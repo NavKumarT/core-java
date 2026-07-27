@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java Generics Bible — GrowthScript Engineering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy:#0F172A; --navy-mid:#1E293B; --brand:#1B4FD8; --brand-soft:#EFF3FE; --brand-mid:#DBEAFE;
+    --accent2:#7C3AED; --accent2-soft:#F5F3FF; --success:#059669; --success-soft:#ECFDF5;
+    --success-border:#A7F3D0; --warn:#D97706; --warn-soft:#FFFBEB; --warn-border:#FDE68A;
+    --warn-text:#78350F; --warn-text-strong:#92400E; --danger:#E11D48; --danger-soft:#FFF1F2;
+    --danger-border:#FECDD3; --purple:#9333EA; --purple-soft:#FDF4FF;
+    --text-1:#0F172A; --text-2:#334155; --text-3:#64748B; --text-4:#94A3B8;
+    --border:#E2E8F0; --border-strong:#CBD5E1; --surface:#FFFFFF; --page:#F8FAFC; --code-bg:#F1F5F9;
+    --sidebar-w:240px; --radius-sm:6px; --radius:10px; --radius-lg:14px;
+    --syn-kw:#6D28D9; --syn-cm:#94A3B8; --syn-st:#059669; --syn-ty:#D97706; --syn-fn:#1B4FD8;
+    color-scheme:light;
+  }
+  [data-theme="dark"] {
+    --navy:#E2E8F0; --navy-mid:#CBD5E1; --brand:#6D9BFF; --brand-soft:#1A2540; --brand-mid:#2A3B66;
+    --accent2:#A78BFA; --accent2-soft:#2A2150; --success:#34D399; --success-soft:#103326;
+    --success-border:#1D5C44; --warn:#FBBF24; --warn-soft:#3A2A0A; --warn-border:#5C4310;
+    --warn-text:#FDE68A; --warn-text-strong:#FCD34D; --danger:#FB7185; --danger-soft:#3A1620;
+    --danger-border:#5C2330; --purple:#D8B4FE; --purple-soft:#2A1A40;
+    --text-1:#E8ECF2; --text-2:#B6C0CE; --text-3:#8895A7; --text-4:#647082;
+    --border:#2A3441; --border-strong:#3D4859; --surface:#161D29; --page:#0D1219; --code-bg:#0F1722;
+    --syn-kw:#C4A7FF; --syn-cm:#6B7888; --syn-st:#6EE7B7; --syn-ty:#FCD34D; --syn-fn:#7FB3FF;
+    color-scheme:dark;
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family:'Inter',-apple-system,sans-serif; background:var(--page); color:var(--text-1); font-size:15px; line-height:1.7; -webkit-font-smoothing:antialiased; display:flex; min-height:100vh; transition:background 0.2s,color 0.2s; }
+  .sidebar { width:var(--sidebar-w); flex-shrink:0; position:sticky; top:0; height:100vh; overflow-y:auto; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:0 0 32px; transition:background 0.2s,border-color 0.2s; }
+  .sidebar-brand { padding:16px 20px 14px; border-bottom:1px solid var(--border); margin-bottom:8px; position:sticky; top:0; background:var(--surface); z-index:10; display:flex; flex-direction:column; gap:10px; }
+  .brand-row { display:flex; flex-direction:column; }
+  .sidebar-logo { font-family:'Space Mono',monospace; font-size:12px; font-weight:700; color:var(--brand); letter-spacing:0.04em; display:block; margin-bottom:2px; }
+  .sidebar-tagline { font-size:11px; color:var(--text-4); }
+  .sidebar-group { padding:12px 0 4px; }
+  .sidebar-group-label { font-family:'Space Mono',monospace; font-size:9.5px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-4); padding:0 20px; margin-bottom:4px; display:block; }
+  .sidebar-link { display:flex; align-items:center; gap:8px; padding:6px 20px; font-size:13px; color:var(--text-2); text-decoration:none; border-left:2px solid transparent; transition:all 0.12s; line-height:1.4; }
+  .sidebar-link:hover { color:var(--brand); background:var(--brand-soft); border-left-color:var(--brand-mid); }
+  .sidebar-link.active { color:var(--brand); background:var(--brand-soft); border-left-color:var(--brand); font-weight:500; }
+  .sidebar-link .sl-dot { width:5px; height:5px; border-radius:50%; background:var(--border-strong); flex-shrink:0; }
+  .sidebar-link.active .sl-dot,.sidebar-link:hover .sl-dot { background:var(--brand); }
+  .sidebar-sub-link { display:flex; align-items:center; gap:8px; padding:4px 20px 4px 34px; font-size:12px; color:var(--text-3); text-decoration:none; border-left:2px solid transparent; transition:all 0.12s; }
+  .sidebar-sub-link:hover { color:var(--brand); background:var(--brand-soft); }
+  .theme-toggle { display:flex; align-items:center; background:var(--page); border:1px solid var(--border); border-radius:20px; padding:3px; width:fit-content; }
+  .theme-toggle-btn { display:flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; border:none; background:transparent; color:var(--text-3); cursor:pointer; font-size:13px; transition:all 0.15s; }
+  .theme-toggle-btn.active { background:var(--surface); color:var(--brand); box-shadow:0 1px 3px rgba(0,0,0,0.1); }
+  .main { flex:1; min-width:0; padding:48px 64px 80px 64px; max-width:1100px; }
+  .page-title-block { padding-bottom:36px; border-bottom:1px solid var(--border); margin-bottom:52px; }
+  .page-eyebrow { font-family:'Space Mono',monospace; font-size:11px; font-weight:700; letter-spacing:0.1em; color:var(--text-4); text-transform:uppercase; margin-bottom:10px; display:block; }
+  .page-title-block h1 { font-size:30px; font-weight:600; color:var(--navy); letter-spacing:-0.02em; line-height:1.2; margin-bottom:10px; }
+  .page-title-block > p { font-size:15px; color:var(--text-2); max-width:680px; line-height:1.65; }
+  .tc-row { display:flex; gap:16px; margin-top:18px; flex-wrap:wrap; }
+  .tc-pill { font-size:12px; color:var(--text-3); display:flex; align-items:center; gap:5px; }
+  .tc-pill span { width:6px; height:6px; border-radius:50%; background:var(--brand); display:inline-block; }
+  .section { margin-bottom:60px; scroll-margin-top:32px; }
+  .section-header { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+  .section-eyebrow { font-family:'Space Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.1em; color:var(--text-4); text-transform:uppercase; white-space:nowrap; }
+  .section-rule { flex:1; height:1px; background:var(--border); }
+  .section h2 { font-size:21px; font-weight:600; color:var(--navy); letter-spacing:-0.02em; margin-bottom:8px; }
+  .section-intro { font-size:14.5px; color:var(--text-2); margin-bottom:28px; max-width:760px; line-height:1.7; }
+  .sub-heading { font-size:14px; font-weight:600; color:var(--navy); margin:28px 0 10px; display:flex; align-items:center; gap:8px; }
+  .sub-heading::after { content:''; flex:1; height:1px; background:var(--border); }
+  .section-divider { height:1px; background:var(--border); margin:48px 0; }
+  .body-p { font-size:14px; color:var(--text-2); margin-bottom:14px; line-height:1.7; }
+  .split-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px; }
+  .rule-card { background:var(--page); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
+  .rule-card-label { font-family:'Space Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-4); margin-bottom:10px; display:block; }
+  .rule-list { list-style:none; }
+  .rule-list li { font-size:13px; color:var(--text-2); padding-left:18px; position:relative; margin-bottom:6px; line-height:1.6; }
+  .rule-list li::before { content:'→'; position:absolute; left:0; color:var(--brand); font-size:11px; top:2px; }
+  .rule-list li.no::before  { content:'✗'; color:var(--danger);  font-size:12px; }
+  .rule-list li.yes::before { content:'✓'; color:var(--success); font-size:12px; }
+  .tip-box { display:flex; gap:10px; background:var(--brand-soft); border:1px solid var(--brand-mid); border-radius:var(--radius); padding:11px 14px; margin-top:14px; }
+  .tip-icon { flex-shrink:0; font-size:14px; margin-top:2px; }
+  .tip-text { font-size:12.5px; color:var(--navy-mid); line-height:1.6; }
+  .tip-text strong { color:var(--brand); font-weight:600; }
+  [data-theme="dark"] .tip-text { color:var(--text-2); }
+  .warn-box { display:flex; gap:10px; background:var(--warn-soft); border:1px solid var(--warn-border); border-radius:var(--radius); padding:11px 14px; margin-top:12px; }
+  .warn-text { font-size:12.5px; color:var(--warn-text); line-height:1.6; }
+  .warn-text strong { color:var(--warn-text-strong); font-weight:600; }
+  .danger-box { display:flex; gap:10px; background:var(--danger-soft); border:1px solid var(--danger-border); border-radius:var(--radius); padding:11px 14px; margin-top:12px; }
+  .danger-text { font-size:12.5px; color:var(--danger); line-height:1.6; }
+  .danger-text strong { font-weight:600; }
+  pre { background:var(--code-bg); border-top:1px solid var(--border); padding:14px 16px; overflow-x:auto; font-family:'Space Mono',monospace; font-size:12px; line-height:1.8; color:var(--text-1); }
+  code.inline { font-family:'Space Mono',monospace; font-size:11.5px; background:var(--code-bg); padding:1px 5px; border-radius:4px; color:var(--text-1); }
+  .kw { color:var(--syn-kw); font-weight:700; }
+  .cm { color:var(--syn-cm); font-style:italic; }
+  .st { color:var(--syn-st); }
+  .ty { color:var(--syn-ty); }
+  .fn { color:var(--syn-fn); }
+  .an { color:var(--syn-ty); font-weight:600; }
+  .code-pair { margin-top:14px; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  .code-pair-tabs { display:flex; border-bottom:1px solid var(--border); }
+  .cpt { flex:1; padding:7px 14px; font-size:12px; font-weight:600; color:var(--text-3); text-align:center; cursor:pointer; transition:all 0.12s; user-select:none; }
+  .cpt.bad { border-right:1px solid var(--border); }
+  .cpt.bad.active  { background:var(--danger-soft); color:var(--danger); }
+  .cpt.good.active { background:var(--success-soft); color:var(--success); }
+  .code-pane { display:none; }
+  .code-pane.active { display:block; }
+  .code-pane pre { border-top:none; border-radius:0; }
+  .code-tabs-wrap { border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; margin-top:14px; }
+  .code-tabs-header { display:flex; overflow-x:auto; border-bottom:1px solid var(--border); background:var(--page); }
+  .ct-tab { padding:9px 16px; font-size:12px; font-weight:500; color:var(--text-3); cursor:pointer; white-space:nowrap; border-right:1px solid var(--border); transition:all 0.12s; font-family:'Space Mono',monospace; user-select:none; flex-shrink:0; }
+  .ct-tab:hover { color:var(--brand); background:var(--brand-soft); }
+  .ct-tab.active { color:var(--brand); background:var(--surface); border-bottom:2px solid var(--brand); font-weight:700; }
+  .ct-pane { display:none; }
+  .ct-pane.active { display:block; }
+  .ct-pane pre { border-top:none; border-radius:0; font-size:12px; }
+  .step-list { display:flex; flex-direction:column; gap:8px; margin-bottom:18px; }
+  .step-item { display:flex; gap:12px; align-items:flex-start; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:10px 14px; }
+  .step-num { flex-shrink:0; width:22px; height:22px; border-radius:50%; background:var(--brand); color:#fff; font-family:'Space Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:2px; }
+  .step-body { font-size:13px; color:var(--text-2); line-height:1.6; }
+  .step-body strong { color:var(--navy); }
+  .code-block-wrap { border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-top:12px; margin-bottom:4px; }
+  .code-block-label { font-family:'Space Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-4); background:var(--page); padding:7px 14px; border-bottom:1px solid var(--border); display:block; }
+  .code-block-wrap pre { border-top:none; }
+  .ref-table { width:100%; border-collapse:collapse; font-size:13px; margin-top:14px; border-radius:var(--radius); overflow:hidden; border:1px solid var(--border); }
+  .ref-table th { background:var(--page); color:var(--navy); font-weight:600; text-align:left; padding:10px 14px; border-bottom:2px solid var(--border); font-family:'Space Mono',monospace; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; }
+  .ref-table td { padding:9px 14px; border-bottom:1px solid var(--border); color:var(--text-2); vertical-align:top; line-height:1.6; }
+  .ref-table tr:last-child td { border-bottom:none; }
+  .ref-table tr:hover td { background:var(--brand-soft); }
+  .ref-table .yes { color:var(--success); font-weight:600; }
+  .ref-table .no  { color:var(--danger);  font-weight:600; }
+  .cheat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; }
+  .cheat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
+  .cheat-card h4 { font-size:12.5px; font-weight:600; color:var(--navy); margin-bottom:8px; }
+  .cheat-card ul { list-style:none; }
+  .cheat-card li { font-size:12px; color:var(--text-2); padding-left:13px; position:relative; line-height:1.55; margin-bottom:4px; }
+  .cheat-card li::before { content:'→'; position:absolute; left:0; color:var(--brand); font-size:10.5px; top:1px; }
+  /* Thread state diagram */
+  .state-diagram { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; overflow-x:auto; margin-bottom:6px; }
+  /* Concept pill tags */
+  .tag-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .tag { font-size:11.5px; font-weight:500; padding:3px 10px; border-radius:20px; border:1px solid var(--border); color:var(--text-2); background:var(--page); font-family:'Space Mono',monospace; }
+  .tag-brand  { background:var(--brand-soft);   border-color:var(--brand-mid);      color:var(--brand);   }
+  .tag-warn   { background:var(--warn-soft);    border-color:var(--warn-border);    color:var(--warn);    }
+  .tag-danger { background:var(--danger-soft);  border-color:var(--danger-border);  color:var(--danger);  }
+  .tag-green  { background:var(--success-soft); border-color:var(--success-border); color:var(--success); }
+  /* Comparison table accent rows */
+  .ref-table tr.accent td { background:var(--brand-soft); font-weight:500; }
+  .page-footer { border-top:1px solid var(--border); padding:20px 0 0; display:flex; justify-content:space-between; align-items:center; }
+  .footer-brand { font-family:'Space Mono',monospace; font-size:11px; font-weight:700; color:var(--brand); }
+  .footer-note  { font-size:11.5px; color:var(--text-4); }
+  @media(max-width:860px){
+    body{flex-direction:column;}
+    .sidebar{width:100%;height:auto;position:static;border-right:none;border-bottom:1px solid var(--border);padding-bottom:0;}
+    .sidebar-group{display:flex;flex-wrap:wrap;padding:8px 16px;gap:4px;}
+    .sidebar-group-label{display:none;}
+    .sidebar-link{padding:5px 10px;border-left:none;border-radius:20px;border:1px solid var(--border);font-size:12px;}
+    .sidebar-link:hover,.sidebar-link.active{background:var(--brand-soft);border-color:var(--brand-mid);}
+    .sidebar-sub-link{display:none;}
+    .main{padding:32px 20px 60px;}
+    .split-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-row">
+      <span class="sidebar-logo">GS // Generics Bible</span>
+      <span class="sidebar-tagline">Interview Reference</span>
+    </div>
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <button class="theme-toggle-btn active" id="btn-light">☀️</button>
+      <button class="theme-toggle-btn" id="btn-dark">🌙</button>
+    </div>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Foundations</span>
+    <a href="#foundations" class="sidebar-link active"><span class="sl-dot"></span>Why Generics Exist</a>
+    <a href="#foundations" class="sidebar-sub-link">The Object-cast problem</a>
+    <a href="#type-erasure" class="sidebar-link"><span class="sl-dot"></span>Type Erasure</a>
+    <a href="#type-erasure" class="sidebar-sub-link">Why T[] needs a cast</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Generic Classes</span>
+    <a href="#generic-classes" class="sidebar-link"><span class="sl-dot"></span>Defining a Generic Class</a>
+    <a href="#raw-types" class="sidebar-link"><span class="sl-dot"></span>Raw Types</a>
+    <a href="#raw-types" class="sidebar-sub-link">No type argument → Object</a>
+    <a href="#multiple-params" class="sidebar-link"><span class="sl-dot"></span>Multiple Type Parameters</a>
+    <a href="#multiple-params" class="sidebar-sub-link">K, V — the Map pattern</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Inheritance</span>
+    <a href="#subclassing" class="sidebar-link"><span class="sl-dot"></span>Subclassing Generic Classes</a>
+    <a href="#bounded-types" class="sidebar-link"><span class="sl-dot"></span>Bounded Type Parameters</a>
+    <a href="#bounded-types" class="sidebar-sub-link">extends Number, multiple bounds</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Methods</span>
+    <a href="#generic-methods" class="sidebar-link"><span class="sl-dot"></span>Generic Methods</a>
+    <a href="#generic-methods" class="sidebar-sub-link">Type inference</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Wildcards</span>
+    <a href="#wildcards" class="sidebar-link"><span class="sl-dot"></span>Wildcard Basics</a>
+    <a href="#wildcards" class="sidebar-sub-link">?, ? extends T, ? super T</a>
+    <a href="#pecs" class="sidebar-link"><span class="sl-dot"></span>PECS Principle</a>
+    <a href="#pecs" class="sidebar-sub-link">Producer Extends, Consumer Super</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Deep Mechanics</span>
+    <a href="#arrays" class="sidebar-link"><span class="sl-dot"></span>Generics &amp; Arrays</a>
+    <a href="#restrictions" class="sidebar-link"><span class="sl-dot"></span>Restrictions on Generics</a>
+    <a href="#restrictions" class="sidebar-sub-link">No primitives, no new T(), no static T</a>
+    <a href="#bridge-methods" class="sidebar-link"><span class="sl-dot"></span>Bridge Methods</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Reference</span>
+    <a href="#faang-qa" class="sidebar-link"><span class="sl-dot"></span>FAANG Rapid-Fire Q&amp;A</a>
+    <a href="#cheatsheet" class="sidebar-link"><span class="sl-dot"></span>Interview Cheatsheet</a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+<div class="page-title-block">
+  <span class="page-eyebrow">Java 5+ Type System</span>
+  <h1>Generics Bible</h1>
+  <p>Complete Java Generics reference for FAANG interviews — type erasure, raw types, bounded type parameters, generic methods, wildcards, the PECS principle, generics-vs-arrays, and every restriction and gotcha interviewers reach for.</p>
+  <div class="tc-row">
+    <span class="tc-pill"><span></span>Type Erasure</span>
+    <span class="tc-pill"><span></span>Bounded Types</span>
+    <span class="tc-pill"><span></span>Generic Methods</span>
+    <span class="tc-pill"><span></span>Wildcards</span>
+    <span class="tc-pill"><span></span>PECS</span>
+    <span class="tc-pill"><span></span>Restrictions</span>
+  </div>
+</div>
+<!-- ═══ SECTION 1: FOUNDATIONS ═══ -->
+<section class="section" id="foundations">
+  <div class="section-header"><span class="section-eyebrow">Java 5+</span><span class="section-rule"></span></div>
+  <h2>Why Generics Exist</h2>
+  <p class="section-intro">Before generics, any container that needed to hold "some type" simply held <code class="inline">Object</code>. That worked, but it silently threw away type safety — the compiler had no way to stop you putting the wrong thing in, and every read required an unchecked, runtime-risky cast.</p>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">The problem generics solve — pre-generics, Object-based "polymorphism"</span>
+<pre><span class="ty">String</span> s = <span class="kw">new</span> <span class="ty">String</span>(<span class="st">"Hello world"</span>);
+<span class="ty">Object</span> obj = s;              <span class="cm">// widening — always safe, always allowed</span>
+
+obj = <span class="kw">new</span> <span class="ty">Integer</span>(1);        <span class="cm">// ALSO compiles — obj is just an Object reference,</span>
+                             <span class="cm">// the compiler has no idea it was "supposed to" hold a String</span>
+
+s = (<span class="ty">String</span>) obj;            <span class="cm">// compiles fine... then throws ClassCastException AT RUNTIME</span>
+                             <span class="cm">// because obj actually holds an Integer right now</span>
+
+<span class="cm">// So by default we don't have type safety and compile-time checking —</span>
+<span class="cm">// the mistake (storing an Integer where a String was expected) is only</span>
+<span class="cm">// caught when the bad cast actually executes, potentially deep in production</span></pre>
+  </div>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">What generics add</span>
+      <ul class="rule-list">
+        <li>Compile-time type checking — the wrong type is rejected at compile time, not discovered via a runtime ClassCastException</li>
+        <li>No explicit casts needed on retrieval — the compiler inserts them for you, and only where it's already proven safe</li>
+        <li>Self-documenting APIs — <code class="inline">List&lt;String&gt;</code> tells you exactly what's inside, unlike a raw <code class="inline">List</code></li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">The core idea</span>
+      <ul class="rule-list">
+        <li>A generic class/method is parameterized over a TYPE, the same way a regular method is parameterized over VALUES</li>
+        <li><code class="inline">class Box&lt;T&gt;</code> — T is a placeholder, filled in with a real type (<code class="inline">Box&lt;String&gt;</code>, <code class="inline">Box&lt;Integer&gt;</code>) at the point of use</li>
+        <li>Enforced entirely by the COMPILER — this matters enormously for what generics can and can't do at runtime, covered next in Type Erasure</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview framing:</strong> "Generics move a category of bugs from runtime (ClassCastException, often far from the actual mistake) to compile time (a red squiggle exactly where the wrong type was used)." That's the entire value proposition in one sentence.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 2: TYPE ERASURE ═══ -->
+<section class="section" id="type-erasure">
+  <div class="section-header"><span class="section-eyebrow">The Core Mechanism</span><span class="section-rule"></span></div>
+  <h2>Type Erasure</h2>
+  <p class="section-intro">This is the single most important mechanic behind Java generics, and the source of nearly every "why can't I do X with generics" interview question. Generic type information exists ONLY at compile time — the compiler checks it, then <strong>erases</strong> it, replacing type parameters with their bound (or <code class="inline">Object</code>) in the compiled bytecode.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Why erasure was chosen</span>
+      <ul class="rule-list">
+        <li>Backward compatibility — generics were added in Java 5; erasure lets generic code interoperate with pre-generics bytecode and libraries</li>
+        <li>No JVM changes required — the bytecode format itself didn't need to change to support generics</li>
+        <li>Cost: no reified generics — unlike C#/.NET, Java generics carry no type information at runtime</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">What actually happens at compile time</span>
+      <ul class="rule-list">
+        <li><code class="inline">List&lt;String&gt;</code> and <code class="inline">List&lt;Integer&gt;</code> compile down to the exact same bytecode — plain <code class="inline">List</code></li>
+        <li>The compiler inserts casts automatically at extraction points (e.g. after <code class="inline">list.get(0)</code>) so your code doesn't need to</li>
+        <li>Unbounded <code class="inline">T</code> erases to <code class="inline">Object</code>; <code class="inline">T extends Number</code> erases to <code class="inline">Number</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'te-samebytecode')">Same class at runtime</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'te-arraycast')">Why T[] needs an unchecked cast</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'te-noinstanceof')">instanceof / new T() forbidden</div>
+    </div>
+    <div id="te-samebytecode" class="ct-pane active"><pre><span class="ty">List</span>&lt;<span class="ty">String</span>&gt; strings = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;();
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; ints    = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;();
+
+<span class="ty">System</span>.out.<span class="fn">println</span>(strings.<span class="fn">getClass</span>() == ints.<span class="fn">getClass</span>()); <span class="cm">// true!</span>
+<span class="cm">// Both are literally java.util.ArrayList at runtime — the <String>/<Integer></span>
+<span class="cm">// type argument only ever existed in the SOURCE CODE and compiled .class</span>
+<span class="cm">// file's metadata for the compiler's own use; the runtime object has no idea</span></pre></div>
+    <div id="te-arraycast" class="ct-pane"><pre><span class="kw">class</span> <span class="ty">GenericDemo</span>&lt;T&gt; {
+    T genericArray[] = (T[]) <span class="kw">new</span> <span class="ty">Object</span>[5]; <span class="cm">// unchecked cast warning, but this is the standard pattern</span>
+}
+<span class="cm">// WHY the cast is required: "new T[5]" does NOT compile at all.</span>
+<span class="cm">// After erasure, T is just Object — the JVM would need to create an array</span>
+<span class="cm">// of a type that no longer exists by the time bytecode runs. So Java forces</span>
+<span class="cm">// you to allocate an Object[] and cast it, which is technically a LIE to the</span>
+<span class="cm">// compiler (the array's real runtime component type is Object, not T) —</span>
+<span class="cm">// which is exactly why the compiler flags it as "unchecked"</span>
+
+<span class="ty">GenericDemo</span>&lt;<span class="ty">String</span>&gt; gd = <span class="kw">new</span> <span class="ty">GenericDemo</span>&lt;&gt;();
+gd.genericArray[0] = <span class="st">"Hello"</span>; <span class="cm">// fine</span>
+<span class="cm">// gd.genericArray[1] = 10;   // COMPILE ERROR — the compiler DOES still enforce</span>
+<span class="cm">// this at the assignment site, even though the array itself is really an Object[]</span>
+<span class="cm">// underneath. Type safety is enforced by the COMPILER, not by the array's real type</span></pre></div>
+    <div id="te-noinstanceof" class="ct-pane"><pre><span class="kw">class</span> <span class="ty">Box</span>&lt;T&gt; {
+    <span class="kw">private</span> T value;
+
+    <span class="kw">boolean</span> <span class="fn">isStringBox</span>() {
+        <span class="cm">// return value instanceof T; // COMPILE ERROR — "T" doesn't exist at runtime</span>
+        <span class="kw">return</span> <span class="kw">false</span>; <span class="cm">// no way to ask "is T String?" — the information is erased</span>
+    }
+
+    T <span class="fn">createDefault</span>() {
+        <span class="cm">// return new T(); // COMPILE ERROR — same root cause: the JVM has no</span>
+        <span class="cm">// class named "T" to instantiate; erasure means it doesn't exist by runtime</span>
+        <span class="kw">return</span> <span class="kw">null</span>;
+    }
+}
+<span class="cm">// Workaround for both: pass a Class&lt;T&gt; token explicitly, e.g.</span>
+<span class="cm">// T createDefault(Class&lt;T&gt; clazz) { return clazz.getDeclaredConstructor().newInstance(); }</span></pre></div>
+  </div>
+
+  <div class="danger-box">
+    <span class="tip-icon">🚫</span>
+    <span class="danger-text"><strong>The single fact that answers most "why can't generics do X" questions:</strong> at runtime, all generic type information is gone. <code class="inline">T</code> effectively doesn't exist in the compiled class — it's compiled AS IF it were <code class="inline">Object</code> (or its bound). Every restriction covered later in this document (no <code class="inline">new T()</code>, no <code class="inline">T[]</code>, no <code class="inline">instanceof T</code>, no static fields of type <code class="inline">T</code>) traces back directly to this one fact.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 3: GENERIC CLASSES ═══ -->
+<section class="section" id="generic-classes">
+  <div class="section-header"><span class="section-eyebrow">Building Blocks</span><span class="section-rule"></span></div>
+  <h2>Defining a Generic Class</h2>
+  <p class="section-intro">A generic class declares one or more type parameters in angle brackets after the class name. Every field, method parameter, and return type inside the class can then reference that placeholder type, and the compiler substitutes the real type at every call site.</p>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">A complete generic container — fields, a constrained-capacity array, append/display</span>
+<pre><span class="kw">class</span> <span class="ty">GenericDemo</span>&lt;T&gt; {
+    <span class="kw">private</span> T genericArray[] = (T[]) <span class="kw">new</span> <span class="ty">Object</span>[5]; <span class="cm">// unchecked cast — see Type Erasure section</span>
+    <span class="kw">private</span> <span class="kw">int</span> length = 0;
+
+    <span class="kw">public void</span> <span class="fn">display</span>() {
+        <span class="kw">for</span> (<span class="kw">int</span> i = 0; i &lt; length; i++) {
+            <span class="ty">System</span>.out.<span class="fn">println</span>(genericArray[i]);
+        }
+    }
+
+    <span class="kw">public void</span> <span class="fn">append</span>(T v) {
+        <span class="kw">if</span> (length == 5) <span class="kw">return</span>;
+        genericArray[length++] = v;
+    }
+}
+
+<span class="kw">public class</span> <span class="ty">Main</span> {
+    <span class="kw">public static void</span> <span class="fn">main</span>(<span class="ty">String</span>[] args) {
+        <span class="ty">GenericDemo</span>&lt;<span class="ty">String</span>&gt; gds = <span class="kw">new</span> <span class="ty">GenericDemo</span>&lt;&gt;(); <span class="cm">// diamond operator — infers <String></span>
+        gds.<span class="fn">append</span>(<span class="st">"Hello"</span>);
+        gds.<span class="fn">append</span>(<span class="st">"World"</span>);
+        <span class="cm">// gds.append(10); // COMPILE ERROR — T is bound to String for this instance</span>
+        gds.<span class="fn">display</span>();
+    }
+}</pre>
+  </div>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Naming convention</span>
+      <ul class="rule-list">
+        <li><code class="inline">T</code> — Type (general purpose)</li>
+        <li><code class="inline">E</code> — Element (used heavily in the Collections framework — <code class="inline">List&lt;E&gt;</code>)</li>
+        <li><code class="inline">K, V</code> — Key, Value (Map-style generics)</li>
+        <li><code class="inline">N</code> — Number; <code class="inline">R</code> — Return type; <code class="inline">S, U</code> — additional types when T is taken</li>
+        <li>Single uppercase letters by convention, purely readability — the compiler treats <code class="inline">T</code> and <code class="inline">MyType</code> identically</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">The diamond operator (Java 7+)</span>
+      <ul class="rule-list">
+        <li><code class="inline">new GenericDemo&lt;&gt;()</code> — empty angle brackets, type inferred from the declared variable type on the left</li>
+        <li>Before Java 7, you had to repeat it: <code class="inline">GenericDemo&lt;String&gt; gd = new GenericDemo&lt;String&gt;();</code></li>
+        <li>Purely a compile-time convenience — has zero effect on the erased bytecode</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 4: RAW TYPES ═══ -->
+<section class="section" id="raw-types">
+  <div class="section-header"><span class="section-eyebrow">Legacy Interop</span><span class="section-rule"></span></div>
+  <h2>Raw Types — What Happens Without a Type Parameter</h2>
+  <p class="section-intro">You CAN use a generic class without supplying a type argument at all — this is called a <strong>raw type</strong>. It exists purely for backward compatibility with pre-Java-5 code, and it throws away every compile-time safety guarantee generics normally provide.</p>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'raw-basic')">Raw type — behaves like Object</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'raw-warning')">Unchecked warning &amp; mixed usage danger</div>
+    </div>
+    <div id="raw-basic" class="ct-pane active"><pre><span class="ty">GenericDemo</span> gds = <span class="kw">new</span> <span class="ty">GenericDemo</span>(); <span class="cm">// RAW TYPE — no <T> supplied at all</span>
+<span class="cm">// T is effectively treated as Object here — no compile-time type checking</span>
+<span class="cm">// applies to values passed to append(), and display() gives no type guarantee</span>
+
+gds.<span class="fn">append</span>(<span class="st">"Hello"</span>); <span class="cm">// compiles</span>
+gds.<span class="fn">append</span>(10);        <span class="cm">// ALSO compiles — no error, because with a raw type the</span>
+                       <span class="cm">// compiler falls all the way back to pre-generics behavior</span>
+<span class="cm">// This is exactly the type-unsafety problem generics were built to prevent —</span>
+<span class="cm">// using a raw type opts you OUT of that protection entirely</span></pre></div>
+    <div id="raw-warning" class="ct-pane"><pre><span class="ty">List</span> rawList = <span class="kw">new</span> <span class="ty">ArrayList</span>(); <span class="cm">// raw — compiler emits "uses unchecked or unsafe operations"</span>
+rawList.<span class="fn">add</span>(<span class="st">"a string"</span>);
+rawList.<span class="fn">add</span>(42);              <span class="cm">// compiles — raw type accepts anything</span>
+
+<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; strings = rawList;  <span class="cm">// UNCHECKED WARNING, but compiles — assigning raw to parameterized</span>
+<span class="ty">String</span> s = strings.<span class="fn">get</span>(1);     <span class="cm">// compiles fine... ClassCastException AT RUNTIME (Integer -> String)</span>
+<span class="cm">// The compiler trusted the raw-to-parameterized assignment and inserted</span>
+<span class="cm">// a cast at get(), which then blows up because the actual element is an Integer</span></pre></div>
+  </div>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th></th><th>Raw type: <code class="inline">GenericDemo gd</code></th><th>Parameterized: <code class="inline">GenericDemo&lt;String&gt; gd</code></th></tr></thead>
+    <tbody>
+      <tr><td>Compile-time type checking</td><td class="no">None — behaves like pre-Java-5 code</td><td class="yes">Full — wrong-type arguments rejected</td></tr>
+      <tr><td>Unchecked warnings</td><td class="no">Generated liberally</td><td class="yes">None, when used correctly</td></tr>
+      <tr><td>Use case</td><td>Legacy code interop only</td><td>All new code, always</td></tr>
+    </tbody>
+  </table>
+
+  <div class="warn-box">
+    <span class="tip-icon">⚠️</span>
+    <span class="warn-text">Raw types are a legacy escape hatch, not a feature to reach for. Modern Java code should never declare a raw type deliberately — if you see one in a codebase, it's almost always either very old code or an accidental omission of the type argument.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 5: MULTIPLE TYPE PARAMETERS ═══ -->
+<section class="section" id="multiple-params">
+  <div class="section-header"><span class="section-eyebrow">Beyond a Single T</span><span class="section-rule"></span></div>
+  <h2>Multiple Type Parameters</h2>
+  <p class="section-intro">A generic class isn't limited to one placeholder — you can declare as many as the design needs, comma-separated. The most common real-world example is a key/value pair, exactly how <code class="inline">Map&lt;K,V&gt;</code> is built.</p>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">Two type parameters — a simple key/value pair, mirroring Map.Entry</span>
+<pre><span class="kw">class</span> <span class="ty">Pair</span>&lt;K, V&gt; {
+    <span class="kw">private</span> K key;
+    <span class="kw">private</span> V value;
+
+    <span class="ty">Pair</span>(K key, V value) {
+        <span class="kw">this</span>.key = key;
+        <span class="kw">this</span>.value = value;
+    }
+
+    <span class="kw">public</span> K <span class="fn">getKey</span>()   { <span class="kw">return</span> key; }
+    <span class="kw">public</span> V <span class="fn">getValue</span>() { <span class="kw">return</span> value; }
+
+    <span class="an">@Override</span>
+    <span class="kw">public</span> <span class="ty">String</span> <span class="fn">toString</span>() { <span class="kw">return</span> key + <span class="st">" -> "</span> + value; }
+}
+
+<span class="ty">Pair</span>&lt;<span class="ty">String</span>, <span class="ty">Integer</span>&gt; ageEntry = <span class="kw">new</span> <span class="ty">Pair</span>&lt;&gt;(<span class="st">"Alice"</span>, 30);
+<span class="ty">System</span>.out.<span class="fn">println</span>(ageEntry); <span class="cm">// "Alice -> 30"</span>
+
+<span class="cm">// This is exactly the shape java.util.Map&lt;K,V&gt; and Map.Entry&lt;K,V&gt; use —</span>
+<span class="cm">// HashMap&lt;String, List&lt;Integer&gt;&gt; is the same idea with a more complex V</span></pre>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text">Type parameters are completely independent of each other — <code class="inline">Pair&lt;String, Integer&gt;</code> and <code class="inline">Pair&lt;Integer, String&gt;</code> are different, incompatible parameterizations of the same class. Order matters exactly like it does for regular method parameters.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 6: SUBCLASSING GENERIC CLASSES ═══ -->
+<section class="section" id="subclassing">
+  <div class="section-header"><span class="section-eyebrow">Inheritance</span><span class="section-rule"></span></div>
+  <h2>Subclassing a Generic Class</h2>
+  <p class="section-intro">A subclass of a generic class has three options: stay generic and pass the type parameter through, fix the type parameter to something concrete, or extend the raw type. Each has different implications for what the subclass can promise its own callers.</p>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'sub-passthrough')">Pass the type parameter through</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'sub-fixed')">Fix the type parameter</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'sub-newparam')">Subclass introduces its OWN parameter</div>
+    </div>
+    <div id="sub-passthrough" class="ct-pane active"><pre><span class="kw">class</span> <span class="ty">Container</span>&lt;T&gt; {
+    <span class="kw">protected</span> T value;
+    <span class="kw">public void</span> <span class="fn">set</span>(T value) { <span class="kw">this</span>.value = value; }
+    <span class="kw">public</span> T <span class="fn">get</span>() { <span class="kw">return</span> value; }
+}
+
+<span class="cm">// Subclass stays generic — "class Sub&lt;T&gt; extends Super&lt;T&gt;" from your notes</span>
+<span class="kw">class</span> <span class="ty">LoggingContainer</span>&lt;T&gt; <span class="kw">extends</span> <span class="ty">Container</span>&lt;T&gt; {
+    <span class="an">@Override</span>
+    <span class="kw">public void</span> <span class="fn">set</span>(T value) {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Setting: "</span> + value);
+        <span class="kw">super</span>.<span class="fn">set</span>(value);
+    }
+}
+<span class="ty">LoggingContainer</span>&lt;<span class="ty">String</span>&gt; lc = <span class="kw">new</span> <span class="ty">LoggingContainer</span>&lt;&gt;(); <span class="cm">// still flexible — caller picks T</span></pre></div>
+    <div id="sub-fixed" class="ct-pane"><pre><span class="cm">// Subclass FIXES the type parameter to something concrete — no longer generic itself</span>
+<span class="kw">class</span> <span class="ty">StringContainer</span> <span class="kw">extends</span> <span class="ty">Container</span>&lt;<span class="ty">String</span>&gt; {
+    <span class="kw">public</span> <span class="kw">int</span> <span class="fn">length</span>() { <span class="kw">return</span> <span class="fn">get</span>().<span class="fn">length</span>(); } <span class="cm">// get() is known to return String here — no cast needed</span>
+}
+<span class="ty">StringContainer</span> sc = <span class="kw">new</span> <span class="ty">StringContainer</span>(); <span class="cm">// no <T> at all — it's baked in as String</span>
+sc.<span class="fn">set</span>(<span class="st">"hello"</span>);
+<span class="ty">System</span>.out.<span class="fn">println</span>(sc.<span class="fn">length</span>()); <span class="cm">// 5</span>
+<span class="cm">// sc.set(42); // COMPILE ERROR — set(T) is set(String) for this subclass</span></pre></div>
+    <div id="sub-newparam" class="ct-pane"><pre><span class="cm">// Subclass adds an ADDITIONAL type parameter of its own</span>
+<span class="kw">class</span> <span class="ty">KeyedContainer</span>&lt;T, K&gt; <span class="kw">extends</span> <span class="ty">Container</span>&lt;T&gt; {
+    <span class="kw">private</span> K key;
+    <span class="kw">public void</span> <span class="fn">setKey</span>(K key) { <span class="kw">this</span>.key = key; }
+    <span class="kw">public</span> K <span class="fn">getKey</span>()   { <span class="kw">return</span> key; }
+}
+<span class="ty">KeyedContainer</span>&lt;<span class="ty">String</span>, <span class="ty">Integer</span>&gt; kc = <span class="kw">new</span> <span class="ty">KeyedContainer</span>&lt;&gt;();
+kc.<span class="fn">set</span>(<span class="st">"value"</span>);   <span class="cm">// T = String, inherited from Container</span>
+kc.<span class="fn">setKey</span>(101);   <span class="cm">// K = Integer, this class's own parameter</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text">Interfaces follow the exact same rules — <code class="inline">class Repo&lt;T&gt; implements Dao&lt;T&gt;</code> passes the parameter through, and <code class="inline">class UserRepo implements Dao&lt;User&gt;</code> fixes it, identical to the extends cases above.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 7: BOUNDED TYPE PARAMETERS ═══ -->
+<section class="section" id="bounded-types">
+  <div class="section-header"><span class="section-eyebrow">Constraining T</span><span class="section-rule"></span></div>
+  <h2>Bounded Type Parameters</h2>
+  <p class="section-intro">By default, <code class="inline">T</code> can be ANY reference type — the compiler assumes nothing about it beyond what <code class="inline">Object</code> offers. A bounded type parameter narrows that: <code class="inline">T extends Number</code> restricts <code class="inline">T</code> to Number and its subtypes, and — critically — lets you call Number's methods directly on a <code class="inline">T</code> value.</p>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'bt-single')">Single bound — extends Number</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'bt-interface')">Bound is an interface — still "extends"</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'bt-multiple')">Multiple bounds — class &amp; interfaces</div>
+    </div>
+    <div id="bt-single" class="ct-pane active"><pre><span class="kw">class</span> <span class="ty">NumericBox</span>&lt;T <span class="kw">extends</span> <span class="ty">Number</span>&gt; { <span class="cm">// only Number and its subtypes allowed</span>
+    <span class="kw">private</span> T value;
+    <span class="ty">NumericBox</span>(T value) { <span class="kw">this</span>.value = value; }
+
+    <span class="kw">public</span> <span class="kw">double</span> <span class="fn">doubleValue</span>() {
+        <span class="kw">return</span> value.<span class="fn">doubleValue</span>(); <span class="cm">// callable because the compiler KNOWS T is at least a Number —</span>
+    }                            <span class="cm">// without the bound, T would only offer Object's methods</span>
+}
+
+<span class="ty">NumericBox</span>&lt;<span class="ty">Integer</span>&gt; ib = <span class="kw">new</span> <span class="ty">NumericBox</span>&lt;&gt;(42);   <span class="cm">// OK — Integer extends Number</span>
+<span class="ty">NumericBox</span>&lt;<span class="ty">Double</span>&gt;  db = <span class="kw">new</span> <span class="ty">NumericBox</span>&lt;&gt;(3.14); <span class="cm">// OK — Double extends Number</span>
+<span class="cm">// NumericBox&lt;String&gt; sb = new NumericBox&lt;&gt;("x"); // COMPILE ERROR —</span>
+<span class="cm">// String does not extend Number</span></pre></div>
+    <div id="bt-interface" class="ct-pane"><pre><span class="cm">// Even when the bound is an INTERFACE, the keyword is still "extends" — never "implements"</span>
+<span class="kw">class</span> <span class="ty">SortedBox</span>&lt;T <span class="kw">extends</span> <span class="ty">Comparable</span>&lt;T&gt;&gt; { <span class="cm">// Comparable is an interface</span>
+    <span class="kw">private</span> <span class="ty">List</span>&lt;T&gt; items = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;();
+
+    <span class="kw">public void</span> <span class="fn">add</span>(T item) {
+        items.<span class="fn">add</span>(item);
+        <span class="ty">Collections</span>.<span class="fn">sort</span>(items); <span class="cm">// legal because T is guaranteed Comparable&lt;T&gt;</span>
+    }
+}
+<span class="cm">// Why "extends" for interfaces too: in the context of a type parameter</span>
+<span class="cm">// bound, "extends" simply means "is-a" / "is a subtype of" — it doesn't</span>
+<span class="cm">// carry class-vs-interface baggage the way it does for normal class</span>
+<span class="cm">// declarations. This is a very common interview trick question.</span></pre></div>
+    <div id="bt-multiple" class="ct-pane"><pre><span class="cm">// Multiple bounds: AT MOST one class, plus any number of interfaces, joined with &</span>
+<span class="kw">interface</span> <span class="ty">Auditable</span> { <span class="ty">String</span> <span class="fn">auditId</span>(); }
+<span class="kw">interface</span> <span class="ty">Taggable</span>  { <span class="ty">String</span> <span class="fn">tag</span>(); }
+
+<span class="kw">class</span> <span class="ty">Record</span>&lt;T <span class="kw">extends</span> <span class="ty">Number</span> &amp; <span class="ty">Auditable</span> &amp; <span class="ty">Taggable</span>&gt; {
+    <span class="cm">// T must be a Number (the ONE class bound) AND implement BOTH interfaces</span>
+    <span class="kw">private</span> T value;
+    <span class="kw">public void</span> <span class="fn">describe</span>() {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(value.<span class="fn">auditId</span>() + <span class="st">" / "</span> + value.<span class="fn">tag</span>() + <span class="st">" = "</span> + value.<span class="fn">doubleValue</span>());
+    }
+}
+<span class="cm">// RULE: if a class bound is present, it MUST come first, before any interfaces —</span>
+<span class="cm">// <T extends Auditable & Number> would be a COMPILE ERROR (class must lead)</span>
+<span class="cm">// You can have zero or one class bound, but as many interface bounds as needed</span></pre></div>
+  </div>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Why only ONE class bound is allowed</span>
+      <ul class="rule-list">
+        <li>Java doesn't support multiple class inheritance — a type parameter's bound follows the same rule any class declaration does</li>
+        <li>A type can only ever extend one concrete class, so the bound mirrors that: at most one class, but unlimited interfaces (since a class CAN implement many interfaces)</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Bounded types &amp; wildcards preview</span>
+      <ul class="rule-list">
+        <li>Bounded type PARAMETERS (<code class="inline">T extends Number</code>) constrain what T can be declared as, at the class/method definition site</li>
+        <li>Bounded WILDCARDS (<code class="inline">? extends Number</code>) constrain what a caller can pass at the USE site — a related but distinct concept, covered in the Wildcards section</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 8: GENERIC METHODS ═══ -->
+<section class="section" id="generic-methods">
+  <div class="section-header"><span class="section-eyebrow">Method-Level Generics</span><span class="section-rule"></span></div>
+  <h2>Generic Methods</h2>
+  <p class="section-intro">A method can declare its own type parameter, independent of whether its enclosing class is generic at all. The type parameter is declared in angle brackets BEFORE the return type — this is what makes a method generic, not merely using a type that happens to be a class-level parameter.</p>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">A static generic method operating on any GenericDemo&lt;T&gt;</span>
+<pre><span class="kw">static</span> &lt;T&gt; <span class="kw">void</span> <span class="fn">display</span>(<span class="ty">GenericDemo</span>&lt;T&gt; array) {
+    <span class="cm">//     ^^^ this angle-bracket declaration is what makes display() generic —</span>
+    <span class="cm">// it introduces T fresh, for THIS method call, independent of any class-level T</span>
+    <span class="kw">for</span> (T element : array) {
+        <span class="ty">System</span>.out.<span class="fn">print</span>(element);
+    }
+}
+
+<span class="cm">// Callable with ANY GenericDemo&lt;T&gt;, T inferred per-call:</span>
+<span class="fn">display</span>(<span class="kw">new</span> <span class="ty">GenericDemo</span>&lt;<span class="ty">String</span>&gt;());   <span class="cm">// T inferred as String for this call</span>
+<span class="fn">display</span>(<span class="kw">new</span> <span class="ty">GenericDemo</span>&lt;<span class="ty">Integer</span>&gt;());  <span class="cm">// T inferred as Integer for this call — a DIFFERENT, independent T</span></pre>
+  </div>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Generic methods in a non-generic class</span>
+      <ul class="rule-list">
+        <li>The class itself doesn't need any type parameter — the method introduces and scopes its own <code class="inline">T</code></li>
+        <li>Static generic methods (like <code class="inline">Collections.sort</code>, <code class="inline">Arrays.asList</code>) are extremely common in the JDK for exactly this reason — utility methods that work across any type</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Type inference</span>
+      <ul class="rule-list">
+        <li>You almost never need to specify the type argument explicitly — the compiler infers it from the arguments passed</li>
+        <li>Explicit form when needed: <code class="inline">Main.&lt;String&gt;display(gd)</code> — rarely necessary, useful when inference is ambiguous</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'gm-bounded')">Bounded generic method</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'gm-multiparam')">Multiple type parameters on a method</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'gm-jdk')">JDK examples you already use</div>
+    </div>
+    <div id="gm-bounded" class="ct-pane active"><pre><span class="cm">// A method's own type parameter can be bounded exactly like a class's can</span>
+<span class="kw">static</span> &lt;T <span class="kw">extends</span> <span class="ty">Comparable</span>&lt;T&gt;&gt; T <span class="fn">max</span>(T a, T b) {
+    <span class="kw">return</span> a.<span class="fn">compareTo</span>(b) &gt;= 0 ? a : b; <span class="cm">// compareTo() callable because of the bound</span>
+}
+<span class="ty">System</span>.out.<span class="fn">println</span>(<span class="fn">max</span>(3, 7));           <span class="cm">// 7 — T = Integer</span>
+<span class="ty">System</span>.out.<span class="fn">println</span>(<span class="fn">max</span>(<span class="st">"apple"</span>, <span class="st">"banana"</span>)); <span class="cm">// "banana" — T = String</span></pre></div>
+    <div id="gm-multiparam" class="ct-pane"><pre><span class="kw">static</span> &lt;K, V&gt; <span class="ty">Pair</span>&lt;K, V&gt; <span class="fn">of</span>(K key, V value) { <span class="cm">// factory method with 2 method-level type params</span>
+    <span class="kw">return</span> <span class="kw">new</span> <span class="ty">Pair</span>&lt;&gt;(key, value);
+}
+<span class="ty">Pair</span>&lt;<span class="ty">String</span>, <span class="ty">Integer</span>&gt; p = <span class="ty">Pair</span>.of(<span class="st">"age"</span>, 30); <span class="cm">// K, V both inferred from the arguments</span>
+
+<span class="cm">// This "static factory method with inference" pattern predates the diamond</span>
+<span class="cm">// operator and is still common for readability — e.g. Map.entry(k, v)</span></pre></div>
+    <div id="gm-jdk" class="ct-pane"><pre><span class="cm">// You've been calling generic methods all along without necessarily noticing:</span>
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; nums = <span class="ty">Arrays</span>.&lt;<span class="ty">Integer</span>&gt;asList(1, 2, 3); <span class="cm">// explicit type witness (rarely needed)</span>
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; nums2 = <span class="ty">Arrays</span>.asList(1, 2, 3);         <span class="cm">// normal — inferred</span>
+
+<span class="ty">Collections</span>.&lt;<span class="ty">String</span>&gt;<span class="fn">sort</span>(myList);  <span class="cm">// Collections.sort's signature:</span>
+                                <span class="cm">// static &lt;T extends Comparable&lt;? super T&gt;&gt; void sort(List&lt;T&gt; list)</span>
+
+<span class="cm">// Every one of these is a STATIC GENERIC METHOD — none of Arrays, Collections,</span>
+<span class="cm">// or List are themselves generic classes for these particular methods</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview trap to watch for:</strong> <code class="inline">static</code> methods CANNOT reference a class-level type parameter — a static context has no particular instance, so there's no concrete binding of the class's <code class="inline">T</code> to use. A static method that needs generics must declare its OWN type parameter, exactly as shown above.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 9: WILDCARDS ═══ -->
+<section class="section" id="wildcards">
+  <div class="section-header"><span class="section-eyebrow">Flexible Call Sites</span><span class="section-rule"></span></div>
+  <h2>Wildcards — ?, ? extends T, ? super T</h2>
+  <p class="section-intro">Generics are <strong>invariant</strong> by default: <code class="inline">List&lt;Integer&gt;</code> is NOT a <code class="inline">List&lt;Number&gt;</code>, even though <code class="inline">Integer</code> IS a <code class="inline">Number</code>. Wildcards exist to relax that rigidity at specific use sites, without breaking type safety.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Why invariance exists in the first place</span>
+      <ul class="rule-list">
+        <li>If <code class="inline">List&lt;Integer&gt;</code> WERE a <code class="inline">List&lt;Number&gt;</code>, you could do <code class="inline">List&lt;Number&gt; ln = someListOfIntegers; ln.add(3.14);</code> — adding a Double into what's really a List&lt;Integer&gt; at runtime</li>
+        <li>Invariance prevents exactly that hole — it's a deliberate safety choice, not an oversight</li>
+        <li>Wildcards let you opt into read-only or write-only flexibility instead, safely</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">The three wildcard forms</span>
+      <ul class="rule-list">
+        <li><code class="inline">?</code> — unbounded, "some unknown type"</li>
+        <li><code class="inline">? extends T</code> — upper-bounded, "T or any subtype" — READ-friendly</li>
+        <li><code class="inline">? super T</code> — lower-bounded, "T or any supertype" — WRITE-friendly</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'wc-unbounded')">Unbounded ?</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'wc-upper')">? extends T (upper bound)</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'wc-lower')">? super T (lower bound)</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'wc-superclassonly')">super only works on methods, not classes</div>
+    </div>
+    <div id="wc-unbounded" class="ct-pane active"><pre><span class="kw">static</span> <span class="kw">void</span> <span class="fn">printAll</span>(<span class="ty">List</span>&lt;?&gt; list) { <span class="cm">// accepts List&lt;String&gt;, List&lt;Integer&gt;, List&lt;AnyType&gt; — all of them</span>
+    <span class="kw">for</span> (<span class="ty">Object</span> o : list) {  <span class="cm">// elements only guaranteed to be Object — the exact type is unknown</span>
+        <span class="ty">System</span>.out.<span class="fn">println</span>(o);
+    }
+    <span class="cm">// list.add("x"); // COMPILE ERROR — can't add ANYTHING except null;</span>
+    <span class="cm">// the compiler doesn't know what type this list REALLY holds</span>
+}
+<span class="fn">printAll</span>(<span class="ty">List</span>.<span class="fn">of</span>(<span class="st">"a"</span>, <span class="st">"b"</span>));  <span class="cm">// works</span>
+<span class="fn">printAll</span>(<span class="ty">List</span>.<span class="fn">of</span>(1, 2, 3));   <span class="cm">// also works — that's the whole point of ?</span></pre></div>
+    <div id="wc-upper" class="ct-pane"><pre><span class="cm">// "? extends T" — accepts T or any SUBTYPE of T. Great for READING.</span>
+<span class="kw">static</span> <span class="kw">double</span> <span class="fn">sumAll</span>(<span class="ty">List</span>&lt;? <span class="kw">extends</span> <span class="ty">Number</span>&gt; list) {
+    <span class="kw">double</span> sum = 0;
+    <span class="kw">for</span> (<span class="ty">Number</span> n : list) { <span class="cm">// safe to read as Number — every element IS-A Number, guaranteed</span>
+        sum += n.<span class="fn">doubleValue</span>();
+    }
+    <span class="kw">return</span> sum;
+    <span class="cm">// list.add(5); // COMPILE ERROR — can't add. The list might really be a</span>
+    <span class="cm">// List&lt;Integer&gt;, or List&lt;Double&gt;, or List&lt;Long&gt; — the compiler can't verify</span>
+    <span class="cm">// an int/Integer literal is safe to insert into whichever ONE of those it is</span>
+}
+<span class="fn">sumAll</span>(<span class="ty">List</span>.<span class="fn">of</span>(1, 2, 3));       <span class="cm">// List&lt;Integer&gt; — Integer extends Number, OK</span>
+<span class="fn">sumAll</span>(<span class="ty">List</span>.<span class="fn">of</span>(1.5, 2.5));    <span class="cm">// List&lt;Double&gt; — Double extends Number, OK</span></pre></div>
+    <div id="wc-lower" class="ct-pane"><pre><span class="cm">// "? super T" — accepts T or any SUPERTYPE of T. Great for WRITING.</span>
+<span class="kw">static</span> <span class="kw">void</span> <span class="fn">addNumbers</span>(<span class="ty">List</span>&lt;? <span class="kw">super</span> <span class="ty">Integer</span>&gt; list) {
+    list.<span class="fn">add</span>(1);  <span class="cm">// SAFE — whatever the list really is (List&lt;Integer&gt;, List&lt;Number&gt;,</span>
+    list.<span class="fn">add</span>(2);  <span class="cm">// List&lt;Object&gt;), an Integer is guaranteed assignable into it</span>
+    <span class="cm">// Number n = list.get(0); // COMPILE ERROR — can't assume the return type is</span>
+    <span class="cm">// more specific than Object; the list might really hold Objects</span>
+    <span class="ty">Object</span> o = list.<span class="fn">get</span>(0); <span class="cm">// only Object is guaranteed on read</span>
+}
+<span class="ty">List</span>&lt;<span class="ty">Number</span>&gt; numbers = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;();
+<span class="fn">addNumbers</span>(numbers); <span class="cm">// OK — Number is a supertype of Integer</span>
+<span class="ty">List</span>&lt;<span class="ty">Object</span>&gt; objects = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;();
+<span class="fn">addNumbers</span>(objects); <span class="cm">// also OK — Object is a supertype of Integer too</span></pre></div>
+    <div id="wc-superclassonly" class="ct-pane"><pre><span class="cm">// "super" is a WILDCARD-BOUND keyword only — it works on method/variable</span>
+<span class="cm">// declarations using "?", but is NOT valid for bounding a type PARAMETER</span>
+<span class="cm">// on a class or method declaration:</span>
+
+<span class="kw">static</span> <span class="kw">void</span> <span class="fn">addNumbers</span>(<span class="ty">List</span>&lt;? <span class="kw">super</span> <span class="ty">Integer</span>&gt; list) { <span class="cm">/* ... */</span> } <span class="cm">// ✓ VALID — wildcard bound</span>
+
+<span class="cm">// class Box&lt;T super Integer&gt; { }  // ✗ COMPILE ERROR — "super" is not</span>
+<span class="cm">// allowed here. Type parameter declarations only support "extends"</span>
+<span class="cm">// (which, as covered earlier, is also used for interface bounds).</span>
+<span class="cm">// There is no way to say "T must be Integer or a supertype of Integer"</span>
+<span class="cm">// as a class-level type parameter bound — only as a wildcard bound.</span></pre></div>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 10: PECS PRINCIPLE ═══ -->
+<section class="section" id="pecs">
+  <div class="section-header"><span class="section-eyebrow">The Mnemonic That Sticks</span><span class="section-rule"></span></div>
+  <h2>PECS — Producer Extends, Consumer Super</h2>
+  <p class="section-intro">Deciding between <code class="inline">? extends T</code> and <code class="inline">? super T</code> is confusing until you frame it around what the parameter DOES: does your method read FROM it (a producer of values), or write INTO it (a consumer of values)?</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th>Role</th><th>Wildcard</th><th>You can...</th><th>You cannot...</th></tr></thead>
+    <tbody>
+      <tr><td><strong>P</strong>roducer — you READ from it</td><td><code class="inline">? extends T</code></td><td>Read elements out, safely typed as T</td><td>Add elements in (except null)</td></tr>
+      <tr><td><strong>C</strong>onsumer — you WRITE to it</td><td><code class="inline">? super T</code></td><td>Add elements of type T in</td><td>Read elements out as anything more specific than Object</td></tr>
+      <tr><td>Both produce AND consume</td><td>No wildcard — exact type <code class="inline">T</code></td><td>Both read and write, fully typed</td><td>Accept a broader range of caller-supplied list types</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">PECS in action — Collections.copy's actual real-world signature</span>
+<pre><span class="cm">// The real JDK signature: java.util.Collections.copy</span>
+<span class="kw">public static</span> &lt;T&gt; <span class="kw">void</span> <span class="fn">copy</span>(<span class="ty">List</span>&lt;? <span class="kw">super</span> T&gt; dest, <span class="ty">List</span>&lt;? <span class="kw">extends</span> T&gt; src) {
+    <span class="kw">for</span> (<span class="kw">int</span> i = 0; i &lt; src.<span class="fn">size</span>(); i++) {
+        dest.<span class="fn">set</span>(i, src.<span class="fn">get</span>(i)); <span class="cm">// READ from src (a Producer of T -> "extends"),</span>
+    }                                <span class="cm">// WRITE into dest (a Consumer of T -> "super")</span>
+}
+
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; ints    = <span class="ty">List</span>.<span class="fn">of</span>(1, 2, 3);
+<span class="ty">List</span>&lt;<span class="ty">Number</span>&gt;  numbers = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;(<span class="ty">List</span>.<span class="fn">of</span>(0, 0, 0));
+
+<span class="ty">Collections</span>.<span class="fn">copy</span>(numbers, ints);
+<span class="cm">// dest = List&lt;Number&gt;  — Number is a supertype of Integer -&gt; matches "? super T" where T=Integer</span>
+<span class="cm">// src  = List&lt;Integer&gt; — matches "? extends T" exactly where T=Integer</span>
+<span class="cm">// Without wildcards, copy() could ONLY accept List&lt;Integer&gt; dest and</span>
+<span class="cm">// List&lt;Integer&gt; src — far too restrictive for a general-purpose utility</span></pre>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "PECS — Producer Extends, Consumer Super. If the parameterized type only ever GIVES you values, bound it with extends. If it only ever TAKES values from you, bound it with super. If it does both, don't use a wildcard at all — use the exact type."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 11: GENERICS & ARRAYS ═══ -->
+<section class="section" id="arrays">
+  <div class="section-header"><span class="section-eyebrow">A Classic Clash</span><span class="section-rule"></span></div>
+  <h2>Generics &amp; Arrays</h2>
+  <p class="section-intro">Arrays and generics have fundamentally incompatible design philosophies — arrays are <strong>covariant and reified</strong> (they know their element type at runtime), while generics are <strong>invariant and erased</strong> (type info vanishes at runtime). Mixing them is where some of the trickiest generics questions live.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Arrays are covariant (and reified)</span>
+      <ul class="rule-list">
+        <li><code class="inline">Integer[]</code> IS-A <code class="inline">Number[]</code> IS-A <code class="inline">Object[]</code> — array types follow the same subtype relationship as their elements</li>
+        <li>Arrays carry their actual component type at runtime — <code class="inline">arr.getClass()</code> tells you exactly what it is</li>
+        <li>This covariance is UNSAFE and enforced only at runtime via <code class="inline">ArrayStoreException</code></li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Generics are invariant (and erased)</span>
+      <ul class="rule-list">
+        <li><code class="inline">List&lt;Integer&gt;</code> is NOT a <code class="inline">List&lt;Number&gt;</code> — no automatic subtyping between different parameterizations</li>
+        <li>This invariance is enforced entirely at COMPILE time, with no runtime type info to fall back on</li>
+        <li>Because of erasure, there IS no runtime component type for a generic array to carry — this is the root incompatibility</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'ga-covariance-bug')">Array covariance — a real runtime bug</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ga-nogenericarray')">Why "new T[]" doesn't compile</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ga-varargs')">Generic varargs — heap pollution warning</div>
+    </div>
+    <div id="ga-covariance-bug" class="ct-pane active"><pre><span class="ty">Integer</span>[] ints = {1, 2, 3};
+<span class="ty">Object</span>[] objs = ints;         <span class="cm">// legal — arrays ARE covariant</span>
+objs[0] = <span class="st">"not an integer"</span>; <span class="cm">// compiles fine (objs is declared Object[])...</span>
+                             <span class="cm">// ...but throws ArrayStoreException AT RUNTIME, because the array</span>
+                             <span class="cm">// object underneath is REALLY an Integer[], and it remembers that</span>
+
+<span class="cm">// Contrast: the generics equivalent doesn't even COMPILE, catching the</span>
+<span class="cm">// same class of mistake much earlier —</span>
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; intList = <span class="ty">List</span>.<span class="fn">of</span>(1, 2, 3);
+<span class="cm">// List&lt;Object&gt; objList = intList; // COMPILE ERROR — invariance blocks this outright</span></pre></div>
+    <div id="ga-nogenericarray" class="ct-pane"><pre><span class="kw">class</span> <span class="ty">Box</span>&lt;T&gt; {
+    <span class="cm">// T[] arr = new T[10]; // COMPILE ERROR — "generic array creation"</span>
+    <span class="cm">//</span>
+    <span class="cm">// WHY: arrays need to know their component type at runtime to enforce</span>
+    <span class="cm">// covariance checks (ArrayStoreException). After erasure, T is just</span>
+    <span class="cm">// Object — creating "new T[10]" would really create an Object[], but</span>
+    <span class="cm">// claim to be a T[], silently breaking the runtime type-safety guarantee</span>
+    <span class="cm">// arrays are supposed to provide. Java refuses to let you create that lie.</span>
+
+    <span class="kw">private</span> T[] arr = (T[]) <span class="kw">new</span> <span class="ty">Object</span>[10]; <span class="cm">// the standard, unchecked-warning workaround</span>
+    <span class="cm">// You're explicitly telling the compiler "trust me" — and it's YOUR job</span>
+    <span class="cm">// as the class author to never let this array escape as a T[] to outside</span>
+    <span class="cm">// code, since doing so risks a ClassCastException down the line</span>
+}</pre></div>
+    <div id="ga-varargs" class="ct-pane"><pre><span class="cm">// Varargs are secretly arrays — combining them with generics triggers the same issue</span>
+<span class="an">@SafeVarargs</span> <span class="cm">// suppresses the warning WHEN you've verified the method is actually safe</span>
+<span class="kw">static</span> &lt;T&gt; <span class="ty">List</span>&lt;T&gt; <span class="fn">listOf</span>(T... elements) { <span class="cm">// compiler creates a T[] under the hood — "heap pollution" warning</span>
+    <span class="kw">return</span> <span class="ty">Arrays</span>.<span class="fn">asList</span>(elements);
+}
+<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; l = <span class="fn">listOf</span>(<span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"c"</span>); <span class="cm">// fine to call — the warning is about the METHOD's internals, not call sites</span>
+
+<span class="cm">// @SafeVarargs is a promise from the method author: "I don't store anything</span>
+<span class="cm">// unsafe into this array or let it escape" — only legal on static/final/</span>
+<span class="cm">// private methods or constructors, since it requires the method can't be</span>
+<span class="cm">// overridden with a version that breaks the promise</span></pre></div>
+  </div>
+
+  <div class="danger-box">
+    <span class="tip-icon">🚫</span>
+    <span class="danger-text"><strong>Interview one-liner:</strong> "Arrays check element types at runtime because they're reified; generics check element types at compile time because they're erased. new T[] would need runtime type info generics don't have — that mismatch is exactly why the JDK's own generic containers (ArrayList, HashMap) store an Object[] internally and cast on retrieval, rather than ever creating a true generic array."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 12: RESTRICTIONS ═══ -->
+<section class="section" id="restrictions">
+  <div class="section-header"><span class="section-eyebrow">The Full List</span><span class="section-rule"></span></div>
+  <h2>Restrictions on Generics</h2>
+  <p class="section-intro">Every restriction below traces back to type erasure — <code class="inline">T</code> genuinely does not exist as a distinct type at runtime, so anything requiring runtime type knowledge of <code class="inline">T</code> is off the table.</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th>Restriction</th><th>Why (traces back to erasure)</th></tr></thead>
+    <tbody>
+      <tr><td>Cannot instantiate <code class="inline">T</code> — <code class="inline">new T()</code></td><td>No class named "T" exists at runtime to instantiate</td></tr>
+      <tr><td>Cannot create a generic array — <code class="inline">new T[]</code></td><td>Arrays need a real runtime component type to enforce store-checks; T has none</td></tr>
+      <tr><td>Cannot use primitives as a type argument — <code class="inline">List&lt;int&gt;</code></td><td>Generics are erased to Object/bound; a primitive can't be stored where a reference is expected — use wrapper types (<code class="inline">List&lt;Integer&gt;</code>)</td></tr>
+      <tr><td>Cannot create static fields of type <code class="inline">T</code></td><td>A static field is shared across ALL instantiations (<code class="inline">Box&lt;String&gt;</code>, <code class="inline">Box&lt;Integer&gt;</code>) — but after erasure there's only ONE class, so which T would it hold?</td></tr>
+      <tr><td>Cannot use <code class="inline">instanceof</code> with a parameterized type — <code class="inline">obj instanceof List&lt;String&gt;</code></td><td>At runtime, all List&lt;X&gt; are just List — there's no way to check the erased type argument</td></tr>
+      <tr><td>Cannot catch a generic exception type — <code class="inline">catch (T e)</code></td><td>The JVM's exception dispatch mechanism relies on the exact runtime class of the exception; T has none</td></tr>
+      <tr><td>Cannot overload two methods that erase to the same signature</td><td><code class="inline">void m(List&lt;String&gt; l)</code> and <code class="inline">void m(List&lt;Integer&gt; l)</code> both erase to <code class="inline">void m(List l)</code> — a compile-time "clashing" error</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'re-primitives')">No primitives</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'re-static')">No static fields of type T</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'re-instanceof')">No instanceof with parameterized type</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'re-catch')">No catch(T e)</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'re-overload')">No clashing overloads</div>
+    </div>
+    <div id="re-primitives" class="ct-pane active"><pre><span class="cm">// List&lt;int&gt; list = new ArrayList&lt;&gt;(); // COMPILE ERROR — type arguments must be reference types</span>
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; list = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;(); <span class="cm">// use the wrapper class instead</span>
+list.<span class="fn">add</span>(5); <span class="cm">// autoboxing converts int -> Integer transparently at the call site</span>
+
+<span class="kw">int</span> x = list.<span class="fn">get</span>(0); <span class="cm">// auto-unboxing converts Integer -> int on retrieval</span>
+<span class="cm">// This autoboxing/unboxing convenience is exactly why generics never NEEDED</span>
+<span class="cm">// primitive support directly, at the cost of some boxing overhead</span></pre></div>
+    <div id="re-static" class="ct-pane"><pre><span class="kw">class</span> <span class="ty">Box</span>&lt;T&gt; {
+    <span class="cm">// private static T defaultValue; // COMPILE ERROR — "non-static type variable T</span>
+    <span class="cm">// cannot be referenced from a static context"</span>
+    <span class="cm">//</span>
+    <span class="cm">// WHY: Box&lt;String&gt; and Box&lt;Integer&gt; are literally the SAME class after</span>
+    <span class="cm">// erasure. A static field is ONE field, shared class-wide — but which type</span>
+    <span class="cm">// would "defaultValue" hold — the String use's value, or the Integer use's?</span>
+    <span class="cm">// There's no coherent answer, so the compiler forbids it entirely.</span>
+
+    <span class="kw">private</span> <span class="kw">static</span> <span class="kw">int</span> instanceCount; <span class="cm">// FINE — doesn't involve T at all</span>
+}</pre></div>
+    <div id="re-instanceof" class="ct-pane"><pre><span class="ty">List</span>&lt;<span class="ty">String</span>&gt; list = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;();
+
+<span class="cm">// if (list instanceof List&lt;String&gt;) { } // COMPILE ERROR — "illegal generic type for instanceof"</span>
+<span class="cm">// The erased runtime type of list is just List — there's no <String> left to check against</span>
+
+<span class="kw">if</span> (list <span class="kw">instanceof</span> <span class="ty">List</span>&lt;?&gt;) { <span class="cm">// ✓ VALID — unbounded wildcard IS allowed, since it asks</span>
+    <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"is some kind of List"</span>); <span class="cm">// nothing about the erased type argument</span>
+}
+<span class="kw">if</span> (list <span class="kw">instanceof</span> <span class="ty">ArrayList</span>) { <span class="cm">/* ... */</span> } <span class="cm">// ✓ VALID — checking the raw class itself is always fine</span></pre></div>
+    <div id="re-catch" class="ct-pane"><pre><span class="kw">class</span> <span class="ty">Processor</span>&lt;T <span class="kw">extends</span> <span class="ty">Exception</span>&gt; {
+    <span class="kw">void</span> <span class="fn">process</span>() {
+        <span class="kw">try</span> {
+            <span class="fn">doWork</span>();
+        <span class="cm">// } catch (T e) { } // COMPILE ERROR — "cannot catch type parameter T"</span>
+        <span class="cm">//</span>
+        <span class="cm">// WHY: the JVM's catch-clause matching works by inspecting the actual</span>
+        <span class="cm">// runtime class of the thrown exception against the catch clause's type.</span>
+        <span class="cm">// After erasure, T has no distinct runtime class to match against.</span>
+        } <span class="kw">catch</span> (<span class="ty">Exception</span> e) { <span class="cm">// have to catch a real, erasure-safe type instead</span>
+            <span class="cm">// handle generically here</span>
+        }
+    }
+    <span class="kw">void</span> <span class="fn">doWork</span>() <span class="kw">throws</span> <span class="ty">Exception</span> {}
+}
+<span class="cm">// Note: you CAN still declare "void m() throws T" (throwing IS allowed) —</span>
+<span class="cm">// it's specifically CATCHING a type parameter that's forbidden</span></pre></div>
+    <div id="re-overload" class="ct-pane"><pre><span class="kw">class</span> <span class="ty">Printer</span> {
+    <span class="kw">void</span> <span class="fn">print</span>(<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; list)  { <span class="cm">/* ... */</span> }
+    <span class="cm">// void print(List&lt;Integer&gt; list) { } // COMPILE ERROR — "print(List&lt;Integer&gt;)</span>
+    <span class="cm">// clashes with print(List&lt;String&gt;); both methods have the same erasure"</span>
+    <span class="cm">//</span>
+    <span class="cm">// WHY: after erasure, BOTH signatures become "void print(List list)" —</span>
+    <span class="cm">// literally identical bytecode signatures, an illegal duplicate method</span>
+}</pre></div>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 13: BRIDGE METHODS ═══ -->
+<section class="section" id="bridge-methods">
+  <div class="section-header"><span class="section-eyebrow">Erasure's Side Effect</span><span class="section-rule"></span></div>
+  <h2>Bridge Methods</h2>
+  <p class="section-intro">A subtle consequence of type erasure surfaces when a generic class or interface is overridden with a concrete type: the compiler silently generates an extra <strong>bridge method</strong> to preserve polymorphism. Most Java developers never see this directly, but it's a genuine "deep knowledge" interview question.</p>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">Why a bridge method is needed</span>
+<pre><span class="kw">interface</span> <span class="ty">Container</span>&lt;T&gt; {
+    <span class="kw">void</span> <span class="fn">set</span>(T value);
+}
+
+<span class="kw">class</span> <span class="ty">StringContainer</span> <span class="kw">implements</span> <span class="ty">Container</span>&lt;<span class="ty">String</span>&gt; {
+    <span class="an">@Override</span>
+    <span class="kw">public void</span> <span class="fn">set</span>(<span class="ty">String</span> value) { <span class="cm">// looks like it overrides Container.set(T), but...</span>
+        <span class="ty">System</span>.out.<span class="fn">println</span>(value);
+    }
+}
+
+<span class="cm">// After erasure, Container&lt;T&gt;'s method is really: void set(Object value)</span>
+<span class="cm">// But StringContainer declares: void set(String value)</span>
+<span class="cm">// These are DIFFERENT erased signatures — set(Object) vs set(String) — so</span>
+<span class="cm">// technically StringContainer.set(String) does NOT override Container.set(Object)</span>
+<span class="cm">// by normal JVM override rules. Polymorphism would silently break.</span>
+
+<span class="cm">// THE FIX: the compiler auto-generates a synthetic BRIDGE method behind the scenes:</span>
+<span class="cm">//   public void set(Object value) { set((String) value); }  // compiler-generated</span>
+<span class="cm">// This bridge method DOES have the erased signature the interface expects,</span>
+<span class="cm">// and simply delegates to your real, more specific set(String) method</span></pre>
+  </div>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">What this means in practice</span>
+      <ul class="rule-list">
+        <li>You never write bridge methods yourself — the compiler generates them automatically whenever needed</li>
+        <li>They're marked with the synthetic + bridge flags in the bytecode — invisible to normal source-level code and reflection unless you specifically ask for synthetic methods</li>
+        <li><code class="inline">StringContainer.class.getDeclaredMethods()</code> will actually show TWO <code class="inline">set</code> methods if you inspect it — your real one, and the compiler-generated bridge</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Why interviewers ask this</span>
+      <ul class="rule-list">
+        <li>It demonstrates real understanding of erasure's consequences, beyond just memorizing "T becomes Object"</li>
+        <li>It explains otherwise-confusing reflection output (extra synthetic methods) that engineers sometimes stumble into</li>
+        <li>It reinforces WHY erasure needed careful compiler engineering to preserve normal OOP behavior seamlessly</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "Bridge methods are the compiler's way of reconciling erasure with polymorphism — when a generic method is overridden with a more specific parameter type, the compiler generates an invisible forwarding method with the erased signature so the JVM's normal virtual-dispatch rules still work correctly."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 14: FAANG Q&A ═══ -->
+<section class="section" id="faang-qa">
+  <div class="section-header"><span class="section-eyebrow">FAANG Rapid Fire</span><span class="section-rule"></span></div>
+  <h2>FAANG Rapid-Fire Q&amp;A — Tricky Questions</h2>
+  <p class="section-intro">Generics questions cluster around erasure's consequences, wildcard direction, and bounded-type mechanics. These are the ones that come up again and again in senior interviews.</p>
+
+  <p class="sub-heading">Compile-error / output prediction</p>
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'pq-samesig')">Overload clash from erasure</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pq-wildcardadd')">Adding to a ? extends list</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pq-rawassign')">Raw-to-parameterized assignment</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pq-arraycovariance')">Array covariance vs generic invariance</div>
+    </div>
+    <div id="pq-samesig" class="ct-pane active"><pre><span class="kw">class</span> <span class="ty">Utils</span> {
+    <span class="kw">static</span> <span class="kw">void</span> <span class="fn">process</span>(<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; list)  {}
+    <span class="kw">static</span> <span class="kw">void</span> <span class="fn">process</span>(<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; list) {} <span class="cm">// Q: does this compile?</span>
+}
+<span class="cm">// A: NO — COMPILE ERROR: "process(List&lt;Integer&gt;) clashes with</span>
+<span class="cm">// process(List&lt;String&gt;); both methods have the same erasure."</span>
+<span class="cm">// Both erase to process(List) — an illegal duplicate method signature</span></pre></div>
+    <div id="pq-wildcardadd" class="ct-pane"><pre><span class="ty">List</span>&lt;? <span class="kw">extends</span> <span class="ty">Number</span>&gt; nums = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;<span class="ty">Integer</span>&gt;();
+<span class="cm">// nums.add(5); // Q: does this compile?</span>
+<span class="cm">// A: NO — COMPILE ERROR. The compiler only knows nums holds "some subtype</span>
+<span class="cm">// of Number" — it could really be List&lt;Integer&gt;, List&lt;Double&gt;, List&lt;Long&gt;.</span>
+<span class="cm">// Adding an int literal (autoboxed to Integer) isn't provably safe for</span>
+<span class="cm">// EVERY possible real type nums could be. Only nums.add(null) is legal —</span>
+<span class="cm">// null is assignable to any reference type</span></pre></div>
+    <div id="pq-rawassign" class="ct-pane"><pre><span class="ty">List</span> raw = <span class="kw">new</span> <span class="ty">ArrayList</span>();
+raw.<span class="fn">add</span>(<span class="st">"a string"</span>);
+raw.<span class="fn">add</span>(42);
+
+<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; strings = raw; <span class="cm">// Q: does this compile? What happens next?</span>
+<span class="cm">// A: Compiles WITH an unchecked warning — assigning a raw type to a</span>
+<span class="cm">// parameterized type is allowed (for legacy interop) but flagged.</span>
+
+<span class="kw">for</span> (<span class="ty">String</span> s : strings) { <span class="ty">System</span>.out.<span class="fn">println</span>(s); } <span class="cm">// throws ClassCastException on</span>
+<span class="cm">// the SECOND element — the compiler inserted an implicit (String) cast at</span>
+<span class="cm">// each access point, which fails the moment it hits the Integer 42</span></pre></div>
+    <div id="pq-arraycovariance" class="ct-pane"><pre><span class="cm">// Q: which of these compiles, and which throws at runtime?</span>
+<span class="ty">Integer</span>[] intArr = {1, 2, 3};
+<span class="ty">Object</span>[] objArr = intArr;      <span class="cm">// (1) compiles — arrays are covariant</span>
+objArr[0] = <span class="st">"oops"</span>;         <span class="cm">// (2) compiles, throws ArrayStoreException at RUNTIME</span>
+
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; intList = <span class="ty">List</span>.<span class="fn">of</span>(1, 2, 3);
+<span class="cm">// List&lt;Object&gt; objList = intList; // (3) COMPILE ERROR — generics are invariant,</span>
+<span class="cm">// this doesn't even compile, catching the mistake earlier than the array case</span>
+
+<span class="cm">// A: Arrays let the mistake through to runtime (reified, covariant).</span>
+<span class="cm">// Generics reject it at compile time (erased, invariant). This exact</span>
+<span class="cm">// contrast is the textbook justification for why generics exist.</span></pre></div>
+  </div>
+
+  <p class="sub-heading">Short-answer FAANG questions</p>
+  <div class="cheat-grid">
+    <div class="cheat-card">
+      <h4>❓ What is type erasure and why does it exist?</h4>
+      <ul>
+        <li>Generic type information is checked at compile time, then stripped from the bytecode</li>
+        <li>Exists for backward compatibility — generic code interoperates with pre-Java-5 bytecode and libraries with zero JVM changes</li>
+        <li>Trade-off: no reified generics at runtime, unlike C#</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Are generics covariant or invariant? What about arrays?</h4>
+      <ul>
+        <li>Generics: invariant by default — List&lt;Integer&gt; is not a List&lt;Number&gt;</li>
+        <li>Arrays: covariant — Integer[] IS an Object[]</li>
+        <li>Wildcards (? extends/? super) let you opt into controlled, safe variance for generics</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ What's the difference between List&lt;Object&gt; and a raw List?</h4>
+      <ul>
+        <li>List&lt;Object&gt;: fully type-checked — every element is guaranteed to be an Object (anything really, since everything IS an Object), full compiler protection</li>
+        <li>Raw List: NO type checking at all — compiler falls back to pre-generics behavior entirely, unchecked warnings everywhere</li>
+        <li>List&lt;?&gt; (unbounded wildcard) sits in between — read-only unknown type, safer than raw but not writable</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Explain PECS in one sentence.</h4>
+      <ul>
+        <li>Producer Extends — if you only read from it, use ? extends T</li>
+        <li>Consumer Super — if you only write to it, use ? super T</li>
+        <li>Both? Use the exact type T, no wildcard</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Why can't you create a generic array directly?</h4>
+      <ul>
+        <li>Arrays need a real runtime component type to enforce covariance's ArrayStoreException checks</li>
+        <li>After erasure, T has no distinct runtime type — creating "new T[]" would be a lie about the array's real element type</li>
+        <li>Workaround: create an Object[] (or array of the erasure bound) and unchecked-cast it</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Why must a class bound come before interface bounds in T extends A & B & C?</h4>
+      <ul>
+        <li>Java allows at most ONE class bound (no multiple class inheritance) but unlimited interface bounds</li>
+        <li>The class bound, if present, must be listed FIRST — a syntax rule enforced by the compiler</li>
+        <li>"extends" is reused for both class and interface bounds in this context — no separate "implements" keyword for type parameters</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Can a static method use its enclosing class's type parameter?</h4>
+      <ul>
+        <li>No — a class-level T is bound per-instance (Box&lt;String&gt; vs Box&lt;Integer&gt;); a static context has no particular instance</li>
+        <li>A static method needing generics must declare its OWN type parameter: static &lt;T&gt; void method(...)</li>
+        <li>This applies to static fields of type T too — forbidden for the same reason</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ What is a bridge method?</h4>
+      <ul>
+        <li>A compiler-generated synthetic method reconciling a generic interface/superclass method with a subclass's more specific override</li>
+        <li>Needed because erasure can make an "obvious" override technically mismatch at the erased-signature level</li>
+        <li>Invisible in normal source code — only visible via reflection (getDeclaredMethods shows extra synthetic entries)</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Why does List&lt;String&gt;.class not compile?</h4>
+      <ul>
+        <li>.class literals require a real runtime Class object — but List&lt;String&gt; and List&lt;Integer&gt; share ONE Class object (List.class) after erasure</li>
+        <li>There is no distinct List&lt;String&gt;.class to reference — only the raw List.class exists at runtime</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Bounded type parameter vs bounded wildcard — what's the actual difference?</h4>
+      <ul>
+        <li>Bounded type PARAMETER (T extends Number): constrains what T can be at the DEFINITION site (class/method declaration)</li>
+        <li>Bounded WILDCARD (? extends Number): constrains what can be passed at the USE/call site, without needing to name a type parameter at all</li>
+        <li>Wildcards are for call-site flexibility; type parameter bounds are for definition-site guarantees you can rely on inside the class/method body</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Why does Comparable use &lt;T&gt; but Comparator often uses wildcards?</h4>
+      <ul>
+        <li>Comparable&lt;T&gt;.compareTo(T o) — an object compares itself to exactly one type, T is fixed per-class</li>
+        <li>Comparator&lt;T&gt; methods like Collections.sort accept Comparator&lt;? super T&gt; — allowing a comparator written for a SUPERTYPE to sort a list of a subtype (PECS: comparator CONSUMES T values to compare, so super applies)</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ What happens if you don't supply a type argument at all?</h4>
+      <ul>
+        <li>The class is used as a RAW TYPE — T is effectively treated as Object throughout</li>
+        <li>All compile-time type checking for that variable is lost — compiler emits unchecked warnings</li>
+        <li>Purely a legacy-compatibility feature, never intentional in new code</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 15: CHEATSHEET ═══ -->
+<section class="section" id="cheatsheet">
+  <div class="section-header"><span class="section-eyebrow">Interview Reference</span><span class="section-rule"></span></div>
+  <h2>Interview Cheatsheet</h2>
+  <p class="section-intro">One-liners for when you're under pressure. Know these cold.</p>
+
+  <div class="cheat-grid">
+    <div class="cheat-card">
+      <h4>🎯 Why generics exist</h4>
+      <ul>
+        <li>Move type errors from runtime (ClassCastException) to compile time</li>
+        <li>No explicit casts needed — compiler inserts them where already proven safe</li>
+        <li>Self-documenting APIs — List&lt;String&gt; vs raw List</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🧹 Type erasure — the master rule</h4>
+      <ul>
+        <li>Generic type info exists ONLY at compile time, erased from bytecode</li>
+        <li>List&lt;String&gt; and List&lt;Integer&gt; are the SAME class at runtime</li>
+        <li>Unbounded T erases to Object; T extends Number erases to Number</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>📦 Raw types</h4>
+      <ul>
+        <li>No type argument supplied → T treated as Object, zero compile-time checking</li>
+        <li>Legacy-compatibility escape hatch only — never intentional in new code</li>
+        <li>Raw-to-parameterized assignment compiles with an unchecked warning</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🔗 Multiple type params &amp; subclassing</h4>
+      <ul>
+        <li>Pair&lt;K,V&gt; — independent params, order matters (K,V ≠ V,K)</li>
+        <li>Subclass can pass T through, fix it concrete, or add its own new param</li>
+        <li>Interfaces follow identical rules to extends</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🔒 Bounded type parameters</h4>
+      <ul>
+        <li>T extends Number — restricts T, unlocks Number's methods on T</li>
+        <li>"extends" used even for interface bounds — never "implements"</li>
+        <li>T extends A & B & C — at most ONE class (must be first), any number of interfaces</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🛠️ Generic methods</h4>
+      <ul>
+        <li>&lt;T&gt; declared BEFORE the return type — introduces its own T, independent of class-level T</li>
+        <li>Static methods MUST use their own type parameter — can't reference class-level T</li>
+        <li>Type inference handles almost all cases — explicit witness rarely needed</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🃏 Wildcards</h4>
+      <ul>
+        <li>? — unbounded, read-only as Object, can't add (except null)</li>
+        <li>? extends T — upper bound, read as T, can't add</li>
+        <li>? super T — lower bound, can add T, read only as Object</li>
+        <li>"super" only valid on wildcards — NOT on type parameter declarations</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🎓 PECS</h4>
+      <ul>
+        <li>Producer Extends — only reading from it → ? extends T</li>
+        <li>Consumer Super — only writing to it → ? super T</li>
+        <li>Both → exact type T, no wildcard at all</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>📐 Generics vs Arrays</h4>
+      <ul>
+        <li>Arrays: covariant + reified — Integer[] IS Object[], checked at runtime (ArrayStoreException)</li>
+        <li>Generics: invariant + erased — List&lt;Integer&gt; is NOT List&lt;Object&gt;, checked at compile time</li>
+        <li>new T[] doesn't compile — no runtime component type to give the array</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🚫 The 6 core restrictions</h4>
+      <ul>
+        <li>No new T(), no new T[], no primitives as type args</li>
+        <li>No static fields of type T</li>
+        <li>No instanceof with a parameterized type (unbounded ? is OK)</li>
+        <li>No catch(T e); no overloads that erase to the same signature</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🌉 Bridge methods</h4>
+      <ul>
+        <li>Compiler-generated synthetic methods reconciling erasure with polymorphism</li>
+        <li>Generated when a generic method is overridden with a more specific parameter type</li>
+        <li>Invisible in source, visible via reflection (getDeclaredMethods)</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🚨 Top interview traps</h4>
+      <ul>
+        <li>Assuming List&lt;Integer&gt; is a List&lt;Number&gt; (it's not — invariance)</li>
+        <li>Forgetting class bound must come FIRST in T extends A & B & C</li>
+        <li>Trying static &lt;class-level T&gt; usage in a static method</li>
+        <li>Confusing PECS direction — remember: extends=read, super=write</li>
+        <li>Assuming a raw-to-parameterized assignment is fully safe (it isn't — deferred ClassCastException risk)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="page-footer">
+  <span class="footer-brand">GrowthScript // Java Generics Bible</span>
+  <span class="footer-note">Type Erasure · Bounded Types · Generic Methods · Wildcards · PECS · Restrictions</span>
+</footer>
+</main>
+
+<script>
+function ctSwitch(tab, id) {
+  const wrap = tab.closest('.code-tabs-wrap');
+  wrap.querySelectorAll('.ct-tab').forEach(t => t.classList.remove('active'));
+  wrap.querySelectorAll('.ct-pane').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+function switchTab(tab, id) {
+  const pair = tab.closest('.code-pair');
+  pair.querySelectorAll('.cpt').forEach(t => t.classList.remove('active'));
+  pair.querySelectorAll('.code-pane').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+function toggleTheme() {
+  const html = document.documentElement;
+  const dark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', dark ? 'light' : 'dark');
+  document.getElementById('btn-light').classList.toggle('active',  dark);
+  document.getElementById('btn-dark').classList.toggle('active',  !dark);
+  localStorage.setItem('generics-theme', dark ? 'light' : 'dark');
+}
+(function(){
+  const saved = localStorage.getItem('generics-theme');
+  if (saved === 'dark') {
+    document.documentElement.setAttribute('data-theme','dark');
+    document.getElementById('btn-light').classList.remove('active');
+    document.getElementById('btn-dark').classList.add('active');
+  }
+})();
+const sections  = document.querySelectorAll('section[id]');
+const sideLinks = document.querySelectorAll('.sidebar-link');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const id = e.target.id;
+      sideLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#'+id));
+    }
+  });
+}, { threshold: 0.15, rootMargin: '-60px 0px -60% 0px' });
+sections.forEach(s => obs.observe(s));
+</script>
+</body>
+</html>

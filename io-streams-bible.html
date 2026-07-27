@@ -1,0 +1,1805 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java I/O Streams Bible — GrowthScript Engineering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy:#0F172A; --navy-mid:#1E293B; --brand:#1B4FD8; --brand-soft:#EFF3FE; --brand-mid:#DBEAFE;
+    --accent2:#7C3AED; --accent2-soft:#F5F3FF; --success:#059669; --success-soft:#ECFDF5;
+    --success-border:#A7F3D0; --warn:#D97706; --warn-soft:#FFFBEB; --warn-border:#FDE68A;
+    --warn-text:#78350F; --warn-text-strong:#92400E; --danger:#E11D48; --danger-soft:#FFF1F2;
+    --danger-border:#FECDD3; --purple:#9333EA; --purple-soft:#FDF4FF;
+    --text-1:#0F172A; --text-2:#334155; --text-3:#64748B; --text-4:#94A3B8;
+    --border:#E2E8F0; --border-strong:#CBD5E1; --surface:#FFFFFF; --page:#F8FAFC; --code-bg:#F1F5F9;
+    --sidebar-w:240px; --radius-sm:6px; --radius:10px; --radius-lg:14px;
+    --syn-kw:#6D28D9; --syn-cm:#94A3B8; --syn-st:#059669; --syn-ty:#D97706; --syn-fn:#1B4FD8;
+    color-scheme:light;
+  }
+  [data-theme="dark"] {
+    --navy:#E2E8F0; --navy-mid:#CBD5E1; --brand:#6D9BFF; --brand-soft:#1A2540; --brand-mid:#2A3B66;
+    --accent2:#A78BFA; --accent2-soft:#2A2150; --success:#34D399; --success-soft:#103326;
+    --success-border:#1D5C44; --warn:#FBBF24; --warn-soft:#3A2A0A; --warn-border:#5C4310;
+    --warn-text:#FDE68A; --warn-text-strong:#FCD34D; --danger:#FB7185; --danger-soft:#3A1620;
+    --danger-border:#5C2330; --purple:#D8B4FE; --purple-soft:#2A1A40;
+    --text-1:#E8ECF2; --text-2:#B6C0CE; --text-3:#8895A7; --text-4:#647082;
+    --border:#2A3441; --border-strong:#3D4859; --surface:#161D29; --page:#0D1219; --code-bg:#0F1722;
+    --syn-kw:#C4A7FF; --syn-cm:#6B7888; --syn-st:#6EE7B7; --syn-ty:#FCD34D; --syn-fn:#7FB3FF;
+    color-scheme:dark;
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family:'Inter',-apple-system,sans-serif; background:var(--page); color:var(--text-1); font-size:15px; line-height:1.7; -webkit-font-smoothing:antialiased; display:flex; min-height:100vh; transition:background 0.2s,color 0.2s; }
+  .sidebar { width:var(--sidebar-w); flex-shrink:0; position:sticky; top:0; height:100vh; overflow-y:auto; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:0 0 32px; transition:background 0.2s,border-color 0.2s; }
+  .sidebar-brand { padding:16px 20px 14px; border-bottom:1px solid var(--border); margin-bottom:8px; position:sticky; top:0; background:var(--surface); z-index:10; display:flex; flex-direction:column; gap:10px; }
+  .brand-row { display:flex; flex-direction:column; }
+  .sidebar-logo { font-family:'Space Mono',monospace; font-size:12px; font-weight:700; color:var(--brand); letter-spacing:0.04em; display:block; margin-bottom:2px; }
+  .sidebar-tagline { font-size:11px; color:var(--text-4); }
+  .sidebar-group { padding:12px 0 4px; }
+  .sidebar-group-label { font-family:'Space Mono',monospace; font-size:9.5px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-4); padding:0 20px; margin-bottom:4px; display:block; }
+  .sidebar-link { display:flex; align-items:center; gap:8px; padding:6px 20px; font-size:13px; color:var(--text-2); text-decoration:none; border-left:2px solid transparent; transition:all 0.12s; line-height:1.4; }
+  .sidebar-link:hover { color:var(--brand); background:var(--brand-soft); border-left-color:var(--brand-mid); }
+  .sidebar-link.active { color:var(--brand); background:var(--brand-soft); border-left-color:var(--brand); font-weight:500; }
+  .sidebar-link .sl-dot { width:5px; height:5px; border-radius:50%; background:var(--border-strong); flex-shrink:0; }
+  .sidebar-link.active .sl-dot,.sidebar-link:hover .sl-dot { background:var(--brand); }
+  .sidebar-sub-link { display:flex; align-items:center; gap:8px; padding:4px 20px 4px 34px; font-size:12px; color:var(--text-3); text-decoration:none; border-left:2px solid transparent; transition:all 0.12s; }
+  .sidebar-sub-link:hover { color:var(--brand); background:var(--brand-soft); }
+  .theme-toggle { display:flex; align-items:center; background:var(--page); border:1px solid var(--border); border-radius:20px; padding:3px; width:fit-content; }
+  .theme-toggle-btn { display:flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; border:none; background:transparent; color:var(--text-3); cursor:pointer; font-size:13px; transition:all 0.15s; }
+  .theme-toggle-btn.active { background:var(--surface); color:var(--brand); box-shadow:0 1px 3px rgba(0,0,0,0.1); }
+  .main { flex:1; min-width:0; padding:48px 64px 80px 64px; max-width:1100px; }
+  .page-title-block { padding-bottom:36px; border-bottom:1px solid var(--border); margin-bottom:52px; }
+  .page-eyebrow { font-family:'Space Mono',monospace; font-size:11px; font-weight:700; letter-spacing:0.1em; color:var(--text-4); text-transform:uppercase; margin-bottom:10px; display:block; }
+  .page-title-block h1 { font-size:30px; font-weight:600; color:var(--navy); letter-spacing:-0.02em; line-height:1.2; margin-bottom:10px; }
+  .page-title-block > p { font-size:15px; color:var(--text-2); max-width:680px; line-height:1.65; }
+  .tc-row { display:flex; gap:16px; margin-top:18px; flex-wrap:wrap; }
+  .tc-pill { font-size:12px; color:var(--text-3); display:flex; align-items:center; gap:5px; }
+  .tc-pill span { width:6px; height:6px; border-radius:50%; background:var(--brand); display:inline-block; }
+  .section { margin-bottom:60px; scroll-margin-top:32px; }
+  .section-header { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+  .section-eyebrow { font-family:'Space Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.1em; color:var(--text-4); text-transform:uppercase; white-space:nowrap; }
+  .section-rule { flex:1; height:1px; background:var(--border); }
+  .section h2 { font-size:21px; font-weight:600; color:var(--navy); letter-spacing:-0.02em; margin-bottom:8px; }
+  .section-intro { font-size:14.5px; color:var(--text-2); margin-bottom:28px; max-width:760px; line-height:1.7; }
+  .sub-heading { font-size:14px; font-weight:600; color:var(--navy); margin:28px 0 10px; display:flex; align-items:center; gap:8px; }
+  .sub-heading::after { content:''; flex:1; height:1px; background:var(--border); }
+  .section-divider { height:1px; background:var(--border); margin:48px 0; }
+  .body-p { font-size:14px; color:var(--text-2); margin-bottom:14px; line-height:1.7; }
+  .split-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px; }
+  .rule-card { background:var(--page); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
+  .rule-card-label { font-family:'Space Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-4); margin-bottom:10px; display:block; }
+  .rule-list { list-style:none; }
+  .rule-list li { font-size:13px; color:var(--text-2); padding-left:18px; position:relative; margin-bottom:6px; line-height:1.6; }
+  .rule-list li::before { content:'→'; position:absolute; left:0; color:var(--brand); font-size:11px; top:2px; }
+  .rule-list li.no::before  { content:'✗'; color:var(--danger);  font-size:12px; }
+  .rule-list li.yes::before { content:'✓'; color:var(--success); font-size:12px; }
+  .tip-box { display:flex; gap:10px; background:var(--brand-soft); border:1px solid var(--brand-mid); border-radius:var(--radius); padding:11px 14px; margin-top:14px; }
+  .tip-icon { flex-shrink:0; font-size:14px; margin-top:2px; }
+  .tip-text { font-size:12.5px; color:var(--navy-mid); line-height:1.6; }
+  .tip-text strong { color:var(--brand); font-weight:600; }
+  [data-theme="dark"] .tip-text { color:var(--text-2); }
+  .warn-box { display:flex; gap:10px; background:var(--warn-soft); border:1px solid var(--warn-border); border-radius:var(--radius); padding:11px 14px; margin-top:12px; }
+  .warn-text { font-size:12.5px; color:var(--warn-text); line-height:1.6; }
+  .warn-text strong { color:var(--warn-text-strong); font-weight:600; }
+  .danger-box { display:flex; gap:10px; background:var(--danger-soft); border:1px solid var(--danger-border); border-radius:var(--radius); padding:11px 14px; margin-top:12px; }
+  .danger-text { font-size:12.5px; color:var(--danger); line-height:1.6; }
+  .danger-text strong { font-weight:600; }
+  pre { background:var(--code-bg); border-top:1px solid var(--border); padding:14px 16px; overflow-x:auto; font-family:'Space Mono',monospace; font-size:12px; line-height:1.8; color:var(--text-1); }
+  code.inline { font-family:'Space Mono',monospace; font-size:11.5px; background:var(--code-bg); padding:1px 5px; border-radius:4px; color:var(--text-1); }
+  .kw { color:var(--syn-kw); font-weight:700; }
+  .cm { color:var(--syn-cm); font-style:italic; }
+  .st { color:var(--syn-st); }
+  .ty { color:var(--syn-ty); }
+  .fn { color:var(--syn-fn); }
+  .an { color:var(--syn-ty); font-weight:600; }
+  .code-pair { margin-top:14px; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  .code-pair-tabs { display:flex; border-bottom:1px solid var(--border); }
+  .cpt { flex:1; padding:7px 14px; font-size:12px; font-weight:600; color:var(--text-3); text-align:center; cursor:pointer; transition:all 0.12s; user-select:none; }
+  .cpt.bad { border-right:1px solid var(--border); }
+  .cpt.bad.active  { background:var(--danger-soft); color:var(--danger); }
+  .cpt.good.active { background:var(--success-soft); color:var(--success); }
+  .code-pane { display:none; }
+  .code-pane.active { display:block; }
+  .code-pane pre { border-top:none; border-radius:0; }
+  .code-tabs-wrap { border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; margin-top:14px; }
+  .code-tabs-header { display:flex; overflow-x:auto; border-bottom:1px solid var(--border); background:var(--page); }
+  .ct-tab { padding:9px 16px; font-size:12px; font-weight:500; color:var(--text-3); cursor:pointer; white-space:nowrap; border-right:1px solid var(--border); transition:all 0.12s; font-family:'Space Mono',monospace; user-select:none; flex-shrink:0; }
+  .ct-tab:hover { color:var(--brand); background:var(--brand-soft); }
+  .ct-tab.active { color:var(--brand); background:var(--surface); border-bottom:2px solid var(--brand); font-weight:700; }
+  .ct-pane { display:none; }
+  .ct-pane.active { display:block; }
+  .ct-pane pre { border-top:none; border-radius:0; font-size:12px; }
+  .step-list { display:flex; flex-direction:column; gap:8px; margin-bottom:18px; }
+  .step-item { display:flex; gap:12px; align-items:flex-start; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:10px 14px; }
+  .step-num { flex-shrink:0; width:22px; height:22px; border-radius:50%; background:var(--brand); color:#fff; font-family:'Space Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:2px; }
+  .step-body { font-size:13px; color:var(--text-2); line-height:1.6; }
+  .step-body strong { color:var(--navy); }
+  .code-block-wrap { border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-top:12px; margin-bottom:4px; }
+  .code-block-label { font-family:'Space Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-4); background:var(--page); padding:7px 14px; border-bottom:1px solid var(--border); display:block; }
+  .code-block-wrap pre { border-top:none; }
+  .ref-table { width:100%; border-collapse:collapse; font-size:13px; margin-top:14px; border-radius:var(--radius); overflow:hidden; border:1px solid var(--border); }
+  .ref-table th { background:var(--page); color:var(--navy); font-weight:600; text-align:left; padding:10px 14px; border-bottom:2px solid var(--border); font-family:'Space Mono',monospace; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; }
+  .ref-table td { padding:9px 14px; border-bottom:1px solid var(--border); color:var(--text-2); vertical-align:top; line-height:1.6; }
+  .ref-table tr:last-child td { border-bottom:none; }
+  .ref-table tr:hover td { background:var(--brand-soft); }
+  .ref-table .yes { color:var(--success); font-weight:600; }
+  .ref-table .no  { color:var(--danger);  font-weight:600; }
+  .cheat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; }
+  .cheat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
+  .cheat-card h4 { font-size:12.5px; font-weight:600; color:var(--navy); margin-bottom:8px; }
+  .cheat-card ul { list-style:none; }
+  .cheat-card li { font-size:12px; color:var(--text-2); padding-left:13px; position:relative; line-height:1.55; margin-bottom:4px; }
+  .cheat-card li::before { content:'→'; position:absolute; left:0; color:var(--brand); font-size:10.5px; top:1px; }
+  /* Thread state diagram */
+  .state-diagram { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; overflow-x:auto; margin-bottom:6px; }
+  /* Concept pill tags */
+  .tag-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .tag { font-size:11.5px; font-weight:500; padding:3px 10px; border-radius:20px; border:1px solid var(--border); color:var(--text-2); background:var(--page); font-family:'Space Mono',monospace; }
+  .tag-brand  { background:var(--brand-soft);   border-color:var(--brand-mid);      color:var(--brand);   }
+  .tag-warn   { background:var(--warn-soft);    border-color:var(--warn-border);    color:var(--warn);    }
+  .tag-danger { background:var(--danger-soft);  border-color:var(--danger-border);  color:var(--danger);  }
+  .tag-green  { background:var(--success-soft); border-color:var(--success-border); color:var(--success); }
+  /* Comparison table accent rows */
+  .ref-table tr.accent td { background:var(--brand-soft); font-weight:500; }
+  .page-footer { border-top:1px solid var(--border); padding:20px 0 0; display:flex; justify-content:space-between; align-items:center; }
+  .footer-brand { font-family:'Space Mono',monospace; font-size:11px; font-weight:700; color:var(--brand); }
+  .footer-note  { font-size:11.5px; color:var(--text-4); }
+  @media(max-width:860px){
+    body{flex-direction:column;}
+    .sidebar{width:100%;height:auto;position:static;border-right:none;border-bottom:1px solid var(--border);padding-bottom:0;}
+    .sidebar-group{display:flex;flex-wrap:wrap;padding:8px 16px;gap:4px;}
+    .sidebar-group-label{display:none;}
+    .sidebar-link{padding:5px 10px;border-left:none;border-radius:20px;border:1px solid var(--border);font-size:12px;}
+    .sidebar-link:hover,.sidebar-link.active{background:var(--brand-soft);border-color:var(--brand-mid);}
+    .sidebar-sub-link{display:none;}
+    .main{padding:32px 20px 60px;}
+    .split-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-row">
+      <span class="sidebar-logo">GS // I/O Streams Bible</span>
+      <span class="sidebar-tagline">Interview Reference</span>
+    </div>
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <button class="theme-toggle-btn active" id="btn-light">☀️</button>
+      <button class="theme-toggle-btn" id="btn-dark">🌙</button>
+    </div>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Foundations</span>
+    <a href="#foundations" class="sidebar-link active"><span class="sl-dot"></span>Streams &amp; the I/O Model</a>
+    <a href="#foundations" class="sidebar-sub-link">Byte vs Character streams</a>
+    <a href="#hierarchy" class="sidebar-link"><span class="sl-dot"></span>Class Hierarchy</a>
+    <a href="#hierarchy" class="sidebar-sub-link">InputStream / OutputStream</a>
+    <a href="#hierarchy" class="sidebar-sub-link">Reader / Writer</a>
+    <a href="#decorator" class="sidebar-link"><span class="sl-dot"></span>The Decorator Pattern</a>
+    <a href="#decorator" class="sidebar-sub-link">Filter* wrapper classes</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Byte Streams</span>
+    <a href="#core-methods" class="sidebar-link"><span class="sl-dot"></span>InputStream / OutputStream API</a>
+    <a href="#core-methods" class="sidebar-sub-link">read, write, mark, reset, skip</a>
+    <a href="#file-streams" class="sidebar-link"><span class="sl-dot"></span>FileInputStream / FileOutputStream</a>
+    <a href="#bytearray-streams" class="sidebar-link"><span class="sl-dot"></span>ByteArrayInputStream / OutputStream</a>
+    <a href="#buffered-streams" class="sidebar-link"><span class="sl-dot"></span>Buffered Streams</a>
+    <a href="#buffered-streams" class="sidebar-sub-link">Why buffering, mark/reset support</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Character Streams</span>
+    <a href="#reader-writer" class="sidebar-link"><span class="sl-dot"></span>Reader &amp; Writer Basics</a>
+    <a href="#reader-writer" class="sidebar-sub-link">BufferedReader, CharArrayReader/Writer</a>
+    <a href="#bridge-classes" class="sidebar-link"><span class="sl-dot"></span>InputStreamReader / OutputStreamWriter</a>
+    <a href="#bridge-classes" class="sidebar-sub-link">Byte ↔ char bridge, charset encoding</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Random Access &amp; Files</span>
+    <a href="#random-access" class="sidebar-link"><span class="sl-dot"></span>RandomAccessFile</a>
+    <a href="#random-access" class="sidebar-sub-link">seek, file pointer</a>
+    <a href="#file-class" class="sidebar-link"><span class="sl-dot"></span>The File Class</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Typed &amp; Convenience I/O</span>
+    <a href="#data-streams" class="sidebar-link"><span class="sl-dot"></span>DataInputStream / DataOutputStream</a>
+    <a href="#print-streams" class="sidebar-link"><span class="sl-dot"></span>PrintStream / PrintWriter</a>
+    <a href="#print-streams" class="sidebar-sub-link">System.out, autoFlush</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Serialization</span>
+    <a href="#serialization" class="sidebar-link"><span class="sl-dot"></span>Object Serialization</a>
+    <a href="#serialization" class="sidebar-sub-link">Serializable, transient, serialVersionUID</a>
+    <a href="#serialization-deep" class="sidebar-link"><span class="sl-dot"></span>Custom readObject/writeObject</a>
+    <a href="#serialization-deep" class="sidebar-sub-link">Externalizable, inheritance rules</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Real-World Java</span>
+    <a href="#other-streams" class="sidebar-link"><span class="sl-dot"></span>Other Notable Streams</a>
+    <a href="#other-streams" class="sidebar-sub-link">Pushback, Sequence, Piped, String*</a>
+    <a href="#nio" class="sidebar-link"><span class="sl-dot"></span>java.nio.file — The Modern API</a>
+    <a href="#nio" class="sidebar-sub-link">Files, Paths, Files.readAllLines</a>
+    <a href="#best-practices" class="sidebar-link"><span class="sl-dot"></span>Best Practices &amp; Pitfalls</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Reference</span>
+    <a href="#faang-qa" class="sidebar-link"><span class="sl-dot"></span>FAANG Rapid-Fire Q&amp;A</a>
+    <a href="#cheatsheet" class="sidebar-link"><span class="sl-dot"></span>Interview Cheatsheet</a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+<div class="page-title-block">
+  <span class="page-eyebrow">java.io &amp; java.nio</span>
+  <h1>Java I/O Streams Bible</h1>
+  <p>Complete Java I/O reference for FAANG interviews — the full byte and character stream hierarchy, the decorator pattern behind Filter* classes, buffering, random access files, typed and object I/O, serialization internals, and every gotcha interviewers reach for.</p>
+  <div class="tc-row">
+    <span class="tc-pill"><span></span>Byte vs Char Streams</span>
+    <span class="tc-pill"><span></span>Decorator Pattern</span>
+    <span class="tc-pill"><span></span>Buffering &amp; mark/reset</span>
+    <span class="tc-pill"><span></span>RandomAccessFile</span>
+    <span class="tc-pill"><span></span>Serialization</span>
+    <span class="tc-pill"><span></span>NIO</span>
+  </div>
+</div>
+<!-- ═══ SECTION 1: FOUNDATIONS ═══ -->
+<section class="section" id="foundations">
+  <div class="section-header"><span class="section-eyebrow">java.io</span><span class="section-rule"></span></div>
+  <h2>Streams &amp; the Java I/O Model</h2>
+  <p class="section-intro">A <strong>stream</strong> is a sequential channel of data flowing between your program and a source or destination — a file, a network socket, an in-memory buffer, another process. Java models every I/O source uniformly as a stream so the same read/write vocabulary works everywhere, regardless of what's on the other end.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Why streams, not random blob transfer</span>
+      <ul class="rule-list">
+        <li>Data arrives sequentially and often can't fit in memory all at once (a 10GB file, an infinite socket)</li>
+        <li>A stream lets you process data incrementally — read a chunk, act on it, read the next chunk</li>
+        <li>Uniform abstraction: a file, a network connection, and a byte array all expose the same <code class="inline">read()</code>/<code class="inline">write()</code> contract</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Two families: byte streams vs character streams</span>
+      <ul class="rule-list">
+        <li><strong>Byte streams</strong> (<code class="inline">InputStream</code>/<code class="inline">OutputStream</code>) — raw 8-bit bytes; used for binary data: images, audio, serialized objects, any non-text file</li>
+        <li><strong>Character streams</strong> (<code class="inline">Reader</code>/<code class="inline">Writer</code>) — 16-bit Unicode characters; used for text, handles character-encoding conversion automatically</li>
+        <li>Character streams exist BECAUSE byte streams alone don't understand multi-byte encodings (UTF-8, UTF-16) — reading text as raw bytes can split a multi-byte character across two reads</li>
+      </ul>
+    </div>
+  </div>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th>Aspect</th><th>Byte Streams</th><th>Character Streams</th></tr></thead>
+    <tbody>
+      <tr><td>Root classes</td><td><code class="inline">InputStream</code> / <code class="inline">OutputStream</code></td><td><code class="inline">Reader</code> / <code class="inline">Writer</code></td></tr>
+      <tr><td>Unit of data</td><td>8-bit byte</td><td>16-bit Unicode character</td></tr>
+      <tr><td>Use case</td><td>Binary data — images, audio, video, serialized objects, ZIP files</td><td>Text data — properties files, source code, JSON, CSV</td></tr>
+      <tr><td>Encoding awareness</td><td>None — raw bytes, no charset concept</td><td>Charset-aware, handles multi-byte characters correctly</td></tr>
+      <tr><td>File equivalent</td><td><code class="inline">FileInputStream</code> / <code class="inline">FileOutputStream</code></td><td><code class="inline">FileReader</code> / <code class="inline">FileWriter</code></td></tr>
+      <tr><td>Bridge class</td><td>—</td><td><code class="inline">InputStreamReader</code> / <code class="inline">OutputStreamWriter</code> convert byte↔char</td></tr>
+    </tbody>
+  </table>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Rule of thumb for choosing:</strong> reading/writing text meant for humans → character stream. Reading/writing anything else, or when you don't know/care about encoding → byte stream. Mixing them up (e.g. reading a JPEG with a Reader) corrupts the data because Readers apply charset decoding that binary data was never encoded with.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 2: CLASS HIERARCHY ═══ -->
+<section class="section" id="hierarchy">
+  <div class="section-header"><span class="section-eyebrow">The Big Picture</span><span class="section-rule"></span></div>
+  <h2>The Complete I/O Class Hierarchy</h2>
+  <p class="section-intro">All four root classes are abstract. Every concrete class you actually instantiate extends one of these four, and almost the entire hierarchy is symmetric: whatever exists for bytes has a character-stream counterpart.</p>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">Full hierarchy — byte streams (left) and character streams (right) mirror each other</span>
+<pre>Object
+│
+├─ InputStream  (byte, read)                    ├─ Reader  (char, read)
+│   ├─ ByteArrayInputStream                      │   ├─ BufferedReader
+│   ├─ FileInputStream                           │   │   └─ LineNumberReader
+│   ├─ ObjectInputStream                         │   ├─ CharArrayReader
+│   ├─ PipedInputStream                          │   ├─ InputStreamReader
+│   ├─ SequenceInputStream                       │   │   └─ FileReader
+│   └─ FilterInputStream  (decorator base)       │   ├─ FilterReader
+│       ├─ BufferedInputStream                   │   ├─ PipedReader
+│       ├─ DataInputStream                       │   └─ StringReader
+│       └─ PushbackInputStream                   │
+│                                                 │
+├─ OutputStream  (byte, write)                   ├─ Writer  (char, write)
+│   ├─ ByteArrayOutputStream                      │   ├─ BufferedWriter
+│   ├─ FileOutputStream                           │   ├─ CharArrayWriter
+│   ├─ ObjectOutputStream                         │   ├─ OutputStreamWriter
+│   ├─ PipedOutputStream                          │   │   └─ FileWriter
+│   └─ FilterOutputStream  (decorator base)       │   ├─ FilterWriter
+│       ├─ BufferedOutputStream                   │   ├─ PipedWriter
+│       ├─ DataOutputStream                       │   ├─ PrintWriter
+│       └─ PrintStream                            │   └─ StringWriter</pre>
+  </div>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Reading the tree</span>
+      <ul class="rule-list">
+        <li>Left column = byte-oriented, right column = character-oriented — the same design repeated twice</li>
+        <li><code class="inline">FilterInputStream</code>/<code class="inline">FilterOutputStream</code>/<code class="inline">FilterReader</code>/<code class="inline">FilterWriter</code> are "decorator base" classes — they wrap another stream and add behavior (buffering, typed reads, pushback)</li>
+        <li><code class="inline">FileReader</code>/<code class="inline">FileWriter</code> are themselves thin convenience subclasses of <code class="inline">InputStreamReader</code>/<code class="inline">OutputStreamWriter</code></li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">RandomAccessFile — the outlier</span>
+      <ul class="rule-list">
+        <li>Implements <code class="inline">DataInput</code> and <code class="inline">DataOutput</code> interfaces directly — does NOT extend InputStream/OutputStream at all</li>
+        <li>Supports both reading and writing through a single object, plus arbitrary seeking via a file pointer</li>
+        <li>Covered in depth later in this document</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 3: THE DECORATOR PATTERN ═══ -->
+<section class="section" id="decorator">
+  <div class="section-header"><span class="section-eyebrow">Design Pattern Tie-In</span><span class="section-rule"></span></div>
+  <h2>The Decorator Pattern Behind java.io</h2>
+  <p class="section-intro">This is a favorite LLD-meets-I/O interview question: <em>"Why do you have to write <code class="inline">new BufferedReader(new InputStreamReader(new FileInputStream(...)))</code> instead of just one class?"</em> The answer is that java.io is a textbook implementation of the <strong>Decorator</strong> design pattern.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">The problem decorator solves</span>
+      <ul class="rule-list">
+        <li>Streams have many optional, combinable features: buffering, typed reads, pushback, line counting</li>
+        <li>Without decorator, you'd need a class for every COMBINATION — <code class="inline">BufferedFileInputStream</code>, <code class="inline">BufferedDataFileInputStream</code>, and so on — a combinatorial explosion</li>
+        <li>Decorator instead wraps a base stream in layers, each layer adding exactly one capability</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">How it's structured in java.io</span>
+      <ul class="rule-list">
+        <li><code class="inline">FilterInputStream</code> IS-A <code class="inline">InputStream</code> (extends it) AND HAS-A <code class="inline">InputStream</code> (wraps one in a field)</li>
+        <li>Every method delegates to the wrapped stream by default, with the subclass overriding only the methods it wants to enhance</li>
+        <li><code class="inline">BufferedInputStream</code>, <code class="inline">DataInputStream</code>, <code class="inline">PushbackInputStream</code> are all concrete decorators built this way</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">Stacking decorators — each layer adds one capability</span>
+<pre><span class="cm">// Base stream: raw byte access to a file</span>
+<span class="ty">FileInputStream</span> fis = <span class="kw">new</span> <span class="ty">FileInputStream</span>(<span class="st">"data.txt"</span>);
+
+<span class="cm">// Decorator layer 1: adds buffering for performance</span>
+<span class="ty">BufferedInputStream</span> bis = <span class="kw">new</span> <span class="ty">BufferedInputStream</span>(fis);
+
+<span class="cm">// Decorator layer 2: adds byte→char conversion (a different family bridge)</span>
+<span class="ty">InputStreamReader</span> isr = <span class="kw">new</span> <span class="ty">InputStreamReader</span>(bis, <span class="ty">StandardCharsets</span>.UTF_8);
+
+<span class="cm">// Decorator layer 3: adds line-based reading on top of the char stream</span>
+<span class="ty">BufferedReader</span> br = <span class="kw">new</span> <span class="ty">BufferedReader</span>(isr);
+
+<span class="ty">String</span> line = br.<span class="fn">readLine</span>(); <span class="cm">// the outermost wrapper is what you call — everything underneath does its part</span>
+
+<span class="cm">// Fully inlined, this is the classic (and interview-common) one-liner:</span>
+<span class="kw">try</span> (<span class="ty">BufferedReader</span> reader = <span class="kw">new</span> <span class="ty">BufferedReader</span>(
+        <span class="kw">new</span> <span class="ty">InputStreamReader</span>(
+            <span class="kw">new</span> <span class="ty">FileInputStream</span>(<span class="st">"data.txt"</span>), <span class="ty">StandardCharsets</span>.UTF_8))) {
+    <span class="ty">String</span> line2;
+    <span class="kw">while</span> ((line2 = reader.<span class="fn">readLine</span>()) != <span class="kw">null</span>) {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(line2);
+    }
+}</pre>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "java.io favors composition over a rigid inheritance tree — each wrapper class implements the same stream interface it wraps, so wrappers stack in any order and any combination without an explosion of subclasses." This is precisely the Decorator pattern's textbook definition — same intent as Java's own GoF example.</span>
+  </div>
+
+  <div class="warn-box">
+    <span class="tip-icon">⚠️</span>
+    <span class="warn-text">Closing the OUTERMOST wrapper is enough — <code class="inline">close()</code> propagates inward through the chain automatically, since each decorator's <code class="inline">close()</code> calls the wrapped stream's <code class="inline">close()</code>. Closing an inner stream directly while an outer wrapper still references it can cause errors on subsequent use of the outer wrapper.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 4: CORE METHODS ═══ -->
+<section class="section" id="core-methods">
+  <div class="section-header"><span class="section-eyebrow">The Contract</span><span class="section-rule"></span></div>
+  <h2>InputStream &amp; OutputStream — Core API</h2>
+  <p class="section-intro">Every byte input stream, no matter how many decorators wrap it, ultimately exposes this same core method set. Knowing exactly what each returns and when is a baseline interview expectation.</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th>Method</th><th>Signature</th><th>Behavior</th></tr></thead>
+    <tbody>
+      <tr><td><code class="inline">read()</code></td><td><code class="inline">int read()</code></td><td>Reads ONE byte, returns it as an <code class="inline">int</code> in range 0–255. Returns <strong>-1</strong> at end of stream (not <code class="inline">null</code>, not an exception)</td></tr>
+      <tr><td><code class="inline">read(byte[])</code></td><td><code class="inline">int read(byte[] b)</code></td><td>Fills the array as much as possible, returns the number of bytes actually read (may be less than array length), or -1 if already at EOF</td></tr>
+      <tr><td><code class="inline">read(byte[],int,int)</code></td><td><code class="inline">int read(byte[] b, int off, int len)</code></td><td>Reads up to <code class="inline">len</code> bytes starting at index <code class="inline">off</code> in the array</td></tr>
+      <tr><td><code class="inline">skip(long)</code></td><td><code class="inline">long skip(long n)</code></td><td>Skips up to n bytes; returns the ACTUAL number skipped (may be less than n, e.g. near EOF)</td></tr>
+      <tr><td><code class="inline">available()</code></td><td><code class="inline">int available()</code></td><td>Estimated number of bytes that can be read without blocking — NOT the total file size, just a hint</td></tr>
+      <tr><td><code class="inline">mark(int)</code></td><td><code class="inline">void mark(int readLimit)</code></td><td>Marks the current position; readLimit is how many bytes can be read before the mark becomes invalid</td></tr>
+      <tr><td><code class="inline">reset()</code></td><td><code class="inline">void reset()</code></td><td>Rewinds to the last <code class="inline">mark()</code>ed position</td></tr>
+      <tr><td><code class="inline">markSupported()</code></td><td><code class="inline">boolean markSupported()</code></td><td>Whether this stream supports mark/reset — <code class="inline">false</code> by default in the base InputStream</td></tr>
+      <tr><td><code class="inline">close()</code></td><td><code class="inline">void close()</code></td><td>Releases the underlying resource (file handle, socket) — always call, ideally via try-with-resources</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'core-read')">read() vs read(byte[])</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'core-mark')">mark() / reset()</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'core-write')">OutputStream write()</div>
+    </div>
+    <div id="core-read" class="ct-pane active"><pre><span class="cm">// read() one byte at a time — returns int, -1 signals EOF</span>
+<span class="kw">try</span> (<span class="ty">FileInputStream</span> fis = <span class="kw">new</span> <span class="ty">FileInputStream</span>(<span class="st">"data.txt"</span>)) {
+    <span class="kw">int</span> b;
+    <span class="kw">while</span> ((b = fis.<span class="fn">read</span>()) != -1) {   <span class="cm">// -1 is an int outside byte range (0-255), so it's unambiguous</span>
+        <span class="ty">System</span>.out.<span class="fn">print</span>((<span class="kw">char</span>) b);
+    }
+}
+
+<span class="cm">// read(byte[]) — bulk read, far fewer method calls, MUCH faster</span>
+<span class="kw">try</span> (<span class="ty">FileInputStream</span> fis = <span class="kw">new</span> <span class="ty">FileInputStream</span>(<span class="st">"data.txt"</span>)) {
+    <span class="kw">byte</span>[] buffer = <span class="kw">new</span> <span class="kw">byte</span>[1024];
+    <span class="kw">int</span> bytesRead;
+    <span class="kw">while</span> ((bytesRead = fis.<span class="fn">read</span>(buffer)) != -1) {
+        <span class="cm">// IMPORTANT: use only buffer[0..bytesRead), NOT the whole array —</span>
+        <span class="cm">// the last chunk is usually partial and leaves stale data past bytesRead</span>
+        <span class="ty">System</span>.out.<span class="fn">write</span>(buffer, 0, bytesRead);
+    }
+}</pre></div>
+    <div id="core-mark" class="ct-pane"><pre><span class="kw">try</span> (<span class="ty">BufferedInputStream</span> bis =
+        <span class="kw">new</span> <span class="ty">BufferedInputStream</span>(<span class="kw">new</span> <span class="ty">FileInputStream</span>(<span class="st">"data.txt"</span>))) {
+
+    <span class="ty">System</span>.out.<span class="fn">println</span>(bis.<span class="fn">markSupported</span>()); <span class="cm">// true — BufferedInputStream supports it</span>
+
+    bis.<span class="fn">mark</span>(100);            <span class="cm">// mark current position; guarantees reset() works for up to 100 bytes read</span>
+    <span class="kw">int</span> first = bis.<span class="fn">read</span>();  <span class="cm">// consume a byte</span>
+    bis.<span class="fn">reset</span>();             <span class="cm">// rewind back to the marked position</span>
+    <span class="kw">int</span> firstAgain = bis.<span class="fn">read</span>(); <span class="cm">// reads the SAME byte again</span>
+    <span class="ty">System</span>.out.<span class="fn">println</span>(first == firstAgain); <span class="cm">// true</span>
+}
+
+<span class="cm">// Plain FileInputStream: markSupported() returns false —</span>
+<span class="cm">// calling mark()/reset() on it silently does nothing useful, or throws</span>
+<span class="cm">// IOException on reset() ("mark/reset not supported")</span></pre></div>
+    <div id="core-write" class="ct-pane"><pre><span class="kw">try</span> (<span class="ty">FileOutputStream</span> fos = <span class="kw">new</span> <span class="ty">FileOutputStream</span>(<span class="st">"out.txt"</span>)) {
+    fos.<span class="fn">write</span>(65);                          <span class="cm">// writes ONE byte — 'A' (int is truncated to a byte)</span>
+    fos.<span class="fn">write</span>(<span class="st">"Hello"</span>.<span class="fn">getBytes</span>());        <span class="cm">// writes a whole byte array</span>
+    fos.<span class="fn">write</span>(<span class="st">"Hello World"</span>.<span class="fn">getBytes</span>(), 0, 5); <span class="cm">// writes "Hello" only — offset 0, length 5</span>
+    fos.<span class="fn">flush</span>();                          <span class="cm">// forces buffered bytes out — usually a no-op for FileOutputStream, matters for Buffered/network streams</span>
+} <span class="cm">// close() called automatically — flushes and releases the file handle</span></pre></div>
+  </div>
+
+  <div class="danger-box">
+    <span class="tip-icon">🚫</span>
+    <span class="danger-text"><strong>Classic bug:</strong> checking <code class="inline">read(byte[])</code>'s return value against 0 instead of -1. A return of 0 is legal (some streams may return 0 bytes read without being at EOF); only -1 means "end of stream." And after a partial bulk read, printing the WHOLE buffer array instead of only <code class="inline">buffer[0, bytesRead)</code> leaks stale bytes from the previous iteration into the output.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 5: FILE STREAMS ═══ -->
+<section class="section" id="file-streams">
+  <div class="section-header"><span class="section-eyebrow">Byte Streams</span><span class="section-rule"></span></div>
+  <h2>FileInputStream &amp; FileOutputStream</h2>
+  <p class="section-intro">The most commonly used byte streams — direct byte-level access to a file on disk. Simple, but with a handful of interview-relevant exception and lifecycle details.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">FileOutputStream</span>
+      <ul class="rule-list">
+        <li>Constructor throws <code class="inline">FileNotFoundException</code> — actually thrown if the file can't be CREATED (parent dir missing, no permissions), not literally "file not found"</li>
+        <li>By default, <strong>overwrites</strong> the file's existing contents from byte 0</li>
+        <li>Second constructor arg <code class="inline">boolean append</code> — <code class="inline">new FileOutputStream(path, true)</code> appends instead of overwriting</li>
+        <li><code class="inline">write()</code> methods throw <code class="inline">IOException</code></li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">FileInputStream</span>
+      <ul class="rule-list">
+        <li>Constructor throws <code class="inline">FileNotFoundException</code> if the file genuinely doesn't exist, or is a directory, or can't be opened for reading</li>
+        <li><code class="inline">available()</code> can be used to size a buffer for a one-shot full read, but is unreliable for network-backed streams</li>
+        <li>Does NOT support <code class="inline">mark()</code>/<code class="inline">reset()</code> — <code class="inline">markSupported()</code> returns <code class="inline">false</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'fs-write')">Writing a file</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'fs-read')">Reading a file — byte by byte</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'fs-readfull')">Reading a whole file at once</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'fs-append')">Append mode</div>
+    </div>
+    <div id="fs-write" class="ct-pane active"><pre><span class="kw">try</span> (<span class="ty">FileOutputStream</span> fos = <span class="kw">new</span> <span class="ty">FileOutputStream</span>(<span class="st">"test.txt"</span>)) {
+    <span class="ty">String</span> str = <span class="st">"example"</span>;
+    <span class="kw">byte</span>[] B = str.<span class="fn">getBytes</span>();
+    <span class="kw">for</span> (<span class="kw">byte</span> b : B) {
+        fos.<span class="fn">write</span>(b);   <span class="cm">// works, but one syscall-ish operation per byte — inefficient</span>
+    }
+    <span class="cm">// Better: fos.write(B) — writes the whole array in one call</span>
+} <span class="cm">// try-with-resources calls close() automatically — no need to call it explicitly</span></pre></div>
+    <div id="fs-read" class="ct-pane"><pre><span class="kw">try</span> (<span class="ty">FileInputStream</span> fis = <span class="kw">new</span> <span class="ty">FileInputStream</span>(<span class="st">"test.txt"</span>)) {
+    <span class="kw">int</span> x;
+    <span class="kw">while</span> ((x = fis.<span class="fn">read</span>()) != -1) {
+        <span class="ty">System</span>.out.<span class="fn">print</span>((<span class="kw">char</span>) x);
+    }
+}
+<span class="cm">// Note: for character/text data, FileReader is the more appropriate choice —</span>
+<span class="cm">// it handles multi-byte encodings correctly, this cast-to-char trick only</span>
+<span class="cm">// works safely for single-byte encodings like ASCII/ISO-8859-1</span></pre></div>
+    <div id="fs-readfull" class="ct-pane"><pre><span class="kw">try</span> (<span class="ty">FileInputStream</span> fis = <span class="kw">new</span> <span class="ty">FileInputStream</span>(<span class="st">"test.txt"</span>)) {
+    <span class="kw">byte</span>[] B = <span class="kw">new</span> <span class="kw">byte</span>[fis.<span class="fn">available</span>()]; <span class="cm">// sized off available() — OK for small local files, NOT reliable in general</span>
+    fis.<span class="fn">read</span>(B);
+    <span class="ty">String</span> str = <span class="kw">new</span> <span class="ty">String</span>(B);
+    <span class="ty">System</span>.out.<span class="fn">println</span>(str);
+}
+
+<span class="cm">// Modern equivalent (Java 7+), no manual buffer sizing needed:</span>
+<span class="kw">byte</span>[] allBytes = <span class="ty">Files</span>.<span class="fn">readAllBytes</span>(<span class="ty">Path</span>.<span class="fn">of</span>(<span class="st">"test.txt"</span>));
+<span class="ty">String</span> str2 = <span class="kw">new</span> <span class="ty">String</span>(allBytes, <span class="ty">StandardCharsets</span>.UTF_8);</pre></div>
+    <div id="fs-append" class="ct-pane"><pre><span class="cm">// Default constructor OVERWRITES the file</span>
+<span class="kw">try</span> (<span class="ty">FileOutputStream</span> fos = <span class="kw">new</span> <span class="ty">FileOutputStream</span>(<span class="st">"log.txt"</span>)) {
+    fos.<span class="fn">write</span>(<span class="st">"first line\n"</span>.<span class="fn">getBytes</span>());
+}
+<span class="kw">try</span> (<span class="ty">FileOutputStream</span> fos = <span class="kw">new</span> <span class="ty">FileOutputStream</span>(<span class="st">"log.txt"</span>)) { <span class="cm">// same call again</span>
+    fos.<span class="fn">write</span>(<span class="st">"second line\n"</span>.<span class="fn">getBytes</span>());
+}
+<span class="cm">// log.txt now contains ONLY "second line" — "first line" was wiped</span>
+
+<span class="cm">// append=true preserves existing content:</span>
+<span class="kw">try</span> (<span class="ty">FileOutputStream</span> fos = <span class="kw">new</span> <span class="ty">FileOutputStream</span>(<span class="st">"log.txt"</span>, <span class="kw">true</span>)) {
+    fos.<span class="fn">write</span>(<span class="st">"appended line\n"</span>.<span class="fn">getBytes</span>());
+}</pre></div>
+  </div>
+
+  <div class="warn-box">
+    <span class="tip-icon">⚠️</span>
+    <span class="warn-text">If a file is marked read-only (<code class="inline">file.setReadOnly()</code>) and you open it with <code class="inline">FileOutputStream</code>, the CONSTRUCTOR itself throws <code class="inline">FileNotFoundException</code> — the OS denies write access, and Java surfaces it through the same exception type used for "doesn't exist." Message text is the only way to distinguish the two causes.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 6: BYTEARRAY STREAMS ═══ -->
+<section class="section" id="bytearray-streams">
+  <div class="section-header"><span class="section-eyebrow">In-Memory I/O</span><span class="section-rule"></span></div>
+  <h2>ByteArrayInputStream &amp; ByteArrayOutputStream</h2>
+  <p class="section-intro">Stream I/O without touching disk or network — the source or destination is just a byte array sitting in memory. Useful for testing, buffering data before a real write, or treating in-memory data uniformly with the stream API.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">ByteArrayInputStream</span>
+      <ul class="rule-list">
+        <li>Wraps an EXISTING byte array as a readable stream source</li>
+        <li><code class="inline">markSupported()</code> returns <code class="inline">true</code> — full mark/reset support, unlike FileInputStream</li>
+        <li>Never throws IOException on read — there's no real I/O happening, just array indexing</li>
+        <li>Reading doesn't consume/modify the underlying array — it just moves an internal read pointer</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">ByteArrayOutputStream</span>
+      <ul class="rule-list">
+        <li>Grows its OWN internal byte array as you write — you never provide one</li>
+        <li>Optional constructor arg sets the initial capacity (default 32 bytes), purely a performance hint — it resizes automatically regardless</li>
+        <li><code class="inline">toByteArray()</code> snapshots current contents; <code class="inline">toString()</code> converts using the platform default (or specified) charset</li>
+        <li><code class="inline">writeTo(OutputStream)</code> pipes its buffered content into any other stream in one call</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'bas-in')">ByteArrayInputStream</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'bas-out')">ByteArrayOutputStream</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'bas-testing')">Common use: unit testing I/O code</div>
+    </div>
+    <div id="bas-in" class="ct-pane active"><pre><span class="kw">byte</span>[] b = {<span class="st">'a'</span>, <span class="st">'b'</span>, <span class="st">'c'</span>};
+<span class="ty">ByteArrayInputStream</span> bis = <span class="kw">new</span> <span class="ty">ByteArrayInputStream</span>(b);
+
+<span class="ty">System</span>.out.<span class="fn">println</span>(bis.<span class="fn">markSupported</span>()); <span class="cm">// true</span>
+
+<span class="kw">int</span> first = bis.<span class="fn">read</span>();    <span class="cm">// 97 ('a')</span>
+bis.<span class="fn">mark</span>(0);
+bis.<span class="fn">read</span>();                <span class="cm">// consumes 'b'</span>
+bis.<span class="fn">reset</span>();               <span class="cm">// back to right after 'a'</span>
+<span class="ty">System</span>.out.<span class="fn">println</span>((<span class="kw">char</span>) bis.<span class="fn">read</span>()); <span class="cm">// 'b' again</span>
+
+<span class="kw">byte</span>[] all = <span class="kw">new</span> <span class="ty">ByteArrayInputStream</span>(b).<span class="fn">readAllBytes</span>(); <span class="cm">// Java 9+, whole array at once</span></pre></div>
+    <div id="bas-out" class="ct-pane"><pre><span class="ty">ByteArrayOutputStream</span> bos = <span class="kw">new</span> <span class="ty">ByteArrayOutputStream</span>(20); <span class="cm">// 20 = initial capacity hint only</span>
+
+bos.<span class="fn">write</span>(<span class="st">'A'</span>);
+bos.<span class="fn">write</span>(<span class="st">"BCDE"</span>.<span class="fn">getBytes</span>());
+
+<span class="kw">byte</span>[] result = bos.<span class="fn">toByteArray</span>();   <span class="cm">// snapshot: [A, B, C, D, E]</span>
+<span class="ty">String</span> asString = bos.<span class="fn">toString</span>();     <span class="cm">// "ABCDE" — uses default charset</span>
+
+<span class="kw">try</span> (<span class="ty">FileOutputStream</span> fos = <span class="kw">new</span> <span class="ty">FileOutputStream</span>(<span class="st">"out.txt"</span>)) {
+    bos.<span class="fn">writeTo</span>(fos); <span class="cm">// dumps the whole in-memory buffer straight into a real file stream</span>
+}</pre></div>
+    <div id="bas-testing" class="ct-pane"><pre><span class="cm">// Testing a method that reads from an InputStream — no real file needed</span>
+<span class="kw">public</span> <span class="ty">String</span> <span class="fn">countLines</span>(<span class="ty">InputStream</span> in) <span class="kw">throws</span> <span class="ty">IOException</span> {
+    <span class="kw">try</span> (<span class="ty">BufferedReader</span> br = <span class="kw">new</span> <span class="ty">BufferedReader</span>(<span class="kw">new</span> <span class="ty">InputStreamReader</span>(in))) {
+        <span class="kw">return</span> <span class="ty">String</span>.<span class="fn">valueOf</span>(br.<span class="fn">lines</span>().<span class="fn">count</span>());
+    }
+}
+
+<span class="an">@Test</span>
+<span class="kw">void</span> <span class="fn">testCountLines</span>() <span class="kw">throws</span> <span class="ty">IOException</span> {
+    <span class="ty">InputStream</span> fake = <span class="kw">new</span> <span class="ty">ByteArrayInputStream</span>(<span class="st">"a\nb\nc\n"</span>.<span class="fn">getBytes</span>());
+    <span class="fn">assertEquals</span>(<span class="st">"3"</span>, <span class="fn">countLines</span>(fake)); <span class="cm">// no disk I/O anywhere in the test</span>
+}
+
+<span class="cm">// Similarly, redirecting System.out to capture printed output in a test:</span>
+<span class="ty">ByteArrayOutputStream</span> captured = <span class="kw">new</span> <span class="ty">ByteArrayOutputStream</span>();
+<span class="ty">System</span>.<span class="fn">setOut</span>(<span class="kw">new</span> <span class="ty">PrintStream</span>(captured));
+<span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"hi"</span>);
+<span class="fn">assertEquals</span>(<span class="st">"hi"</span> + <span class="ty">System</span>.<span class="fn">lineSeparator</span>(), captured.<span class="fn">toString</span>());</pre></div>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 7: BUFFERED STREAMS ═══ -->
+<section class="section" id="buffered-streams">
+  <div class="section-header"><span class="section-eyebrow">Performance</span><span class="section-rule"></span></div>
+  <h2>Buffered Streams</h2>
+  <p class="section-intro">Every unbuffered <code class="inline">read()</code>/<code class="inline">write()</code> call on a file or socket stream can trigger an expensive system call. Buffering interposes an in-memory array so most reads/writes touch memory instead of the OS — a difference that can be 10-100x in raw throughput.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">How buffering works</span>
+      <ul class="rule-list">
+        <li><code class="inline">BufferedInputStream</code> reads a large CHUNK from the underlying stream into an internal array on the first <code class="inline">read()</code> call</li>
+        <li>Subsequent <code class="inline">read()</code> calls are served from that in-memory array — no syscall — until the buffer is exhausted, then it refills</li>
+        <li><code class="inline">BufferedOutputStream</code> mirrors this: writes accumulate in memory and flush to the underlying stream in one batched syscall once the buffer fills (or on explicit <code class="inline">flush()</code>/<code class="inline">close()</code>)</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">mark/reset support</span>
+      <ul class="rule-list">
+        <li>Buffered streams ADD mark/reset capability that raw FileInputStream/FileOutputStream lack</li>
+        <li><code class="inline">markSupported()</code> returns <code class="inline">true</code> for BufferedInputStream and BufferedReader</li>
+        <li>The mark's <code class="inline">readLimit</code> parameter matters: if you read past that many bytes without calling reset(), the mark becomes invalid and reset() throws <code class="inline">IOException</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'buf-input')">BufferedInputStream</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'buf-output')">BufferedOutputStream</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'buf-reader')">BufferedReader — readLine()</div>
+    </div>
+    <div id="buf-input" class="ct-pane active"><pre><span class="cm">// Unbuffered — one syscall PER BYTE if you loop read() naively</span>
+<span class="kw">try</span> (<span class="ty">FileInputStream</span> fis = <span class="kw">new</span> <span class="ty">FileInputStream</span>(<span class="st">"large.dat"</span>)) {
+    <span class="kw">int</span> b;
+    <span class="kw">while</span> ((b = fis.<span class="fn">read</span>()) != -1) { <span class="cm">/* slow for large files */</span> }
+}
+
+<span class="cm">// Buffered — the FileInputStream is only hit for large chunk reads</span>
+<span class="kw">try</span> (<span class="ty">BufferedInputStream</span> bis =
+        <span class="kw">new</span> <span class="ty">BufferedInputStream</span>(<span class="kw">new</span> <span class="ty">FileInputStream</span>(<span class="st">"large.dat"</span>), 8192)) { <span class="cm">// optional buffer size, default 8192</span>
+    <span class="kw">int</span> b;
+    <span class="kw">while</span> ((b = bis.<span class="fn">read</span>()) != -1) { <span class="cm">/* each call is now just an array index bump, mostly */</span> }
+}</pre></div>
+    <div id="buf-output" class="ct-pane"><pre><span class="kw">try</span> (<span class="ty">BufferedOutputStream</span> bos =
+        <span class="kw">new</span> <span class="ty">BufferedOutputStream</span>(<span class="kw">new</span> <span class="ty">FileOutputStream</span>(<span class="st">"out.dat"</span>))) {
+    <span class="kw">for</span> (<span class="kw">int</span> i = 0; i &lt; 100000; i++) {
+        bos.<span class="fn">write</span>(i % 256); <span class="cm">// accumulates in memory, NOT written to disk yet</span>
+    }
+    <span class="cm">// close() (called automatically by try-with-resources) flushes remaining</span>
+    <span class="cm">// buffered bytes before releasing the file handle</span>
+}
+<span class="cm">// WITHOUT try-with-resources, forgetting flush()/close() can silently lose</span>
+<span class="cm">// the last partial buffer's worth of data — a classic production bug</span></pre></div>
+    <div id="buf-reader" class="ct-pane"><pre><span class="kw">try</span> (<span class="ty">BufferedReader</span> br = <span class="kw">new</span> <span class="ty">BufferedReader</span>(<span class="kw">new</span> <span class="ty">FileReader</span>(<span class="st">"data.txt"</span>))) {
+    <span class="ty">String</span> line;
+    <span class="kw">while</span> ((line = br.<span class="fn">readLine</span>()) != <span class="kw">null</span>) { <span class="cm">// readLine() ONLY exists on BufferedReader/LineNumberReader,</span>
+        <span class="ty">System</span>.out.<span class="fn">println</span>(line);               <span class="cm">// not on the plain Reader base class</span>
+    }
+}
+<span class="cm">// readLine() strips the line terminator and returns null at EOF —</span>
+<span class="cm">// an empty line returns "" (empty string), NOT null — a common trap</span>
+
+<span class="cm">// Java 8+ stream-of-lines alternative:</span>
+<span class="kw">try</span> (<span class="ty">Stream</span>&lt;<span class="ty">String</span>&gt; lines = <span class="ty">Files</span>.<span class="fn">lines</span>(<span class="ty">Path</span>.<span class="fn">of</span>(<span class="st">"data.txt"</span>))) {
+    lines.<span class="fn">filter</span>(l -&gt; !l.<span class="fn">isBlank</span>()).<span class="fn">forEach</span>(<span class="ty">System</span>.out::println);
+}</pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "Buffering trades a small amount of memory for a large reduction in system calls — it's a decorator that batches I/O operations rather than changing what data flows through the stream." Always wrap file/network streams in a buffered decorator unless you have a specific reason not to.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 8: READER & WRITER BASICS ═══ -->
+<section class="section" id="reader-writer">
+  <div class="section-header"><span class="section-eyebrow">Character Streams</span><span class="section-rule"></span></div>
+  <h2>Reader &amp; Writer — Character Stream Basics</h2>
+  <p class="section-intro"><code class="inline">Reader</code>/<code class="inline">Writer</code> are the character-stream mirror of <code class="inline">InputStream</code>/<code class="inline">OutputStream</code> — same core method shapes, but operating on <code class="inline">char</code> instead of <code class="inline">byte</code>, with automatic charset handling baked in wherever bytes are ultimately involved.</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th>Byte Stream Method</th><th>Character Stream Equivalent</th></tr></thead>
+    <tbody>
+      <tr><td><code class="inline">int read()</code> → byte 0-255, or -1</td><td><code class="inline">int read()</code> → char 0-65535, or -1</td></tr>
+      <tr><td><code class="inline">int read(byte[])</code></td><td><code class="inline">int read(char[])</code></td></tr>
+      <tr><td><code class="inline">void write(int)</code></td><td><code class="inline">void write(int)</code></td></tr>
+      <tr><td>—</td><td><code class="inline">void write(String str)</code> — Writer adds direct String support</td></tr>
+      <tr><td>—</td><td><code class="inline">String readLine()</code> — only on BufferedReader/LineNumberReader</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'rw-chararray')">CharArrayReader / CharArrayWriter</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'rw-stringrw')">StringReader / StringWriter</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'rw-linenum')">LineNumberReader</div>
+    </div>
+    <div id="rw-chararray" class="ct-pane active"><pre><span class="cm">// The character-stream equivalent of ByteArrayInputStream/OutputStream</span>
+<span class="kw">char</span>[] chars = {<span class="st">'h'</span>, <span class="st">'e'</span>, <span class="st">'l'</span>, <span class="st">'l'</span>, <span class="st">'o'</span>};
+<span class="ty">CharArrayReader</span> cr = <span class="kw">new</span> <span class="ty">CharArrayReader</span>(chars);
+<span class="kw">int</span> c;
+<span class="kw">while</span> ((c = cr.<span class="fn">read</span>()) != -1) {
+    <span class="ty">System</span>.out.<span class="fn">print</span>((<span class="kw">char</span>) c);
+}
+
+<span class="ty">CharArrayWriter</span> cw = <span class="kw">new</span> <span class="ty">CharArrayWriter</span>();
+cw.<span class="fn">write</span>(<span class="st">"built in memory"</span>);
+<span class="kw">char</span>[] result = cw.<span class="fn">toCharArray</span>();</pre></div>
+    <div id="rw-stringrw" class="ct-pane"><pre><span class="cm">// StringReader: treat a String as a character source stream</span>
+<span class="kw">try</span> (<span class="ty">BufferedReader</span> br = <span class="kw">new</span> <span class="ty">BufferedReader</span>(<span class="kw">new</span> <span class="ty">StringReader</span>(<span class="st">"line1\nline2\nline3"</span>))) {
+    <span class="ty">String</span> line;
+    <span class="kw">while</span> ((line = br.<span class="fn">readLine</span>()) != <span class="kw">null</span>) {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(line);
+    }
+}
+
+<span class="cm">// StringWriter: build a String via the Writer API, e.g. for a template engine</span>
+<span class="ty">StringWriter</span> sw = <span class="kw">new</span> <span class="ty">StringWriter</span>();
+<span class="kw">try</span> (<span class="ty">PrintWriter</span> pw = <span class="kw">new</span> <span class="ty">PrintWriter</span>(sw)) {
+    pw.<span class="fn">println</span>(<span class="st">"Hello"</span>);
+    pw.<span class="fn">printf</span>(<span class="st">"Value: %d"</span>, 42);
+}
+<span class="ty">String</span> result = sw.<span class="fn">toString</span>(); <span class="cm">// captures everything printed, as a String</span></pre></div>
+    <div id="rw-linenum" class="ct-pane"><pre><span class="kw">try</span> (<span class="ty">LineNumberReader</span> lnr = <span class="kw">new</span> <span class="ty">LineNumberReader</span>(<span class="kw">new</span> <span class="ty">FileReader</span>(<span class="st">"data.txt"</span>))) {
+    <span class="ty">String</span> line;
+    <span class="kw">while</span> ((line = lnr.<span class="fn">readLine</span>()) != <span class="kw">null</span>) {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(lnr.<span class="fn">getLineNumber</span>() + <span class="st">": "</span> + line); <span class="cm">// 0-indexed by default</span>
+    }
+}
+<span class="cm">// A BufferedReader subclass — inherits readLine(), adds line tracking.</span>
+<span class="cm">// Useful for parsers/config-file readers that need to report "error on line N"</span></pre></div>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 9: BRIDGE CLASSES ═══ -->
+<section class="section" id="bridge-classes">
+  <div class="section-header"><span class="section-eyebrow">Byte ↔ Char</span><span class="section-rule"></span></div>
+  <h2>InputStreamReader &amp; OutputStreamWriter — The Bridge Classes</h2>
+  <p class="section-intro">Everything that ultimately touches a disk, socket, or network is byte-based at the OS level. <code class="inline">InputStreamReader</code>/<code class="inline">OutputStreamWriter</code> are the adapter classes that convert between the byte world and the character world — decoding bytes into chars (or encoding chars into bytes) using a specified charset.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Why they exist</span>
+      <ul class="rule-list">
+        <li>A file on disk is just bytes — there's no inherent "this is UTF-8 text" metadata</li>
+        <li><code class="inline">InputStreamReader</code> wraps a byte-based InputStream and decodes its bytes into chars using a Charset</li>
+        <li><code class="inline">OutputStreamWriter</code> does the reverse — encodes chars into bytes for an underlying OutputStream</li>
+        <li><code class="inline">FileReader</code>/<code class="inline">FileWriter</code> are just pre-wired convenience subclasses of these two, defaulting to the platform charset (or accepting an explicit one, Java 11+)</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Charset matters</span>
+      <ul class="rule-list">
+        <li>Always specify the charset explicitly — <code class="inline">StandardCharsets.UTF_8</code> — rather than relying on the platform default</li>
+        <li>Platform default varies by OS/locale — code that "works on my machine" can corrupt text on a server with a different default charset</li>
+        <li>This exact bug (relying on default charset) is a common root cause of "mojibake" / garbled international text in production</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">The full pipeline: bytes on disk → decoded chars → buffered line reading</span>
+<pre><span class="cm">// EXPLICIT charset — the correct, portable way</span>
+<span class="kw">try</span> (<span class="ty">InputStreamReader</span> isr = <span class="kw">new</span> <span class="ty">InputStreamReader</span>(
+        <span class="kw">new</span> <span class="ty">FileInputStream</span>(<span class="st">"data.txt"</span>), <span class="ty">StandardCharsets</span>.UTF_8)) {
+
+    <span class="kw">char</span>[] buf = <span class="kw">new</span> <span class="kw">char</span>[1024];
+    <span class="kw">int</span> n;
+    <span class="kw">while</span> ((n = isr.<span class="fn">read</span>(buf)) != -1) {
+        <span class="ty">System</span>.out.<span class="fn">print</span>(<span class="kw">new</span> <span class="ty">String</span>(buf, 0, n));
+    }
+}
+
+<span class="cm">// OutputStreamWriter — the reverse direction</span>
+<span class="kw">try</span> (<span class="ty">OutputStreamWriter</span> osw = <span class="kw">new</span> <span class="ty">OutputStreamWriter</span>(
+        <span class="kw">new</span> <span class="ty">FileOutputStream</span>(<span class="st">"out.txt"</span>), <span class="ty">StandardCharsets</span>.UTF_8)) {
+    osw.<span class="fn">write</span>(<span class="st">"café — UTF-8 encoded correctly"</span>);
+}
+
+<span class="cm">// FileReader with explicit charset (Java 11+) — equivalent to the InputStreamReader above</span>
+<span class="kw">try</span> (<span class="ty">FileReader</span> fr = <span class="kw">new</span> <span class="ty">FileReader</span>(<span class="st">"data.txt"</span>, <span class="ty">StandardCharsets</span>.UTF_8)) { <span class="cm">/* ... */</span> }
+
+<span class="cm">// Pre-Java-11 FileReader has NO charset parameter — always platform default,</span>
+<span class="cm">// which is exactly why InputStreamReader was often preferred for portability</span></pre>
+  </div>
+
+  <div class="warn-box">
+    <span class="tip-icon">⚠️</span>
+    <span class="warn-text"><strong>Interview trap:</strong> "What's the difference between FileReader and InputStreamReader?" — FileReader IS an InputStreamReader (it extends it), pre-configured for a File source. The real distinction interviewers want is charset control: historically FileReader offered no way to specify a charset, forcing InputStreamReader(new FileInputStream(...), charset) when portability mattered. Java 11 added charset-aware FileReader constructors, narrowing this gap.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 10: RANDOMACCESSFILE ═══ -->
+<section class="section" id="random-access">
+  <div class="section-header"><span class="section-eyebrow">Seek Anywhere</span><span class="section-rule"></span></div>
+  <h2>RandomAccessFile</h2>
+  <p class="section-intro">Every stream covered so far is strictly sequential — read forward, or (rarely) mark/reset a limited distance back. <code class="inline">RandomAccessFile</code> breaks that model entirely: it maintains a <strong>file pointer</strong> that can jump to any byte offset, and can both read AND write through the same object.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Key characteristics</span>
+      <ul class="rule-list">
+        <li>Does NOT extend InputStream/OutputStream — implements <code class="inline">DataInput</code> and <code class="inline">DataOutput</code> directly</li>
+        <li>Constructor takes a mode string: <code class="inline">"r"</code> (read-only) or <code class="inline">"rw"</code> (read+write)</li>
+        <li>Has all the typed read/write methods from DataInputStream/DataOutputStream (<code class="inline">readInt()</code>, <code class="inline">writeUTF()</code>, etc.)</li>
+        <li>Maintains an internal file pointer that advances after every read/write, and can be repositioned directly</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Core methods</span>
+      <ul class="rule-list">
+        <li><code class="inline">seek(long pos)</code> — jumps the file pointer to an absolute byte offset</li>
+        <li><code class="inline">getFilePointer()</code> — returns the current offset</li>
+        <li><code class="inline">skipBytes(int n)</code> — advances the pointer by n bytes without reading</li>
+        <li><code class="inline">length()</code> — total file size in bytes; <code class="inline">setLength(long)</code> can grow or truncate the file</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'raf-basic')">Basic seek + read/write</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'raf-fixed')">Fixed-record-size random access</div>
+    </div>
+    <div id="raf-basic" class="ct-pane active"><pre><span class="kw">try</span> (<span class="ty">RandomAccessFile</span> rf = <span class="kw">new</span> <span class="ty">RandomAccessFile</span>(<span class="st">"data.bin"</span>, <span class="st">"rw"</span>)) {
+
+    rf.<span class="fn">writeInt</span>(100);
+    rf.<span class="fn">writeInt</span>(200);
+    rf.<span class="fn">writeInt</span>(300);              <span class="cm">// pointer now at byte 12 (3 ints × 4 bytes)</span>
+
+    rf.<span class="fn">seek</span>(0);                    <span class="cm">// jump back to the start</span>
+    <span class="ty">System</span>.out.<span class="fn">println</span>(rf.<span class="fn">readInt</span>()); <span class="cm">// 100</span>
+
+    rf.<span class="fn">seek</span>(rf.<span class="fn">getFilePointer</span>() + 4); <span class="cm">// skip over the 200 entry</span>
+    <span class="ty">System</span>.out.<span class="fn">println</span>(rf.<span class="fn">readInt</span>()); <span class="cm">// 300</span>
+
+    rf.<span class="fn">skipBytes</span>(-8);              <span class="cm">// NOTE: skipBytes only supports moving forward per the API contract —</span>
+                                    <span class="cm">// use seek() for backward movement</span>
+}</pre></div>
+    <div id="raf-fixed" class="ct-pane"><pre><span class="cm">// Classic RandomAccessFile use case: fixed-size records, jump directly</span>
+<span class="cm">// to record N without reading everything before it</span>
+<span class="kw">final</span> <span class="kw">int</span> RECORD_SIZE = 20; <span class="cm">// bytes per record</span>
+
+<span class="kw">try</span> (<span class="ty">RandomAccessFile</span> rf = <span class="kw">new</span> <span class="ty">RandomAccessFile</span>(<span class="st">"records.dat"</span>, <span class="st">"rw"</span>)) {
+
+    <span class="kw">void</span> writeRecord(<span class="kw">int</span> index, <span class="ty">String</span> name, <span class="kw">int</span> score) <span class="kw">throws</span> <span class="ty">IOException</span> {
+        rf.<span class="fn">seek</span>((<span class="kw">long</span>) index * RECORD_SIZE); <span class="cm">// jump straight to this record's offset</span>
+        rf.<span class="fn">writeUTF</span>(name);                   <span class="cm">// (simplified — real code pads to a fixed width)</span>
+        rf.<span class="fn">writeInt</span>(score);
+    }
+
+    <span class="ty">String</span> readNameAt(<span class="kw">int</span> index) <span class="kw">throws</span> <span class="ty">IOException</span> {
+        rf.<span class="fn">seek</span>((<span class="kw">long</span>) index * RECORD_SIZE);
+        <span class="kw">return</span> rf.<span class="fn">readUTF</span>();
+    }
+}
+<span class="cm">// This is how simple fixed-record database/index files work under the hood —</span>
+<span class="cm">// O(1) access to record N instead of O(N) sequential scanning</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "RandomAccessFile trades the simplicity of sequential streams for direct positional access — useful when you need to update a specific record in place without rewriting the whole file, like a simple embedded database or a large fixed-format binary file."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 11: FILE CLASS ═══ -->
+<section class="section" id="file-class">
+  <div class="section-header"><span class="section-eyebrow">Metadata, Not Content</span><span class="section-rule"></span></div>
+  <h2>The File Class</h2>
+  <p class="section-intro"><code class="inline">java.io.File</code> represents a path in the filesystem and lets you query/manipulate its METADATA — it does not read or write file content itself. Content I/O still goes through a stream/reader/writer constructed from a File (or path string).</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th>Method</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code class="inline">exists()</code></td><td>Whether the path exists on disk</td></tr>
+      <tr><td><code class="inline">isFile()</code> / <code class="inline">isDirectory()</code></td><td>Type check</td></tr>
+      <tr><td><code class="inline">getName()</code> / <code class="inline">getPath()</code> / <code class="inline">getAbsolutePath()</code></td><td>Various path representations</td></tr>
+      <tr><td><code class="inline">list()</code> / <code class="inline">listFiles()</code></td><td>Directory contents — String[] or File[]; null if not a directory or I/O error</td></tr>
+      <tr><td><code class="inline">mkdir()</code> / <code class="inline">mkdirs()</code></td><td>Create a directory / create it plus any missing parent directories</td></tr>
+      <tr><td><code class="inline">delete()</code></td><td>Deletes the file (or empty directory); returns boolean success</td></tr>
+      <tr><td><code class="inline">renameTo(File)</code></td><td>Renames/moves; returns boolean success — notoriously platform-inconsistent for cross-filesystem moves</td></tr>
+      <tr><td><code class="inline">setReadOnly()</code></td><td>Marks the file read-only at the OS level</td></tr>
+      <tr><td><code class="inline">length()</code></td><td>File size in bytes</td></tr>
+      <tr><td><code class="inline">lastModified()</code></td><td>Last-modified timestamp, as epoch millis</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">Common File usage</span>
+<pre><span class="ty">File</span> f = <span class="kw">new</span> <span class="ty">File</span>(<span class="st">"data/records"</span>);
+
+<span class="kw">if</span> (!f.<span class="fn">exists</span>()) {
+    f.<span class="fn">mkdirs</span>();                     <span class="cm">// creates "data" and "records" if either is missing</span>
+}
+
+<span class="ty">File</span> file = <span class="kw">new</span> <span class="ty">File</span>(f, <span class="st">"log.txt"</span>);   <span class="cm">// File(parent, child) — safer than string concatenation for paths</span>
+<span class="ty">System</span>.out.<span class="fn">println</span>(file.<span class="fn">getName</span>()); <span class="cm">// "log.txt"</span>
+<span class="ty">System</span>.out.<span class="fn">println</span>(file.<span class="fn">isFile</span>()); <span class="cm">// false — doesn't exist yet, no content written</span>
+
+file.<span class="fn">setReadOnly</span>();
+<span class="kw">try</span> (<span class="ty">FileOutputStream</span> fos = <span class="kw">new</span> <span class="ty">FileOutputStream</span>(file)) {
+    fos.<span class="fn">write</span>(1); <span class="cm">// throws FileNotFoundException — OS refuses write access to a read-only file</span>
+} <span class="kw">catch</span> (<span class="ty">FileNotFoundException</span> e) {
+    <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Blocked: "</span> + e.<span class="fn">getMessage</span>());
+}
+
+<span class="kw">for</span> (<span class="ty">File</span> child : f.<span class="fn">listFiles</span>()) { <span class="cm">// NPE risk if f isn't a directory or an I/O error occurs — listFiles() can return null</span>
+    <span class="ty">System</span>.out.<span class="fn">println</span>(child.<span class="fn">getName</span>());
+}</pre>
+  </div>
+
+  <div class="warn-box">
+    <span class="tip-icon">⚠️</span>
+    <span class="warn-text"><code class="inline">File</code> is considered legacy — <code class="inline">java.nio.file.Path</code> (with the <code class="inline">Files</code> utility class) is the modern replacement, offering better error reporting (real exceptions instead of silent boolean-false failures), symbolic link support, and file-attribute views. See the NIO section later in this document.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 12: DATA STREAMS ═══ -->
+<section class="section" id="data-streams">
+  <div class="section-header"><span class="section-eyebrow">Typed I/O</span><span class="section-rule"></span></div>
+  <h2>DataInputStream &amp; DataOutputStream</h2>
+  <p class="section-intro">Plain byte streams only understand raw bytes — writing an <code class="inline">int</code> means manually splitting it into 4 bytes yourself. <code class="inline">DataInputStream</code>/<code class="inline">DataOutputStream</code> add methods for every Java primitive, reading/writing them in a portable binary format (big-endian, fixed width).</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th>Type</th><th>Write method</th><th>Read method</th><th>Bytes</th></tr></thead>
+    <tbody>
+      <tr><td><code class="inline">boolean</code></td><td><code class="inline">writeBoolean()</code></td><td><code class="inline">readBoolean()</code></td><td>1</td></tr>
+      <tr><td><code class="inline">char</code></td><td><code class="inline">writeChar()</code></td><td><code class="inline">readChar()</code></td><td>2</td></tr>
+      <tr><td><code class="inline">int</code></td><td><code class="inline">writeInt()</code></td><td><code class="inline">readInt()</code></td><td>4</td></tr>
+      <tr><td><code class="inline">long</code></td><td><code class="inline">writeLong()</code></td><td><code class="inline">readLong()</code></td><td>8</td></tr>
+      <tr><td><code class="inline">float</code></td><td><code class="inline">writeFloat()</code></td><td><code class="inline">readFloat()</code></td><td>4</td></tr>
+      <tr><td><code class="inline">double</code></td><td><code class="inline">writeDouble()</code></td><td><code class="inline">readDouble()</code></td><td>8</td></tr>
+      <tr><td><code class="inline">String</code> (as UTF)</td><td><code class="inline">writeUTF()</code></td><td><code class="inline">readUTF()</code></td><td>2 (length prefix) + variable</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'ds-write')">Writing typed data</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ds-read')">Reading it back — ORDER matters</div>
+    </div>
+    <div id="ds-write" class="ct-pane active"><pre><span class="kw">try</span> (<span class="ty">DataOutputStream</span> dos = <span class="kw">new</span> <span class="ty">DataOutputStream</span>(
+        <span class="kw">new</span> <span class="ty">BufferedOutputStream</span>(<span class="kw">new</span> <span class="ty">FileOutputStream</span>(<span class="st">"data.bin"</span>)))) {
+
+    dos.<span class="fn">writeInt</span>(100);
+    dos.<span class="fn">writeUTF</span>(<span class="st">"Hello"</span>);
+    dos.<span class="fn">writeDouble</span>(3.14);
+    dos.<span class="fn">writeBoolean</span>(<span class="kw">true</span>);
+} <span class="cm">// stacking DataOutputStream on top of BufferedOutputStream — decorator pattern again</span></pre></div>
+    <div id="ds-read" class="ct-pane"><pre><span class="kw">try</span> (<span class="ty">DataInputStream</span> dis = <span class="kw">new</span> <span class="ty">DataInputStream</span>(
+        <span class="kw">new</span> <span class="ty">BufferedInputStream</span>(<span class="kw">new</span> <span class="ty">FileInputStream</span>(<span class="st">"data.bin"</span>)))) {
+
+    <span class="kw">int</span> num       = dis.<span class="fn">readInt</span>();     <span class="cm">// MUST read in the exact same order as written</span>
+    <span class="ty">String</span> str  = dis.<span class="fn">readUTF</span>();
+    <span class="kw">double</span> pi   = dis.<span class="fn">readDouble</span>();
+    <span class="kw">boolean</span> flag = dis.<span class="fn">readBoolean</span>();
+
+    <span class="ty">System</span>.out.<span class="fn">println</span>(num + <span class="st">" "</span> + str + <span class="st">" "</span> + pi + <span class="st">" "</span> + flag);
+}
+<span class="cm">// There's no type tagging in the file — reading readDouble() where the</span>
+<span class="cm">// bytes were actually written by writeInt() silently returns GARBAGE,</span>
+<span class="cm">// it does NOT throw an exception. The format is a raw, self-describing-free</span>
+<span class="cm">// binary layout — reader and writer must agree on the exact schema</span></pre></div>
+  </div>
+
+  <div class="danger-box">
+    <span class="tip-icon">🚫</span>
+    <span class="danger-text"><strong>Key interview point:</strong> DataInputStream/DataOutputStream have NO schema information embedded in the data — reading the wrong type, or in the wrong order, silently produces corrupted values rather than failing loudly. This is exactly why real binary protocols (Protobuf, Avro) add explicit schemas and versioning on top of a similar length-prefixed encoding idea.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 13: PRINT STREAMS ═══ -->
+<section class="section" id="print-streams">
+  <div class="section-header"><span class="section-eyebrow">Convenience Output</span><span class="section-rule"></span></div>
+  <h2>PrintStream &amp; PrintWriter</h2>
+  <p class="section-intro"><code class="inline">System.out</code> is a <code class="inline">PrintStream</code> — the class behind every <code class="inline">println()</code> call you've ever written. Its whole purpose is convenience: it converts any Java value to a human-readable String representation and NEVER throws a checked <code class="inline">IOException</code>.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">PrintStream (byte-based)</span>
+      <ul class="rule-list">
+        <li><code class="inline">System.out</code> and <code class="inline">System.err</code> are both PrintStream instances</li>
+        <li>Overloaded <code class="inline">print()</code>/<code class="inline">println()</code> for every primitive type plus Object (via toString())</li>
+        <li>Never throws IOException — instead sets an internal error flag, checkable via <code class="inline">checkError()</code></li>
+        <li>Optional <code class="inline">autoFlush</code> constructor arg — flushes automatically on newline or array write</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">PrintWriter (character-based)</span>
+      <ul class="rule-list">
+        <li>The character-stream equivalent — same convenience methods, wraps a Writer instead of an OutputStream</li>
+        <li>Preferred over PrintStream for text output where proper charset handling matters</li>
+        <li>Adds <code class="inline">printf()</code>/<code class="inline">format()</code> for formatted output — also available on PrintStream</li>
+        <li>Also swallows IOExceptions internally — check via <code class="inline">checkError()</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'ps-basic')">PrintStream basics</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ps-printf')">printf / format</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ps-redirect')">Redirecting System.out</div>
+    </div>
+    <div id="ps-basic" class="ct-pane active"><pre><span class="kw">try</span> (<span class="ty">PrintStream</span> ps = <span class="kw">new</span> <span class="ty">PrintStream</span>(<span class="kw">new</span> <span class="ty">FileOutputStream</span>(<span class="st">"log.txt"</span>), <span class="kw">true</span>)) { <span class="cm">// autoFlush=true</span>
+    ps.<span class="fn">println</span>(<span class="st">"Server started"</span>);
+    ps.<span class="fn">println</span>(42);
+    ps.<span class="fn">println</span>(<span class="kw">new</span> <span class="ty">Object</span>() {
+        <span class="an">@Override</span> <span class="kw">public</span> <span class="ty">String</span> <span class="fn">toString</span>() { <span class="kw">return</span> <span class="st">"custom object"</span>; }
+    }); <span class="cm">// calls toString() automatically</span>
+}
+<span class="cm">// PrintStream write methods NEVER throw IOException — this is exactly why</span>
+<span class="cm">// System.out.println() calls never need a try/catch or "throws" declaration</span></pre></div>
+    <div id="ps-printf" class="ct-pane"><pre><span class="ty">System</span>.out.<span class="fn">printf</span>(<span class="st">"Name: %s, Score: %d, Avg: %.2f%n"</span>, <span class="st">"Alice"</span>, 95, 87.456);
+<span class="cm">// "Name: Alice, Score: 95, Avg: 87.46"</span>
+
+<span class="ty">PrintWriter</span> pw = <span class="kw">new</span> <span class="ty">PrintWriter</span>(<span class="ty">System</span>.out);
+pw.<span class="fn">format</span>(<span class="st">"%-10s|%5d%n"</span>, <span class="st">"item"</span>, 3);  <span class="cm">// left-align 10 wide, right-align int 5 wide</span>
+pw.<span class="fn">flush</span>();  <span class="cm">// PrintWriter often needs an explicit flush() — not always auto-flushing like System.out</span></pre></div>
+    <div id="ps-redirect" class="ct-pane"><pre><span class="cm">// Redirect System.out to a file — everything, including library println() calls, follows</span>
+<span class="ty">PrintStream</span> original = <span class="ty">System</span>.out;
+<span class="kw">try</span> (<span class="ty">PrintStream</span> fileOut = <span class="kw">new</span> <span class="ty">PrintStream</span>(<span class="kw">new</span> <span class="ty">FileOutputStream</span>(<span class="st">"console.log"</span>))) {
+    <span class="ty">System</span>.<span class="fn">setOut</span>(fileOut);
+    <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"This goes to console.log, not the terminal"</span>);
+} <span class="kw">finally</span> {
+    <span class="ty">System</span>.<span class="fn">setOut</span>(original); <span class="cm">// always restore, especially in tests, or later output vanishes</span>
+}</pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "PrintStream/PrintWriter are the only streams in java.io explicitly designed to never throw a checked exception — they trade error-signaling rigor for output convenience, which is exactly why System.out.println() never needs a try/catch."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 14: OBJECT SERIALIZATION ═══ -->
+<section class="section" id="serialization">
+  <div class="section-header"><span class="section-eyebrow">Object Persistence</span><span class="section-rule"></span></div>
+  <h2>Object Serialization Fundamentals</h2>
+  <p class="section-intro"><strong>Serialization</strong> converts an object's in-memory state into a byte stream that can be stored (file, database) or transmitted (network) and later reconstructed via <strong>deserialization</strong>. This is one of the deepest, most interview-heavy corners of java.io.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Requirements</span>
+      <ul class="rule-list">
+        <li>Class must implement <code class="inline">Serializable</code> — a MARKER interface with zero methods, purely a compile/runtime flag</li>
+        <li>Every non-transient, non-static field must ALSO be Serializable (or null at write time) — including fields of referenced objects, recursively</li>
+        <li>No constructor is called during deserialization for a Serializable class — the object is built directly from the byte stream, bypassing normal instantiation</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">What gets excluded automatically</span>
+      <ul class="rule-list">
+        <li><code class="inline">static</code> fields — belong to the CLASS, not the instance, so never serialized (they're not object state)</li>
+        <li><code class="inline">transient</code> fields — explicitly opted out by the developer (passwords, caches, non-serializable handles like Threads/Sockets)</li>
+        <li>Transient fields are reset to their type's default value (0, null, false) on deserialization — NOT preserved</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'ser-basic')">Basic write/read</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ser-transient')">transient &amp; static fields</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ser-svuid')">serialVersionUID</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ser-nonserfield')">Non-serializable field → error</div>
+    </div>
+    <div id="ser-basic" class="ct-pane active"><pre><span class="kw">class</span> <span class="ty">Employee</span> <span class="kw">implements</span> <span class="ty">Serializable</span> {
+    <span class="kw">private</span> <span class="ty">String</span> name;
+    <span class="kw">private</span> <span class="kw">int</span> age;
+    <span class="ty">Employee</span>(<span class="ty">String</span> name, <span class="kw">int</span> age) { <span class="kw">this</span>.name = name; <span class="kw">this</span>.age = age; }
+    <span class="cm">// getters omitted</span>
+}
+
+<span class="cm">// Writing (serializing)</span>
+<span class="kw">try</span> (<span class="ty">ObjectOutputStream</span> oos = <span class="kw">new</span> <span class="ty">ObjectOutputStream</span>(
+        <span class="kw">new</span> <span class="ty">FileOutputStream</span>(<span class="st">"employee.ser"</span>))) {
+    oos.<span class="fn">writeObject</span>(<span class="kw">new</span> <span class="ty">Employee</span>(<span class="st">"Alice"</span>, 30));
+}
+
+<span class="cm">// Reading (deserializing)</span>
+<span class="kw">try</span> (<span class="ty">ObjectInputStream</span> ois = <span class="kw">new</span> <span class="ty">ObjectInputStream</span>(
+        <span class="kw">new</span> <span class="ty">FileInputStream</span>(<span class="st">"employee.ser"</span>))) {
+    <span class="ty">Employee</span> e = (<span class="ty">Employee</span>) ois.<span class="fn">readObject</span>(); <span class="cm">// throws ClassNotFoundException + IOException</span>
+    <span class="ty">System</span>.out.<span class="fn">println</span>(e.name + <span class="st">" "</span> + e.age);   <span class="cm">// "Alice 30" — no constructor ran, state came straight from the stream</span>
+}</pre></div>
+    <div id="ser-transient" class="ct-pane"><pre><span class="kw">class</span> <span class="ty">User</span> <span class="kw">implements</span> <span class="ty">Serializable</span> {
+    <span class="kw">private</span> <span class="ty">String</span> username;
+    <span class="kw">private</span> <span class="kw">transient</span> <span class="ty">String</span> password; <span class="cm">// deliberately excluded — never persisted or transmitted</span>
+    <span class="kw">private</span> <span class="kw">static</span> <span class="kw">int</span> loginAttempts;  <span class="cm">// excluded automatically — class-level, not instance state</span>
+
+    <span class="ty">User</span>(<span class="ty">String</span> u, <span class="ty">String</span> p) { username = u; password = p; }
+}
+
+<span class="ty">User</span> u = <span class="kw">new</span> <span class="ty">User</span>(<span class="st">"alice"</span>, <span class="st">"secret123"</span>);
+<span class="cm">// ... serialize u, then deserialize into u2 ...</span>
+<span class="ty">System</span>.out.<span class="fn">println</span>(u2.username); <span class="cm">// "alice" — preserved</span>
+<span class="ty">System</span>.out.<span class="fn">println</span>(u2.password); <span class="cm">// null — transient fields reset to default, NOT preserved</span></pre></div>
+    <div id="ser-svuid" class="ct-pane"><pre><span class="kw">class</span> <span class="ty">Config</span> <span class="kw">implements</span> <span class="ty">Serializable</span> {
+    <span class="kw">private</span> <span class="kw">static</span> <span class="kw">final</span> <span class="kw">long</span> serialVersionUID = 1L; <span class="cm">// explicit — BEST PRACTICE</span>
+    <span class="kw">private</span> <span class="ty">String</span> value;
+}
+
+<span class="cm">// Without an explicit serialVersionUID, the JVM computes one automatically</span>
+<span class="cm">// based on class details (fields, methods, etc.) via a hash algorithm.</span>
+<span class="cm">// PROBLEM: that computed value can DIFFER between compilations, even for</span>
+<span class="cm">// a "harmless" change (adding a method, changing compiler version), causing:</span>
+<span class="cm">// java.io.InvalidClassException: local class incompatible: stream classdesc</span>
+<span class="cm">// serialVersionUID = X, local class serialVersionUID = Y</span>
+<span class="cm">//</span>
+<span class="cm">// Declaring it explicitly means YOU control compatibility — bump it only</span>
+<span class="cm">// when you intend to break backward compatibility with old serialized data</span></pre></div>
+    <div id="ser-nonserfield" class="ct-pane"><pre><span class="kw">class</span> <span class="ty">Engine</span> { <span class="cm">/* does NOT implement Serializable */</span> }
+
+<span class="kw">class</span> <span class="ty">Car</span> <span class="kw">implements</span> <span class="ty">Serializable</span> {
+    <span class="kw">private</span> <span class="ty">String</span> model;
+    <span class="kw">private</span> <span class="ty">Engine</span> engine; <span class="cm">// NOT marked transient, NOT Serializable itself</span>
+    <span class="ty">Car</span>(<span class="ty">String</span> m, <span class="ty">Engine</span> e) { model = m; engine = e; }
+}
+
+<span class="ty">Car</span> c = <span class="kw">new</span> <span class="ty">Car</span>(<span class="st">"Model X"</span>, <span class="kw">new</span> <span class="ty">Engine</span>());
+oos.<span class="fn">writeObject</span>(c);
+<span class="cm">// java.io.NotSerializableException: Engine</span>
+<span class="cm">// Fix: make Engine implement Serializable too, OR mark the field transient</span>
+<span class="cm">// if it's acceptable to lose/reset it on deserialization</span></pre></div>
+  </div>
+
+  <div class="warn-box">
+    <span class="tip-icon">⚠️</span>
+    <span class="warn-text">Serialization is transitive: if a Serializable class holds a reference to ANY non-serializable, non-transient object, serialization fails at runtime with <code class="inline">NotSerializableException</code> — this is NOT caught at compile time, since Serializable is just a marker with no static field-checking.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 15: SERIALIZATION DEEP-DIVE ═══ -->
+<section class="section" id="serialization-deep">
+  <div class="section-header"><span class="section-eyebrow">Beyond the Basics</span><span class="section-rule"></span></div>
+  <h2>Custom Serialization &amp; Inheritance Rules</h2>
+  <p class="section-intro">Default serialization works for simple cases, but real interview questions live in the exceptions: custom read/write logic, what happens with inheritance, and the alternative <code class="inline">Externalizable</code> contract that hands you full manual control.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Custom writeObject / readObject</span>
+      <ul class="rule-list">
+        <li>Declared <code class="inline">private void writeObject(ObjectOutputStream out)</code> and <code class="inline">private void readObject(ObjectInputStream in)</code> — the JVM finds and calls these via reflection if present, no interface to implement</li>
+        <li>Lets you transform, encrypt, or validate data during (de)serialization — e.g. re-deriving a transient field</li>
+        <li><code class="inline">out.defaultWriteObject()</code> / <code class="inline">in.defaultReadObject()</code> handle the normal fields; your custom code runs before/after</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Inheritance rules</span>
+      <ul class="rule-list">
+        <li>If a superclass is Serializable, ALL subclasses are automatically Serializable too</li>
+        <li>If a superclass is <strong>NOT</strong> Serializable but the subclass IS, the superclass MUST have an accessible no-arg constructor — it gets called during deserialization to initialize the non-serializable part of the state</li>
+        <li>Superclass fields are only preserved if the superclass itself is Serializable; otherwise they reset to defaults, initialized only via that no-arg constructor</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'sd-custom')">Custom writeObject/readObject</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'sd-inherit-good')">Non-serializable superclass — works</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'sd-inherit-bad')">Non-serializable superclass — fails</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'sd-externalizable')">Externalizable</div>
+    </div>
+    <div id="sd-custom" class="ct-pane active"><pre><span class="kw">class</span> <span class="ty">Account</span> <span class="kw">implements</span> <span class="ty">Serializable</span> {
+    <span class="kw">private</span> <span class="ty">String</span> owner;
+    <span class="kw">private</span> <span class="kw">transient</span> <span class="ty">String</span> encryptedPin; <span class="cm">// custom-handled, not default-serialized</span>
+
+    <span class="kw">private</span> <span class="kw">void</span> <span class="fn">writeObject</span>(<span class="ty">ObjectOutputStream</span> out) <span class="kw">throws</span> <span class="ty">IOException</span> {
+        out.<span class="fn">defaultWriteObject</span>();               <span class="cm">// writes "owner" normally</span>
+        out.<span class="fn">writeObject</span>(<span class="fn">encrypt</span>(encryptedPin));  <span class="cm">// custom step for the transient field</span>
+    }
+
+    <span class="kw">private</span> <span class="kw">void</span> <span class="fn">readObject</span>(<span class="ty">ObjectInputStream</span> in) <span class="kw">throws</span> <span class="ty">IOException</span>, <span class="ty">ClassNotFoundException</span> {
+        in.<span class="fn">defaultReadObject</span>();                  <span class="cm">// restores "owner" normally</span>
+        <span class="ty">String</span> encrypted = (<span class="ty">String</span>) in.<span class="fn">readObject</span>();
+        encryptedPin = <span class="fn">decrypt</span>(encrypted);        <span class="cm">// reconstruct the transient field manually</span>
+    }
+
+    <span class="kw">private</span> <span class="ty">String</span> <span class="fn">encrypt</span>(<span class="ty">String</span> s) { <span class="kw">return</span> <span class="st">"enc("</span> + s + <span class="st">")"</span>; }
+    <span class="kw">private</span> <span class="ty">String</span> <span class="fn">decrypt</span>(<span class="ty">String</span> s) { <span class="kw">return</span> s.<span class="fn">replace</span>(<span class="st">"enc("</span>, <span class="st">""</span>).<span class="fn">replace</span>(<span class="st">")"</span>, <span class="st">""</span>); }
+}</pre></div>
+    <div id="sd-inherit-good" class="ct-pane"><pre><span class="kw">class</span> <span class="ty">Animal</span> { <span class="cm">// NOT Serializable</span>
+    <span class="ty">String</span> species;
+    <span class="ty">Animal</span>() { species = <span class="st">"unknown"</span>; } <span class="cm">// no-arg constructor — REQUIRED for this pattern to work</span>
+}
+
+<span class="kw">class</span> <span class="ty">Dog</span> <span class="kw">extends</span> <span class="ty">Animal</span> <span class="kw">implements</span> <span class="ty">Serializable</span> {
+    <span class="ty">String</span> name;
+    <span class="ty">Dog</span>(<span class="ty">String</span> species, <span class="ty">String</span> name) { <span class="kw">this</span>.species = species; <span class="kw">this</span>.name = name; }
+}
+
+<span class="ty">Dog</span> d = <span class="kw">new</span> <span class="ty">Dog</span>(<span class="st">"Canine"</span>, <span class="st">"Rex"</span>);
+<span class="cm">// ... serialize d, then deserialize into d2 ...</span>
+<span class="ty">System</span>.out.<span class="fn">println</span>(d2.name);    <span class="cm">// "Rex" — Dog's own field, fully preserved</span>
+<span class="ty">System</span>.out.<span class="fn">println</span>(d2.species); <span class="cm">// "unknown" — NOT "Canine"! Animal isn't Serializable, so its</span>
+                              <span class="cm">// no-arg constructor runs fresh during deserialization,</span>
+                              <span class="cm">// resetting species to whatever that constructor sets</span></pre></div>
+    <div id="sd-inherit-bad" class="ct-pane"><pre><span class="kw">class</span> <span class="ty">Vehicle</span> { <span class="cm">// NOT Serializable, and NO no-arg constructor</span>
+    <span class="ty">String</span> type;
+    <span class="ty">Vehicle</span>(<span class="ty">String</span> type) { <span class="kw">this</span>.type = type; } <span class="cm">// only a parameterized constructor exists</span>
+}
+
+<span class="kw">class</span> <span class="ty">Car</span> <span class="kw">extends</span> <span class="ty">Vehicle</span> <span class="kw">implements</span> <span class="ty">Serializable</span> {
+    <span class="ty">String</span> model;
+    <span class="ty">Car</span>(<span class="ty">String</span> type, <span class="ty">String</span> model) { <span class="kw">super</span>(type); <span class="kw">this</span>.model = model; }
+}
+
+<span class="cm">// Serializing a Car succeeds fine — the problem only surfaces on DESERIALIZE:</span>
+<span class="ty">Car</span> c2 = (<span class="ty">Car</span>) ois.<span class="fn">readObject</span>();
+<span class="cm">// java.io.InvalidClassException: Vehicle; no valid constructor</span>
+<span class="cm">// The JVM needs to call Vehicle's no-arg constructor to initialize the</span>
+<span class="cm">// non-serializable portion of the object, and none exists</span></pre></div>
+    <div id="sd-externalizable" class="ct-pane"><pre><span class="kw">class</span> <span class="ty">Report</span> <span class="kw">implements</span> <span class="ty">Externalizable</span> {
+    <span class="kw">private</span> <span class="ty">String</span> title;
+    <span class="kw">private</span> <span class="kw">int</span> pageCount;
+
+    <span class="kw">public</span> <span class="ty">Report</span>() {} <span class="cm">// PUBLIC no-arg constructor is MANDATORY for Externalizable —</span>
+                       <span class="cm">// unlike Serializable, the JVM DOES call a real constructor here</span>
+
+    <span class="kw">public</span> <span class="ty">Report</span>(<span class="ty">String</span> title, <span class="kw">int</span> pageCount) { <span class="kw">this</span>.title = title; <span class="kw">this</span>.pageCount = pageCount; }
+
+    <span class="an">@Override</span>
+    <span class="kw">public void</span> <span class="fn">writeExternal</span>(<span class="ty">ObjectOutput</span> out) <span class="kw">throws</span> <span class="ty">IOException</span> {
+        out.<span class="fn">writeUTF</span>(title);      <span class="cm">// YOU write EVERY field — nothing is automatic</span>
+        out.<span class="fn">writeInt</span>(pageCount);
+    }
+
+    <span class="an">@Override</span>
+    <span class="kw">public void</span> <span class="fn">readExternal</span>(<span class="ty">ObjectInput</span> in) <span class="kw">throws</span> <span class="ty">IOException</span> {
+        title = in.<span class="fn">readUTF</span>();     <span class="cm">// YOU read every field, in the exact same order</span>
+        pageCount = in.<span class="fn">readInt</span>();
+    }
+}
+<span class="cm">// Externalizable = full manual control, smaller output (no reflection-based</span>
+<span class="cm">// field metadata), but far more boilerplate and easier to get wrong</span></pre></div>
+  </div>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th></th><th>Serializable</th><th>Externalizable</th></tr></thead>
+    <tbody>
+      <tr><td>Type</td><td>Marker interface (no methods)</td><td>Regular interface — 2 methods to implement</td></tr>
+      <tr><td>Field handling</td><td>Automatic, via reflection</td><td>Fully manual — you write every field yourself</td></tr>
+      <tr><td>Constructor on deserialize</td><td>None called (bypassed entirely)</td><td>Public no-arg constructor IS called, then readExternal() populates state</td></tr>
+      <tr><td>Performance</td><td>Slower — reflection overhead</td><td>Faster — no reflection, direct field access</td></tr>
+      <tr><td>Control</td><td>Minimal — transient/custom hooks only</td><td>Total — you decide exactly what's written/read</td></tr>
+    </tbody>
+  </table>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 16: OTHER NOTABLE STREAMS ═══ -->
+<section class="section" id="other-streams">
+  <div class="section-header"><span class="section-eyebrow">Rounding Out the Picture</span><span class="section-rule"></span></div>
+  <h2>Other Notable Streams</h2>
+  <p class="section-intro">A handful of specialty stream classes come up less often day-to-day, but are exactly the kind of "have you heard of this" question interviewers use to gauge breadth.</p>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'os-pushback')">PushbackInputStream</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'os-sequence')">SequenceInputStream</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'os-piped')">PipedInputStream / PipedOutputStream</div>
+    </div>
+    <div id="os-pushback" class="ct-pane active"><pre><span class="cm">// Lets you "unread" a byte — peek ahead, then push it back if you don't want it yet.</span>
+<span class="cm">// Classic use: hand-written tokenizers/parsers that need 1-token lookahead</span>
+<span class="kw">try</span> (<span class="ty">PushbackInputStream</span> pis =
+        <span class="kw">new</span> <span class="ty">PushbackInputStream</span>(<span class="kw">new</span> <span class="ty">ByteArrayInputStream</span>(<span class="st">"123+456"</span>.<span class="fn">getBytes</span>()))) {
+
+    <span class="ty">StringBuilder</span> number = <span class="kw">new</span> <span class="ty">StringBuilder</span>();
+    <span class="kw">int</span> b;
+    <span class="kw">while</span> ((b = pis.<span class="fn">read</span>()) != -1) {
+        <span class="kw">if</span> (<span class="ty">Character</span>.<span class="fn">isDigit</span>(b)) {
+            number.<span class="fn">append</span>((<span class="kw">char</span>) b);
+        } <span class="kw">else</span> {
+            pis.<span class="fn">unread</span>(b); <span class="cm">// "I read too far" — push this byte back onto the stream</span>
+            <span class="kw">break</span>;
+        }
+    }
+    <span class="ty">System</span>.out.<span class="fn">println</span>(number); <span class="cm">// "123" — and '+' is still unread, available for the next read()</span>
+}</pre></div>
+    <div id="os-sequence" class="ct-pane"><pre><span class="cm">// Concatenates multiple InputStreams into ONE logical stream, read in order</span>
+<span class="ty">InputStream</span> part1 = <span class="kw">new</span> <span class="ty">ByteArrayInputStream</span>(<span class="st">"Hello, "</span>.<span class="fn">getBytes</span>());
+<span class="ty">InputStream</span> part2 = <span class="kw">new</span> <span class="ty">ByteArrayInputStream</span>(<span class="st">"World!"</span>.<span class="fn">getBytes</span>());
+
+<span class="kw">try</span> (<span class="ty">SequenceInputStream</span> combined = <span class="kw">new</span> <span class="ty">SequenceInputStream</span>(part1, part2)) {
+    <span class="kw">int</span> b;
+    <span class="kw">while</span> ((b = combined.<span class="fn">read</span>()) != -1) {
+        <span class="ty">System</span>.out.<span class="fn">print</span>((<span class="kw">char</span>) b); <span class="cm">// "Hello, World!" — part1 fully drained before part2 starts</span>
+    }
+}
+<span class="cm">// Also accepts an Enumeration<InputStream> for combining an arbitrary number of streams —</span>
+<span class="cm">// e.g. concatenating several log-file chunks into one logical read</span></pre></div>
+    <div id="os-piped" class="ct-pane"><pre><span class="cm">// In-memory communication pipe BETWEEN TWO THREADS — a producer writes,</span>
+<span class="cm">// a consumer reads, without a shared buffer you manage yourself</span>
+<span class="ty">PipedOutputStream</span> pos = <span class="kw">new</span> <span class="ty">PipedOutputStream</span>();
+<span class="ty">PipedInputStream</span> pis = <span class="kw">new</span> <span class="ty">PipedInputStream</span>(pos); <span class="cm">// connect them at construction</span>
+
+<span class="ty">Thread</span> producer = <span class="kw">new</span> <span class="ty">Thread</span>(() -&gt; {
+    <span class="kw">try</span> (pos) {
+        pos.<span class="fn">write</span>(<span class="st">"data from producer thread"</span>.<span class="fn">getBytes</span>());
+    } <span class="kw">catch</span> (<span class="ty">IOException</span> e) { <span class="kw">throw new</span> <span class="ty">RuntimeException</span>(e); }
+});
+
+<span class="ty">Thread</span> consumer = <span class="kw">new</span> <span class="ty">Thread</span>(() -&gt; {
+    <span class="kw">try</span> (pis) {
+        <span class="kw">int</span> b;
+        <span class="kw">while</span> ((b = pis.<span class="fn">read</span>()) != -1) { <span class="ty">System</span>.out.<span class="fn">print</span>((<span class="kw">char</span>) b); }
+    } <span class="kw">catch</span> (<span class="ty">IOException</span> e) { <span class="kw">throw new</span> <span class="ty">RuntimeException</span>(e); }
+});
+
+producer.<span class="fn">start</span>(); consumer.<span class="fn">start</span>();
+<span class="cm">// MUST be used across separate threads — using both ends on the SAME thread deadlocks,</span>
+<span class="cm">// since PipedInputStream.read() blocks until data is available on the paired output side</span></pre></div>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 17: NIO ═══ -->
+<section class="section" id="nio">
+  <div class="section-header"><span class="section-eyebrow">Java 7+</span><span class="section-rule"></span></div>
+  <h2>java.nio.file — The Modern File API</h2>
+  <p class="section-intro">Interviewers increasingly expect you to know that <code class="inline">java.nio.file</code> (Java 7's "NIO.2") is the recommended API for most file operations today — <code class="inline">File</code> and manually-composed stream chains still work, but <code class="inline">Path</code>/<code class="inline">Files</code> are terser, throw real exceptions instead of returning booleans, and integrate with streams.</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th>Old (java.io)</th><th>Modern (java.nio.file)</th></tr></thead>
+    <tbody>
+      <tr><td><code class="inline">new File(path)</code></td><td><code class="inline">Path.of(path)</code></td></tr>
+      <tr><td>Manually loop + read bytes for a whole file</td><td><code class="inline">Files.readAllBytes(path)</code></td></tr>
+      <tr><td>BufferedReader + readLine() loop</td><td><code class="inline">Files.readAllLines(path)</code> or <code class="inline">Files.lines(path)</code> (lazy Stream)</td></tr>
+      <tr><td><code class="inline">file.mkdir()</code> — returns boolean, silent failure</td><td><code class="inline">Files.createDirectory(path)</code> — throws IOException with a real cause</td></tr>
+      <tr><td><code class="inline">file.delete()</code> — returns boolean</td><td><code class="inline">Files.delete(path)</code> — throws <code class="inline">NoSuchFileException</code> etc.</td></tr>
+      <tr><td><code class="inline">file.renameTo()</code> — platform-inconsistent</td><td><code class="inline">Files.move(source, target)</code> — well-defined, supports atomic move</td></tr>
+      <tr><td>No symbolic link support</td><td><code class="inline">Files.isSymbolicLink()</code>, <code class="inline">Files.readSymbolicLink()</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">Common NIO operations</span>
+<pre><span class="ty">Path</span> path = <span class="ty">Path</span>.<span class="fn">of</span>(<span class="st">"data/report.txt"</span>);
+
+<span class="cm">// Whole-file reads — no manual buffer management</span>
+<span class="kw">byte</span>[] bytes = <span class="ty">Files</span>.<span class="fn">readAllBytes</span>(path);
+<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; lines = <span class="ty">Files</span>.<span class="fn">readAllLines</span>(path, <span class="ty">StandardCharsets</span>.UTF_8);
+
+<span class="cm">// Lazy line-by-line Stream — good for large files, must be closed</span>
+<span class="kw">try</span> (<span class="ty">Stream</span>&lt;<span class="ty">String</span>&gt; lineStream = <span class="ty">Files</span>.<span class="fn">lines</span>(path)) {
+    <span class="kw">long</span> errorCount = lineStream.<span class="fn">filter</span>(l -&gt; l.<span class="fn">contains</span>(<span class="st">"ERROR"</span>)).<span class="fn">count</span>();
+}
+
+<span class="cm">// Writing</span>
+<span class="ty">Files</span>.<span class="fn">writeString</span>(path, <span class="st">"new content"</span>);            <span class="cm">// Java 11+, overwrites by default</span>
+<span class="ty">Files</span>.<span class="fn">write</span>(path, lines, <span class="ty">StandardOpenOption</span>.APPEND); <span class="cm">// explicit open-option control</span>
+
+<span class="cm">// Metadata — real exceptions instead of silent boolean failures</span>
+<span class="kw">try</span> {
+    <span class="ty">Files</span>.<span class="fn">createDirectories</span>(<span class="ty">Path</span>.<span class="fn">of</span>(<span class="st">"data/nested/dirs"</span>));
+} <span class="kw">catch</span> (<span class="ty">IOException</span> e) {
+    <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Failed: "</span> + e.<span class="fn">getMessage</span>()); <span class="cm">// tells you WHY, unlike File.mkdirs() returning false</span>
+}
+
+<span class="cm">// Still need a stream? Bridge straight to one:</span>
+<span class="kw">try</span> (<span class="ty">InputStream</span> in = <span class="ty">Files</span>.<span class="fn">newInputStream</span>(path);
+     <span class="ty">OutputStream</span> out = <span class="ty">Files</span>.<span class="fn">newOutputStream</span>(<span class="ty">Path</span>.<span class="fn">of</span>(<span class="st">"copy.txt"</span>))) {
+    in.<span class="fn">transferTo</span>(out); <span class="cm">// Java 9+ — streams the whole source into the destination in one call</span>
+}</pre>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview framing:</strong> "java.io streams still underpin everything at the byte level — NIO.2 didn't replace InputStream/OutputStream, it replaced File for path/metadata operations and added terser whole-file helpers built on top of the same stream classes underneath." Knowing both — the classic stream mechanics AND the modern convenience layer — is what separates "knows Java I/O" from "just memorized readAllLines()."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 18: BEST PRACTICES ═══ -->
+<section class="section" id="best-practices">
+  <div class="section-header"><span class="section-eyebrow">Production Java</span><span class="section-rule"></span></div>
+  <h2>Best Practices &amp; Common Pitfalls</h2>
+  <p class="section-intro">The mechanics of any one stream class are rarely where production bugs come from — resource leaks, silent data loss, and encoding mismatches are.</p>
+
+  <div class="step-list">
+    <div class="step-item">
+      <span class="step-num">1</span>
+      <div class="step-content">
+        <h4>Always use try-with-resources</h4>
+        <p>Every class implementing <code class="inline">Closeable</code>/<code class="inline">AutoCloseable</code> — every stream class covered in this document — should be opened in a try-with-resources block. Manual <code class="inline">finally { stream.close(); }</code> is verbose and easy to get subtly wrong (e.g. forgetting a null check if the constructor itself threw).</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <span class="step-num">2</span>
+      <div class="step-content">
+        <h4>Always wrap raw file/network streams in a buffered decorator</h4>
+        <p>Unbuffered byte-at-a-time I/O against a file or socket is dramatically slower than buffered I/O. Default to <code class="inline">BufferedInputStream</code>/<code class="inline">BufferedReader</code>/etc. unless you have a specific reason not to (e.g. you're already reading large fixed chunks via <code class="inline">DataInputStream</code> against an in-memory <code class="inline">ByteArrayInputStream</code>, where buffering adds no value).</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <span class="step-num">3</span>
+      <div class="step-content">
+        <h4>Always specify charset explicitly for text I/O</h4>
+        <p>Relying on the platform default charset is a portability bug waiting to happen. Use <code class="inline">StandardCharsets.UTF_8</code> (or an explicit charset the format requires) every time you construct an InputStreamReader, OutputStreamWriter, or call String(byte[]) / getBytes().</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <span class="step-num">4</span>
+      <div class="step-content">
+        <h4>Check bulk-read return values correctly</h4>
+        <p><code class="inline">read(byte[])</code> may return FEWER bytes than the array length, even mid-stream (not just at EOF) — never assume a single call fills the buffer. Loop until -1, and only use the buffer's <code class="inline">[0, bytesRead)</code> range each iteration.</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <span class="step-num">5</span>
+      <div class="step-content">
+        <h4>Don't serialize what you don't need to</h4>
+        <p>Mark sensitive fields (credentials, cache handles) <code class="inline">transient</code>. Always declare an explicit <code class="inline">serialVersionUID</code> on any Serializable class you intend to evolve. Prefer modern data formats (JSON, Protobuf) over Java's built-in serialization for anything crossing service or version boundaries — Java serialization is version-fragile and has a well-documented history of deserialization security vulnerabilities.</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <span class="step-num">6</span>
+      <div class="step-content">
+        <h4>Prefer java.nio.file for path/file operations</h4>
+        <p>Use <code class="inline">Files</code>/<code class="inline">Path</code> over <code class="inline">File</code> for anything beyond the simplest cases — better error reporting, atomic operations, and direct Stream integration.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="danger-box">
+    <span class="tip-icon">🚫</span>
+    <span class="danger-text"><strong>Anti-pattern to flag in code review:</strong> deserializing data from an untrusted source with <code class="inline">ObjectInputStream.readObject()</code>. Java's native deserialization has been the root cause of numerous real-world remote code execution vulnerabilities (a malicious byte stream can trigger arbitrary code during object reconstruction). Never deserialize data you don't fully trust — validate the source, use an allow-list of expected classes, or avoid native Java serialization entirely for external-facing data.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 19: FAANG Q&A ═══ -->
+<section class="section" id="faang-qa">
+  <div class="section-header"><span class="section-eyebrow">FAANG Rapid Fire</span><span class="section-rule"></span></div>
+  <h2>FAANG Rapid-Fire Q&amp;A — Tricky Questions</h2>
+  <p class="section-intro">I/O interview questions cluster around a few themes: byte-vs-char reasoning, decorator mechanics, mark/reset semantics, and serialization edge cases. These are the ones that come up again and again.</p>
+
+  <p class="sub-heading">Output / behavior prediction</p>
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'pq-eof')">EOF check on empty file</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pq-marklimit')">mark() readLimit exceeded</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pq-closeorder')">Closing an inner stream early</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pq-svuid-change')">Changing a class after serializing data</div>
+    </div>
+    <div id="pq-eof" class="ct-pane active"><pre><span class="cm">// Q: what does this print for a completely EMPTY file?</span>
+<span class="kw">try</span> (<span class="ty">FileInputStream</span> fis = <span class="kw">new</span> <span class="ty">FileInputStream</span>(<span class="st">"empty.txt"</span>)) {
+    <span class="ty">System</span>.out.<span class="fn">println</span>(fis.<span class="fn">read</span>());
+}
+<span class="cm">// A: -1, immediately. The FIRST read() call already signals EOF —</span>
+<span class="cm">// there's no special "empty file" exception, it behaves exactly like</span>
+<span class="cm">// reaching the end of any other stream, just on the very first call</span></pre></div>
+    <div id="pq-marklimit" class="ct-pane"><pre><span class="cm">// Q: what happens here?</span>
+<span class="kw">try</span> (<span class="ty">BufferedInputStream</span> bis = <span class="kw">new</span> <span class="ty">BufferedInputStream</span>(
+        <span class="kw">new</span> <span class="ty">ByteArrayInputStream</span>(<span class="st">"0123456789"</span>.<span class="fn">getBytes</span>()))) {
+
+    bis.<span class="fn">mark</span>(3);          <span class="cm">// readLimit = 3 bytes</span>
+    bis.<span class="fn">read</span>(); bis.<span class="fn">read</span>(); bis.<span class="fn">read</span>(); bis.<span class="fn">read</span>(); <span class="cm">// reads 4 bytes — EXCEEDS the readLimit of 3</span>
+    bis.<span class="fn">reset</span>();          <span class="cm">// Q: does this succeed?</span>
+}
+<span class="cm">// A: Implementation-defined, but per the contract the mark MAY become</span>
+<span class="cm">// invalid once more than readLimit bytes are read — reset() can throw</span>
+<span class="cm">// IOException("Resetting to invalid mark"). Never assume reset() will</span>
+<span class="cm">// succeed if you've read further than the readLimit you declared</span></pre></div>
+    <div id="pq-closeorder" class="ct-pane"><pre><span class="cm">// Q: is this safe?</span>
+<span class="ty">FileInputStream</span> fis = <span class="kw">new</span> <span class="ty">FileInputStream</span>(<span class="st">"data.txt"</span>);
+<span class="ty">BufferedInputStream</span> bis = <span class="kw">new</span> <span class="ty">BufferedInputStream</span>(fis);
+fis.<span class="fn">close</span>();          <span class="cm">// closing the INNER stream directly</span>
+bis.<span class="fn">read</span>();          <span class="cm">// then trying to use the OUTER wrapper</span>
+
+<span class="cm">// A: NO — throws IOException ("Stream Closed") on the bis.read() call.</span>
+<span class="cm">// The decorator (bis) still holds a reference to the now-closed fis and</span>
+<span class="cm">// has no way to know it was closed out from under it. Always close only</span>
+<span class="cm">// the OUTERMOST wrapper — it propagates close() down the chain correctly</span></pre></div>
+    <div id="pq-svuid-change" class="ct-pane"><pre><span class="cm">// Q: you serialize a Config object to disk, then add a new field to the</span>
+<span class="cm">// Config class and redeploy. What happens reading the OLD data?</span>
+<span class="kw">class</span> <span class="ty">Config</span> <span class="kw">implements</span> <span class="ty">Serializable</span> {
+    <span class="kw">private</span> <span class="kw">static</span> <span class="kw">final</span> <span class="kw">long</span> serialVersionUID = 1L; <span class="cm">// UNCHANGED across the edit</span>
+    <span class="kw">private</span> <span class="ty">String</span> name;
+    <span class="kw">private</span> <span class="kw">int</span> timeout; <span class="cm">// NEW field, added after old data was written</span>
+}
+<span class="cm">// A: Deserialization SUCCEEDS. With an explicit, unchanged serialVersionUID,</span>
+<span class="cm">// the JVM allows "compatible" changes like adding a field — the new field</span>
+<span class="cm">// is simply initialized to its default value (0 for int) since it's absent</span>
+<span class="cm">// from the old byte stream. Removing/renaming/retyping an existing field,</span>
+<span class="cm">// or changing the class hierarchy, are the changes that break compatibility</span></pre></div>
+  </div>
+
+  <p class="sub-heading">Short-answer FAANG questions</p>
+  <div class="cheat-grid">
+    <div class="cheat-card">
+      <h4>❓ Byte stream vs character stream — when does the distinction actually matter?</h4>
+      <ul>
+        <li>Byte streams don't understand encoding — reading multi-byte UTF-8 text as raw bytes and truncating mid-character corrupts it</li>
+        <li>Character streams decode/encode via a Charset, always producing valid characters</li>
+        <li>Binary formats (images, serialized objects, ZIPs) have no "characters" — must use byte streams</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Why does InputStream.read() return int, not byte?</h4>
+      <ul>
+        <li>A byte's range is -128 to 127 (signed) or 0-255 unsigned — either way it can't distinguish a real value from an "end of stream" sentinel</li>
+        <li>int has room for 0-255 AND a distinct -1 for EOF, all in one return type</li>
+        <li>Same reasoning applies to Reader.read() returning int for a 0-65535 char range</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ What design pattern does java.io use, and why?</h4>
+      <ul>
+        <li>Decorator — FilterInputStream/OutputStream/Reader/Writer wrap another stream of the same type</li>
+        <li>Avoids a combinatorial explosion of classes for every feature combination (buffered+typed+file, etc.)</li>
+        <li>Lets you stack capabilities (buffering, typed reads, encoding) in any order, only paying for what you use</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Why does FileInputStream not support mark/reset, but BufferedInputStream does?</h4>
+      <ul>
+        <li>Supporting reset() requires buffering already-read data somewhere so it can be replayed</li>
+        <li>Raw FileInputStream has no such buffer — it's a thin wrapper over the OS file descriptor</li>
+        <li>BufferedInputStream's whole purpose is holding an in-memory buffer — reset() is a natural extension of that buffer</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ What's the difference between flush() and close()?</h4>
+      <ul>
+        <li>flush() pushes any buffered data out immediately, but keeps the stream open for further writes</li>
+        <li>close() flushes AND releases the underlying resource (file handle, socket) — the stream can't be used afterward</li>
+        <li>close() is effectively "flush() + release resources," which is why explicit flush() calls are rarely needed when using try-with-resources</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Why are static fields never serialized?</h4>
+      <ul>
+        <li>Serialization captures INSTANCE state — what makes one object different from another</li>
+        <li>A static field belongs to the class itself, shared by every instance — it isn't "this object's data"</li>
+        <li>Serializing it would also be meaningless on deserialize — which instance's copy would win?</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ What happens if two subclasses of a Serializable superclass have conflicting field types?</h4>
+      <ul>
+        <li>Doesn't apply directly — each subclass has its own instance layout; the question usually really means "what if a field's TYPE changes between serialize and deserialize?"</li>
+        <li>Changing a field's type is an INCOMPATIBLE change — deserialization throws <code class="inline">InvalidClassException</code> even with a matching serialVersionUID, since the stream format encodes field types</li>
+        <li>Safe evolution: add new fields (default-initialized on old data), never change an existing field's type or remove it if old data must still load</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Is Serializable inherited?</h4>
+      <ul>
+        <li>Yes — if class A implements Serializable, every subclass of A is automatically Serializable too (interfaces are inherited)</li>
+        <li>You cannot "opt out" a subclass from being Serializable once a superclass declares it</li>
+        <li>The reverse isn't automatic: a Serializable subclass of a non-Serializable superclass needs that superclass to have an accessible no-arg constructor</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Why can array types and String be serialized without explicitly implementing Serializable?</h4>
+      <ul>
+        <li>java.lang.String and all array types are treated as implicitly Serializable by the JVM's serialization mechanism</li>
+        <li>This is a special case baked into the serialization spec, not something you can replicate for your own classes</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ PrintStream vs Writer — why doesn't System.out.println() need a try/catch?</h4>
+      <ul>
+        <li>PrintStream explicitly overrides the checked-exception-throwing behavior of normal OutputStreams</li>
+        <li>It catches all internal IOExceptions and sets an error flag instead, checkable via checkError()</li>
+        <li>Deliberate design tradeoff: console/log output shouldn't force every calling method to declare "throws IOException"</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ How would you copy a large file efficiently in Java?</h4>
+      <ul>
+        <li>Best: <code class="inline">Files.copy(source, target)</code> — NIO, can use OS-level optimizations</li>
+        <li>Stream-based: buffered streams + a reused byte[] buffer loop, or <code class="inline">InputStream.transferTo(OutputStream)</code> (Java 9+)</li>
+        <li>Avoid: reading the whole file into a byte[]/String first for files that might be large — risks OutOfMemoryError</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ What's the difference between Reader.read(char[]) and BufferedReader.readLine()?</h4>
+      <ul>
+        <li>read(char[]) is a low-level bulk fill — returns raw characters, doesn't know or care about line boundaries</li>
+        <li>readLine() is line-aware — strips the line terminator, returns null at EOF, empty string "" for a blank line</li>
+        <li>readLine() only exists on BufferedReader/LineNumberReader, not the base Reader class</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 20: CHEATSHEET ═══ -->
+<section class="section" id="cheatsheet">
+  <div class="section-header"><span class="section-eyebrow">Interview Reference</span><span class="section-rule"></span></div>
+  <h2>Interview Cheatsheet</h2>
+  <p class="section-intro">One-liners for when you're under pressure. Know these cold.</p>
+
+  <div class="cheat-grid">
+    <div class="cheat-card">
+      <h4>🌊 Byte vs Character streams</h4>
+      <ul>
+        <li>Byte: InputStream/OutputStream — raw 8-bit, binary data, no encoding awareness</li>
+        <li>Char: Reader/Writer — 16-bit Unicode, charset-aware, for text</li>
+        <li>Bridge: InputStreamReader / OutputStreamWriter convert byte↔char</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🎁 Decorator pattern</h4>
+      <ul>
+        <li>Filter* classes wrap another stream of the same base type</li>
+        <li>Stack capabilities (buffering, typed I/O, encoding) in any combination</li>
+        <li>Close only the OUTERMOST wrapper — close() propagates inward</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>📖 Core InputStream methods</h4>
+      <ul>
+        <li>read() → int (0-255), -1 = EOF</li>
+        <li>read(byte[]) → number read, may be &lt; array length even mid-stream</li>
+        <li>mark(limit)/reset() — only if markSupported() is true</li>
+        <li>FileInputStream: markSupported() = false. BufferedInputStream: true</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>📁 FileInputStream / FileOutputStream</h4>
+      <ul>
+        <li>Constructors throw FileNotFoundException</li>
+        <li>FileOutputStream default: OVERWRITES. new FileOutputStream(path, true) = append</li>
+        <li>No mark/reset support on either</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🚀 Buffered streams</h4>
+      <ul>
+        <li>Batch syscalls — reads/writes hit an in-memory array first</li>
+        <li>Add mark/reset support that raw file streams lack</li>
+        <li>Default buffer size 8192 bytes unless specified</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🗄️ RandomAccessFile</h4>
+      <ul>
+        <li>Does NOT extend InputStream/OutputStream — implements DataInput/DataOutput</li>
+        <li>Mode: "r" or "rw"; seek(pos), getFilePointer(), skipBytes(n)</li>
+        <li>Enables O(1) access to a specific offset/record</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🔢 DataInputStream / DataOutputStream</h4>
+      <ul>
+        <li>writeInt/readInt, writeUTF/readUTF, etc. — every Java primitive</li>
+        <li>NO type tagging in the format — reader must know the exact schema and order</li>
+        <li>Reading the wrong type/order gives silently WRONG data, not an exception</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🖨️ PrintStream / PrintWriter</h4>
+      <ul>
+        <li>System.out/System.err ARE PrintStreams</li>
+        <li>NEVER throw IOException — check via checkError() instead</li>
+        <li>PrintWriter often needs an explicit flush() — not always auto-flushing</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>📦 Serialization essentials</h4>
+      <ul>
+        <li>Serializable = marker interface, no methods</li>
+        <li>static fields: never serialized. transient fields: excluded, reset to default</li>
+        <li>NO constructor runs on deserialize (Serializable) — bypasses normal instantiation</li>
+        <li>Always declare explicit serialVersionUID</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🏗️ Serialization + inheritance</h4>
+      <ul>
+        <li>Superclass Serializable → all subclasses automatically Serializable</li>
+        <li>Non-Serializable superclass needs an accessible no-arg constructor, or deserialize throws InvalidClassException</li>
+        <li>Non-Serializable superclass fields reset via that constructor, NOT preserved</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>⚙️ Externalizable vs Serializable</h4>
+      <ul>
+        <li>Externalizable: full manual control (writeExternal/readExternal), needs PUBLIC no-arg constructor, JVM calls it</li>
+        <li>Serializable: automatic via reflection, no constructor called at all</li>
+        <li>Externalizable is faster (no reflection) but far more boilerplate</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🆕 java.nio.file (modern API)</h4>
+      <ul>
+        <li>Path.of() replaces new File()</li>
+        <li>Files.readAllBytes/readAllLines/lines/write — no manual buffer management</li>
+        <li>Throws real exceptions instead of File's silent boolean failures</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🚨 Top interview traps</h4>
+      <ul>
+        <li>Checking read(byte[]) against 0 instead of -1 for EOF</li>
+        <li>Closing an inner stream while an outer wrapper still references it</li>
+        <li>Relying on platform-default charset instead of specifying UTF-8 explicitly</li>
+        <li>Assuming reset() always works if you've read past the declared readLimit</li>
+        <li>Forgetting a field must be Serializable transitively, or marked transient</li>
+        <li>Deserializing untrusted data — a known RCE attack surface</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="page-footer">
+  <span class="footer-brand">GrowthScript // Java I/O Streams Bible</span>
+  <span class="footer-note">Byte &amp; Char Streams · Decorator Pattern · Buffering · RandomAccessFile · Serialization · NIO</span>
+</footer>
+</main>
+
+<script>
+function ctSwitch(tab, id) {
+  const wrap = tab.closest('.code-tabs-wrap');
+  wrap.querySelectorAll('.ct-tab').forEach(t => t.classList.remove('active'));
+  wrap.querySelectorAll('.ct-pane').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+function switchTab(tab, id) {
+  const pair = tab.closest('.code-pair');
+  pair.querySelectorAll('.cpt').forEach(t => t.classList.remove('active'));
+  pair.querySelectorAll('.code-pane').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+function toggleTheme() {
+  const html = document.documentElement;
+  const dark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', dark ? 'light' : 'dark');
+  document.getElementById('btn-light').classList.toggle('active',  dark);
+  document.getElementById('btn-dark').classList.toggle('active',  !dark);
+  localStorage.setItem('io-theme', dark ? 'light' : 'dark');
+}
+(function(){
+  const saved = localStorage.getItem('io-theme');
+  if (saved === 'dark') {
+    document.documentElement.setAttribute('data-theme','dark');
+    document.getElementById('btn-light').classList.remove('active');
+    document.getElementById('btn-dark').classList.add('active');
+  }
+})();
+const sections  = document.querySelectorAll('section[id]');
+const sideLinks = document.querySelectorAll('.sidebar-link');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const id = e.target.id;
+      sideLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#'+id));
+    }
+  });
+}, { threshold: 0.15, rootMargin: '-60px 0px -60% 0px' });
+sections.forEach(s => obs.observe(s));
+</script>
+</body>
+</html>

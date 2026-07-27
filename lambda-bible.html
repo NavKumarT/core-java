@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lambda Expressions Bible — GrowthScript Engineering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy:#0F172A; --navy-mid:#1E293B; --brand:#1B4FD8; --brand-soft:#EFF3FE; --brand-mid:#DBEAFE;
+    --accent2:#7C3AED; --accent2-soft:#F5F3FF; --success:#059669; --success-soft:#ECFDF5;
+    --success-border:#A7F3D0; --warn:#D97706; --warn-soft:#FFFBEB; --warn-border:#FDE68A;
+    --warn-text:#78350F; --warn-text-strong:#92400E; --danger:#E11D48; --danger-soft:#FFF1F2;
+    --danger-border:#FECDD3; --purple:#9333EA; --purple-soft:#FDF4FF;
+    --text-1:#0F172A; --text-2:#334155; --text-3:#64748B; --text-4:#94A3B8;
+    --border:#E2E8F0; --border-strong:#CBD5E1; --surface:#FFFFFF; --page:#F8FAFC; --code-bg:#F1F5F9;
+    --sidebar-w:240px; --radius-sm:6px; --radius:10px; --radius-lg:14px;
+    --syn-kw:#6D28D9; --syn-cm:#94A3B8; --syn-st:#059669; --syn-ty:#D97706; --syn-fn:#1B4FD8;
+    color-scheme:light;
+  }
+  [data-theme="dark"] {
+    --navy:#E2E8F0; --navy-mid:#CBD5E1; --brand:#6D9BFF; --brand-soft:#1A2540; --brand-mid:#2A3B66;
+    --accent2:#A78BFA; --accent2-soft:#2A2150; --success:#34D399; --success-soft:#103326;
+    --success-border:#1D5C44; --warn:#FBBF24; --warn-soft:#3A2A0A; --warn-border:#5C4310;
+    --warn-text:#FDE68A; --warn-text-strong:#FCD34D; --danger:#FB7185; --danger-soft:#3A1620;
+    --danger-border:#5C2330; --purple:#D8B4FE; --purple-soft:#2A1A40;
+    --text-1:#E8ECF2; --text-2:#B6C0CE; --text-3:#8895A7; --text-4:#647082;
+    --border:#2A3441; --border-strong:#3D4859; --surface:#161D29; --page:#0D1219; --code-bg:#0F1722;
+    --syn-kw:#C4A7FF; --syn-cm:#6B7888; --syn-st:#6EE7B7; --syn-ty:#FCD34D; --syn-fn:#7FB3FF;
+    color-scheme:dark;
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family:'Inter',-apple-system,sans-serif; background:var(--page); color:var(--text-1); font-size:15px; line-height:1.7; -webkit-font-smoothing:antialiased; display:flex; min-height:100vh; transition:background 0.2s,color 0.2s; }
+  .sidebar { width:var(--sidebar-w); flex-shrink:0; position:sticky; top:0; height:100vh; overflow-y:auto; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:0 0 32px; transition:background 0.2s,border-color 0.2s; }
+  .sidebar-brand { padding:16px 20px 14px; border-bottom:1px solid var(--border); margin-bottom:8px; position:sticky; top:0; background:var(--surface); z-index:10; display:flex; flex-direction:column; gap:10px; }
+  .brand-row { display:flex; flex-direction:column; }
+  .sidebar-logo { font-family:'Space Mono',monospace; font-size:12px; font-weight:700; color:var(--brand); letter-spacing:0.04em; display:block; margin-bottom:2px; }
+  .sidebar-tagline { font-size:11px; color:var(--text-4); }
+  .sidebar-group { padding:12px 0 4px; }
+  .sidebar-group-label { font-family:'Space Mono',monospace; font-size:9.5px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-4); padding:0 20px; margin-bottom:4px; display:block; }
+  .sidebar-link { display:flex; align-items:center; gap:8px; padding:6px 20px; font-size:13px; color:var(--text-2); text-decoration:none; border-left:2px solid transparent; transition:all 0.12s; line-height:1.4; }
+  .sidebar-link:hover { color:var(--brand); background:var(--brand-soft); border-left-color:var(--brand-mid); }
+  .sidebar-link.active { color:var(--brand); background:var(--brand-soft); border-left-color:var(--brand); font-weight:500; }
+  .sidebar-link .sl-dot { width:5px; height:5px; border-radius:50%; background:var(--border-strong); flex-shrink:0; }
+  .sidebar-link.active .sl-dot,.sidebar-link:hover .sl-dot { background:var(--brand); }
+  .sidebar-sub-link { display:flex; align-items:center; gap:8px; padding:4px 20px 4px 34px; font-size:12px; color:var(--text-3); text-decoration:none; border-left:2px solid transparent; transition:all 0.12s; }
+  .sidebar-sub-link:hover { color:var(--brand); background:var(--brand-soft); }
+  .theme-toggle { display:flex; align-items:center; background:var(--page); border:1px solid var(--border); border-radius:20px; padding:3px; width:fit-content; }
+  .theme-toggle-btn { display:flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; border:none; background:transparent; color:var(--text-3); cursor:pointer; font-size:13px; transition:all 0.15s; }
+  .theme-toggle-btn.active { background:var(--surface); color:var(--brand); box-shadow:0 1px 3px rgba(0,0,0,0.1); }
+  .main { flex:1; min-width:0; padding:48px 64px 80px 64px; max-width:1100px; }
+  .page-title-block { padding-bottom:36px; border-bottom:1px solid var(--border); margin-bottom:52px; }
+  .page-eyebrow { font-family:'Space Mono',monospace; font-size:11px; font-weight:700; letter-spacing:0.1em; color:var(--text-4); text-transform:uppercase; margin-bottom:10px; display:block; }
+  .page-title-block h1 { font-size:30px; font-weight:600; color:var(--navy); letter-spacing:-0.02em; line-height:1.2; margin-bottom:10px; }
+  .page-title-block > p { font-size:15px; color:var(--text-2); max-width:680px; line-height:1.65; }
+  .tc-row { display:flex; gap:16px; margin-top:18px; flex-wrap:wrap; }
+  .tc-pill { font-size:12px; color:var(--text-3); display:flex; align-items:center; gap:5px; }
+  .tc-pill span { width:6px; height:6px; border-radius:50%; background:var(--brand); display:inline-block; }
+  .section { margin-bottom:60px; scroll-margin-top:32px; }
+  .section-header { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+  .section-eyebrow { font-family:'Space Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.1em; color:var(--text-4); text-transform:uppercase; white-space:nowrap; }
+  .section-rule { flex:1; height:1px; background:var(--border); }
+  .section h2 { font-size:21px; font-weight:600; color:var(--navy); letter-spacing:-0.02em; margin-bottom:8px; }
+  .section-intro { font-size:14.5px; color:var(--text-2); margin-bottom:28px; max-width:760px; line-height:1.7; }
+  .sub-heading { font-size:14px; font-weight:600; color:var(--navy); margin:28px 0 10px; display:flex; align-items:center; gap:8px; }
+  .sub-heading::after { content:''; flex:1; height:1px; background:var(--border); }
+  .section-divider { height:1px; background:var(--border); margin:48px 0; }
+  .body-p { font-size:14px; color:var(--text-2); margin-bottom:14px; line-height:1.7; }
+  .split-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px; }
+  .rule-card { background:var(--page); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
+  .rule-card-label { font-family:'Space Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-4); margin-bottom:10px; display:block; }
+  .rule-list { list-style:none; }
+  .rule-list li { font-size:13px; color:var(--text-2); padding-left:18px; position:relative; margin-bottom:6px; line-height:1.6; }
+  .rule-list li::before { content:'→'; position:absolute; left:0; color:var(--brand); font-size:11px; top:2px; }
+  .rule-list li.no::before  { content:'✗'; color:var(--danger);  font-size:12px; }
+  .rule-list li.yes::before { content:'✓'; color:var(--success); font-size:12px; }
+  .tip-box { display:flex; gap:10px; background:var(--brand-soft); border:1px solid var(--brand-mid); border-radius:var(--radius); padding:11px 14px; margin-top:14px; }
+  .tip-icon { flex-shrink:0; font-size:14px; margin-top:2px; }
+  .tip-text { font-size:12.5px; color:var(--navy-mid); line-height:1.6; }
+  .tip-text strong { color:var(--brand); font-weight:600; }
+  [data-theme="dark"] .tip-text { color:var(--text-2); }
+  .warn-box { display:flex; gap:10px; background:var(--warn-soft); border:1px solid var(--warn-border); border-radius:var(--radius); padding:11px 14px; margin-top:12px; }
+  .warn-text { font-size:12.5px; color:var(--warn-text); line-height:1.6; }
+  .warn-text strong { color:var(--warn-text-strong); font-weight:600; }
+  .danger-box { display:flex; gap:10px; background:var(--danger-soft); border:1px solid var(--danger-border); border-radius:var(--radius); padding:11px 14px; margin-top:12px; }
+  .danger-text { font-size:12.5px; color:var(--danger); line-height:1.6; }
+  .danger-text strong { font-weight:600; }
+  pre { background:var(--code-bg); border-top:1px solid var(--border); padding:14px 16px; overflow-x:auto; font-family:'Space Mono',monospace; font-size:12px; line-height:1.8; color:var(--text-1); }
+  code.inline { font-family:'Space Mono',monospace; font-size:11.5px; background:var(--code-bg); padding:1px 5px; border-radius:4px; color:var(--text-1); }
+  .kw { color:var(--syn-kw); font-weight:700; }
+  .cm { color:var(--syn-cm); font-style:italic; }
+  .st { color:var(--syn-st); }
+  .ty { color:var(--syn-ty); }
+  .fn { color:var(--syn-fn); }
+  .an { color:var(--syn-ty); font-weight:600; }
+  .code-pair { margin-top:14px; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  .code-pair-tabs { display:flex; border-bottom:1px solid var(--border); }
+  .cpt { flex:1; padding:7px 14px; font-size:12px; font-weight:600; color:var(--text-3); text-align:center; cursor:pointer; transition:all 0.12s; user-select:none; }
+  .cpt.bad { border-right:1px solid var(--border); }
+  .cpt.bad.active  { background:var(--danger-soft); color:var(--danger); }
+  .cpt.good.active { background:var(--success-soft); color:var(--success); }
+  .code-pane { display:none; }
+  .code-pane.active { display:block; }
+  .code-pane pre { border-top:none; border-radius:0; }
+  .code-tabs-wrap { border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; margin-top:14px; }
+  .code-tabs-header { display:flex; overflow-x:auto; border-bottom:1px solid var(--border); background:var(--page); }
+  .ct-tab { padding:9px 16px; font-size:12px; font-weight:500; color:var(--text-3); cursor:pointer; white-space:nowrap; border-right:1px solid var(--border); transition:all 0.12s; font-family:'Space Mono',monospace; user-select:none; flex-shrink:0; }
+  .ct-tab:hover { color:var(--brand); background:var(--brand-soft); }
+  .ct-tab.active { color:var(--brand); background:var(--surface); border-bottom:2px solid var(--brand); font-weight:700; }
+  .ct-pane { display:none; }
+  .ct-pane.active { display:block; }
+  .ct-pane pre { border-top:none; border-radius:0; font-size:12px; }
+  .step-list { display:flex; flex-direction:column; gap:8px; margin-bottom:18px; }
+  .step-item { display:flex; gap:12px; align-items:flex-start; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:10px 14px; }
+  .step-num { flex-shrink:0; width:22px; height:22px; border-radius:50%; background:var(--brand); color:#fff; font-family:'Space Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:2px; }
+  .step-body { font-size:13px; color:var(--text-2); line-height:1.6; }
+  .step-body strong { color:var(--navy); }
+  .code-block-wrap { border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-top:12px; margin-bottom:4px; }
+  .code-block-label { font-family:'Space Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-4); background:var(--page); padding:7px 14px; border-bottom:1px solid var(--border); display:block; }
+  .code-block-wrap pre { border-top:none; }
+  .ref-table { width:100%; border-collapse:collapse; font-size:13px; margin-top:14px; border-radius:var(--radius); overflow:hidden; border:1px solid var(--border); }
+  .ref-table th { background:var(--page); color:var(--navy); font-weight:600; text-align:left; padding:10px 14px; border-bottom:2px solid var(--border); font-family:'Space Mono',monospace; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; }
+  .ref-table td { padding:9px 14px; border-bottom:1px solid var(--border); color:var(--text-2); vertical-align:top; line-height:1.6; }
+  .ref-table tr:last-child td { border-bottom:none; }
+  .ref-table tr:hover td { background:var(--brand-soft); }
+  .ref-table .yes { color:var(--success); font-weight:600; }
+  .ref-table .no  { color:var(--danger);  font-weight:600; }
+  .cheat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; }
+  .cheat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
+  .cheat-card h4 { font-size:12.5px; font-weight:600; color:var(--navy); margin-bottom:8px; }
+  .cheat-card ul { list-style:none; }
+  .cheat-card li { font-size:12px; color:var(--text-2); padding-left:13px; position:relative; line-height:1.55; margin-bottom:4px; }
+  .cheat-card li::before { content:'→'; position:absolute; left:0; color:var(--brand); font-size:10.5px; top:1px; }
+  /* Thread state diagram */
+  .state-diagram { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; overflow-x:auto; margin-bottom:6px; }
+  /* Concept pill tags */
+  .tag-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .tag { font-size:11.5px; font-weight:500; padding:3px 10px; border-radius:20px; border:1px solid var(--border); color:var(--text-2); background:var(--page); font-family:'Space Mono',monospace; }
+  .tag-brand  { background:var(--brand-soft);   border-color:var(--brand-mid);      color:var(--brand);   }
+  .tag-warn   { background:var(--warn-soft);    border-color:var(--warn-border);    color:var(--warn);    }
+  .tag-danger { background:var(--danger-soft);  border-color:var(--danger-border);  color:var(--danger);  }
+  .tag-green  { background:var(--success-soft); border-color:var(--success-border); color:var(--success); }
+  /* Comparison table accent rows */
+  .ref-table tr.accent td { background:var(--brand-soft); font-weight:500; }
+  .page-footer { border-top:1px solid var(--border); padding:20px 0 0; display:flex; justify-content:space-between; align-items:center; }
+  .footer-brand { font-family:'Space Mono',monospace; font-size:11px; font-weight:700; color:var(--brand); }
+  .footer-note  { font-size:11.5px; color:var(--text-4); }
+  @media(max-width:860px){
+    body{flex-direction:column;}
+    .sidebar{width:100%;height:auto;position:static;border-right:none;border-bottom:1px solid var(--border);padding-bottom:0;}
+    .sidebar-group{display:flex;flex-wrap:wrap;padding:8px 16px;gap:4px;}
+    .sidebar-group-label{display:none;}
+    .sidebar-link{padding:5px 10px;border-left:none;border-radius:20px;border:1px solid var(--border);font-size:12px;}
+    .sidebar-link:hover,.sidebar-link.active{background:var(--brand-soft);border-color:var(--brand-mid);}
+    .sidebar-sub-link{display:none;}
+    .main{padding:32px 20px 60px;}
+    .split-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-row">
+      <span class="sidebar-logo">GS // Lambda Bible</span>
+      <span class="sidebar-tagline">Interview Reference</span>
+    </div>
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <button class="theme-toggle-btn active" id="btn-light">☀️</button>
+      <button class="theme-toggle-btn" id="btn-dark">🌙</button>
+    </div>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Foundations</span>
+    <a href="#foundations" class="sidebar-link active"><span class="sl-dot"></span>What is a Lambda?</a>
+    <a href="#functional-interfaces" class="sidebar-link"><span class="sl-dot"></span>Functional Interfaces</a>
+    <a href="#functional-interfaces" class="sidebar-sub-link">@FunctionalInterface rules</a>
+    <a href="#syntax" class="sidebar-link"><span class="sl-dot"></span>Lambda Syntax Forms</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Core Mechanics</span>
+    <a href="#lambda-vs-anon" class="sidebar-link"><span class="sl-dot"></span>Lambda vs Anonymous Class</a>
+    <a href="#lambda-vs-anon" class="sidebar-sub-link">this, .class files, invokedynamic</a>
+    <a href="#capture" class="sidebar-link"><span class="sl-dot"></span>Variable Capture</a>
+    <a href="#capture" class="sidebar-sub-link">Effectively final rule</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Built-in Interfaces</span>
+    <a href="#built-in" class="sidebar-link"><span class="sl-dot"></span>java.util.function Catalog</a>
+    <a href="#built-in" class="sidebar-sub-link">Function, Predicate, Supplier...</a>
+    <a href="#composition" class="sidebar-link"><span class="sl-dot"></span>Composing Functions</a>
+    <a href="#composition" class="sidebar-sub-link">andThen, compose, and, or, negate</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Usage Patterns</span>
+    <a href="#params" class="sidebar-link"><span class="sl-dot"></span>Lambdas as Parameters</a>
+    <a href="#method-refs" class="sidebar-link"><span class="sl-dot"></span>Method References</a>
+    <a href="#method-refs" class="sidebar-sub-link">4 kinds, ClassName::method</a>
+    <a href="#exceptions" class="sidebar-link"><span class="sl-dot"></span>Lambdas &amp; Checked Exceptions</a>
+    <a href="#streams" class="sidebar-link"><span class="sl-dot"></span>Lambdas in Streams</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Reference</span>
+    <a href="#faang-qa" class="sidebar-link"><span class="sl-dot"></span>FAANG Rapid-Fire Q&amp;A</a>
+    <a href="#cheatsheet" class="sidebar-link"><span class="sl-dot"></span>Interview Cheatsheet</a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+<div class="page-title-block">
+  <span class="page-eyebrow">Java 8+ Functional Programming</span>
+  <h1>Lambda Expressions Bible</h1>
+  <p>Complete Java lambda expressions reference for FAANG interviews — functional interfaces, syntax forms, variable capture rules, the lambda-vs-anonymous-class distinction, the entire <code class="inline">java.util.function</code> catalog, method references, and every tricky compile-time gotcha interviewers reach for.</p>
+  <div class="tc-row">
+    <span class="tc-pill"><span></span>Functional Interfaces</span>
+    <span class="tc-pill"><span></span>Syntax Forms</span>
+    <span class="tc-pill"><span></span>Variable Capture</span>
+    <span class="tc-pill"><span></span>this Binding</span>
+    <span class="tc-pill"><span></span>java.util.function</span>
+    <span class="tc-pill"><span></span>Method References</span>
+    <span class="tc-pill"><span></span>Streams</span>
+  </div>
+</div>
+<!-- ═══ SECTION 1: FOUNDATIONS ═══ -->
+<section class="section" id="foundations">
+  <div class="section-header"><span class="section-eyebrow">Java 8+</span><span class="section-rule"></span></div>
+  <h2>What is a Lambda Expression?</h2>
+  <p class="section-intro">A lambda expression is an anonymous, nameless block of code that can be passed around as a value — a way of writing an implementation of a single-method interface inline, without a class declaration. It's Java's syntax for "here's a function, treat it like data."</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Core characteristics</span>
+      <ul class="rule-list">
+        <li>Nameless — no method name, no class name required at the call site</li>
+        <li>Anonymous — creates an implementation without a named class</li>
+        <li>Defined against an interface — specifically, one with exactly one abstract method</li>
+        <li>Can be assigned to a variable, passed as an argument, or returned from a method</li>
+        <li>Enables functional-style programming — behavior as a first-class value</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">What problem it solves</span>
+      <ul class="rule-list">
+        <li>Before Java 8, passing behavior meant an anonymous inner class — 5+ lines of ceremony for one line of logic</li>
+        <li>Lambdas collapse that ceremony to <code class="inline">(params) -&gt; expression</code></li>
+        <li>Enabled the Stream API, <code class="inline">Comparator</code> chaining, and functional-style collection processing</li>
+        <li>Under the hood, still compiles down to implementing a functional interface — no new bytecode-level construct</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">The progression: interface → concrete class → anonymous class → lambda</span>
+<pre><span class="an">@FunctionalInterface</span>
+<span class="kw">interface</span> <span class="ty">MyLambda</span> {
+    <span class="kw">void</span> <span class="fn">display</span>();
+}
+
+<span class="cm">// 1) Traditional — a separate named concrete class</span>
+<span class="kw">class</span> <span class="ty">ConcreteClass</span> <span class="kw">implements</span> <span class="ty">MyLambda</span> {
+    <span class="an">@Override</span>
+    <span class="kw">public void</span> <span class="fn">display</span>() { <span class="ty">System</span>.out.<span class="fn">print</span>(<span class="st">"Hello world"</span>); }
+}
+<span class="ty">MyLambda</span> ml = <span class="kw">new</span> <span class="ty">ConcreteClass</span>();
+ml.<span class="fn">display</span>();
+
+<span class="cm">// 2) Anonymous inner class — no separate named class, but still verbose</span>
+<span class="ty">MyLambda</span> mlNested = <span class="kw">new</span> <span class="ty">MyLambda</span>() {
+    <span class="an">@Override</span>
+    <span class="kw">public void</span> <span class="fn">display</span>() { <span class="ty">System</span>.out.<span class="fn">print</span>(<span class="st">"Inner nested method"</span>); }
+};
+mlNested.<span class="fn">display</span>();
+
+<span class="cm">// 3) Lambda expression — same result, minimal syntax</span>
+<span class="ty">MyLambda</span> ml2 = () -&gt; { <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Lambda"</span>); };
+ml2.<span class="fn">display</span>();</pre>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Mental model:</strong> a lambda is compiler sugar for "implement this one abstract method, right here, right now." The variable's declared type (<code class="inline">MyLambda</code>) tells the compiler which interface's method the lambda's parameter list and body must match — this is called <strong>target typing</strong>.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 2: FUNCTIONAL INTERFACES ═══ -->
+<section class="section" id="functional-interfaces">
+  <div class="section-header"><span class="section-eyebrow">The Contract</span><span class="section-rule"></span></div>
+  <h2>Functional Interfaces &amp; @FunctionalInterface</h2>
+  <p class="section-intro">A lambda can only be assigned to a variable of a <strong>functional interface</strong> type — an interface with exactly one abstract method (a "SAM," Single Abstract Method). This is the mechanism that makes lambdas type-safe: the compiler always knows exactly which method signature the lambda must implement.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">What counts toward "single abstract method"</span>
+      <ul class="rule-list">
+        <li>Exactly ONE abstract (unimplemented) method — the requirement</li>
+        <li><code class="inline">default</code> methods — allowed, don't count toward the limit</li>
+        <li><code class="inline">static</code> methods — allowed, don't count toward the limit</li>
+        <li>Methods that override an <code class="inline">Object</code> method (<code class="inline">equals</code>, <code class="inline">hashCode</code>, <code class="inline">toString</code>) — allowed as abstract, don't count, since every class inherits an implementation from Object anyway</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">@FunctionalInterface annotation</span>
+      <ul class="rule-list">
+        <li>Optional — an interface with one abstract method IS a functional interface with or without it</li>
+        <li>Its only job: tells the compiler to <strong>error</strong> if a second abstract method is later added</li>
+        <li>A documentation + safety-net annotation, not a magic enabler</li>
+        <li>Best practice: always add it — catches accidental interface-breaking edits at compile time instead of at every lambda call site</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'fi-valid')">Valid functional interface</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'fi-invalid')">Invalid — 2 abstract methods</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'fi-object-methods')">Object methods don't count</div>
+    </div>
+    <div id="fi-valid" class="ct-pane active"><pre><span class="an">@FunctionalInterface</span>
+<span class="kw">interface</span> <span class="ty">Calculator</span> {
+    <span class="kw">int</span> <span class="fn">calculate</span>(<span class="kw">int</span> a, <span class="kw">int</span> b);      <span class="cm">// the ONE abstract method</span>
+
+    <span class="kw">default</span> <span class="kw">int</span> <span class="fn">calculateTwice</span>(<span class="kw">int</span> a, <span class="kw">int</span> b) {  <span class="cm">// default — doesn't count</span>
+        <span class="kw">return</span> <span class="fn">calculate</span>(a, b) * 2;
+    }
+
+    <span class="kw">static</span> <span class="ty">Calculator</span> <span class="fn">identity</span>() {           <span class="cm">// static — doesn't count</span>
+        <span class="kw">return</span> (a, b) -&gt; a;
+    }
+}
+<span class="ty">Calculator</span> add = (a, b) -&gt; a + b; <span class="cm">// compiles — exactly 1 abstract method to satisfy</span></pre></div>
+    <div id="fi-invalid" class="ct-pane"><pre><span class="an">@FunctionalInterface</span>
+<span class="kw">interface</span> <span class="ty">Broken</span> {
+    <span class="kw">void</span> <span class="fn">methodOne</span>();
+    <span class="kw">void</span> <span class="fn">methodTwo</span>(); <span class="cm">// SECOND abstract method</span>
+}
+<span class="cm">// COMPILE ERROR: "Broken is not a functional interface"</span>
+<span class="cm">// "multiple non-overriding abstract methods found"</span>
+<span class="cm">// A lambda has ONE body — it can only ever implement ONE method</span></pre></div>
+    <div id="fi-object-methods" class="ct-pane"><pre><span class="an">@FunctionalInterface</span>
+<span class="kw">interface</span> <span class="ty">Comparer</span>&lt;T&gt; {
+    <span class="kw">int</span> <span class="fn">compareTo</span>(T other);
+
+    <span class="kw">boolean</span> <span class="fn">equals</span>(<span class="ty">Object</span> obj); <span class="cm">// re-declares Object's equals() — STILL VALID</span>
+    <span class="ty">String</span> <span class="fn">toString</span>();             <span class="cm">// re-declares Object's toString() — STILL VALID</span>
+}
+<span class="cm">// Still counts as exactly 1 abstract method (compareTo). Every class already</span>
+<span class="cm">// implements equals()/toString()/hashCode() by inheriting from Object, so</span>
+<span class="cm">// re-declaring them here adds no NEW obligation for implementers</span>
+<span class="cm">// (this is literally how java.util.Comparator is designed)</span></pre></div>
+  </div>
+
+  <div class="warn-box">
+    <span class="tip-icon">⚠️</span>
+    <span class="warn-text"><strong>An interface with ZERO abstract methods is not a functional interface either</strong> — there's nothing for a lambda to implement. And a lambda can never target a class or an abstract class, only an interface.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 3: LAMBDA SYNTAX FORMS ═══ -->
+<section class="section" id="syntax">
+  <div class="section-header"><span class="section-eyebrow">Syntax</span><span class="section-rule"></span></div>
+  <h2>Lambda Syntax Forms</h2>
+  <p class="section-intro">The same lambda can be written several ways depending on parameter count and body complexity. Interviewers use this to check you understand the syntax isn't arbitrary — every shorthand has a specific rule behind it.</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th>Form</th><th>Example</th><th>Rule</th></tr></thead>
+    <tbody>
+      <tr><td>No parameters</td><td><code class="inline">() -&gt; System.out.println("hi")</code></td><td>Empty parens are mandatory — cannot be omitted</td></tr>
+      <tr><td>Single parameter</td><td><code class="inline">x -&gt; x * 2</code></td><td>Parens optional ONLY for exactly one untyped parameter</td></tr>
+      <tr><td>Single parameter, typed</td><td><code class="inline">(int x) -&gt; x * 2</code></td><td>Adding a type forces parens back on</td></tr>
+      <tr><td>Multiple parameters</td><td><code class="inline">(a, b) -&gt; a + b</code></td><td>Parens mandatory for 2+ parameters</td></tr>
+      <tr><td>Multiple parameters, typed</td><td><code class="inline">(int a, int b) -&gt; a + b</code></td><td>All params must be typed, or all untyped — can't mix</td></tr>
+      <tr><td>Expression body</td><td><code class="inline">(a, b) -&gt; a + b</code></td><td>No braces, no <code class="inline">return</code>, no semicolon — value is auto-returned</td></tr>
+      <tr><td>Block body</td><td><code class="inline">(a, b) -&gt; { return a + b; }</code></td><td>Braces required once you need multiple statements; explicit <code class="inline">return</code> required if the method returns a value</td></tr>
+      <tr><td><code class="inline">var</code> parameters (Java 11+)</td><td><code class="inline">(var a, var b) -&gt; a + b</code></td><td>Lets you attach annotations to inferred-type parameters; all-or-nothing like typed params</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'sy-nopar')">No params</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'sy-onepar')">One param</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'sy-multipar')">Multiple params</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'sy-body')">Expression vs block body</div>
+    </div>
+    <div id="sy-nopar" class="ct-pane active"><pre><span class="ty">Runnable</span> r = () -&gt; <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"running"</span>);
+<span class="ty">Supplier</span>&lt;<span class="ty">String</span>&gt; s = () -&gt; <span class="st">"generated value"</span>;
+<span class="cm">// () is REQUIRED even with zero parameters — you can't write "-> ..." alone</span></pre></div>
+    <div id="sy-onepar" class="ct-pane"><pre><span class="ty">Function</span>&lt;<span class="ty">Integer</span>, <span class="ty">Integer</span>&gt; square  = x -&gt; x * x;        <span class="cm">// parens OPTIONAL — untyped, single param</span>
+<span class="ty">Function</span>&lt;<span class="ty">Integer</span>, <span class="ty">Integer</span>&gt; square2 = (x) -&gt; x * x;      <span class="cm">// parens OK too, just not required</span>
+<span class="ty">Function</span>&lt;<span class="ty">Integer</span>, <span class="ty">Integer</span>&gt; square3 = (<span class="kw">int</span> x) -&gt; x * x; <span class="cm">// typed → parens become MANDATORY</span></pre></div>
+    <div id="sy-multipar" class="ct-pane"><pre><span class="ty">BiFunction</span>&lt;<span class="ty">Integer</span>, <span class="ty">Integer</span>, <span class="ty">Integer</span>&gt; add = (a, b) -&gt; a + b;              <span class="cm">// parens mandatory for 2+</span>
+<span class="ty">BiFunction</span>&lt;<span class="ty">Integer</span>, <span class="ty">Integer</span>, <span class="ty">Integer</span>&gt; add2 = (<span class="kw">int</span> a, <span class="kw">int</span> b) -&gt; a + b; <span class="cm">// fully typed, also fine</span>
+<span class="cm">// BiFunction<Integer,Integer,Integer> bad = (int a, b) -> a + b; // COMPILE ERROR</span>
+<span class="cm">// mixing typed and untyped params in the same lambda is illegal</span></pre></div>
+    <div id="sy-body" class="ct-pane"><pre><span class="cm">// Expression body — single expression, value implicitly returned, NO semicolon inside</span>
+<span class="ty">Function</span>&lt;<span class="ty">Integer</span>, <span class="ty">Integer</span>&gt; doubleIt = x -&gt; x * 2;
+
+<span class="cm">// Block body — braces required for multiple statements</span>
+<span class="ty">Function</span>&lt;<span class="ty">Integer</span>, <span class="ty">Integer</span>&gt; doubleItVerbose = x -&gt; {
+    <span class="kw">int</span> result = x * 2;
+    <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"doubled: "</span> + result); <span class="cm">// multiple statements need braces</span>
+    <span class="kw">return</span> result;                          <span class="cm">// explicit return REQUIRED inside a block body</span>
+};
+
+<span class="cm">// COMPILE ERROR: mixing the two styles</span>
+<span class="cm">// Function<Integer,Integer> bad = x -> return x * 2; // "return" needs braces around it</span></pre></div>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 4: LAMBDA VS ANONYMOUS CLASS ═══ -->
+<section class="section" id="lambda-vs-anon">
+  <div class="section-header"><span class="section-eyebrow">The #1 Trap</span><span class="section-rule"></span></div>
+  <h2>Lambda vs Anonymous Inner Class</h2>
+  <p class="section-intro">They look interchangeable and often are — until <code class="inline">this</code> enters the picture, or someone asks how each compiles. This distinction is one of the most common "gotcha" questions in senior Java interviews.</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th>Aspect</th><th>Anonymous inner class</th><th>Lambda expression</th></tr></thead>
+    <tbody>
+      <tr><td><code class="inline">this</code> refers to</td><td>The anonymous class instance itself</td><td>The <strong>enclosing</strong> class instance (lambdas don't introduce a new scope)</td></tr>
+      <tr><td>Compiled to</td><td>A separate <code class="inline">Outer$1.class</code> file per anonymous class</td><td>No separate .class file — compiled via an <code class="inline">invokedynamic</code> instruction, generated at runtime by <code class="inline">LambdaMetafactory</code></td></tr>
+      <tr><td>Can implement</td><td>Interface with any number of methods, or extend a class</td><td>Only a functional interface (exactly one abstract method)</td></tr>
+      <tr><td>Can declare its own fields</td><td>Yes</td><td>No — no instance state of its own</td></tr>
+      <tr><td>Shadowing local variables</td><td>Can declare a variable with the same name as an enclosing local</td><td>Cannot — would be a compile error, since lambda shares the enclosing scope</td></tr>
+      <tr><td>Instantiation cost</td><td>New object, new class loaded per anonymous class type</td><td>Cheaper — class generation deferred/cached by the JVM via <code class="inline">invokedynamic</code>, not baked into the jar upfront</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'lv-this')">this — the classic trap</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'lv-shadow')">Variable shadowing</div>
+    </div>
+    <div id="lv-this" class="ct-pane active"><pre><span class="kw">public class</span> <span class="ty">Widget</span> {
+    <span class="kw">private</span> <span class="ty">String</span> name = <span class="st">"Widget-A"</span>;
+
+    <span class="kw">void</span> <span class="fn">testAnonymous</span>() {
+        <span class="ty">Runnable</span> r = <span class="kw">new</span> <span class="ty">Runnable</span>() {
+            <span class="an">@Override</span>
+            <span class="kw">public void</span> <span class="fn">run</span>() {
+                <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="kw">this</span>); <span class="cm">// prints Widget$1@&lt;hash&gt; — the ANONYMOUS CLASS instance</span>
+            }
+        };
+        r.<span class="fn">run</span>();
+    }
+
+    <span class="kw">void</span> <span class="fn">testLambda</span>() {
+        <span class="ty">Runnable</span> r = () -&gt; <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="kw">this</span>); <span class="cm">// prints Widget@&lt;hash&gt; — the ENCLOSING Widget instance</span>
+        r.<span class="fn">run</span>();
+    }
+}
+<span class="cm">// A lambda does NOT create a new "this" scope — it captures the enclosing</span>
+<span class="cm">// instance's "this" exactly like any other local code in that method would</span></pre></div>
+    <div id="lv-shadow" class="ct-pane"><pre><span class="kw">void</span> <span class="fn">demo</span>() {
+    <span class="kw">int</span> count = 5;
+
+    <span class="ty">Runnable</span> anon = <span class="kw">new</span> <span class="ty">Runnable</span>() {
+        <span class="an">@Override</span>
+        <span class="kw">public void</span> <span class="fn">run</span>() {
+            <span class="kw">int</span> count = 10; <span class="cm">// ✓ COMPILES — anonymous class has its OWN scope, shadowing is fine</span>
+            <span class="ty">System</span>.out.<span class="fn">println</span>(count);
+        }
+    };
+
+    <span class="ty">Runnable</span> lam = () -&gt; {
+        <span class="kw">int</span> count = 10; <span class="cm">// ✗ COMPILE ERROR — "variable count is already defined in the scope"</span>
+        <span class="ty">System</span>.out.<span class="fn">println</span>(count); <span class="cm">// lambda shares the ENCLOSING method's scope, not a new one</span>
+    };
+}</pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "A lambda is lexically scoped — it borrows the enclosing scope's <code class="inline">this</code> and can't shadow enclosing locals. An anonymous class introduces a real new scope with its own <code class="inline">this</code>."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 5: VARIABLE CAPTURE ═══ -->
+<section class="section" id="capture">
+  <div class="section-header"><span class="section-eyebrow">Closures</span><span class="section-rule"></span></div>
+  <h2>Variable Capture in Lambda Expressions</h2>
+  <p class="section-intro">A lambda can reference variables from its enclosing scope — this is what makes it a <em>closure</em>. But local variables and instance/static fields follow completely different rules once captured, and that asymmetry is a favorite interview probe.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Local variables — effectively final</span>
+      <ul class="rule-list">
+        <li>Must be <code class="inline">final</code> or <strong>effectively final</strong> (never reassigned after initialization) to be captured</li>
+        <li>Captured <strong>by value</strong> — the lambda gets a copy taken at creation time, not a live reference</li>
+        <li>Reassigning a captured local anywhere in the enclosing scope is a compile error — not just inside the lambda</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Instance / static fields — no restriction</span>
+      <ul class="rule-list">
+        <li>No effectively-final requirement — fields can be freely read AND reassigned inside a lambda</li>
+        <li>Captured <strong>by reference</strong> — the lambda goes through the enclosing object (or class, for static), not a value snapshot</li>
+        <li>Changes made inside the lambda are visible outside it, and vice versa</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'cap-local')">Local variable — must be effectively final</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'cap-instance')">Instance field — freely mutable</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'cap-loop')">Classic loop-variable trap</div>
+    </div>
+    <div id="cap-local" class="ct-pane active"><pre><span class="kw">void</span> <span class="fn">demo</span>() {
+    <span class="kw">int</span> count = 5;           <span class="cm">// never reassigned below → effectively final, OK to capture</span>
+    <span class="ty">Runnable</span> r = () -&gt; <span class="ty">System</span>.out.<span class="fn">println</span>(count); <span class="cm">// ✓ compiles</span>
+
+    <span class="kw">int</span> counter = 0;
+    <span class="ty">Runnable</span> bad = () -&gt; <span class="ty">System</span>.out.<span class="fn">println</span>(counter); <span class="cm">// this line alone would compile...</span>
+    counter++; <span class="cm">// ...but THIS reassignment makes "counter" NOT effectively final</span>
+    <span class="cm">// → COMPILE ERROR on the lambda: "local variables referenced from a</span>
+    <span class="cm">// lambda expression must be final or effectively final"</span>
+}</pre></div>
+    <div id="cap-instance" class="ct-pane"><pre><span class="kw">public class</span> <span class="ty">Counter</span> {
+    <span class="kw">private</span> <span class="kw">int</span> count = 0; <span class="cm">// instance field</span>
+
+    <span class="kw">public</span> <span class="ty">Runnable</span> <span class="fn">increment</span>() {
+        <span class="kw">return</span> () -&gt; count++; <span class="cm">// ✓ COMPILES — fields have NO effectively-final requirement</span>
+    }
+
+    <span class="kw">void</span> <span class="fn">demo</span>() {
+        <span class="ty">Runnable</span> r = <span class="fn">increment</span>();
+        r.<span class="fn">run</span>(); r.<span class="fn">run</span>(); r.<span class="fn">run</span>();
+        <span class="ty">System</span>.out.<span class="fn">println</span>(count); <span class="cm">// 3 — mutations through the lambda ARE visible on the object</span>
+    }
+}
+<span class="cm">// This is exactly how a lambda-based counter/accumulator pattern works —</span>
+<span class="cm">// wrap the mutable state in a field (or an AtomicInteger for thread-safety)</span></pre></div>
+    <div id="cap-loop" class="ct-pane"><pre><span class="cm">// The classic "why did every lambda print the same value" bug</span>
+<span class="ty">List</span>&lt;<span class="ty">Runnable</span>&gt; tasks = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;();
+
+<span class="kw">for</span> (<span class="kw">int</span> i = 0; i &lt; 3; i++) {
+    <span class="kw">int</span> current = i; <span class="cm">// NEW effectively-final local created FRESH each iteration</span>
+    tasks.<span class="fn">add</span>(() -&gt; <span class="ty">System</span>.out.<span class="fn">println</span>(current)); <span class="cm">// each lambda captures its OWN "current"</span>
+}
+tasks.<span class="fn">forEach</span>(<span class="ty">Runnable</span>::run); <span class="cm">// prints 0, 1, 2 — correct</span>
+
+<span class="cm">// Enhanced for-loop variables are ALSO effectively final per-iteration,</span>
+<span class="cm">// so "for (int x : list) { tasks.add(() -> print(x)); }" works correctly too —</span>
+<span class="cm">// each iteration gets its own binding of x, unlike languages with one</span>
+<span class="cm">// shared loop variable across all iterations (classic pre-ES6 JavaScript var trap)</span></pre></div>
+  </div>
+
+  <div class="danger-box">
+    <span class="tip-icon">🚫</span>
+    <span class="danger-text"><strong>Why capture-by-value for locals exists:</strong> a local variable lives on the stack frame of its enclosing method, which may be gone by the time the lambda actually runs (e.g. a lambda returned from a method, or handed to another thread). Copying the value at creation time avoids a dangling reference to a stack frame that no longer exists. Instance fields don't have this problem — they live on the heap as long as the object does, so the lambda can safely hold a live reference to the object and read the field whenever it runs.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 6: BUILT-IN FUNCTIONAL INTERFACES ═══ -->
+<section class="section" id="built-in">
+  <div class="section-header"><span class="section-eyebrow">java.util.function</span><span class="section-rule"></span></div>
+  <h2>The Built-in Functional Interface Catalog</h2>
+  <p class="section-intro">Rather than defining a custom functional interface for everything, the JDK ships a standard set covering nearly every shape a single-method contract can take. Knowing these cold — and which one fits a given signature — is a baseline FAANG expectation.</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th>Interface</th><th>Abstract method</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code class="inline">Function&lt;T,R&gt;</code></td><td><code class="inline">R apply(T t)</code></td><td>Takes one value, returns a (possibly different type) value</td></tr>
+      <tr><td><code class="inline">BiFunction&lt;T,U,R&gt;</code></td><td><code class="inline">R apply(T t, U u)</code></td><td>Takes two values, returns one</td></tr>
+      <tr><td><code class="inline">Supplier&lt;T&gt;</code></td><td><code class="inline">T get()</code></td><td>Takes nothing, produces a value — lazy value generation, factories</td></tr>
+      <tr><td><code class="inline">Consumer&lt;T&gt;</code></td><td><code class="inline">void accept(T t)</code></td><td>Takes a value, returns nothing — side effects, <code class="inline">forEach</code></td></tr>
+      <tr><td><code class="inline">BiConsumer&lt;T,U&gt;</code></td><td><code class="inline">void accept(T t, U u)</code></td><td>Two-value side effect — e.g. <code class="inline">Map.forEach</code></td></tr>
+      <tr><td><code class="inline">Predicate&lt;T&gt;</code></td><td><code class="inline">boolean test(T t)</code></td><td>A boolean-valued question — filtering, validation</td></tr>
+      <tr><td><code class="inline">BiPredicate&lt;T,U&gt;</code></td><td><code class="inline">boolean test(T t, U u)</code></td><td>Two-value boolean test</td></tr>
+      <tr><td><code class="inline">UnaryOperator&lt;T&gt;</code></td><td><code class="inline">T apply(T t)</code></td><td><code class="inline">Function&lt;T,T&gt;</code> specialization — input and output are the same type</td></tr>
+      <tr><td><code class="inline">BinaryOperator&lt;T&gt;</code></td><td><code class="inline">T apply(T t1, T t2)</code></td><td><code class="inline">BiFunction&lt;T,T,T&gt;</code> specialization — combining two values of the same type, e.g. reduce</td></tr>
+      <tr><td><code class="inline">Runnable</code></td><td><code class="inline">void run()</code></td><td>No input, no output — pure action (also usable as a Thread target)</td></tr>
+      <tr><td><code class="inline">Callable&lt;V&gt;</code></td><td><code class="inline">V call() throws Exception</code></td><td>Like Supplier but allowed to throw a checked exception — used with ExecutorService</td></tr>
+      <tr><td><code class="inline">Comparator&lt;T&gt;</code></td><td><code class="inline">int compare(T a, T b)</code></td><td>Ordering logic — negative/zero/positive convention</td></tr>
+      <tr><td><code class="inline">IntFunction&lt;R&gt;</code> / <code class="inline">ToIntFunction&lt;T&gt;</code></td><td><code class="inline">R apply(int)</code> / <code class="inline">int applyAsInt(T)</code></td><td>Primitive specializations avoiding autoboxing — also exist for long/double</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'bi-function')">Function &amp; BiFunction</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'bi-supplier-consumer')">Supplier &amp; Consumer</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'bi-predicate')">Predicate</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'bi-unary-binary')">UnaryOperator &amp; BinaryOperator</div>
+    </div>
+    <div id="bi-function" class="ct-pane active"><pre><span class="ty">Function</span>&lt;<span class="ty">String</span>, <span class="ty">Integer</span>&gt; length = s -&gt; s.<span class="fn">length</span>();
+<span class="ty">System</span>.out.<span class="fn">println</span>(length.<span class="fn">apply</span>(<span class="st">"hello"</span>)); <span class="cm">// 5</span>
+
+<span class="ty">BiFunction</span>&lt;<span class="ty">Integer</span>, <span class="ty">Integer</span>, <span class="ty">Integer</span>&gt; multiply = (a, b) -&gt; a * b;
+<span class="ty">System</span>.out.<span class="fn">println</span>(multiply.<span class="fn">apply</span>(3, 4)); <span class="cm">// 12</span></pre></div>
+    <div id="bi-supplier-consumer" class="ct-pane"><pre><span class="ty">Supplier</span>&lt;<span class="ty">Double</span>&gt; randomVal = () -&gt; <span class="ty">Math</span>.<span class="fn">random</span>();
+<span class="ty">System</span>.out.<span class="fn">println</span>(randomVal.<span class="fn">get</span>()); <span class="cm">// a new random value EACH call — lazy, re-evaluated every get()</span>
+
+<span class="ty">Consumer</span>&lt;<span class="ty">String</span>&gt; printer = s -&gt; <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Got: "</span> + s);
+<span class="ty">List</span>.<span class="fn">of</span>(<span class="st">"a"</span>, <span class="st">"b"</span>).<span class="fn">forEach</span>(printer); <span class="cm">// forEach(Consumer<T>) — the classic use site</span></pre></div>
+    <div id="bi-predicate" class="ct-pane"><pre><span class="ty">Predicate</span>&lt;<span class="ty">Integer</span>&gt; isEven = n -&gt; n % 2 == 0;
+<span class="ty">System</span>.out.<span class="fn">println</span>(isEven.<span class="fn">test</span>(4)); <span class="cm">// true</span>
+
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; evens = <span class="ty">List</span>.<span class="fn">of</span>(1, 2, 3, 4, 5, 6).<span class="fn">stream</span>()
+    .<span class="fn">filter</span>(isEven)  <span class="cm">// Stream.filter takes a Predicate<T></span>
+    .<span class="fn">toList</span>();     <span class="cm">// [2, 4, 6]</span></pre></div>
+    <div id="bi-unary-binary" class="ct-pane"><pre><span class="ty">UnaryOperator</span>&lt;<span class="ty">Integer</span>&gt; square = x -&gt; x * x;      <span class="cm">// same type in and out — could ALSO be a Function<Integer,Integer></span>
+<span class="ty">System</span>.out.<span class="fn">println</span>(square.<span class="fn">apply</span>(5)); <span class="cm">// 25</span>
+
+<span class="ty">BinaryOperator</span>&lt;<span class="ty">Integer</span>&gt; max = (a, b) -&gt; a &gt; b ? a : b; <span class="cm">// same type both sides + result</span>
+<span class="ty">List</span>.<span class="fn">of</span>(3, 7, 2, 9, 4).<span class="fn">stream</span>().<span class="fn">reduce</span>(max).<span class="fn">ifPresent</span>(<span class="ty">System</span>.out::println); <span class="cm">// 9</span>
+<span class="cm">// reduce(BinaryOperator<T>) is exactly why this specialization exists</span></pre></div>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 7: COMPOSING FUNCTIONS ═══ -->
+<section class="section" id="composition">
+  <div class="section-header"><span class="section-eyebrow">Default Methods</span><span class="section-rule"></span></div>
+  <h2>Composing Functions — andThen, compose, and, or, negate</h2>
+  <p class="section-intro">The built-in functional interfaces ship default methods for chaining lambdas together — this is where the "functional interfaces can have default methods" rule from earlier actually pays off in real code.</p>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'cm-andthen')">andThen vs compose</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'cm-predicate-logic')">Predicate: and / or / negate</div>
+    </div>
+    <div id="cm-andthen" class="ct-pane active"><pre><span class="ty">Function</span>&lt;<span class="ty">Integer</span>, <span class="ty">Integer</span>&gt; addTwo   = x -&gt; x + 2;
+<span class="ty">Function</span>&lt;<span class="ty">Integer</span>, <span class="ty">Integer</span>&gt; multiply3 = x -&gt; x * 3;
+
+<span class="cm">// andThen — run THIS first, then feed the result into the argument</span>
+<span class="ty">Function</span>&lt;<span class="ty">Integer</span>, <span class="ty">Integer</span>&gt; f1 = addTwo.<span class="fn">andThen</span>(multiply3);
+<span class="ty">System</span>.out.<span class="fn">println</span>(f1.<span class="fn">apply</span>(5)); <span class="cm">// (5+2)=7, then 7*3 = 21</span>
+
+<span class="cm">// compose — run the ARGUMENT first, then feed its result into THIS</span>
+<span class="ty">Function</span>&lt;<span class="ty">Integer</span>, <span class="ty">Integer</span>&gt; f2 = addTwo.<span class="fn">compose</span>(multiply3);
+<span class="ty">System</span>.out.<span class="fn">println</span>(f2.<span class="fn">apply</span>(5)); <span class="cm">// (5*3)=15, then 15+2 = 17</span>
+
+<span class="cm">// Consumer has andThen too (runs both, no value passed between them):</span>
+<span class="ty">Consumer</span>&lt;<span class="ty">String</span>&gt; log   = s -&gt; <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"LOG: "</span> + s);
+<span class="ty">Consumer</span>&lt;<span class="ty">String</span>&gt; audit = s -&gt; <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"AUDIT: "</span> + s);
+log.<span class="fn">andThen</span>(audit).<span class="fn">accept</span>(<span class="st">"event"</span>); <span class="cm">// prints both, log's output first</span></pre></div>
+    <div id="cm-predicate-logic" class="ct-pane"><pre><span class="ty">Predicate</span>&lt;<span class="ty">Integer</span>&gt; isPositive = n -&gt; n &gt; 0;
+<span class="ty">Predicate</span>&lt;<span class="ty">Integer</span>&gt; isEven     = n -&gt; n % 2 == 0;
+
+<span class="ty">Predicate</span>&lt;<span class="ty">Integer</span>&gt; positiveAndEven = isPositive.<span class="fn">and</span>(isEven);
+<span class="ty">Predicate</span>&lt;<span class="ty">Integer</span>&gt; positiveOrEven  = isPositive.<span class="fn">or</span>(isEven);
+<span class="ty">Predicate</span>&lt;<span class="ty">Integer</span>&gt; isNegative      = isPositive.<span class="fn">negate</span>();
+
+<span class="ty">System</span>.out.<span class="fn">println</span>(positiveAndEven.<span class="fn">test</span>(4));  <span class="cm">// true</span>
+<span class="ty">System</span>.out.<span class="fn">println</span>(positiveAndEven.<span class="fn">test</span>(-4)); <span class="cm">// false</span>
+<span class="ty">System</span>.out.<span class="fn">println</span>(isNegative.<span class="fn">test</span>(-4));      <span class="cm">// true</span>
+
+<span class="cm">// Short-circuits exactly like && and || — and() won't call the second</span>
+<span class="cm">// predicate if the first already returns false</span></pre></div>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 8: LAMBDAS AS PARAMETERS ═══ -->
+<section class="section" id="params">
+  <div class="section-header"><span class="section-eyebrow">Passing Behavior</span><span class="section-rule"></span></div>
+  <h2>Using Lambdas as Method Parameters</h2>
+  <p class="section-intro">The real payoff of lambdas: a method can accept a functional interface parameter and let the <em>caller</em> supply the behavior — this is how <code class="inline">Stream.filter</code>, <code class="inline">Comparator.comparing</code>, and every callback-style API in modern Java works.</p>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">A custom functional interface accepted as a parameter</span>
+<pre><span class="an">@FunctionalInterface</span>
+<span class="kw">interface</span> <span class="ty">Addition</span> {
+    <span class="kw">int</span> <span class="fn">add</span>(<span class="kw">int</span> a, <span class="kw">int</span> b);
+}
+
+<span class="kw">public class</span> <span class="ty">Main</span> {
+    <span class="cm">// addWrapper doesn't care HOW the two ints are combined — just that</span>
+    <span class="cm">// something matching Addition's signature is supplied</span>
+    <span class="kw">static</span> <span class="kw">int</span> <span class="fn">addWrapper</span>(<span class="ty">Addition</span> a) {
+        <span class="kw">return</span> a.<span class="fn">add</span>(5, 9);
+    }
+
+    <span class="kw">public static void</span> <span class="fn">main</span>(<span class="ty">String</span>[] args) {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="fn">addWrapper</span>((a, b) -&gt; a + b + 1)); <span class="cm">// 5+9+1 = 15</span>
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="fn">addWrapper</span>((a, b) -&gt; a * b));     <span class="cm">// 5*9 = 45 — swap behavior with zero changes to addWrapper</span>
+    }
+}</pre>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>This is strategy pattern without the boilerplate.</strong> Before lambdas, "pluggable behavior" meant defining a Strategy interface plus one concrete class per strategy. A lambda IS the concrete implementation, written inline at the call site — same design pattern, far less ceremony.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 9: METHOD REFERENCES ═══ -->
+<section class="section" id="method-refs">
+  <div class="section-header"><span class="section-eyebrow">Shorthand</span><span class="section-rule"></span></div>
+  <h2>Method References</h2>
+  <p class="section-intro">When a lambda's entire body is just "call this existing method," a method reference (<code class="inline">::</code>) says the same thing more directly. There are exactly four kinds — knowing which is which is a standard interview check.</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th>Kind</th><th>Syntax</th><th>Equivalent lambda</th></tr></thead>
+    <tbody>
+      <tr><td>Static method</td><td><code class="inline">ClassName::staticMethod</code></td><td><code class="inline">(args) -&gt; ClassName.staticMethod(args)</code></td></tr>
+      <tr><td>Instance method of a particular object</td><td><code class="inline">obj::instanceMethod</code></td><td><code class="inline">(args) -&gt; obj.instanceMethod(args)</code></td></tr>
+      <tr><td>Instance method of an arbitrary object of a type (unbound)</td><td><code class="inline">ClassName::instanceMethod</code></td><td><code class="inline">(obj, args) -&gt; obj.instanceMethod(args)</code></td></tr>
+      <tr><td>Constructor reference</td><td><code class="inline">ClassName::new</code></td><td><code class="inline">(args) -&gt; new ClassName(args)</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'mr-static')">Static method</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'mr-bound')">Bound instance method</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'mr-unbound')">Unbound instance method</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'mr-constructor')">Constructor reference</div>
+    </div>
+    <div id="mr-static" class="ct-pane active"><pre><span class="an">@FunctionalInterface</span>
+<span class="kw">interface</span> <span class="ty">Addition</span> {
+    <span class="kw">int</span> <span class="fn">add</span>(<span class="kw">int</span> a, <span class="kw">int</span> b);
+}
+
+<span class="kw">public class</span> <span class="ty">Main</span> {
+    <span class="kw">static</span> <span class="kw">int</span> <span class="fn">multiplyThemInstead</span>(<span class="kw">int</span> a, <span class="kw">int</span> b) { <span class="kw">return</span> a * b; }
+
+    <span class="kw">public static void</span> <span class="fn">main</span>(<span class="ty">String</span>[] args) {
+        <span class="ty">Addition</span> ad = <span class="ty">Main</span>::multiplyThemInstead; <span class="cm">// static method reference</span>
+        <span class="ty">System</span>.out.<span class="fn">println</span>(ad.<span class="fn">add</span>(1, 4)); <span class="cm">// 4 — "add" is just the FI's method name; the actual logic is multiplyThemInstead's</span>
+    }
+}
+<span class="cm">// Compiler matches signatures structurally: Addition.add(int,int) → int must</span>
+<span class="cm">// line up with multiplyThemInstead(int,int) → int. Method NAMES don't need to match.</span></pre></div>
+    <div id="mr-bound" class="ct-pane"><pre><span class="ty">String</span> greeting = <span class="st">"hello world"</span>;
+
+<span class="ty">Supplier</span>&lt;<span class="ty">String</span>&gt; upper = greeting::toUpperCase; <span class="cm">// bound to THIS specific "greeting" object</span>
+<span class="ty">System</span>.out.<span class="fn">println</span>(upper.<span class="fn">get</span>()); <span class="cm">// "HELLO WORLD"</span>
+<span class="cm">// Equivalent lambda: () -> greeting.toUpperCase()</span>
+
+<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; items = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;();
+<span class="ty">Consumer</span>&lt;<span class="ty">String</span>&gt; addToList = items::add; <span class="cm">// bound to the "items" instance</span>
+addToList.<span class="fn">accept</span>(<span class="st">"x"</span>); <span class="cm">// items now contains "x"</span></pre></div>
+    <div id="mr-unbound" class="ct-pane"><pre><span class="cm">// No specific object yet — the object becomes the FIRST parameter at call time</span>
+<span class="ty">Function</span>&lt;<span class="ty">String</span>, <span class="ty">String</span>&gt; upper = <span class="ty">String</span>::toUpperCase; <span class="cm">// UNBOUND — no particular String chosen</span>
+<span class="ty">System</span>.out.<span class="fn">println</span>(upper.<span class="fn">apply</span>(<span class="st">"hello"</span>)); <span class="cm">// "HELLO" — "hello" fills the "this" slot</span>
+<span class="cm">// Equivalent lambda: s -> s.toUpperCase()</span>
+
+<span class="cm">// This is exactly what Comparator.comparing / sorting uses under the hood:</span>
+<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; names = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;(<span class="ty">List</span>.<span class="fn">of</span>(<span class="st">"Charlie"</span>, <span class="st">"alice"</span>, <span class="st">"Bob"</span>));
+names.<span class="fn">sort</span>(<span class="ty">String</span>::compareToIgnoreCase); <span class="cm">// (a, b) -> a.compareToIgnoreCase(b)</span></pre></div>
+    <div id="mr-constructor" class="ct-pane"><pre><span class="kw">class</span> <span class="ty">Point</span> {
+    <span class="kw">int</span> x, y;
+    <span class="ty">Point</span>(<span class="kw">int</span> x, <span class="kw">int</span> y) { <span class="kw">this</span>.x = x; <span class="kw">this</span>.y = y; }
+}
+
+<span class="ty">BiFunction</span>&lt;<span class="ty">Integer</span>, <span class="ty">Integer</span>, <span class="ty">Point</span>&gt; factory = <span class="ty">Point</span>::new; <span class="cm">// constructor reference</span>
+<span class="ty">Point</span> p = factory.<span class="fn">apply</span>(3, 4); <span class="cm">// equivalent to (x, y) -> new Point(x, y)</span>
+
+<span class="cm">// Very common with Streams / Collectors:</span>
+<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; names = <span class="ty">List</span>.<span class="fn">of</span>(<span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"c"</span>);
+<span class="ty">List</span>&lt;<span class="ty">StringBuilder</span>&gt; builders = names.<span class="fn">stream</span>()
+    .<span class="fn">map</span>(<span class="ty">StringBuilder</span>::new) <span class="cm">// String -> new StringBuilder(String)</span>
+    .<span class="fn">toList</span>();
+
+<span class="cm">// Array constructor reference — a special extra form</span>
+<span class="ty">IntFunction</span>&lt;<span class="kw">int</span>[]&gt; arrayMaker = <span class="kw">int</span>[]::new;
+<span class="kw">int</span>[] arr = arrayMaker.<span class="fn">apply</span>(5); <span class="cm">// new int[5]</span></pre></div>
+  </div>
+
+  <div class="warn-box">
+    <span class="tip-icon">⚠️</span>
+    <span class="warn-text"><strong>Bound vs unbound is a common trip-up:</strong> <code class="inline">greeting::toUpperCase</code> (a variable) is bound — the object is fixed. <code class="inline">String::toUpperCase</code> (the class name) is unbound — an object of that type must be supplied at call time as the first argument. Same <code class="inline">::</code> syntax, very different resulting functional signature.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 10: LAMBDAS & CHECKED EXCEPTIONS ═══ -->
+<section class="section" id="exceptions">
+  <div class="section-header"><span class="section-eyebrow">Java 8+</span><span class="section-rule"></span></div>
+  <h2>Lambdas &amp; Checked Exceptions</h2>
+  <p class="section-intro">None of the built-in functional interfaces declare <code class="inline">throws</code> on their abstract method, so a checked exception cannot be thrown directly from a lambda body targeting <code class="inline">Function</code>, <code class="inline">Consumer</code>, <code class="inline">Predicate</code>, etc. This trips people up constantly with I/O and reflection code inside streams.</p>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'lex-fail')">Won't compile</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'lex-tryinside')">Fix: catch inside, wrap unchecked</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'lex-customfi')">Fix: custom throwing functional interface</div>
+    </div>
+    <div id="lex-fail" class="ct-pane active"><pre><span class="ty">List</span>&lt;<span class="ty">String</span>&gt; paths = <span class="ty">List</span>.<span class="fn">of</span>(<span class="st">"a.txt"</span>, <span class="st">"b.txt"</span>);
+
+paths.<span class="fn">forEach</span>(p -&gt; {
+    <span class="ty">Files</span>.<span class="fn">readAllLines</span>(<span class="ty">Path</span>.<span class="fn">of</span>(p)); <span class="cm">// COMPILE ERROR — "Unhandled exception: IOException"</span>
+});
+<span class="cm">// Consumer<T>.accept(T) does not declare "throws" — a lambda targeting it</span>
+<span class="cm">// can't add one either. The checked exception has nowhere to legally go.</span></pre></div>
+    <div id="lex-tryinside" class="ct-pane"><pre><span class="cm">// Catch it locally and convert to an unchecked exception</span>
+paths.<span class="fn">forEach</span>(p -&gt; {
+    <span class="kw">try</span> {
+        <span class="ty">Files</span>.<span class="fn">readAllLines</span>(<span class="ty">Path</span>.<span class="fn">of</span>(p));
+    } <span class="kw">catch</span> (<span class="ty">IOException</span> e) {
+        <span class="kw">throw new</span> <span class="ty">UncheckedIOException</span>(e); <span class="cm">// purpose-built JDK wrapper for exactly this case</span>
+    }
+});</pre></div>
+    <div id="lex-customfi" class="ct-pane"><pre><span class="an">@FunctionalInterface</span>
+<span class="kw">interface</span> <span class="ty">ThrowingConsumer</span>&lt;T, E <span class="kw">extends</span> <span class="ty">Exception</span>&gt; {
+    <span class="kw">void</span> <span class="fn">accept</span>(T t) <span class="kw">throws</span> E; <span class="cm">// this ONE declares throws — the escape hatch</span>
+}
+
+<span class="kw">static</span> &lt;T&gt; <span class="ty">Consumer</span>&lt;T&gt; <span class="fn">wrap</span>(<span class="ty">ThrowingConsumer</span>&lt;T, <span class="ty">Exception</span>&gt; f) {
+    <span class="kw">return</span> t -&gt; {
+        <span class="kw">try</span> { f.<span class="fn">accept</span>(t); }
+        <span class="kw">catch</span> (<span class="ty">Exception</span> e) { <span class="kw">throw new</span> <span class="ty">RuntimeException</span>(e); }
+    };
+}
+paths.<span class="fn">forEach</span>(<span class="fn">wrap</span>(p -&gt; <span class="ty">Files</span>.<span class="fn">readAllLines</span>(<span class="ty">Path</span>.<span class="fn">of</span>(p)))); <span class="cm">// compiles cleanly, checked exception preserved as the cause</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text">See the Exception Handling Bible's "Checked Exceptions in Lambdas &amp; Streams" section for the full treatment, including the controversial "sneaky throw" technique.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 11: LAMBDAS IN STREAMS ═══ -->
+<section class="section" id="streams">
+  <div class="section-header"><span class="section-eyebrow">Where They Shine</span><span class="section-rule"></span></div>
+  <h2>Lambdas in the Stream API</h2>
+  <p class="section-intro">The Stream API is the single biggest reason lambdas exist in modern Java code — nearly every intermediate and terminal stream operation takes a functional interface parameter.</p>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">A typical stream pipeline, annotated with which functional interface each stage expects</span>
+<pre><span class="ty">List</span>&lt;<span class="ty">String</span>&gt; names = <span class="ty">List</span>.<span class="fn">of</span>(<span class="st">"Alice"</span>, <span class="st">"bob"</span>, <span class="st">"Charlie"</span>, <span class="st">"dave"</span>, <span class="st">"Eve"</span>);
+
+<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; result = names.<span class="fn">stream</span>()
+    .<span class="fn">filter</span>(n -&gt; n.<span class="fn">length</span>() &gt; 3)          <span class="cm">// filter(Predicate&lt;T&gt;)</span>
+    .<span class="fn">map</span>(<span class="ty">String</span>::toUpperCase)             <span class="cm">// map(Function&lt;T,R&gt;) — unbound method reference</span>
+    .<span class="fn">sorted</span>((a, b) -&gt; a.<span class="fn">compareTo</span>(b))      <span class="cm">// sorted(Comparator&lt;T&gt;)</span>
+    .<span class="fn">peek</span>(n -&gt; <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"peek: "</span> + n)) <span class="cm">// peek(Consumer&lt;T&gt;) — debugging hook</span>
+    .<span class="fn">toList</span>();
+
+<span class="ty">Optional</span>&lt;<span class="ty">String</span>&gt; longest = names.<span class="fn">stream</span>()
+    .<span class="fn">reduce</span>(<span class="ty">BinaryOperator</span>.<span class="fn">maxBy</span>(<span class="ty">Comparator</span>.<span class="fn">comparingInt</span>(<span class="ty">String</span>::length))); <span class="cm">// reduce(BinaryOperator&lt;T&gt;)</span>
+
+<span class="kw">double</span> avgLength = names.<span class="fn">stream</span>()
+    .<span class="fn">mapToInt</span>(<span class="ty">String</span>::length)             <span class="cm">// mapToInt(ToIntFunction&lt;T&gt;)</span>
+    .<span class="fn">average</span>().<span class="fn">orElse</span>(0);</pre>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview framing:</strong> streams don't add any new lambda mechanics — every single stage is just "here's a functional interface parameter, here's a lambda or method reference satisfying it." Understanding lambdas fully means the Stream API's method signatures stop needing memorization.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 12: FAANG Q&A ═══ -->
+<section class="section" id="faang-qa">
+  <div class="section-header"><span class="section-eyebrow">FAANG Rapid Fire</span><span class="section-rule"></span></div>
+  <h2>FAANG Rapid-Fire Q&amp;A — Tricky Questions</h2>
+  <p class="section-intro">Lambdas look simple at the syntax level, which is exactly why interviewers dig into the mechanics — target typing, capture semantics, and the compiled representation — to see how deep the understanding actually goes.</p>
+
+  <p class="sub-heading">Compile-error / output prediction</p>
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'pq-reassign')">Reassigning a captured local</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pq-this-anon')">this inside a lambda vs anon class</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pq-two-methods')">Interface with 2 abstract methods</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pq-genericfi')">Generic functional interfaces</div>
+    </div>
+    <div id="pq-reassign" class="ct-pane active"><pre><span class="kw">void</span> <span class="fn">demo</span>() {
+    <span class="kw">int</span> x = 10;
+    <span class="ty">Runnable</span> r = () -&gt; <span class="ty">System</span>.out.<span class="fn">println</span>(x);
+    x = 20; <span class="cm">// Q: does this compile?</span>
+}
+<span class="cm">// A: NO — COMPILE ERROR on the lambda line: "local variables referenced</span>
+<span class="cm">// from a lambda expression must be final or effectively final."</span>
+<span class="cm">// The reassignment on the NEXT line retroactively disqualifies x from</span>
+<span class="cm">// being effectively final — order in the source doesn't matter, the</span>
+<span class="cm">// compiler looks at the WHOLE enclosing scope</span></pre></div>
+    <div id="pq-this-anon" class="ct-pane"><pre><span class="kw">public class</span> <span class="ty">Outer</span> {
+    <span class="kw">void</span> <span class="fn">test</span>() {
+        <span class="ty">Runnable</span> lambda = () -&gt; <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="kw">this</span>.<span class="fn">getClass</span>().<span class="fn">getSimpleName</span>());
+        <span class="ty">Runnable</span> anon   = <span class="kw">new</span> <span class="ty">Runnable</span>() {
+            <span class="kw">public void</span> <span class="fn">run</span>() { <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="kw">this</span>.<span class="fn">getClass</span>().<span class="fn">getSimpleName</span>()); }
+        };
+        lambda.<span class="fn">run</span>(); <span class="cm">// prints "Outer"</span>
+        anon.<span class="fn">run</span>();   <span class="cm">// prints "Outer$1" (or similar synthetic name)</span>
+    }
+}
+<span class="cm">// A lambda's "this" is always the ENCLOSING instance; an anonymous class's</span>
+<span class="cm">// "this" is the anonymous class instance itself</span></pre></div>
+    <div id="pq-two-methods" class="ct-pane"><pre><span class="an">@FunctionalInterface</span>
+<span class="kw">interface</span> <span class="ty">Broken</span> {
+    <span class="kw">void</span> <span class="fn">a</span>();
+    <span class="kw">void</span> <span class="fn">b</span>();
+}
+<span class="cm">// Q: what happens here?</span>
+<span class="cm">// A: COMPILE ERROR at the @FunctionalInterface annotation itself —</span>
+<span class="cm">// "Broken is not a functional interface — multiple non-overriding</span>
+<span class="cm">// abstract methods found." The annotation actively enforces the SAM rule.</span>
+<span class="cm">// Without the annotation, the interface would still compile fine on its</span>
+<span class="cm">// own — it just couldn't be used as a lambda target</span></pre></div>
+    <div id="pq-genericfi" class="ct-pane"><pre><span class="cm">// Q: can a functional interface be generic? Does it change anything?</span>
+<span class="an">@FunctionalInterface</span>
+<span class="kw">interface</span> <span class="ty">Transformer</span>&lt;T, R&gt; {
+    R <span class="fn">transform</span>(T input);
+}
+<span class="ty">Transformer</span>&lt;<span class="ty">String</span>, <span class="ty">Integer</span>&gt; toLength = s -&gt; s.<span class="fn">length</span>();
+<span class="ty">Transformer</span>&lt;<span class="ty">Integer</span>, <span class="ty">String</span>&gt; toStr    = i -&gt; <span class="ty">String</span>.<span class="fn">valueOf</span>(i);
+
+<span class="cm">// A: Yes, fully generic — this is exactly how Function<T,R> itself is defined.</span>
+<span class="cm">// The SAM rule is about METHOD COUNT, completely independent of generics.</span></pre></div>
+  </div>
+
+  <p class="sub-heading">Short-answer FAANG questions</p>
+  <div class="cheat-grid">
+    <div class="cheat-card">
+      <h4>❓ What makes an interface "functional"?</h4>
+      <ul>
+        <li>Exactly one abstract method (SAM — Single Abstract Method)</li>
+        <li>default and static methods don't count toward that limit</li>
+        <li>Methods re-declaring an Object method (equals/hashCode/toString) don't count either</li>
+        <li>@FunctionalInterface is optional but enforces the rule at compile time</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Why must captured locals be effectively final?</h4>
+      <ul>
+        <li>Locals live on the stack frame, which may be gone by the time the lambda runs</li>
+        <li>The lambda captures a VALUE COPY at creation time, not a live reference</li>
+        <li>Allowing mutation would create a disconnect between the copy and any "current" value — Java disallows it outright rather than define confusing semantics</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Does a lambda create a new class file?</h4>
+      <ul>
+        <li>No separate .class file at compile time, unlike anonymous inner classes</li>
+        <li>Compiled to an <code class="inline">invokedynamic</code> instruction</li>
+        <li>The actual implementation class is generated at runtime by <code class="inline">LambdaMetafactory</code>, often cached</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Can lambdas be serialized?</h4>
+      <ul>
+        <li>Only if the target functional interface extends <code class="inline">Serializable</code></li>
+        <li>Not recommended for general use — the serialized form is JVM-implementation-specific and fragile across JDK versions</li>
+        <li><code class="inline">Comparator.comparing(...)</code> chains sometimes need this for distributed sort scenarios</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Bound vs unbound method reference — what's the difference?</h4>
+      <ul>
+        <li>Bound: <code class="inline">obj::method</code> — object already fixed, only the remaining args are supplied</li>
+        <li>Unbound: <code class="inline">ClassName::method</code> — the object itself becomes the first parameter at call time</li>
+        <li>Static: <code class="inline">ClassName::staticMethod</code> — no object involved at all</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Can a lambda implement an abstract class?</h4>
+      <ul>
+        <li>No — only interfaces, and only functional (single-abstract-method) ones</li>
+        <li>An abstract class can have constructors and instance state — a lambda has neither</li>
+        <li>If you need that, you still need an anonymous inner class or subclass</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Do lambdas support overloading like normal methods?</h4>
+      <ul>
+        <li>No — a lambda has no name of its own, so there's nothing to overload</li>
+        <li>What IS possible: overloading a method that accepts different functional interface parameter types, and letting the compiler pick based on the lambda's inferred shape</li>
+        <li>Ambiguous cases (same param count on two different FIs) may need an explicit cast</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Function vs UnaryOperator — when does it matter?</h4>
+      <ul>
+        <li><code class="inline">UnaryOperator&lt;T&gt;</code> IS-A <code class="inline">Function&lt;T,T&gt;</code>, just narrower typing</li>
+        <li>APIs like <code class="inline">List.replaceAll(UnaryOperator&lt;E&gt;)</code> specifically require the narrower type</li>
+        <li>Prefer UnaryOperator/BinaryOperator whenever input and output types match — signals intent</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Runnable vs Callable — when to use which?</h4>
+      <ul>
+        <li>Runnable: no return value, cannot throw a checked exception</li>
+        <li>Callable&lt;V&gt;: returns a value, CAN throw checked <code class="inline">Exception</code></li>
+        <li><code class="inline">ExecutorService.submit()</code> is overloaded for both — Callable when you need a result or need to propagate a checked exception</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 13: CHEATSHEET ═══ -->
+<section class="section" id="cheatsheet">
+  <div class="section-header"><span class="section-eyebrow">Interview Reference</span><span class="section-rule"></span></div>
+  <h2>Interview Cheatsheet</h2>
+  <p class="section-intro">One-liners for when you're under pressure. Know these cold.</p>
+
+  <div class="cheat-grid">
+    <div class="cheat-card">
+      <h4>λ What a lambda is</h4>
+      <ul>
+        <li>Nameless, anonymous implementation of a functional interface's single method</li>
+        <li>Target-typed — the variable's declared interface type tells the compiler what to expect</li>
+        <li>No new bytecode construct — compiled via invokedynamic + LambdaMetafactory</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🎯 Functional interface rule</h4>
+      <ul>
+        <li>Exactly ONE abstract method (SAM)</li>
+        <li>default/static methods don't count</li>
+        <li>Re-declared Object methods (equals/hashCode/toString) don't count</li>
+        <li>@FunctionalInterface is optional, but enforces the rule at compile time</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>✍️ Syntax quick ref</h4>
+      <ul>
+        <li>() mandatory for zero params</li>
+        <li>Parens optional for exactly ONE untyped param</li>
+        <li>Parens mandatory for 2+ params, or any typed param</li>
+        <li>Expression body: no braces, no return, no semicolon</li>
+        <li>Block body: braces + explicit return required</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>⚖️ Lambda vs anonymous class</h4>
+      <ul>
+        <li>Lambda's "this" = enclosing instance; anon class's "this" = itself</li>
+        <li>Lambda can't shadow enclosing local variable names; anon class can</li>
+        <li>Lambda: no separate .class file. Anon class: Outer$N.class</li>
+        <li>Lambda: only functional interfaces. Anon class: any interface/abstract class</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🔒 Variable capture</h4>
+      <ul>
+        <li>Local variables: must be final or effectively final; captured BY VALUE</li>
+        <li>Instance/static fields: no restriction, freely mutable, captured BY REFERENCE</li>
+        <li>Loop variables get a fresh binding per iteration — safe to capture</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>📚 java.util.function core 4</h4>
+      <ul>
+        <li>Function&lt;T,R&gt; — apply(T) → R</li>
+        <li>Supplier&lt;T&gt; — get() → T</li>
+        <li>Consumer&lt;T&gt; — accept(T) → void</li>
+        <li>Predicate&lt;T&gt; — test(T) → boolean</li>
+        <li>+ Bi- variants for 2 inputs, Unary/BinaryOperator for same-type in/out</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🔗 Composition defaults</h4>
+      <ul>
+        <li>Function: andThen (this→arg), compose (arg→this)</li>
+        <li>Predicate: and, or, negate — short-circuiting like &amp;&amp;/||</li>
+        <li>Consumer: andThen — runs both, no value passed between</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🔖 Method reference — 4 kinds</h4>
+      <ul>
+        <li>Static: ClassName::staticMethod</li>
+        <li>Bound instance: obj::instanceMethod</li>
+        <li>Unbound instance: ClassName::instanceMethod (obj becomes 1st param)</li>
+        <li>Constructor: ClassName::new</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🚨 Top interview traps</h4>
+      <ul>
+        <li>Captured local reassigned anywhere in scope → compile error</li>
+        <li>2 abstract methods + @FunctionalInterface → compile error</li>
+        <li>Checked exception thrown directly from a standard-FI lambda → compile error</li>
+        <li>Lambda shadowing an enclosing local name → compile error</li>
+        <li>Bound vs unbound method reference confused → wrong parameter count assumed</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>💥 Checked exceptions in lambdas</h4>
+      <ul>
+        <li>Built-in FIs don't declare throws — checked exceptions can't cross directly</li>
+        <li>Fix 1: try-catch inside, rethrow as UncheckedIOException/RuntimeException</li>
+        <li>Fix 2: define a custom FI with `throws E` on its method</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="page-footer">
+  <span class="footer-brand">GrowthScript // Lambda Expressions Bible</span>
+  <span class="footer-note">Functional Interfaces · Syntax · Capture · this Binding · java.util.function · Method References · Streams</span>
+</footer>
+</main>
+
+<script>
+function ctSwitch(tab, id) {
+  const wrap = tab.closest('.code-tabs-wrap');
+  wrap.querySelectorAll('.ct-tab').forEach(t => t.classList.remove('active'));
+  wrap.querySelectorAll('.ct-pane').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+function switchTab(tab, id) {
+  const pair = tab.closest('.code-pair');
+  pair.querySelectorAll('.cpt').forEach(t => t.classList.remove('active'));
+  pair.querySelectorAll('.code-pane').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+function toggleTheme() {
+  const html = document.documentElement;
+  const dark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', dark ? 'light' : 'dark');
+  document.getElementById('btn-light').classList.toggle('active',  dark);
+  document.getElementById('btn-dark').classList.toggle('active',  !dark);
+  localStorage.setItem('lambda-theme', dark ? 'light' : 'dark');
+}
+(function(){
+  const saved = localStorage.getItem('lambda-theme');
+  if (saved === 'dark') {
+    document.documentElement.setAttribute('data-theme','dark');
+    document.getElementById('btn-light').classList.remove('active');
+    document.getElementById('btn-dark').classList.add('active');
+  }
+})();
+const sections  = document.querySelectorAll('section[id]');
+const sideLinks = document.querySelectorAll('.sidebar-link');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const id = e.target.id;
+      sideLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#'+id));
+    }
+  });
+}, { threshold: 0.15, rootMargin: '-60px 0px -60% 0px' });
+sections.forEach(s => obs.observe(s));
+</script>
+</body>
+</html>

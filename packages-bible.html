@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java Packages Bible — GrowthScript Engineering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy:#0F172A; --navy-mid:#1E293B; --brand:#1B4FD8; --brand-soft:#EFF3FE; --brand-mid:#DBEAFE;
+    --accent2:#7C3AED; --accent2-soft:#F5F3FF; --success:#059669; --success-soft:#ECFDF5;
+    --success-border:#A7F3D0; --warn:#D97706; --warn-soft:#FFFBEB; --warn-border:#FDE68A;
+    --warn-text:#78350F; --warn-text-strong:#92400E; --danger:#E11D48; --danger-soft:#FFF1F2;
+    --danger-border:#FECDD3; --purple:#9333EA; --purple-soft:#FDF4FF;
+    --text-1:#0F172A; --text-2:#334155; --text-3:#64748B; --text-4:#94A3B8;
+    --border:#E2E8F0; --border-strong:#CBD5E1; --surface:#FFFFFF; --page:#F8FAFC; --code-bg:#F1F5F9;
+    --sidebar-w:240px; --radius-sm:6px; --radius:10px; --radius-lg:14px;
+    --syn-kw:#6D28D9; --syn-cm:#94A3B8; --syn-st:#059669; --syn-ty:#D97706; --syn-fn:#1B4FD8;
+    color-scheme:light;
+  }
+  [data-theme="dark"] {
+    --navy:#E2E8F0; --navy-mid:#CBD5E1; --brand:#6D9BFF; --brand-soft:#1A2540; --brand-mid:#2A3B66;
+    --accent2:#A78BFA; --accent2-soft:#2A2150; --success:#34D399; --success-soft:#103326;
+    --success-border:#1D5C44; --warn:#FBBF24; --warn-soft:#3A2A0A; --warn-border:#5C4310;
+    --warn-text:#FDE68A; --warn-text-strong:#FCD34D; --danger:#FB7185; --danger-soft:#3A1620;
+    --danger-border:#5C2330; --purple:#D8B4FE; --purple-soft:#2A1A40;
+    --text-1:#E8ECF2; --text-2:#B6C0CE; --text-3:#8895A7; --text-4:#647082;
+    --border:#2A3441; --border-strong:#3D4859; --surface:#161D29; --page:#0D1219; --code-bg:#0F1722;
+    --syn-kw:#C4A7FF; --syn-cm:#6B7888; --syn-st:#6EE7B7; --syn-ty:#FCD34D; --syn-fn:#7FB3FF;
+    color-scheme:dark;
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family:'Inter',-apple-system,sans-serif; background:var(--page); color:var(--text-1); font-size:15px; line-height:1.7; -webkit-font-smoothing:antialiased; display:flex; min-height:100vh; transition:background 0.2s,color 0.2s; }
+  .sidebar { width:var(--sidebar-w); flex-shrink:0; position:sticky; top:0; height:100vh; overflow-y:auto; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:0 0 32px; transition:background 0.2s,border-color 0.2s; }
+  .sidebar-brand { padding:16px 20px 14px; border-bottom:1px solid var(--border); margin-bottom:8px; position:sticky; top:0; background:var(--surface); z-index:10; display:flex; flex-direction:column; gap:10px; }
+  .brand-row { display:flex; flex-direction:column; }
+  .sidebar-logo { font-family:'Space Mono',monospace; font-size:12px; font-weight:700; color:var(--brand); letter-spacing:0.04em; display:block; margin-bottom:2px; }
+  .sidebar-tagline { font-size:11px; color:var(--text-4); }
+  .sidebar-group { padding:12px 0 4px; }
+  .sidebar-group-label { font-family:'Space Mono',monospace; font-size:9.5px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-4); padding:0 20px; margin-bottom:4px; display:block; }
+  .sidebar-link { display:flex; align-items:center; gap:8px; padding:6px 20px; font-size:13px; color:var(--text-2); text-decoration:none; border-left:2px solid transparent; transition:all 0.12s; line-height:1.4; }
+  .sidebar-link:hover { color:var(--brand); background:var(--brand-soft); border-left-color:var(--brand-mid); }
+  .sidebar-link.active { color:var(--brand); background:var(--brand-soft); border-left-color:var(--brand); font-weight:500; }
+  .sidebar-link .sl-dot { width:5px; height:5px; border-radius:50%; background:var(--border-strong); flex-shrink:0; }
+  .sidebar-link.active .sl-dot,.sidebar-link:hover .sl-dot { background:var(--brand); }
+  .sidebar-sub-link { display:flex; align-items:center; gap:8px; padding:4px 20px 4px 34px; font-size:12px; color:var(--text-3); text-decoration:none; border-left:2px solid transparent; transition:all 0.12s; }
+  .sidebar-sub-link:hover { color:var(--brand); background:var(--brand-soft); }
+  .theme-toggle { display:flex; align-items:center; background:var(--page); border:1px solid var(--border); border-radius:20px; padding:3px; width:fit-content; }
+  .theme-toggle-btn { display:flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; border:none; background:transparent; color:var(--text-3); cursor:pointer; font-size:13px; transition:all 0.15s; }
+  .theme-toggle-btn.active { background:var(--surface); color:var(--brand); box-shadow:0 1px 3px rgba(0,0,0,0.1); }
+  .main { flex:1; min-width:0; padding:48px 64px 80px 64px; max-width:1100px; }
+  .page-title-block { padding-bottom:36px; border-bottom:1px solid var(--border); margin-bottom:52px; }
+  .page-eyebrow { font-family:'Space Mono',monospace; font-size:11px; font-weight:700; letter-spacing:0.1em; color:var(--text-4); text-transform:uppercase; margin-bottom:10px; display:block; }
+  .page-title-block h1 { font-size:30px; font-weight:600; color:var(--navy); letter-spacing:-0.02em; line-height:1.2; margin-bottom:10px; }
+  .page-title-block > p { font-size:15px; color:var(--text-2); max-width:680px; line-height:1.65; }
+  .tc-row { display:flex; gap:16px; margin-top:18px; flex-wrap:wrap; }
+  .tc-pill { font-size:12px; color:var(--text-3); display:flex; align-items:center; gap:5px; }
+  .tc-pill span { width:6px; height:6px; border-radius:50%; background:var(--brand); display:inline-block; }
+  .section { margin-bottom:60px; scroll-margin-top:32px; }
+  .section-header { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+  .section-eyebrow { font-family:'Space Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.1em; color:var(--text-4); text-transform:uppercase; white-space:nowrap; }
+  .section-rule { flex:1; height:1px; background:var(--border); }
+  .section h2 { font-size:21px; font-weight:600; color:var(--navy); letter-spacing:-0.02em; margin-bottom:8px; }
+  .section-intro { font-size:14.5px; color:var(--text-2); margin-bottom:28px; max-width:760px; line-height:1.7; }
+  .sub-heading { font-size:14px; font-weight:600; color:var(--navy); margin:28px 0 10px; display:flex; align-items:center; gap:8px; }
+  .sub-heading::after { content:''; flex:1; height:1px; background:var(--border); }
+  .section-divider { height:1px; background:var(--border); margin:48px 0; }
+  .body-p { font-size:14px; color:var(--text-2); margin-bottom:14px; line-height:1.7; }
+  .split-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px; }
+  .rule-card { background:var(--page); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
+  .rule-card-label { font-family:'Space Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-4); margin-bottom:10px; display:block; }
+  .rule-list { list-style:none; }
+  .rule-list li { font-size:13px; color:var(--text-2); padding-left:18px; position:relative; margin-bottom:6px; line-height:1.6; }
+  .rule-list li::before { content:'→'; position:absolute; left:0; color:var(--brand); font-size:11px; top:2px; }
+  .rule-list li.no::before  { content:'✗'; color:var(--danger);  font-size:12px; }
+  .rule-list li.yes::before { content:'✓'; color:var(--success); font-size:12px; }
+  .tip-box { display:flex; gap:10px; background:var(--brand-soft); border:1px solid var(--brand-mid); border-radius:var(--radius); padding:11px 14px; margin-top:14px; }
+  .tip-icon { flex-shrink:0; font-size:14px; margin-top:2px; }
+  .tip-text { font-size:12.5px; color:var(--navy-mid); line-height:1.6; }
+  .tip-text strong { color:var(--brand); font-weight:600; }
+  [data-theme="dark"] .tip-text { color:var(--text-2); }
+  .warn-box { display:flex; gap:10px; background:var(--warn-soft); border:1px solid var(--warn-border); border-radius:var(--radius); padding:11px 14px; margin-top:12px; }
+  .warn-text { font-size:12.5px; color:var(--warn-text); line-height:1.6; }
+  .warn-text strong { color:var(--warn-text-strong); font-weight:600; }
+  .danger-box { display:flex; gap:10px; background:var(--danger-soft); border:1px solid var(--danger-border); border-radius:var(--radius); padding:11px 14px; margin-top:12px; }
+  .danger-text { font-size:12.5px; color:var(--danger); line-height:1.6; }
+  .danger-text strong { font-weight:600; }
+  pre { background:var(--code-bg); border-top:1px solid var(--border); padding:14px 16px; overflow-x:auto; font-family:'Space Mono',monospace; font-size:12px; line-height:1.8; color:var(--text-1); }
+  code.inline { font-family:'Space Mono',monospace; font-size:11.5px; background:var(--code-bg); padding:1px 5px; border-radius:4px; color:var(--text-1); }
+  .kw { color:var(--syn-kw); font-weight:700; }
+  .cm { color:var(--syn-cm); font-style:italic; }
+  .st { color:var(--syn-st); }
+  .ty { color:var(--syn-ty); }
+  .fn { color:var(--syn-fn); }
+  .an { color:var(--syn-ty); font-weight:600; }
+  .code-pair { margin-top:14px; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  .code-pair-tabs { display:flex; border-bottom:1px solid var(--border); }
+  .cpt { flex:1; padding:7px 14px; font-size:12px; font-weight:600; color:var(--text-3); text-align:center; cursor:pointer; transition:all 0.12s; user-select:none; }
+  .cpt.bad { border-right:1px solid var(--border); }
+  .cpt.bad.active  { background:var(--danger-soft); color:var(--danger); }
+  .cpt.good.active { background:var(--success-soft); color:var(--success); }
+  .code-pane { display:none; }
+  .code-pane.active { display:block; }
+  .code-pane pre { border-top:none; border-radius:0; }
+  .code-tabs-wrap { border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; margin-top:14px; }
+  .code-tabs-header { display:flex; overflow-x:auto; border-bottom:1px solid var(--border); background:var(--page); }
+  .ct-tab { padding:9px 16px; font-size:12px; font-weight:500; color:var(--text-3); cursor:pointer; white-space:nowrap; border-right:1px solid var(--border); transition:all 0.12s; font-family:'Space Mono',monospace; user-select:none; flex-shrink:0; }
+  .ct-tab:hover { color:var(--brand); background:var(--brand-soft); }
+  .ct-tab.active { color:var(--brand); background:var(--surface); border-bottom:2px solid var(--brand); font-weight:700; }
+  .ct-pane { display:none; }
+  .ct-pane.active { display:block; }
+  .ct-pane pre { border-top:none; border-radius:0; font-size:12px; }
+  .step-list { display:flex; flex-direction:column; gap:8px; margin-bottom:18px; }
+  .step-item { display:flex; gap:12px; align-items:flex-start; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:10px 14px; }
+  .step-num { flex-shrink:0; width:22px; height:22px; border-radius:50%; background:var(--brand); color:#fff; font-family:'Space Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:2px; }
+  .step-body { font-size:13px; color:var(--text-2); line-height:1.6; }
+  .step-body strong { color:var(--navy); }
+  .code-block-wrap { border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-top:12px; margin-bottom:4px; }
+  .code-block-label { font-family:'Space Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-4); background:var(--page); padding:7px 14px; border-bottom:1px solid var(--border); display:block; }
+  .code-block-wrap pre { border-top:none; }
+  .ref-table { width:100%; border-collapse:collapse; font-size:13px; margin-top:14px; border-radius:var(--radius); overflow:hidden; border:1px solid var(--border); }
+  .ref-table th { background:var(--page); color:var(--navy); font-weight:600; text-align:left; padding:10px 14px; border-bottom:2px solid var(--border); font-family:'Space Mono',monospace; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; }
+  .ref-table td { padding:9px 14px; border-bottom:1px solid var(--border); color:var(--text-2); vertical-align:top; line-height:1.6; }
+  .ref-table tr:last-child td { border-bottom:none; }
+  .ref-table tr:hover td { background:var(--brand-soft); }
+  .ref-table .yes { color:var(--success); font-weight:600; }
+  .ref-table .no  { color:var(--danger);  font-weight:600; }
+  .cheat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; }
+  .cheat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
+  .cheat-card h4 { font-size:12.5px; font-weight:600; color:var(--navy); margin-bottom:8px; }
+  .cheat-card ul { list-style:none; }
+  .cheat-card li { font-size:12px; color:var(--text-2); padding-left:13px; position:relative; line-height:1.55; margin-bottom:4px; }
+  .cheat-card li::before { content:'→'; position:absolute; left:0; color:var(--brand); font-size:10.5px; top:1px; }
+  /* Thread state diagram */
+  .state-diagram { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; overflow-x:auto; margin-bottom:6px; }
+  /* Concept pill tags */
+  .tag-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .tag { font-size:11.5px; font-weight:500; padding:3px 10px; border-radius:20px; border:1px solid var(--border); color:var(--text-2); background:var(--page); font-family:'Space Mono',monospace; }
+  .tag-brand  { background:var(--brand-soft);   border-color:var(--brand-mid);      color:var(--brand);   }
+  .tag-warn   { background:var(--warn-soft);    border-color:var(--warn-border);    color:var(--warn);    }
+  .tag-danger { background:var(--danger-soft);  border-color:var(--danger-border);  color:var(--danger);  }
+  .tag-green  { background:var(--success-soft); border-color:var(--success-border); color:var(--success); }
+  /* Comparison table accent rows */
+  .ref-table tr.accent td { background:var(--brand-soft); font-weight:500; }
+  .page-footer { border-top:1px solid var(--border); padding:20px 0 0; display:flex; justify-content:space-between; align-items:center; }
+  .footer-brand { font-family:'Space Mono',monospace; font-size:11px; font-weight:700; color:var(--brand); }
+  .footer-note  { font-size:11.5px; color:var(--text-4); }
+  @media(max-width:860px){
+    body{flex-direction:column;}
+    .sidebar{width:100%;height:auto;position:static;border-right:none;border-bottom:1px solid var(--border);padding-bottom:0;}
+    .sidebar-group{display:flex;flex-wrap:wrap;padding:8px 16px;gap:4px;}
+    .sidebar-group-label{display:none;}
+    .sidebar-link{padding:5px 10px;border-left:none;border-radius:20px;border:1px solid var(--border);font-size:12px;}
+    .sidebar-link:hover,.sidebar-link.active{background:var(--brand-soft);border-color:var(--brand-mid);}
+    .sidebar-sub-link{display:none;}
+    .main{padding:32px 20px 60px;}
+    .split-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-row">
+      <span class="sidebar-logo">GS // Packages Bible</span>
+      <span class="sidebar-tagline">Interview Reference</span>
+    </div>
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <button class="theme-toggle-btn active" id="btn-light">☀️</button>
+      <button class="theme-toggle-btn" id="btn-dark">🌙</button>
+    </div>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Foundations</span>
+    <a href="#foundations" class="sidebar-link active"><span class="sl-dot"></span>What is a Package?</a>
+    <a href="#foundations" class="sidebar-sub-link">Why packages exist</a>
+    <a href="#types" class="sidebar-link"><span class="sl-dot"></span>Types of Packages</a>
+    <a href="#types" class="sidebar-sub-link">Built-in vs user-defined</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Working with Packages</span>
+    <a href="#import" class="sidebar-link"><span class="sl-dot"></span>The import Statement</a>
+    <a href="#import" class="sidebar-sub-link">Single / wildcard / static</a>
+    <a href="#creating" class="sidebar-link"><span class="sl-dot"></span>Creating &amp; Compiling</a>
+    <a href="#creating" class="sidebar-sub-link">javac -d, directory structure</a>
+    <a href="#subpackages" class="sidebar-link"><span class="sl-dot"></span>Sub-packages</a>
+    <a href="#subpackages" class="sidebar-sub-link">No real hierarchy for access</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Access Control</span>
+    <a href="#access-modifiers" class="sidebar-link"><span class="sl-dot"></span>Access Modifiers</a>
+    <a href="#access-modifiers" class="sidebar-sub-link">private / default / protected / public</a>
+    <a href="#protected-deep" class="sidebar-link"><span class="sl-dot"></span>protected — The Tricky Rule</a>
+    <a href="#top-level" class="sidebar-link"><span class="sl-dot"></span>Top-Level Class Rules</a>
+    <a href="#top-level" class="sidebar-sub-link">One public class per file</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Reference</span>
+    <a href="#naming" class="sidebar-link"><span class="sl-dot"></span>Naming &amp; CLASSPATH</a>
+    <a href="#faang-qa" class="sidebar-link"><span class="sl-dot"></span>FAANG Rapid-Fire Q&amp;A</a>
+    <a href="#cheatsheet" class="sidebar-link"><span class="sl-dot"></span>Interview Cheatsheet</a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+<div class="page-title-block">
+  <span class="page-eyebrow">Java Packages &amp; Access Control</span>
+  <h1>Packages &amp; Access Modifiers Bible</h1>
+  <p>Complete Java packages reference for FAANG interviews — what packages are, imports, creating and compiling your own packages, sub-packages, the four access modifiers, top-level class rules, naming conventions, and every tricky interview question answered.</p>
+  <div class="tc-row">
+    <span class="tc-pill"><span></span>Package Basics</span>
+    <span class="tc-pill"><span></span>import statement</span>
+    <span class="tc-pill"><span></span>Creating a Package</span>
+    <span class="tc-pill"><span></span>Sub-packages</span>
+    <span class="tc-pill"><span></span>Access Modifiers</span>
+    <span class="tc-pill"><span></span>Top-Level Class Rules</span>
+    <span class="tc-pill"><span></span>Naming Conventions</span>
+  </div>
+</div>
+<!-- ═══ SECTION 1: FOUNDATIONS ═══ -->
+<section class="section" id="foundations">
+  <div class="section-header"><span class="section-eyebrow">Java Packages</span><span class="section-rule"></span></div>
+  <h2>What is a Package?</h2>
+  <p class="section-intro">A package is Java's namespace mechanism — a way of organizing related classes, interfaces, enums, and annotations into a single logical unit, backed by an actual directory on disk. Think of it as a folder for your code that also becomes part of every class's fully qualified name.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Why packages exist</span>
+      <ul class="rule-list">
+        <li>Avoid naming collisions — two classes named <code class="inline">List</code> can coexist in <code class="inline">java.util</code> and <code class="inline">java.awt</code></li>
+        <li>Namespace management for large codebases with thousands of classes</li>
+        <li>An access-control boundary — default (package-private) visibility only makes sense because packages exist</li>
+        <li>Logical grouping — related classes live together (all JDBC classes in <code class="inline">java.sql</code>)</li>
+        <li>Easier maintenance, discovery, and reuse across teams/modules</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">A package is, mechanically</span>
+      <ul class="rule-list">
+        <li>A directory on disk whose name matches the package name</li>
+        <li>A namespace prefix baked into every class's fully qualified name</li>
+        <li>Declared via a <code class="inline">package</code> statement at the top of a <code class="inline">.java</code> file</li>
+        <li>NOT a physical container at runtime — the JVM just resolves classes by their FQN and classpath</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">A package's fully qualified name uniquely identifies every class</span>
+<pre><span class="cm">// Without packages — collision, can't have two classes named "List" in one namespace</span>
+<span class="kw">class</span> <span class="ty">List</span> { <span class="cm">/* which one?? */</span> }
+
+<span class="cm">// With packages — fully qualified names disambiguate completely</span>
+java.util.List&lt;<span class="ty">String</span>&gt; l1;   <span class="cm">// java.util's List — an interface</span>
+java.awt.List l2;                <span class="cm">// java.awt's List — a GUI component, totally different class</span>
+
+<span class="cm">// This is the actual reason both can exist in the JDK without conflict</span></pre>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Mental model:</strong> a package is to classes what a folder is to files — except the "folder path" is also baked directly into the language as part of every class's real name.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 2: TYPES OF PACKAGES ═══ -->
+<section class="section" id="types">
+  <div class="section-header"><span class="section-eyebrow">Built-in vs Custom</span><span class="section-rule"></span></div>
+  <h2>Types of Packages</h2>
+  <p class="section-intro">Java packages split into two categories: the ones shipped with the JDK, and the ones you write. Knowing the common built-in packages cold is a baseline interview expectation.</p>
+
+  <table class="ref-table" style="margin-bottom:6px;">
+    <thead><tr><th>Package</th><th>Contains</th></tr></thead>
+    <tbody>
+      <tr><td><code class="inline">java.lang</code></td><td>Core language types: String, Object, Math, Integer, Thread, Exception hierarchy. <strong>Auto-imported</strong> — no import statement ever needed.</td></tr>
+      <tr><td><code class="inline">java.util</code></td><td>Collections framework, Date/Calendar (legacy), Optional, Scanner, regex-adjacent utilities.</td></tr>
+      <tr><td><code class="inline">java.io</code></td><td>Streams, Reader/Writer, File — classic blocking I/O.</td></tr>
+      <tr><td><code class="inline">java.nio</code></td><td>Buffers, Channels — non-blocking / newer I/O (also <code class="inline">java.nio.file</code> for Path/Files).</td></tr>
+      <tr><td><code class="inline">java.net</code></td><td>Sockets, URL, URLConnection, HttpClient (Java 11+).</td></tr>
+      <tr><td><code class="inline">java.sql</code></td><td>JDBC — Connection, Statement, ResultSet.</td></tr>
+      <tr><td><code class="inline">java.time</code></td><td>Modern date/time API (Java 8+) — LocalDate, LocalDateTime, Duration, Instant.</td></tr>
+      <tr><td><code class="inline">java.util.concurrent</code></td><td>ExecutorService, CompletableFuture, concurrent collections, locks.</td></tr>
+      <tr><td><code class="inline">java.util.stream</code></td><td>Stream API — Stream, Collectors, IntStream.</td></tr>
+    </tbody>
+  </table>
+
+  <p class="sub-heading">User-defined packages</p>
+  <p class="body-p">Any package you create yourself — <code class="inline">com.growthscript.service</code>, <code class="inline">com.walmart.inventory.dao</code>. Structured identically to built-in packages: a directory tree matching dotted names, with a <code class="inline">package</code> statement in every source file inside it.</p>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 3: THE IMPORT STATEMENT ═══ -->
+<section class="section" id="import">
+  <div class="section-header"><span class="section-eyebrow">Using Packages</span><span class="section-rule"></span></div>
+  <h2>The import Statement</h2>
+  <p class="section-intro"><code class="inline">import</code> is purely a compile-time convenience — it lets you refer to a class by its short name instead of typing the fully qualified name every time. It has zero runtime cost and zero effect on the compiled bytecode's size or behavior.</p>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'imp-single')">Single-type import</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'imp-wildcard')">Wildcard import</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'imp-static')">Static import</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'imp-fqn')">No import — FQN</div>
+    </div>
+    <div id="imp-single" class="ct-pane active"><pre><span class="kw">import</span> java.util.ArrayList;   <span class="cm">// imports exactly ONE class</span>
+<span class="kw">import</span> java.util.List;
+
+<span class="kw">public class</span> <span class="ty">Demo</span> {
+    <span class="ty">List</span>&lt;<span class="ty">String</span>&gt; names = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;(); <span class="cm">// short names now usable</span>
+}</pre></div>
+    <div id="imp-wildcard" class="ct-pane"><pre><span class="kw">import</span> java.util.*;  <span class="cm">// imports ALL top-level classes/interfaces DIRECTLY in java.util</span>
+
+<span class="kw">public class</span> <span class="ty">Demo</span> {
+    <span class="ty">List</span>&lt;<span class="ty">String</span>&gt; names = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;();
+    <span class="ty">Map</span>&lt;<span class="ty">String</span>, <span class="ty">Integer</span>&gt; counts = <span class="kw">new</span> <span class="ty">HashMap</span>&lt;&gt;();
+}
+
+<span class="cm">// IMPORTANT: java.util.* does NOT import java.util.concurrent.* —</span>
+<span class="cm">// wildcard import is NOT recursive into sub-packages</span>
+<span class="ty">ExecutorService</span> ex; <span class="cm">// COMPILE ERROR even with "import java.util.*;" — needs its own import</span></pre></div>
+    <div id="imp-static" class="ct-pane"><pre><span class="cm">// Static import — brings in STATIC members so you can drop the class prefix</span>
+<span class="kw">import static</span> java.lang.Math.*;
+
+<span class="kw">public class</span> <span class="ty">Demo</span> {
+    <span class="kw">double</span> hyp = <span class="fn">sqrt</span>(<span class="fn">pow</span>(3, 2) + <span class="fn">pow</span>(4, 2)); <span class="cm">// Math.sqrt / Math.pow without the "Math." prefix</span>
+    <span class="kw">double</span> circumference = 2 * PI * radius;          <span class="cm">// Math.PI, also static-imported</span>
+}
+
+<span class="cm">// import static java.util.Collections.emptyList; — imports ONE static member</span>
+<span class="cm">// Overuse hurts readability — reviewers flag "where did this come from" static imports</span></pre></div>
+    <div id="imp-fqn" class="ct-pane"><pre><span class="cm">// No import needed at all — just spell out the fully qualified name inline</span>
+<span class="kw">public class</span> <span class="ty">Demo</span> {
+    java.util.List&lt;<span class="ty">String</span>&gt; names = <span class="kw">new</span> java.util.ArrayList&lt;&gt;();
+    <span class="cm">// Verbose, but zero ambiguity — this is the escape hatch when two</span>
+    <span class="cm">// wildcard-imported packages both define a class with the same name</span>
+}</pre></div>
+  </div>
+
+  <div class="warn-box">
+    <span class="tip-icon">⚠️</span>
+    <span class="warn-text"><strong>Ambiguity trap:</strong> if you <code class="inline">import java.util.*;</code> and <code class="inline">import java.awt.*;</code> and then write <code class="inline">List l;</code>, that's a <strong>compile error</strong> — "reference to List is ambiguous." The compiler won't guess. Fix: use a single-type import for the one you actually want, or the fully qualified name.</span>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>java.lang is the one exception:</strong> every class in <code class="inline">java.lang</code> (String, Object, Math, System, the whole exception hierarchy) is implicitly imported into every Java file — you never write <code class="inline">import java.lang.String;</code>, though it's legal to.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 4: CREATING & COMPILING A PACKAGE ═══ -->
+<section class="section" id="creating">
+  <div class="section-header"><span class="section-eyebrow">Hands-On</span><span class="section-rule"></span></div>
+  <h2>Creating a Package &amp; Compiling It</h2>
+  <p class="section-intro">Three rules govern every source file that belongs to a package: the <code class="inline">package</code> statement must be the first statement in the file, the directory structure must exactly mirror the package name, and the compiler needs to be told to build that structure for you.</p>
+
+  <div class="step-list">
+    <div class="step-item"><div class="step-num">1</div><div class="step-body"><strong>Declare the package</strong> as the very first line — only comments or blank lines may precede it. Nothing else, not even an import, can come before it.</div></div>
+    <div class="step-item"><div class="step-num">2</div><div class="step-body"><strong>Write the class</strong> normally below the package statement.</div></div>
+    <div class="step-item"><div class="step-num">3</div><div class="step-body"><strong>Compile with <code class="inline">-d</code></strong> — this tells <code class="inline">javac</code> to create the matching directory structure and place the <code class="inline">.class</code> file inside it automatically.</div></div>
+    <div class="step-item"><div class="step-num">4</div><div class="step-body"><strong>Run using the fully qualified class name</strong> from the directory that contains the top-level package folder — not from inside the package directory itself.</div></div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'cr-file')">File.java</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'cr-compile')">Compile command</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'cr-structure')">Resulting directory</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'cr-run')">Run it</div>
+    </div>
+    <div id="cr-file" class="ct-pane active"><pre><span class="cm">// File: File.java  (can be saved anywhere before compiling)</span>
+<span class="kw">package</span> mypack1; <span class="cm">// ← MUST be the first statement in the file</span>
+
+<span class="kw">public class</span> <span class="ty">File</span> {
+    <span class="kw">public void</span> <span class="fn">show</span>() {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Hello from mypack1.File"</span>);
+    }
+}</pre></div>
+    <div id="cr-compile" class="ct-pane"><pre><span class="cm">$ javac -d . File.java</span>
+
+<span class="cm">// -d .    → generate the package directory structure STARTING at "."</span>
+<span class="cm">//           (current directory); use -d /some/path for a specific target</span>
+<span class="cm">// javac reads "package mypack1;" from the source and creates:</span>
+<span class="cm">//   ./mypack1/File.class</span>
+
+<span class="cm">// Without -d: javac just drops File.class next to File.java —</span>
+<span class="cm">// no package directory is created, and it WON'T run correctly as a package member</span></pre></div>
+    <div id="cr-structure" class="ct-pane"><pre>.
+├── File.java
+└── mypack1/
+    └── File.class      <span class="cm">// javac -d created this folder + placed the class inside</span>
+
+<span class="cm">// The folder name "mypack1" MUST exactly match the package name (case-sensitive)</span>
+<span class="cm">// This is not a convention — the JVM's classloader relies on it to locate classes</span></pre></div>
+    <div id="cr-run" class="ct-pane"><pre><span class="cm">// Run from the directory that CONTAINS mypack1/ (i.e. the parent, not inside it)</span>
+<span class="cm">$ java mypack1.File</span>   <span class="cm">// note: dotted fully-qualified name, NOT mypack1/File or mypack1.File.class</span>
+
+<span class="cm">// Common mistake: cd into mypack1/ and run "java File" — this FAILS</span>
+<span class="cm">// with NoClassDefFoundError because the classloader expects the package</span>
+<span class="cm">// structure to be visible from the classpath root</span></pre></div>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 5: SUB-PACKAGES ═══ -->
+<section class="section" id="subpackages">
+  <div class="section-header"><span class="section-eyebrow">Nesting</span><span class="section-rule"></span></div>
+  <h2>Creating a Sub-package</h2>
+  <p class="section-intro">A sub-package is just a package whose name has more dot-separated segments — declared the same way, compiled the same way. The interview trap is assuming this nesting grants some kind of special access relationship. It doesn't.</p>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">package packageName.subPackageName;</span>
+<pre><span class="kw">package</span> mypack1.subpack1; <span class="cm">// dot-separated — this IS the entire package name</span>
+
+<span class="kw">public class</span> <span class="ty">Helper</span> {
+    <span class="kw">public void</span> <span class="fn">assist</span>() { <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"in subpack1"</span>); }
+}
+
+<span class="cm">// Directory structure MUST nest to match:</span>
+<span class="cm">// mypack1/</span>
+<span class="cm">//   subpack1/</span>
+<span class="cm">//     Helper.class</span>
+<span class="cm">// Compile from the source root: javac -d . mypack1/subpack1/Helper.java</span>
+<span class="cm">// Run:                          java mypack1.subpack1.Helper</span></pre>
+  </div>
+
+  <div class="danger-box">
+    <span class="tip-icon">🚫</span>
+    <span class="danger-text"><strong>Critical interview point — packages are NOT hierarchical for access control.</strong> <code class="inline">mypack1.subpack1</code> is a completely independent, unrelated package as far as the compiler and access modifiers are concerned. A class in <code class="inline">mypack1</code> has <strong>zero</strong> special access to default (package-private) members in <code class="inline">mypack1.subpack1</code>, and vice versa. <code class="inline">import mypack1.*;</code> does NOT pull in <code class="inline">mypack1.subpack1</code> either — the "sub" in "sub-package" describes the naming convention and directory nesting only, not a parent-child access relationship.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 6: ACCESS MODIFIERS ═══ -->
+<section class="section" id="access-modifiers">
+  <div class="section-header"><span class="section-eyebrow">Access Control</span><span class="section-rule"></span></div>
+  <h2>Access Modifiers in Java</h2>
+  <p class="section-intro">Four levels of visibility, from most to least restrictive: <code class="inline">private</code> → <code class="inline">default</code> (no keyword) → <code class="inline">protected</code> → <code class="inline">public</code>. Every one of these is a favorite whiteboard question because the middle two are easy to mix up.</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th>Modifier</th><th>Same class</th><th>Same package</th><th>Subclass, different package</th><th>World (unrelated, different package)</th></tr></thead>
+    <tbody>
+      <tr><td><code class="inline">private</code></td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+      <tr><td><code class="inline">default</code> (no modifier)</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+      <tr class="accent"><td><code class="inline">protected</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓ (via subclass reference only)</td><td class="no">✗</td></tr>
+      <tr><td><code class="inline">public</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'am-private')">private</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'am-default')">default</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'am-protected')">protected</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'am-public')">public</div>
+    </div>
+    <div id="am-private" class="ct-pane active"><pre><span class="cm">// private — accessible ONLY inside the same class (not even subclasses)</span>
+<span class="kw">package</span> com.growthscript.model;
+
+<span class="kw">public class</span> <span class="ty">Account</span> {
+    <span class="kw">private double</span> balance; <span class="cm">// hidden from EVERY other class, including subclasses</span>
+
+    <span class="kw">private void</span> <span class="fn">auditLog</span>() { <span class="cm">/* internal-only helper */</span> }
+}
+
+<span class="kw">class</span> <span class="ty">SavingsAccount</span> <span class="kw">extends</span> <span class="ty">Account</span> {
+    <span class="kw">void</span> <span class="fn">test</span>() {
+        balance = 100; <span class="cm">// COMPILE ERROR — even a subclass can't see a private field</span>
+    }
+}</pre></div>
+    <div id="am-default" class="ct-pane"><pre><span class="cm">// default (package-private) — no keyword at all, just omit the modifier</span>
+<span class="kw">package</span> com.growthscript.model;
+
+<span class="kw">class</span> <span class="ty">InternalHelper</span> { <span class="cm">// no modifier → default access</span>
+    <span class="kw">void</span> <span class="fn">assist</span>() { <span class="cm">/* also default — package-private method */</span> }
+}
+
+<span class="cm">// From ANOTHER class in com.growthscript.model → fully accessible</span>
+<span class="kw">class</span> <span class="ty">Service</span> {
+    <span class="kw">void</span> <span class="fn">use</span>() { <span class="kw">new</span> <span class="ty">InternalHelper</span>().<span class="fn">assist</span>(); } <span class="cm">// works — same package</span>
+}
+
+<span class="cm">// From com.growthscript.other (a DIFFERENT package) → invisible entirely</span>
+<span class="kw">package</span> com.growthscript.other;
+<span class="kw">import</span> com.growthscript.model.InternalHelper; <span class="cm">// COMPILE ERROR — can't even import it</span></pre></div>
+    <div id="am-protected" class="ct-pane"><pre><span class="cm">// protected — package access PLUS subclasses anywhere, with a catch (see below)</span>
+<span class="kw">package</span> com.growthscript.model;
+
+<span class="kw">public class</span> <span class="ty">Account</span> {
+    <span class="kw">protected double</span> balance;
+    <span class="kw">protected void</span> <span class="fn">applyInterest</span>() { <span class="cm">/* ... */</span> }
+}
+
+<span class="cm">// From a DIFFERENT package, subclassing IS allowed to use protected members —</span>
+<span class="cm">// but only through "this" / a reference of the SUBCLASS's own type</span>
+<span class="kw">package</span> com.growthscript.other;
+<span class="kw">class</span> <span class="ty">SavingsAccount</span> <span class="kw">extends</span> com.growthscript.model.Account {
+    <span class="kw">void</span> <span class="fn">grow</span>() {
+        <span class="kw">this</span>.balance += 10;   <span class="cm">// ✓ works — accessed via inherited "this"</span>
+        <span class="fn">applyInterest</span>();      <span class="cm">// ✓ works — inherited protected method</span>
+    }
+}</pre></div>
+    <div id="am-public" class="ct-pane"><pre><span class="cm">// public — accessible from absolutely anywhere, no restrictions</span>
+<span class="kw">package</span> com.growthscript.model;
+
+<span class="kw">public class</span> <span class="ty">Account</span> {
+    <span class="kw">public</span> <span class="ty">String</span> accountId;
+    <span class="kw">public double</span> <span class="fn">getBalance</span>() { <span class="kw">return</span> balance; }
+}
+
+<span class="cm">// From literally any package, any class, any relationship (or none at all)</span>
+<span class="kw">package</span> com.walmart.billing;
+<span class="kw">import</span> com.growthscript.model.Account;
+<span class="kw">class</span> <span class="ty">Invoice</span> {
+    <span class="kw">void</span> <span class="fn">charge</span>(<span class="ty">Account</span> a) { a.<span class="fn">getBalance</span>(); } <span class="cm">// fully accessible, no relationship needed</span>
+}</pre></div>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 7: PROTECTED DEEP-DIVE ═══ -->
+<section class="section" id="protected-deep">
+  <div class="section-header"><span class="section-eyebrow">The Trap</span><span class="section-rule"></span></div>
+  <h2>protected — The Rule Nobody Remembers Correctly</h2>
+  <p class="section-intro"><code class="inline">protected</code> is "accessible everywhere except by non-subclasses in a different package" — but there's a sharper rule hiding inside that: from a different package, you can only reach a protected member <strong>through a reference of your own subclass type</strong>, never through a reference typed as the superclass.</p>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">The reference-type restriction — a very common FAANG trap</span>
+<pre><span class="kw">package</span> com.growthscript.model;
+<span class="kw">public class</span> <span class="ty">Account</span> {
+    <span class="kw">protected double</span> balance;
+}</pre>
+<pre><span class="kw">package</span> com.growthscript.other; <span class="cm">// different package — subclass relationship exists</span>
+<span class="kw">import</span> com.growthscript.model.Account;
+
+<span class="kw">class</span> <span class="ty">SavingsAccount</span> <span class="kw">extends</span> <span class="ty">Account</span> {
+
+    <span class="kw">void</span> <span class="fn">ok</span>() {
+        <span class="kw">this</span>.balance = 100;          <span class="cm">// ✓ COMPILES — "this" is typed as SavingsAccount</span>
+    }
+
+    <span class="kw">void</span> <span class="fn">alsoOk</span>(<span class="ty">SavingsAccount</span> other) {
+        other.balance = 100;         <span class="cm">// ✓ COMPILES — reference typed as SavingsAccount (the subclass)</span>
+    }
+
+    <span class="kw">void</span> <span class="fn">fails</span>(<span class="ty">Account</span> acc) {
+        acc.balance = 100;           <span class="cm">// ✗ COMPILE ERROR — reference typed as Account (the SUPERCLASS)</span>
+    }                                 <span class="cm">// even though acc might hold a SavingsAccount object at runtime!</span>
+}</pre>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Why this rule exists:</strong> the compiler can't know at compile time that an <code class="inline">Account</code>-typed parameter actually points to a <code class="inline">SavingsAccount</code> — it could be a totally unrelated <code class="inline">CheckingAccount</code> instance from the same package with no relationship to <code class="inline">SavingsAccount</code> at all. Restricting access to your own subclass's type (or subtypes of it) is how Java keeps this check sound at compile time.</span>
+  </div>
+
+  <div class="warn-box">
+    <span class="tip-icon">⚠️</span>
+    <span class="warn-text"><strong>Note:</strong> this restriction only applies across packages. Within the SAME package, protected behaves exactly like default — any class can access it through any reference type, subclass or not, since package access already covers that case.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 8: TOP-LEVEL CLASS RULES ═══ -->
+<section class="section" id="top-level">
+  <div class="section-header"><span class="section-eyebrow">Class Declarations</span><span class="section-rule"></span></div>
+  <h2>Top-Level Class Modifier Rules</h2>
+  <p class="section-intro">A top-level (outer) class can only ever be <code class="inline">public</code> or default (package-private) — <code class="inline">private</code> and <code class="inline">protected</code> are illegal on it. Those two only make sense on <em>members</em> (fields, methods, constructors, and nested classes), which live inside a class and can be scoped tighter than the class itself.</p>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'tl-valid')">Valid top-level declarations</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'tl-invalid')">Illegal top-level declarations</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'tl-nested')">Nested classes — all 4 allowed</div>
+    </div>
+    <div id="tl-valid" class="ct-pane active"><pre><span class="kw">public class</span> <span class="ty">Account</span> { }     <span class="cm">// ✓ public — visible everywhere</span>
+
+<span class="kw">class</span> <span class="ty">InternalHelper</span> { }    <span class="cm">// ✓ default (no modifier) — package-private, visible only in this package</span></pre></div>
+    <div id="tl-invalid" class="ct-pane"><pre><span class="kw">private class</span> <span class="ty">Broken</span> { }    <span class="cm">// ✗ COMPILE ERROR — "modifier private not allowed here"</span>
+
+<span class="kw">protected class</span> <span class="ty">AlsoBroken</span> { } <span class="cm">// ✗ COMPILE ERROR — "modifier protected not allowed here"</span>
+
+<span class="cm">// Reasoning: "private" would mean "visible only inside itself" — meaningless</span>
+<span class="cm">// for a top-level type with nothing enclosing it. Same logic kills protected:</span>
+<span class="cm">// there's no enclosing class to inherit access relative to.</span></pre></div>
+    <div id="tl-nested" class="ct-pane"><pre><span class="cm">// Nested (inner) classes ARE members of the enclosing class — so all 4 apply</span>
+<span class="kw">public class</span> <span class="ty">Outer</span> {
+    <span class="kw">public class</span>    <span class="ty">PublicInner</span>    { }  <span class="cm">// ✓ visible everywhere</span>
+    <span class="kw">protected class</span> <span class="ty">ProtectedInner</span> { }  <span class="cm">// ✓ package + subclasses</span>
+    <span class="kw">class</span>           <span class="ty">DefaultInner</span>   { }  <span class="cm">// ✓ package-private</span>
+    <span class="kw">private class</span>  <span class="ty">PrivateInner</span>   { }  <span class="cm">// ✓ visible only inside Outer</span>
+}</pre></div>
+  </div>
+
+  <div class="danger-box">
+    <span class="tip-icon">🚫</span>
+    <span class="danger-text"><strong>One public top-level class per file, and it must match the filename.</strong> <code class="inline">Account.java</code> can contain at most one <code class="inline">public class Account</code> — plus as many default-access top-level classes as you want. Two public top-level classes in one file, or a public class whose name doesn't match the filename, is a compile error.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 9: NAMING & CLASSPATH ═══ -->
+<section class="section" id="naming">
+  <div class="section-header"><span class="section-eyebrow">Conventions</span><span class="section-rule"></span></div>
+  <h2>Package Naming Conventions &amp; CLASSPATH</h2>
+  <p class="section-intro">Package names follow the reverse-domain-name convention specifically to guarantee global uniqueness — two companies can't accidentally publish colliding package names if both are rooted in their own domains.</p>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">Reverse domain convention</span>
+<pre><span class="cm">// Domain: citi.com  →  package root: com.citi</span>
+<span class="kw">package</span> com.citi.academic.account;
+
+<span class="cm">// Domain: growthscript.com  →  package root: com.growthscript</span>
+<span class="kw">package</span> com.growthscript.youtube.analytics;
+
+<span class="cm">// Rules:</span>
+<span class="cm">// - all lowercase (avoids clashes on case-insensitive filesystems like Windows/macOS,</span>
+<span class="cm">//   and avoids confusion with class names, which are conventionally PascalCase)</span>
+<span class="cm">// - segments separated by dots, matching nested folders exactly</span>
+<span class="cm">// - avoid Java reserved words as segments (no "com.citi.class.account")</span>
+<span class="cm">// - avoid starting a segment with a digit (illegal identifier)</span></pre>
+  </div>
+
+  <p class="sub-heading">CLASSPATH — how the JVM finds your packages</p>
+  <p class="body-p">The classpath is the set of root directories (and/or JARs) the JVM searches when resolving a fully qualified class name. When you run <code class="inline">java mypack1.File</code> from a directory containing <code class="inline">mypack1/</code>, that directory is implicitly on the classpath. For anything beyond the current directory — external JARs, other source roots — use <code class="inline">java -cp path1:path2 mypack1.File</code> (semicolon-separated on Windows). A JAR file is simply a zipped bundle of compiled packages plus a manifest; it's how packages get distributed and depended on (Maven/Gradle dependencies are ultimately JARs full of packages).</p>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 10: FAANG Q&A ═══ -->
+<section class="section" id="faang-qa">
+  <div class="section-header"><span class="section-eyebrow">FAANG Rapid Fire</span><span class="section-rule"></span></div>
+  <h2>FAANG Rapid-Fire Q&amp;A — Tricky Questions</h2>
+  <p class="section-intro">Packages sound simple, which is exactly why interviewers use them to check whether you actually understand Java's compilation and access model, or just memorized "public means everyone can see it."</p>
+
+  <p class="sub-heading">Output / compile-error prediction</p>
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'pq-order')">package statement order</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pq-multi')">Multiple public classes</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pq-subclass-visibility')">Extending a default class</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pq-wildcard-cost')">Does import cost anything?</div>
+    </div>
+    <div id="pq-order" class="ct-pane active"><pre><span class="cm">// Q: Does this compile?</span>
+<span class="kw">import</span> java.util.List;
+<span class="kw">package</span> com.growthscript.model; <span class="cm">// package statement AFTER an import</span>
+
+<span class="kw">public class</span> <span class="ty">Account</span> { }
+
+<span class="cm">// A: NO — COMPILE ERROR: "package statement must be the only statement</span>
+<span class="cm">// on this line" / must appear before any import or type declaration.</span>
+<span class="cm">// Only comments and blank lines are allowed before "package".</span></pre></div>
+    <div id="pq-multi" class="ct-pane"><pre><span class="cm">// Q: Does Account.java compile with this content?</span>
+<span class="kw">package</span> com.growthscript.model;
+
+<span class="kw">public class</span> <span class="ty">Account</span> { }
+<span class="kw">public class</span> <span class="ty">AccountHistory</span> { } <span class="cm">// a SECOND public top-level class, same file</span>
+
+<span class="cm">// A: NO — COMPILE ERROR: a .java file can have at most ONE public</span>
+<span class="cm">// top-level type, and its name must match the filename (Account.java).</span>
+<span class="cm">// Fix: move AccountHistory to its own AccountHistory.java, OR make it</span>
+<span class="cm">// default-access (drop "public") if it's only meant to be used in-package.</span></pre></div>
+    <div id="pq-subclass-visibility" class="ct-pane"><pre><span class="cm">// Q: Can you extend this class from a different package?</span>
+<span class="kw">package</span> com.growthscript.model;
+<span class="kw">class</span> <span class="ty">InternalBase</span> { } <span class="cm">// default access — no modifier</span></pre>
+<pre><span class="kw">package</span> com.growthscript.other;
+<span class="kw">import</span> com.growthscript.model.InternalBase; <span class="cm">// COMPILE ERROR right here</span>
+<span class="kw">class</span> <span class="ty">Derived</span> <span class="kw">extends</span> <span class="ty">InternalBase</span> { }
+
+<span class="cm">// A: You can't even IMPORT it, let alone extend it. Default-access classes</span>
+<span class="cm">// are invisible outside their package — there's no special "I'm extending it"</span>
+<span class="cm">// exemption. The class itself must be public for cross-package subclassing.</span></pre></div>
+    <div id="pq-wildcard-cost" class="ct-pane"><pre><span class="cm">// Q: Does "import java.util.*;" make the compiled program bigger or slower?</span>
+
+<span class="cm">// A: No — imports are a PURE COMPILE-TIME convenience. The compiler resolves</span>
+<span class="cm">// every short name to its fully qualified name and bakes THAT into the</span>
+<span class="cm">// bytecode (the constant pool references FQNs). Whether you write:</span>
+<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; a;                  <span class="cm">// with "import java.util.*;"</span>
+java.util.List&lt;<span class="ty">String</span>&gt; b;        <span class="cm">// with no import at all</span>
+<span class="cm">// ...both compile to IDENTICAL bytecode. Zero runtime difference, zero</span>
+<span class="cm">// difference in .class file size from importing "too much."</span></pre></div>
+  </div>
+
+  <p class="sub-heading">Short-answer FAANG questions</p>
+  <div class="cheat-grid">
+    <div class="cheat-card">
+      <h4>❓ Can two classes share a name in different packages?</h4>
+      <ul>
+        <li>Yes — <code class="inline">java.util.List</code> and <code class="inline">java.awt.List</code> both exist</li>
+        <li>The package prefix is part of the real, unique identity of the class</li>
+        <li>Only becomes a problem if you wildcard-import both into the same file</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Is java.lang imported automatically?</h4>
+      <ul>
+        <li>Yes — every class in <code class="inline">java.lang</code> is implicitly available</li>
+        <li>String, Object, Math, System, Thread, and the exception hierarchy need no import</li>
+        <li>Explicitly writing <code class="inline">import java.lang.String;</code> is legal but pointless</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Does a wildcard import include sub-packages?</h4>
+      <ul>
+        <li>No — <code class="inline">import java.util.*;</code> does NOT pull in <code class="inline">java.util.concurrent.*</code></li>
+        <li>Each sub-package needs its own explicit or wildcard import</li>
+        <li>Same non-hierarchy rule that applies to access control also applies to imports</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Can a top-level class be private or protected?</h4>
+      <ul>
+        <li>No — only <code class="inline">public</code> or default (no modifier) are legal on top-level classes</li>
+        <li>private/protected are only meaningful on members of an enclosing class</li>
+        <li>Nested/inner classes CAN be private, protected, default, or public</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Do sub-packages inherit parent package access?</h4>
+      <ul>
+        <li>No — <code class="inline">com.x</code> and <code class="inline">com.x.y</code> are entirely independent packages</li>
+        <li>Default-access members in one are invisible in the other, despite the dotted naming</li>
+        <li>The "sub" relationship is a naming/folder convention only, not an access grant</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ protected across packages — what's the catch?</h4>
+      <ul>
+        <li>Accessible in a subclass in another package, but only via a reference typed as that subclass (or narrower)</li>
+        <li>Access through a reference typed as the superclass fails to compile, even cross-package</li>
+        <li>Within the SAME package, protected behaves just like default — no restriction</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ What exactly does javac -d do?</h4>
+      <ul>
+        <li>Reads the <code class="inline">package</code> statement and builds matching directories automatically</li>
+        <li>Without <code class="inline">-d</code>, the .class file lands next to the .java file with no package folder</li>
+        <li><code class="inline">-d .</code> roots the generated structure at the current directory</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Why the reverse-domain naming convention?</h4>
+      <ul>
+        <li>Guarantees global uniqueness — domains are already globally unique</li>
+        <li>Prevents two companies from ever publishing colliding package names</li>
+        <li>All lowercase avoids case-sensitivity issues across filesystems</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ What is a package-private constructor used for?</h4>
+      <ul>
+        <li>Forces object creation through a factory method or builder in the same package</li>
+        <li>Common in framework internals — prevents external code from instantiating directly</li>
+        <li>Class can still be public; only the constructor is restricted</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 11: CHEATSHEET ═══ -->
+<section class="section" id="cheatsheet">
+  <div class="section-header"><span class="section-eyebrow">Interview Reference</span><span class="section-rule"></span></div>
+  <h2>Interview Cheatsheet</h2>
+  <p class="section-intro">One-liners for when you're under pressure. Know these cold.</p>
+
+  <div class="cheat-grid">
+    <div class="cheat-card">
+      <h4>📦 What a package is</h4>
+      <ul>
+        <li>Namespace + directory that groups related classes/interfaces/enums</li>
+        <li>Avoids naming collisions, adds an access-control layer</li>
+        <li>Directory name must match package name exactly (case-sensitive)</li>
+        <li>Not a runtime container — just a naming/classloading mechanism</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>📥 import rules</h4>
+      <ul>
+        <li>Compile-time only — zero runtime cost, zero bytecode size difference</li>
+        <li>Wildcard (*) imports one level only — NOT recursive into sub-packages</li>
+        <li>Two wildcard imports with a name clash → ambiguity compile error</li>
+        <li>java.lang.* is always implicitly imported — never needs importing</li>
+        <li>static import brings in static members, drops the class-name prefix</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🏗️ Creating a package</h4>
+      <ul>
+        <li><code class="inline">package name;</code> must be the first statement in the file</li>
+        <li>Only comments/blank lines may precede it — not even imports</li>
+        <li>Compile: <code class="inline">javac -d . File.java</code> — builds matching directories</li>
+        <li>Run: <code class="inline">java pkg.name.ClassName</code> from the classpath root</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🔗 Sub-packages</h4>
+      <ul>
+        <li><code class="inline">package parent.child;</code> — just a longer dotted name</li>
+        <li>NOT hierarchical for access — parent and child are fully independent</li>
+        <li>Default-access members aren't shared between parent and sub-package</li>
+        <li>Wildcard import of parent does NOT pull in the sub-package</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🔐 Access modifiers</h4>
+      <ul>
+        <li>private: same class only</li>
+        <li>default (no keyword): same class + same package</li>
+        <li>protected: same package + subclasses anywhere (via subclass-typed reference)</li>
+        <li>public: everywhere, no restriction</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>⚠️ protected across packages</h4>
+      <ul>
+        <li>Cross-package access only works through a subclass-typed reference</li>
+        <li>Access via a superclass-typed reference fails to compile, even in a subclass</li>
+        <li>Same-package protected access has no such restriction — acts like default</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🏛️ Top-level class rules</h4>
+      <ul>
+        <li>Only public or default allowed — never private, never protected</li>
+        <li>At most ONE public top-level class per .java file</li>
+        <li>Public class name must match the filename exactly</li>
+        <li>Nested/inner classes CAN use all 4 modifiers — they're members</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🌐 Naming convention</h4>
+      <ul>
+        <li>Reverse domain name: <code class="inline">com.company.module</code></li>
+        <li>All lowercase, dot-separated, matches folder nesting exactly</li>
+        <li>Avoid Java reserved words and digit-first segments</li>
+        <li>Guarantees global uniqueness across organizations</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🚨 Top interview traps</h4>
+      <ul>
+        <li>package statement not first line → compile error</li>
+        <li>Two public top-level classes in one file → compile error</li>
+        <li>Private/protected top-level class → compile error</li>
+        <li>Wildcard import ≠ recursive into sub-packages</li>
+        <li>protected via superclass reference (cross-package) → compile error</li>
+        <li>Sub-packages have NO special access to their "parent" package</li>
+        <li>Default-access class can't even be imported cross-package, let alone extended</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🗂️ CLASSPATH quick ref</h4>
+      <ul>
+        <li>Set of roots (dirs/JARs) the JVM searches for FQN class resolution</li>
+        <li>Current dir is implicitly on the classpath when running <code class="inline">java</code></li>
+        <li><code class="inline">-cp path1:path2</code> (or <code class="inline">;</code> on Windows) adds more roots</li>
+        <li>A JAR = zipped compiled packages + manifest — how dependencies are shipped</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="page-footer">
+  <span class="footer-brand">GrowthScript // Packages &amp; Access Modifiers Bible</span>
+  <span class="footer-note">Packages · import · Creating/Compiling · Sub-packages · Access Modifiers · Naming</span>
+</footer>
+</main>
+
+<script>
+function ctSwitch(tab, id) {
+  const wrap = tab.closest('.code-tabs-wrap');
+  wrap.querySelectorAll('.ct-tab').forEach(t => t.classList.remove('active'));
+  wrap.querySelectorAll('.ct-pane').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+function switchTab(tab, id) {
+  const pair = tab.closest('.code-pair');
+  pair.querySelectorAll('.cpt').forEach(t => t.classList.remove('active'));
+  pair.querySelectorAll('.code-pane').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+function toggleTheme() {
+  const html = document.documentElement;
+  const dark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', dark ? 'light' : 'dark');
+  document.getElementById('btn-light').classList.toggle('active',  dark);
+  document.getElementById('btn-dark').classList.toggle('active',  !dark);
+  localStorage.setItem('pkg-theme', dark ? 'light' : 'dark');
+}
+(function(){
+  const saved = localStorage.getItem('pkg-theme');
+  if (saved === 'dark') {
+    document.documentElement.setAttribute('data-theme','dark');
+    document.getElementById('btn-light').classList.remove('active');
+    document.getElementById('btn-dark').classList.add('active');
+  }
+})();
+const sections  = document.querySelectorAll('section[id]');
+const sideLinks = document.querySelectorAll('.sidebar-link');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const id = e.target.id;
+      sideLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#'+id));
+    }
+  });
+}, { threshold: 0.15, rootMargin: '-60px 0px -60% 0px' });
+sections.forEach(s => obs.observe(s));
+</script>
+</body>
+</html>

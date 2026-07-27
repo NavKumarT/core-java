@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GrowthScript Engineering — Notes Hub</title>
+  <meta name="description" content="A curated collection of in-depth engineering interview notes covering OOP, LLD, Multithreading, Exception Handling, Java Packages, Lambda Expressions, Collections, Generics, and I/O Streams." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ─────────────────────────────────────────
+       LIGHT — warm, paper-like, easy on eyes
+    ───────────────────────────────────────── */
+    :root,
+    [data-theme="light"] {
+      --bg:        #F5F0E8;   /* warm cream, not stark white   */
+      --surface:   #FDFAF5;
+      --border:    #E2D9CC;
+      --text:      #2C2118;   /* warm dark brown, not pure black */
+      --secondary: #6B5B4E;
+      --muted:     #A8967F;
+      --hover-bg:  #EDE5D8;
+      --tag-bg:    #E8DED0;
+      --tag-text:  #6B5B4E;
+      --toggle-bg: #E2D9CC;
+      --toggle-icon: "☀️";
+
+      /* accent dots */
+      --c-oop:         #6366f1;
+      --c-lld:         #0ea5e9;
+      --c-thread:      #d97706;
+      --c-exc:         #059669;
+      --c-pkg:         #7c3aed;
+      --c-lambda:      #ea580c;
+      --c-collections: #db2777;
+      --c-generics:    #0891b2;
+      --c-streams:     #16a34a;
+    }
+
+    /* ─────────────────────────────────────────
+       DARK — warm charcoal, not pitch black
+    ───────────────────────────────────────── */
+    [data-theme="dark"] {
+      --bg:        #1A1713;   /* warm dark, almost black coffee */
+      --surface:   #201C18;
+      --border:    #2E2820;
+      --text:      #E8DDD0;   /* warm off-white, not pure white */
+      --secondary: #A8967F;
+      --muted:     #6B5B4E;
+      --hover-bg:  #252018;
+      --tag-bg:    #2A2318;
+      --tag-text:  #A8967F;
+      --toggle-bg: #2E2820;
+      --toggle-icon: "🌙";
+
+      /* slightly muted accents for dark */
+      --c-oop:         #818cf8;
+      --c-lld:         #38bdf8;
+      --c-thread:      #fbbf24;
+      --c-exc:         #34d399;
+      --c-pkg:         #a78bfa;
+      --c-lambda:      #fb923c;
+      --c-collections: #f472b6;
+      --c-generics:    #22d3ee;
+      --c-streams:     #4ade80;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      /* smooth theme transition */
+      transition: background 0.25s ease;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      /* optimal reading line-height */
+      line-height: 1.6;
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 0 28px 100px;
+    }
+
+    /* ── Toggle button ── */
+    .theme-toggle {
+      position: fixed;
+      top: 24px;
+      right: 28px;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--toggle-bg);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+      z-index: 100;
+      line-height: 1;
+    }
+
+    .theme-toggle:hover {
+      transform: scale(1.08);
+      background: var(--hover-bg);
+    }
+
+    /* ── Header ── */
+    header {
+      padding: 80px 0 52px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 48px;
+      transition: border-color 0.25s ease;
+    }
+
+    .eyebrow {
+      font-size: 10.5px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 18px;
+      transition: color 0.25s ease;
+    }
+
+    h1 {
+      font-size: clamp(1.8rem, 5vw, 2.6rem);
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      color: var(--text);
+      margin-bottom: 14px;
+      transition: color 0.25s ease;
+    }
+
+    .subtitle {
+      font-size: 0.93rem;
+      color: var(--secondary);
+      font-weight: 400;
+      line-height: 1.75;
+      max-width: 420px;
+      transition: color 0.25s ease;
+    }
+
+    /* ── Stats ── */
+    .stats {
+      display: flex;
+      gap: 40px;
+      margin-top: 36px;
+    }
+
+    .stat-num {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.02em;
+      transition: color 0.25s ease;
+    }
+
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 3px;
+      letter-spacing: 0.02em;
+      transition: color 0.25s ease;
+    }
+
+    /* ── Section label ── */
+    .section-label {
+      font-size: 10.5px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+      transition: color 0.25s ease;
+    }
+
+    /* ── List ── */
+    .note-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Row card ── */
+    .card {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 22px 0;
+      border-bottom: 1px solid var(--border);
+      text-decoration: none;
+      color: inherit;
+      border-radius: 0;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.15s ease, border-color 0.25s ease, padding 0.15s ease, margin 0.15s ease, border-radius 0.15s ease;
+    }
+
+    .card:first-child { border-top: 1px solid var(--border); }
+
+    .card:hover {
+      background: var(--hover-bg);
+      padding-left: 14px;
+      padding-right: 14px;
+      margin: 0 -14px;
+      border-radius: 8px;
+      border-color: transparent;
+    }
+
+    .card:first-child:hover { border-top-color: transparent; }
+
+    /* dot */
+    .dot {
+      flex-shrink: 0;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      margin-top: 8px;
+    }
+    .card-oop         .dot { background: var(--c-oop); }
+    .card-lld         .dot { background: var(--c-lld); }
+    .card-thread      .dot { background: var(--c-thread); }
+    .card-exc         .dot { background: var(--c-exc); }
+    .card-pkg         .dot { background: var(--c-pkg); }
+    .card-lambda      .dot { background: var(--c-lambda); }
+    .card-collections .dot { background: var(--c-collections); }
+    .card-generics    .dot { background: var(--c-generics); }
+    .card-streams     .dot { background: var(--c-streams); }
+
+    /* icon */
+    .card-icon {
+      flex-shrink: 0;
+      width: 32px;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+    }
+
+    /* text block */
+    .card-body { flex: 1; min-width: 0; }
+
+    .card-title {
+      font-size: 0.92rem;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 5px;
+      letter-spacing: -0.01em;
+      line-height: 1.4;
+      transition: color 0.25s ease;
+    }
+
+    .card-desc {
+      font-size: 0.8rem;
+      color: var(--secondary);
+      line-height: 1.6;
+      margin-bottom: 10px;
+      transition: color 0.25s ease;
+    }
+
+    /* tags */
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .tag {
+      font-size: 0.67rem;
+      font-weight: 500;
+      color: var(--tag-text);
+      background: var(--tag-bg);
+      border-radius: 4px;
+      padding: 2px 8px;
+      letter-spacing: 0.01em;
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+
+    /* arrow */
+    .card-arrow {
+      flex-shrink: 0;
+      font-size: 13px;
+      color: var(--muted);
+      transition: transform 0.15s ease, color 0.15s ease;
+      margin-top: 4px;
+    }
+
+    .card:hover .card-arrow {
+      transform: translate(3px, -3px);
+      color: var(--text);
+    }
+
+    /* ── Footer ── */
+    footer {
+      margin-top: 64px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.6;
+      transition: color 0.25s ease;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      header { padding: 60px 0 40px; }
+      .stats { gap: 24px; }
+      .card-desc { font-size: 0.76rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Theme toggle -->
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+    <span id="toggle-icon">☀️</span>
+  </button>
+
+  <div class="container">
+
+    <!-- Header -->
+    <header>
+      <p class="eyebrow">GrowthScript Engineering</p>
+      <h1>Notes Hub</h1>
+      <p class="subtitle">In-depth interview bibles for core Java &amp; system design — structured for long reading and fast revision.</p>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-num">9</div>
+          <div class="stat-label">Topics</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">~1 MB</div>
+          <div class="stat-label">of notes</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">∞</div>
+          <div class="stat-label">Revisions</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Notes list -->
+    <p class="section-label">All Notes</p>
+    <div class="note-list">
+
+      <!-- OOP -->
+      <a class="card card-oop" href="oops-bible.html" id="card-oops">
+        <span class="dot"></span>
+        <span class="card-icon">🧱</span>
+        <div class="card-body">
+          <div class="card-title">OOP Interview Bible</div>
+          <div class="card-desc">Four pillars, inheritance, abstract classes, interfaces, polymorphism &amp; more.</div>
+          <div class="card-tags">
+            <span class="tag">Inheritance</span>
+            <span class="tag">Polymorphism</span>
+            <span class="tag">Abstraction</span>
+            <span class="tag">Encapsulation</span>
+          </div>
+        </div>
+        <span class="card-arrow">↗</span>
+      </a>
+
+      <!-- LLD -->
+      <a class="card card-lld" href="lld-notes.html" id="card-lld">
+        <span class="dot"></span>
+        <span class="card-icon">🏗️</span>
+        <div class="card-body">
+          <div class="card-title">LLD Interview Bible</div>
+          <div class="card-desc">SOLID principles, design patterns &amp; real-world LLD system walkthroughs.</div>
+          <div class="card-tags">
+            <span class="tag">SOLID</span>
+            <span class="tag">Patterns</span>
+            <span class="tag">System Design</span>
+          </div>
+        </div>
+        <span class="card-arrow">↗</span>
+      </a>
+
+      <!-- Multithreading -->
+      <a class="card card-thread" href="multithreading-bible.html" id="card-multithreading">
+        <span class="dot"></span>
+        <span class="card-icon">⚡</span>
+        <div class="card-body">
+          <div class="card-title">Multithreading Bible</div>
+          <div class="card-desc">Thread lifecycle, synchronization, locks, thread pools &amp; concurrency utilities.</div>
+          <div class="card-tags">
+            <span class="tag">Threads</span>
+            <span class="tag">Synchronization</span>
+            <span class="tag">Concurrency</span>
+          </div>
+        </div>
+        <span class="card-arrow">↗</span>
+      </a>
+
+      <!-- Exception Handling -->
+      <a class="card card-exc" href="exceptions-bible.html" id="card-exceptions">
+        <span class="dot"></span>
+        <span class="card-icon">🛡️</span>
+        <div class="card-body">
+          <div class="card-title">Exception Handling Bible</div>
+          <div class="card-desc">Errors vs exceptions, checked/unchecked, try-catch-finally &amp; custom exceptions.</div>
+          <div class="card-tags">
+            <span class="tag">try-catch</span>
+            <span class="tag">Checked</span>
+            <span class="tag">Custom Exceptions</span>
+          </div>
+        </div>
+        <span class="card-arrow">↗</span>
+      </a>
+
+      <!-- Packages -->
+      <a class="card card-pkg" href="packages-bible.html" id="card-packages">
+        <span class="dot"></span>
+        <span class="card-icon">📦</span>
+        <div class="card-body">
+          <div class="card-title">Packages &amp; Access Modifiers Bible</div>
+          <div class="card-desc">Package types, import statement, access modifiers &amp; visibility rules in Java.</div>
+          <div class="card-tags">
+            <span class="tag">Packages</span>
+            <span class="tag">Access Modifiers</span>
+            <span class="tag">Imports</span>
+          </div>
+        </div>
+        <span class="card-arrow">↗</span>
+      </a>
+
+      <!-- Lambda -->
+      <a class="card card-lambda" href="lambda-bible.html" id="card-lambda">
+        <span class="dot"></span>
+        <span class="card-icon">λ</span>
+        <div class="card-body">
+          <div class="card-title">Lambda Expressions Bible</div>
+          <div class="card-desc">Lambda syntax, functional interfaces, method references &amp; built-in interfaces.</div>
+          <div class="card-tags">
+            <span class="tag">Lambdas</span>
+            <span class="tag">Functional Interfaces</span>
+            <span class="tag">Method Refs</span>
+          </div>
+        </div>
+        <span class="card-arrow">↗</span>
+      </a>
+
+      <!-- Collections -->
+      <a class="card card-collections" href="collections-bible.html" id="card-collections">
+        <span class="dot"></span>
+        <span class="card-icon">🗂️</span>
+        <div class="card-body">
+          <div class="card-title">Java Collections Bible</div>
+          <div class="card-desc">Collections hierarchy, List, Set, Map, Queue internals &amp; when to use each.</div>
+          <div class="card-tags">
+            <span class="tag">List</span>
+            <span class="tag">Set</span>
+            <span class="tag">Map</span>
+            <span class="tag">Queue</span>
+          </div>
+        </div>
+        <span class="card-arrow">↗</span>
+      </a>
+
+      <!-- Generics -->
+      <a class="card card-generics" href="generics-bible.html" id="card-generics">
+        <span class="dot"></span>
+        <span class="card-icon">🔷</span>
+        <div class="card-body">
+          <div class="card-title">Generics Bible</div>
+          <div class="card-desc">Why generics exist, type erasure, bounded wildcards &amp; generic methods.</div>
+          <div class="card-tags">
+            <span class="tag">Type Erasure</span>
+            <span class="tag">Wildcards</span>
+            <span class="tag">Bounded Types</span>
+          </div>
+        </div>
+        <span class="card-arrow">↗</span>
+      </a>
+
+      <!-- I/O Streams -->
+      <a class="card card-streams" href="io-streams-bible.html" id="card-streams">
+        <span class="dot"></span>
+        <span class="card-icon">🌊</span>
+        <div class="card-body">
+          <div class="card-title">Java I/O Streams Bible</div>
+          <div class="card-desc">The I/O model, class hierarchy, byte &amp; character streams, buffering &amp; NIO.</div>
+          <div class="card-tags">
+            <span class="tag">InputStream</span>
+            <span class="tag">Reader/Writer</span>
+            <span class="tag">NIO</span>
+          </div>
+        </div>
+        <span class="card-arrow">↗</span>
+      </a>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <p>GrowthScript Engineering &mdash; open a note above to start revising.</p>
+    </footer>
+
+  </div>
+
+  <script>
+    const html   = document.documentElement;
+    const toggle = document.getElementById('theme-toggle');
+    const icon   = document.getElementById('toggle-icon');
+
+    // Determine initial theme:
+    // 1. User's saved preference
+    // 2. OS preference
+    // 3. Default: light
+    function getInitialTheme() {
+      const saved = localStorage.getItem('theme');
+      if (saved) return saved;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    function applyTheme(theme) {
+      html.setAttribute('data-theme', theme);
+      icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+      localStorage.setItem('theme', theme);
+    }
+
+    // Apply on load (before paint)
+    applyTheme(getInitialTheme());
+
+    toggle.addEventListener('click', () => {
+      const current = html.getAttribute('data-theme');
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    });
+
+    // Sync if user changes OS preference while page is open
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+      if (!localStorage.getItem('theme')) {
+        applyTheme(e.matches ? 'dark' : 'light');
+      }
+    });
+  </script>
+</body>
+</html>

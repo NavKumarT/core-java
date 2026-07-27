@@ -1,0 +1,2545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLD Interview Bible — GrowthScript Engineering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:         #0F172A;
+    --navy-mid:     #1E293B;
+    --brand:        #1B4FD8;
+    --brand-soft:   #EFF3FE;
+    --brand-mid:    #DBEAFE;
+    --accent2:      #7C3AED;
+    --accent2-soft: #F5F3FF;
+    --success:      #059669;
+    --success-soft: #ECFDF5;
+    --success-border: #A7F3D0;
+    --warn:         #D97706;
+    --warn-soft:    #FFFBEB;
+    --warn-border:  #FDE68A;
+    --warn-text:    #78350F;
+    --warn-text-strong: #92400E;
+    --danger:       #E11D48;
+    --danger-soft:  #FFF1F2;
+    --danger-border:#FECDD3;
+    --purple:       #9333EA;
+    --purple-soft:  #FDF4FF;
+    --text-1:       #0F172A;
+    --text-2:       #334155;
+    --text-3:       #64748B;
+    --text-4:       #94A3B8;
+    --border:       #E2E8F0;
+    --border-strong:#CBD5E1;
+    --surface:      #FFFFFF;
+    --page:         #F8FAFC;
+    --code-bg:      #F1F5F9;
+    --sidebar-w:    240px;
+    --radius-sm:    6px;
+    --radius:       10px;
+    --radius-lg:    14px;
+
+    /* Syntax highlighting — theme-aware */
+    --syn-kw: #6D28D9;
+    --syn-cm: #94A3B8;
+    --syn-st: #059669;
+    --syn-ty: #D97706;
+    --syn-fn: #1B4FD8;
+
+    color-scheme: light;
+  }
+
+  /* ═══════════════════════════
+     DARK THEME
+     Tuned for long reading sessions: no pure black/white,
+     reduced blue-light glare, preserved brand identity,
+     boosted syntax-highlight contrast against dark code panes.
+  ═══════════════════════════ */
+  [data-theme="dark"] {
+    --navy:         #E2E8F0;   /* headings render light against dark bg */
+    --navy-mid:     #CBD5E1;
+    --brand:        #6D9BFF;   /* brightened for AA contrast on dark */
+    --brand-soft:   #1A2540;
+    --brand-mid:    #2A3B66;
+    --accent2:      #A78BFA;
+    --accent2-soft: #2A2150;
+    --success:      #34D399;
+    --success-soft: #103326;
+    --success-border: #1D5C44;
+    --warn:         #FBBF24;
+    --warn-soft:    #3A2A0A;
+    --warn-border:  #5C4310;
+    --warn-text:    #FDE68A;
+    --warn-text-strong: #FCD34D;
+    --danger:       #FB7185;
+    --danger-soft:  #3A1620;
+    --danger-border:#5C2330;
+    --purple:       #D8B4FE;
+    --purple-soft:  #2A1A40;
+    --text-1:       #E8ECF2;   /* primary body text — soft off-white, not pure white */
+    --text-2:       #B6C0CE;
+    --text-3:       #8895A7;
+    --text-4:       #647082;
+    --border:       #2A3441;
+    --border-strong:#3D4859;
+    --surface:      #161D29;   /* card surface — warm charcoal, not black */
+    --page:         #0D1219;   /* page bg — deep but not pure black */
+    --code-bg:      #0F1722;
+
+    /* Syntax highlighting — brightened for dark backgrounds */
+    --syn-kw: #C4A7FF;
+    --syn-cm: #6B7888;
+    --syn-st: #6EE7B7;
+    --syn-ty: #FCD34D;
+    --syn-fn: #7FB3FF;
+
+    color-scheme: dark;
+  }
+
+  /* UML diagrams stay on a light "paper" card even in dark mode —
+     they're hand-tuned pastel SVGs; re-theming them loses fidelity.
+     Bounded by their own border/radius so the contrast is intentional,
+     like a printed diagram inset into a dark page. */
+  [data-theme="dark"] .uml-wrap {
+    background: #F8FAFC;
+    border-color: #2A3441;
+  }
+  [data-theme="dark"] .uml-wrap svg text {
+    /* SVGs use literal hex already tuned for white bg — leave untouched */
+  }
+
+  /* ── Theme Toggle ── */
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--page);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .theme-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--text-3);
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.15s;
+  }
+  .theme-toggle-btn.active {
+    background: var(--surface);
+    color: var(--brand);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  [data-theme="dark"] .theme-toggle-btn.active {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--page);
+    color: var(--text-1);
+    font-size: 15px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ═══════════════════════════
+     LEFT SIDEBAR
+  ═══════════════════════════ */
+  .sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 0 0 32px;
+  }
+
+  .sidebar-brand {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    z-index: 10;
+  }
+  .sidebar-logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--brand);
+    letter-spacing: 0.04em;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .sidebar-tagline {
+    font-size: 11px;
+    color: var(--text-4);
+  }
+
+  .sidebar-group {
+    padding: 12px 0 4px;
+  }
+  .sidebar-group-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-4);
+    padding: 0 20px;
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  .sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 20px;
+    font-size: 13px;
+    color: var(--text-2);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    transition: all 0.12s;
+    line-height: 1.4;
+  }
+  .sidebar-link:hover {
+    color: var(--brand);
+    background: var(--brand-soft);
+    border-left-color: var(--brand-mid);
+  }
+  .sidebar-link.active {
+    color: var(--brand);
+    background: var(--brand-soft);
+    border-left-color: var(--brand);
+    font-weight: 500;
+  }
+  .sidebar-link .sl-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--border-strong);
+    flex-shrink: 0;
+  }
+  .sidebar-link.active .sl-dot,
+  .sidebar-link:hover .sl-dot {
+    background: var(--brand);
+  }
+
+  .sidebar-sub-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 20px 4px 34px;
+    font-size: 12px;
+    color: var(--text-3);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    transition: all 0.12s;
+  }
+  .sidebar-sub-link:hover {
+    color: var(--brand);
+    background: var(--brand-soft);
+  }
+
+  /* ═══════════════════════════
+     MAIN CONTENT
+  ═══════════════════════════ */
+  .main {
+    flex: 1;
+    min-width: 0;
+    padding: 48px 64px 80px 64px;
+    max-width: 1100px;
+  }
+
+  /* ── Page Title ── */
+  .page-title-block {
+    padding-bottom: 36px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 52px;
+  }
+  .page-eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--text-4);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .page-title-block h1 {
+    font-size: 30px;
+    font-weight: 600;
+    color: var(--navy);
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+  .page-title-block p {
+    font-size: 15px;
+    color: var(--text-2);
+    max-width: 680px;
+    line-height: 1.65;
+  }
+  .topic-count-row {
+    display: flex;
+    gap: 16px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+  }
+  .tc-pill {
+    font-size: 12px;
+    color: var(--text-3);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .tc-pill span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--brand);
+    display: inline-block;
+  }
+
+  /* ── Section ── */
+  .section {
+    margin-bottom: 60px;
+    scroll-margin-top: 32px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+  .section-eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--text-4);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .section-rule {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .section h2 {
+    font-size: 21px;
+    font-weight: 600;
+    color: var(--navy);
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+  .section-intro {
+    font-size: 14.5px;
+    color: var(--text-2);
+    margin-bottom: 28px;
+    max-width: 760px;
+    line-height: 1.7;
+  }
+
+  /* ── Flow Strip ── */
+  .flow-strip {
+    display: flex;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  .flow-node {
+    flex: 1;
+    padding: 16px 20px;
+    text-align: center;
+  }
+  .flow-node:not(:last-child) { border-right: 1px solid var(--border); }
+  .flow-node.active { background: var(--brand-soft); }
+  .flow-node-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 3px;
+  }
+  .flow-node.active .flow-node-label { color: var(--brand); }
+  .flow-node-sub { font-size: 11.5px; color: var(--text-3); line-height: 1.5; }
+  .flow-arrow { padding: 0 4px; color: var(--text-4); font-size: 18px; flex-shrink: 0; }
+
+  /* ── Goal Cards ── */
+  .goal-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 0;
+  }
+  .goal-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+  }
+  .goal-card.c1 { border-top: 3px solid var(--brand); }
+  .goal-card.c2 { border-top: 3px solid var(--success); }
+  .goal-card.c3 { border-top: 3px solid var(--accent2); }
+  .goal-card h4 { font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+  .goal-card ul { list-style: none; }
+  .goal-card li { font-size: 12.5px; color: var(--text-2); padding-left: 13px; position: relative; margin-bottom: 3px; line-height: 1.55; }
+  .goal-card li::before { content: '→'; position: absolute; left: 0; color: var(--text-4); font-size: 11px; }
+
+  /* ── SOLID Principle Cards ── */
+  .solid-grid { display: flex; flex-direction: column; gap: 14px; }
+  .principle-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .principle-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 18px 22px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .principle-badge {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .badge-s { background: var(--brand-soft);    color: var(--brand); }
+  .badge-o { background: var(--success-soft);  color: var(--success); }
+  .badge-l { background: var(--warn-soft);     color: var(--warn); }
+  .badge-i { background: var(--purple-soft);   color: var(--purple); }
+  .badge-d { background: var(--danger-soft);   color: var(--danger); }
+  .principle-name { font-size: 15.5px; font-weight: 600; color: var(--navy); line-height: 1.3; }
+  .principle-subtitle { font-size: 12.5px; color: var(--text-3); margin-top: 2px; }
+  .principle-body { padding: 18px 22px; }
+  .principle-def { font-size: 14px; color: var(--text-2); margin-bottom: 14px; line-height: 1.7; }
+
+  /* ── Tip / Warn boxes ── */
+  .tip-box {
+    display: flex;
+    gap: 10px;
+    background: var(--brand-soft);
+    border: 1px solid var(--brand-mid);
+    border-radius: var(--radius);
+    padding: 11px 14px;
+    margin-top: 14px;
+  }
+  .tip-icon { flex-shrink: 0; font-size: 14px; margin-top: 2px; }
+  .tip-text { font-size: 12.5px; color: var(--navy-mid); line-height: 1.6; }
+  .tip-text strong { color: var(--brand); font-weight: 600; }
+
+  .warn-box {
+    display: flex;
+    gap: 10px;
+    background: var(--warn-soft);
+    border: 1px solid var(--warn-border);
+    border-radius: var(--radius);
+    padding: 11px 14px;
+    margin-top: 12px;
+  }
+  .warn-text { font-size: 12.5px; color: var(--warn-text); line-height: 1.6; }
+  .warn-text strong { color: var(--warn-text-strong); font-weight: 600; }
+
+  /* ── Code ── */
+  pre {
+    background: var(--code-bg);
+    border-top: 1px solid var(--border);
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--navy-mid);
+  }
+  .kw  { color: var(--syn-kw); font-weight: 700; }
+  .cm  { color: var(--syn-cm); font-style: italic; }
+  .st  { color: var(--syn-st); }
+  .ty  { color: var(--syn-ty); }
+  .fn  { color: var(--syn-fn); }
+  code.inline {
+    font-family: 'Space Mono', monospace;
+    font-size: 11.5px;
+    background: var(--code-bg);
+    padding: 1px 5px;
+    border-radius: 4px;
+    color: var(--navy-mid);
+  }
+
+  /* ── Code pair toggle ── */
+  .code-pair {
+    margin-top: 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .code-pair-tabs { display: flex; border-bottom: 1px solid var(--border); }
+  .cpt {
+    flex: 1;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-3);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.12s;
+    user-select: none;
+  }
+  .cpt.bad { border-right: 1px solid var(--border); }
+  .cpt.bad.active  { background: var(--danger-soft); color: var(--danger); }
+  .cpt.good.active { background: var(--success-soft); color: var(--success); }
+  .code-pane { display: none; }
+  .code-pane.active { display: block; }
+  .code-pane pre { border-top: none; border-radius: 0; }
+
+  /* ── Pattern Grid ── */
+  .pattern-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .pattern-cat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+  }
+  .pattern-cat-head { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+  .pat-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .pat-dot-c { background: var(--brand); }
+  .pat-dot-s { background: var(--accent2); }
+  .pat-dot-b { background: var(--success); }
+  .pattern-cat h3 { font-size: 13.5px; font-weight: 600; color: var(--navy); }
+  .pattern-cat > p { font-size: 12.5px; color: var(--text-3); margin-bottom: 12px; line-height: 1.6; }
+  .pattern-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .ptag {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--text-2);
+    background: var(--page);
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* ── Memory Aid ── */
+  /* Deliberately fixed dark card regardless of page theme — uses its own
+     tokens rather than --navy, since --navy inverts in dark mode. */
+  .memory-aid {
+    background: #0F172A;
+    border-radius: var(--radius-lg);
+    padding: 22px 26px;
+    margin-top: 4px;
+    border: 1px solid #1E293B;
+  }
+  .memory-aid-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: #475569;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    display: block;
+  }
+  .memory-aid-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+  .memory-aid p.head { font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+  .memory-aid p.body { font-size: 12.5px; color: #94A3B8; line-height: 1.6; }
+
+  /* ── Relationship Grid ── */
+  .rel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 22px; }
+  .rel-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+  }
+  .rel-card h3 { font-size: 14.5px; font-weight: 600; color: var(--navy); margin-bottom: 4px; }
+  .rel-card .mono-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10.5px;
+    color: var(--brand);
+    font-weight: 700;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .rel-card p { font-size: 13px; color: var(--text-2); margin-bottom: 8px; line-height: 1.65; }
+
+  .sub-rel-row { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+  .sub-rel {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    background: var(--page);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+  }
+  .sub-rel-icon { font-size: 15px; flex-shrink: 0; margin-top: 2px; }
+  .sub-rel-name { font-size: 13px; font-weight: 600; color: var(--navy); }
+  .sub-rel-desc { font-size: 12px; color: var(--text-3); margin-top: 3px; line-height: 1.55; }
+
+  /* ── Cheatsheet ── */
+  .cheat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+  .cheat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  .cheat-card h4 { font-size: 12.5px; font-weight: 600; color: var(--navy); margin-bottom: 8px; }
+  .cheat-card ul { list-style: none; }
+  .cheat-card li { font-size: 12px; color: var(--text-2); padding-left: 13px; position: relative; line-height: 1.55; margin-bottom: 4px; }
+  .cheat-card li::before { content: '→'; position: absolute; left: 0; color: var(--brand); font-size: 10.5px; top: 1px; }
+
+  /* ═══════════════════════════
+     BEHAVIOURAL PATTERN PAGES
+  ═══════════════════════════ */
+
+  /* Pattern intro strip */
+  .pattern-intro-strip {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .pi-card {
+    flex: 1;
+    min-width: 160px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  .pi-card-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-4);
+    margin-bottom: 5px;
+    display: block;
+  }
+  .pi-card-value {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--navy);
+    line-height: 1.5;
+  }
+
+  /* Pattern badge header */
+  .pattern-title-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .pattern-icon-badge {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .pib-strategy { background: #EFF3FE; }
+  .pib-observer { background: var(--success-soft); }
+  .pib-state    { background: var(--warn-soft); }
+
+  .pattern-title-row h2 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--navy);
+    letter-spacing: -0.02em;
+    margin-bottom: 3px;
+  }
+  .pattern-title-row .pt-sub {
+    font-size: 13px;
+    color: var(--text-3);
+  }
+
+  /* Sub-section heading inside a pattern */
+  .sub-heading {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--navy);
+    margin: 28px 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sub-heading::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* UML container */
+  .uml-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    overflow-x: auto;
+    margin-bottom: 6px;
+  }
+  .uml-caption {
+    font-size: 11.5px;
+    color: var(--text-4);
+    text-align: center;
+    margin-top: 8px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* Problem/solution two-col */
+  .prob-sol-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  @media(max-width:640px){ .prob-sol-grid { grid-template-columns: 1fr; } }
+  .prob-card, .sol-card {
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  .prob-card {
+    background: var(--danger-soft);
+    border: 1px solid var(--danger-border);
+  }
+  .sol-card {
+    background: var(--success-soft);
+    border: 1px solid var(--success-border);
+  }
+  .ps-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .prob-card .ps-label { color: var(--danger); }
+  .sol-card  .ps-label { color: var(--success); }
+  .prob-card li, .sol-card li {
+    font-size: 12.5px;
+    line-height: 1.6;
+    margin-bottom: 4px;
+    padding-left: 14px;
+    position: relative;
+    list-style: none;
+  }
+  .prob-card li::before { content: '✗'; position:absolute; left:0; color:var(--danger); font-size:11px; top:1px; }
+  .sol-card  li::before { content: '✓'; position:absolute; left:0; color:var(--success); font-size:11px; top:1px; }
+
+  /* When-to-use tags */
+  .when-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 22px;
+  }
+  .when-tag {
+    font-size: 12.5px;
+    background: var(--brand-soft);
+    border: 1px solid var(--brand-mid);
+    color: var(--brand);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  /* Code tabs — multi file */
+  .code-tabs-wrap {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-top: 14px;
+  }
+  .code-tabs-header {
+    display: flex;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--border);
+    background: var(--page);
+  }
+  .ct-tab {
+    padding: 9px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-3);
+    cursor: pointer;
+    white-space: nowrap;
+    border-right: 1px solid var(--border);
+    transition: all 0.12s;
+    font-family: 'Space Mono', monospace;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .ct-tab:hover { color: var(--brand); background: var(--brand-soft); }
+  .ct-tab.active { color: var(--brand); background: var(--surface); border-bottom: 2px solid var(--brand); font-weight: 700; }
+  .ct-pane { display: none; }
+  .ct-pane.active { display: block; }
+  .ct-pane pre { border-top: none; border-radius: 0; font-size: 12px; }
+
+  /* Push vs Pull toggle for Observer */
+  .model-toggle-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .model-btn {
+    padding: 7px 18px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.12s;
+    background: var(--surface);
+    color: var(--text-3);
+  }
+  .model-btn.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .model-pane { display: none; }
+  .model-pane.active { display: block; }
+
+  /* Step callout list */
+  .step-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .step-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+  }
+  .step-num {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--brand);
+    color: #fff;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+  }
+  .step-body { font-size: 13px; color: var(--text-2); line-height: 1.6; }
+  .step-body strong { color: var(--navy); }
+
+  /* Pattern divider between patterns */
+  .pattern-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 52px 0;
+  }
+
+  /* ── Footer ── */
+  .page-footer {
+    border-top: 1px solid var(--border);
+    padding: 20px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-brand { font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; color: var(--brand); }
+  .footer-note { font-size: 11.5px; color: var(--text-4); }
+
+  /* ── Responsive ── */
+  @media (max-width: 860px) {
+    body { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; position: static; border-right: none; border-bottom: 1px solid var(--border); padding-bottom: 0; }
+    .sidebar-group { display: flex; flex-wrap: wrap; padding: 8px 16px; gap: 4px; }
+    .sidebar-group-label { display: none; }
+    .sidebar-link { padding: 5px 10px; border-left: none; border-radius: 20px; border: 1px solid var(--border); font-size: 12px; }
+    .sidebar-link:hover, .sidebar-link.active { background: var(--brand-soft); border-color: var(--brand-mid); border-left-color: var(--brand-mid); }
+    .sidebar-sub-link { display: none; }
+    .main { padding: 32px 20px 60px; }
+    .pattern-grid { grid-template-columns: 1fr; }
+    .rel-grid { grid-template-columns: 1fr; }
+    .goal-row { grid-template-columns: 1fr; }
+    .memory-aid-grid { grid-template-columns: 1fr; gap: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ SIDEBAR ═══════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <span class="sidebar-logo">GS // LLD Bible</span>
+    <span class="sidebar-tagline">Interview Reference</span>
+  </div>
+
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Foundations</span>
+    <a href="#overview"  class="sidebar-link active"><span class="sl-dot"></span>What is LLD?</a>
+    <a href="#overview"  class="sidebar-sub-link">HLD → LLD → Code</a>
+    <a href="#overview"  class="sidebar-sub-link">Goals of LLD</a>
+  </div>
+
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">SOLID Principles</span>
+    <a href="#solid"     class="sidebar-link"><span class="sl-dot"></span>SOLID Overview</a>
+    <a href="#srp"       class="sidebar-sub-link">S — Single Responsibility</a>
+    <a href="#ocp"       class="sidebar-sub-link">O — Open / Closed</a>
+    <a href="#lsp"       class="sidebar-sub-link">L — Liskov Substitution</a>
+    <a href="#isp"       class="sidebar-sub-link">I — Interface Segregation</a>
+    <a href="#dip"       class="sidebar-sub-link">D — Dependency Inversion</a>
+  </div>
+
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Design Patterns</span>
+    <a href="#patterns"  class="sidebar-link"><span class="sl-dot"></span>Pattern Categories</a>
+    <a href="#patterns"  class="sidebar-sub-link">Creational</a>
+    <a href="#patterns"  class="sidebar-sub-link">Structural</a>
+    <a href="#patterns"  class="sidebar-sub-link">Behavioural</a>
+  </div>
+
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Behavioural Patterns</span>
+    <a href="#bp-strategy" class="sidebar-link"><span class="sl-dot"></span>Strategy Pattern</a>
+    <a href="#bp-strategy" class="sidebar-sub-link">Generic UML</a>
+    <a href="#bp-strategy" class="sidebar-sub-link">Example: Payment</a>
+    <a href="#bp-observer" class="sidebar-link"><span class="sl-dot"></span>Observer Pattern</a>
+    <a href="#bp-observer" class="sidebar-sub-link">Push vs Pull</a>
+    <a href="#bp-observer" class="sidebar-sub-link">Example: Stock Tracker</a>
+    <a href="#bp-state"    class="sidebar-link"><span class="sl-dot"></span>State Pattern</a>
+    <a href="#bp-state"    class="sidebar-sub-link">Generic UML</a>
+    <a href="#bp-state"    class="sidebar-sub-link">Example: Vending Machine</a>
+  </div>
+
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Relationships</span>
+    <a href="#relations" class="sidebar-link"><span class="sl-dot"></span>Has-A vs Is-A</a>
+    <a href="#relations" class="sidebar-sub-link">Aggregation</a>
+    <a href="#relations" class="sidebar-sub-link">Composition</a>
+  </div>
+
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Reference</span>
+    <a href="#cheatsheet" class="sidebar-link"><span class="sl-dot"></span>Interview Cheatsheet</a>
+  </div>
+</aside>
+
+<!-- ═══════════════════ MAIN ═══════════════════ -->
+<main class="main">
+
+  <!-- Page Title -->
+  <div class="page-title-block">
+    <span class="page-eyebrow">Low Level Design</span>
+    <h1>LLD Interview Bible</h1>
+    <p>A complete, living reference for FAANG-level LLD interviews. Covers design principles, object relationships, and pattern taxonomy — with Java examples at every concept.</p>
+    <div class="topic-count-row">
+      <span class="tc-pill"><span></span>SOLID Principles (5)</span>
+      <span class="tc-pill"><span></span>Pattern Categories (3)</span>
+      <span class="tc-pill"><span></span>Has-A / Is-A Relationships</span>
+      <span class="tc-pill"><span></span>Java Examples Throughout</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SECTION 1 — OVERVIEW
+  ════════════════════════════════════════ -->
+  <section class="section" id="overview">
+    <div class="section-header">
+      <span class="section-eyebrow">Foundations</span>
+      <span class="section-rule"></span>
+    </div>
+    <h2>What is LLD?</h2>
+    <p class="section-intro">LLD bridges the gap between a high-level architecture and actual code. It focuses on classes, objects, and their relationships — the skeleton an engineer designs before implementation begins.</p>
+
+    <div class="flow-strip">
+      <div class="flow-node">
+        <div class="flow-node-label">HLD</div>
+        <div class="flow-node-sub">System components, APIs, databases, infrastructure</div>
+      </div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node active">
+        <div class="flow-node-label">LLD</div>
+        <div class="flow-node-sub">Classes · Objects · Interfaces · Design Patterns</div>
+      </div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node">
+        <div class="flow-node-label">Code</div>
+        <div class="flow-node-sub">Actual implementation in Java / Python / etc.</div>
+      </div>
+    </div>
+
+    <p style="font-size:13.5px; color:var(--text-2); margin-bottom:14px; font-weight:500;">The goal of LLD is to produce code that is:</p>
+    <div class="goal-row">
+      <div class="goal-card c1">
+        <h4>🧹 Clean</h4>
+        <ul>
+          <li>Readable by another engineer without explanation</li>
+          <li>Minimal duplication (DRY)</li>
+        </ul>
+      </div>
+      <div class="goal-card c2">
+        <h4>🔄 Flexible</h4>
+        <ul>
+          <li>Open for extension, closed for modification</li>
+          <li>Behaviour changes don't cascade into unrelated classes</li>
+        </ul>
+      </div>
+      <div class="goal-card c3">
+        <h4>🧪 Testable</h4>
+        <ul>
+          <li>Dependencies can be swapped or mocked</li>
+          <li>Each class has a single, verifiable job</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       SECTION 2 — SOLID
+  ════════════════════════════════════════ -->
+  <section class="section" id="solid">
+    <div class="section-header">
+      <span class="section-eyebrow">SOLID Principles</span>
+      <span class="section-rule"></span>
+    </div>
+    <h2>SOLID Principles</h2>
+    <p class="section-intro">The 5 foundational rules for writing object-oriented code that won't collapse under change. Every FAANG LLD round tests these — knowingly or not.</p>
+
+    <div class="solid-grid">
+
+      <!-- S -->
+      <div class="principle-card" id="srp">
+        <div class="principle-header">
+          <div class="principle-badge badge-s">S</div>
+          <div>
+            <div class="principle-name">Single Responsibility Principle</div>
+            <div class="principle-subtitle">A class should have only one reason to change</div>
+          </div>
+        </div>
+        <div class="principle-body">
+          <p class="principle-def">Every class or module should do <strong>one thing</strong> and do it well. If a class handles both invoice generation and email sending, a change in email logic forces you to touch the invoice class — a recipe for silent bugs.</p>
+          <p style="font-size:13px; color:var(--text-3); margin-bottom:12px;"><strong style="color:var(--navy);">Analogy:</strong> A restaurant chef cooks. A waiter serves. If the chef also takes orders, the kitchen gets chaotic when the order system changes.</p>
+
+          <div class="code-pair">
+            <div class="code-pair-tabs">
+              <div class="cpt bad active" onclick="switchTab(this,'bad-srp')">❌ Violation</div>
+              <div class="cpt good"       onclick="switchTab(this,'good-srp')">✅ Correct</div>
+            </div>
+            <div id="bad-srp" class="code-pane active">
+<pre><span class="kw">class</span> <span class="ty">Invoice</span> {
+  <span class="cm">// Reason 1: business logic</span>
+  <span class="kw">void</span> <span class="fn">calculateTotal</span>() { ... }
+  <span class="cm">// Reason 2: persistence — SRP violation!</span>
+  <span class="kw">void</span> <span class="fn">saveToDatabase</span>() { ... }
+  <span class="cm">// Reason 3: output — another violation!</span>
+  <span class="kw">void</span> <span class="fn">printInvoice</span>() { ... }
+}</pre>
+            </div>
+            <div id="good-srp" class="code-pane">
+<pre><span class="kw">class</span> <span class="ty">Invoice</span>          { <span class="kw">void</span> <span class="fn">calculateTotal</span>() {...} }
+<span class="kw">class</span> <span class="ty">InvoiceRepository</span> { <span class="kw">void</span> <span class="fn">save</span>(<span class="ty">Invoice</span> i) {...} }
+<span class="kw">class</span> <span class="ty">InvoicePrinter</span>    { <span class="kw">void</span> <span class="fn">print</span>(<span class="ty">Invoice</span> i) {...} }
+<span class="cm">// Each class has exactly one reason to change</span></pre>
+            </div>
+          </div>
+
+          <div class="tip-box">
+            <span class="tip-icon">💡</span>
+            <span class="tip-text"><strong>Interview answer:</strong> "I'd check if I can describe what the class does without using the word 'and'. If I need 'and', it has multiple responsibilities."</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- O -->
+      <div class="principle-card" id="ocp">
+        <div class="principle-header">
+          <div class="principle-badge badge-o">O</div>
+          <div>
+            <div class="principle-name">Open / Closed Principle</div>
+            <div class="principle-subtitle">Open for extension, closed for modification</div>
+          </div>
+        </div>
+        <div class="principle-body">
+          <p class="principle-def">Once a class is tested and deployed, modifying it introduces risk. Instead, extend behaviour by adding <strong>new classes or implementations</strong> — not by editing proven code. Reduces risk, supports polymorphism, and enables dynamic behaviour through inheritance and interfaces.</p>
+          <p style="font-size:13px; color:var(--text-3); margin-bottom:12px;"><strong style="color:var(--navy);">Analogy:</strong> A power socket is closed for modification. A new appliance extends it via a plug — it doesn't rewire the socket.</p>
+
+          <div class="code-pair">
+            <div class="code-pair-tabs">
+              <div class="cpt bad active" onclick="switchTab(this,'bad-ocp')">❌ Violation</div>
+              <div class="cpt good"       onclick="switchTab(this,'good-ocp')">✅ Correct</div>
+            </div>
+            <div id="bad-ocp" class="code-pane active">
+<pre><span class="kw">class</span> <span class="ty">DiscountCalculator</span> {
+  <span class="kw">double</span> <span class="fn">calculate</span>(<span class="ty">String</span> type, <span class="kw">double</span> price) {
+    <span class="kw">if</span> (type.equals(<span class="st">"STUDENT"</span>))  <span class="kw">return</span> price * 0.8;
+    <span class="kw">if</span> (type.equals(<span class="st">"SENIOR"</span>))   <span class="kw">return</span> price * 0.7;
+    <span class="cm">// Adding EMPLOYEE forces editing this class!</span>
+  }
+}</pre>
+            </div>
+            <div id="good-ocp" class="code-pane">
+<pre><span class="kw">interface</span> <span class="ty">DiscountStrategy</span> {
+  <span class="kw">double</span> <span class="fn">apply</span>(<span class="kw">double</span> price);
+}
+<span class="kw">class</span> <span class="ty">StudentDiscount</span>  <span class="kw">implements</span> <span class="ty">DiscountStrategy</span> {
+  <span class="kw">public double</span> <span class="fn">apply</span>(<span class="kw">double</span> p) { <span class="kw">return</span> p * 0.8; }
+}
+<span class="kw">class</span> <span class="ty">EmployeeDiscount</span> <span class="kw">implements</span> <span class="ty">DiscountStrategy</span> {
+  <span class="kw">public double</span> <span class="fn">apply</span>(<span class="kw">double</span> p) { <span class="kw">return</span> p * 0.6; }
+}
+<span class="cm">// New discount = new class. Zero existing code touched.</span></pre>
+            </div>
+          </div>
+
+          <div class="tip-box">
+            <span class="tip-icon">💡</span>
+            <span class="tip-text"><strong>Interview answer:</strong> "I'd use the Strategy pattern. Adding a new payment method means adding a new class, not modifying PaymentProcessor."</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- L -->
+      <div class="principle-card" id="lsp">
+        <div class="principle-header">
+          <div class="principle-badge badge-l">L</div>
+          <div>
+            <div class="principle-name">Liskov Substitution Principle</div>
+            <div class="principle-subtitle">Subclasses must be substitutable for their superclass</div>
+          </div>
+        </div>
+        <div class="principle-body">
+          <p class="principle-def">If class <code class="inline">B</code> extends class <code class="inline">A</code>, then anywhere <code class="inline">A</code> is used, <code class="inline">B</code> must work without breaking the application. A subclass <em>extends</em> the parent's capabilities — it never <strong>narrows</strong> them.</p>
+          <p style="font-size:13px; color:var(--text-3); margin-bottom:12px;"><strong style="color:var(--navy);">Analogy:</strong> If you order a "vehicle" and receive a car — you should be able to drive it. A car that can't go in reverse violates this principle.</p>
+
+          <div class="warn-box">
+            <span class="tip-icon">⚠️</span>
+            <div class="warn-text"><strong>Classic LSP trap — Square extends Rectangle:</strong> Setting width on a Rectangle should not change its height. But a Square must keep them equal — so swapping a Rectangle for a Square breaks calling code. They should both implement a common <code style="font-family:'Space Mono',monospace;font-size:11px;">Shape</code> interface instead.</div>
+          </div>
+
+          <div class="code-pair" style="margin-top:14px;">
+            <div class="code-pair-tabs">
+              <div class="cpt bad active" onclick="switchTab(this,'bad-lsp')">❌ Violation</div>
+              <div class="cpt good"       onclick="switchTab(this,'good-lsp')">✅ Correct</div>
+            </div>
+            <div id="bad-lsp" class="code-pane active">
+<pre><span class="kw">class</span> <span class="ty">Bird</span>    { <span class="kw">void</span> <span class="fn">fly</span>() { <span class="cm">/* flaps wings */</span> } }
+<span class="kw">class</span> <span class="ty">Ostrich</span> <span class="kw">extends</span> <span class="ty">Bird</span> {
+  <span class="kw">void</span> <span class="fn">fly</span>() {
+    <span class="kw">throw new</span> <span class="ty">UnsupportedOperationException</span>(<span class="st">"Can't fly!"</span>);
+    <span class="cm">// Breaks any code that calls fly() on a Bird</span>
+  }
+}</pre>
+            </div>
+            <div id="good-lsp" class="code-pane">
+<pre><span class="kw">interface</span> <span class="ty">Bird</span>      { <span class="kw">void</span> <span class="fn">eat</span>(); }
+<span class="kw">interface</span> <span class="ty">FlyingBird</span> <span class="kw">extends</span> <span class="ty">Bird</span> { <span class="kw">void</span> <span class="fn">fly</span>(); }
+<span class="kw">class</span> <span class="ty">Eagle</span>   <span class="kw">implements</span> <span class="ty">FlyingBird</span> { ... }
+<span class="kw">class</span> <span class="ty">Ostrich</span> <span class="kw">implements</span> <span class="ty">Bird</span>       { ... }
+<span class="cm">// Ostrich is never passed where FlyingBird is expected</span></pre>
+            </div>
+          </div>
+
+          <div class="tip-box">
+            <span class="tip-icon">💡</span>
+            <span class="tip-text"><strong>Interview test:</strong> "Can I use this subclass everywhere the parent is used without reading the subclass's code?" If no — it violates LSP.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- I -->
+      <div class="principle-card" id="isp">
+        <div class="principle-header">
+          <div class="principle-badge badge-i">I</div>
+          <div>
+            <div class="principle-name">Interface Segregation Principle</div>
+            <div class="principle-subtitle">No client should implement methods it doesn't use</div>
+          </div>
+        </div>
+        <div class="principle-body">
+          <p class="principle-def">A "fat" interface forces implementing classes to provide empty or irrelevant method stubs — coupling them to things they don't need. Break large interfaces into smaller, role-specific ones. Prevents bloated classes, no forced dependencies, cleaner more maintainable code.</p>
+          <p style="font-size:13px; color:var(--text-3); margin-bottom:12px;"><strong style="color:var(--navy);">Analogy:</strong> A printer interface with <code class="inline">print()</code>, <code class="inline">scan()</code>, and <code class="inline">fax()</code> — a basic printer shouldn't have to implement <code class="inline">fax()</code>.</p>
+
+          <div class="code-pair">
+            <div class="code-pair-tabs">
+              <div class="cpt bad active" onclick="switchTab(this,'bad-isp')">❌ Violation</div>
+              <div class="cpt good"       onclick="switchTab(this,'good-isp')">✅ Correct</div>
+            </div>
+            <div id="bad-isp" class="code-pane active">
+<pre><span class="kw">interface</span> <span class="ty">Worker</span> {
+  <span class="kw">void</span> <span class="fn">work</span>();
+  <span class="kw">void</span> <span class="fn">eat</span>();   <span class="cm">// Robots don't eat!</span>
+  <span class="kw">void</span> <span class="fn">sleep</span>();  <span class="cm">// Robots don't sleep!</span>
+}
+<span class="kw">class</span> <span class="ty">Robot</span> <span class="kw">implements</span> <span class="ty">Worker</span> {
+  <span class="kw">public void</span> <span class="fn">eat</span>()   { <span class="cm">/* forced empty impl */</span> }
+  <span class="kw">public void</span> <span class="fn">sleep</span>() { <span class="cm">/* forced empty impl */</span> }
+}</pre>
+            </div>
+            <div id="good-isp" class="code-pane">
+<pre><span class="kw">interface</span> <span class="ty">Workable</span>  { <span class="kw">void</span> <span class="fn">work</span>(); }
+<span class="kw">interface</span> <span class="ty">Feedable</span>  { <span class="kw">void</span> <span class="fn">eat</span>(); }
+<span class="kw">interface</span> <span class="ty">Sleepable</span> { <span class="kw">void</span> <span class="fn">sleep</span>(); }
+
+<span class="kw">class</span> <span class="ty">Human</span> <span class="kw">implements</span> <span class="ty">Workable</span>, <span class="ty">Feedable</span>, <span class="ty">Sleepable</span> {...}
+<span class="kw">class</span> <span class="ty">Robot</span> <span class="kw">implements</span> <span class="ty">Workable</span> {
+  <span class="kw">public void</span> <span class="fn">work</span>() { ... } <span class="cm">// only what it needs</span>
+}</pre>
+            </div>
+          </div>
+
+          <div class="tip-box">
+            <span class="tip-icon">💡</span>
+            <span class="tip-text"><strong>Interview answer:</strong> "I'd look for any <code class="inline">UnsupportedOperationException</code> or empty method body — those are red flags the interface is too fat."</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- D -->
+      <div class="principle-card" id="dip">
+        <div class="principle-header">
+          <div class="principle-badge badge-d">D</div>
+          <div>
+            <div class="principle-name">Dependency Inversion Principle</div>
+            <div class="principle-subtitle">Depend on abstractions, not concretions</div>
+          </div>
+        </div>
+        <div class="principle-body">
+          <p class="principle-def">High-level modules (business logic) should <strong>not</strong> depend on low-level modules (databases, email clients). Both should depend on <strong>abstractions</strong> (interfaces). This decouples layers and makes the system swappable and testable without touching production code.</p>
+          <p style="font-size:13px; color:var(--text-3); margin-bottom:12px;"><strong style="color:var(--navy);">Analogy:</strong> A TV remote doesn't depend on a specific TV model. It depends on an IR protocol (abstraction). You can change the TV without changing the remote.</p>
+
+          <div class="code-pair">
+            <div class="code-pair-tabs">
+              <div class="cpt bad active" onclick="switchTab(this,'bad-dip')">❌ Violation</div>
+              <div class="cpt good"       onclick="switchTab(this,'good-dip')">✅ Correct</div>
+            </div>
+            <div id="bad-dip" class="code-pane active">
+<pre><span class="kw">class</span> <span class="ty">OrderService</span> {
+  <span class="cm">// Hardcoded to MySQL — impossible to test or swap</span>
+  <span class="kw">private</span> <span class="ty">MySQLOrderRepository</span> repo =
+              <span class="kw">new</span> <span class="ty">MySQLOrderRepository</span>();
+  <span class="kw">void</span> <span class="fn">placeOrder</span>(<span class="ty">Order</span> o) { repo.<span class="fn">save</span>(o); }
+}</pre>
+            </div>
+            <div id="good-dip" class="code-pane">
+<pre><span class="kw">interface</span> <span class="ty">OrderRepository</span> { <span class="kw">void</span> <span class="fn">save</span>(<span class="ty">Order</span> o); }
+
+<span class="kw">class</span> <span class="ty">OrderService</span> {
+  <span class="kw">private final</span> <span class="ty">OrderRepository</span> repo;
+  <span class="ty">OrderService</span>(<span class="ty">OrderRepository</span> repo) { <span class="kw">this</span>.repo = repo; }
+  <span class="kw">void</span> <span class="fn">placeOrder</span>(<span class="ty">Order</span> o) { repo.<span class="fn">save</span>(o); }
+}
+<span class="cm">// Prod: inject MySQLRepo. Tests: inject MockRepo.</span></pre>
+            </div>
+          </div>
+
+          <div class="tip-box">
+            <span class="tip-icon">💡</span>
+            <span class="tip-text"><strong>Interview answer:</strong> "I'd use constructor injection — pass in an interface, not a concrete class. In production inject MySQL, in tests inject a mock. Same service, no code change."</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       SECTION 3 — DESIGN PATTERNS
+  ════════════════════════════════════════ -->
+  <section class="section" id="patterns">
+    <div class="section-header">
+      <span class="section-eyebrow">Design Patterns</span>
+      <span class="section-rule"></span>
+    </div>
+    <h2>Design Pattern Categories</h2>
+    <p class="section-intro">Design patterns are reusable solutions to recurring OOP problems. The Gang of Four (GoF) categorised them into three families based on <em>what problem they solve</em>.</p>
+
+    <div class="pattern-grid">
+      <div class="pattern-cat">
+        <div class="pattern-cat-head">
+          <span class="pat-dot pat-dot-c"></span>
+          <h3>Creational</h3>
+        </div>
+        <p>Controls <strong>how objects are created</strong>. Decouples creation logic from calling code — caller doesn't need to know which concrete class is instantiated.</p>
+        <div class="pattern-tags">
+          <span class="ptag">Singleton</span>
+          <span class="ptag">Builder</span>
+          <span class="ptag">Factory</span>
+          <span class="ptag">Abstract Factory</span>
+          <span class="ptag">Object Pool</span>
+          <span class="ptag">Prototype</span>
+        </div>
+        <div class="tip-box" style="margin-top:12px;">
+          <span class="tip-icon">💡</span>
+          <span class="tip-text" style="font-size:12px;"><strong>Example:</strong> <code class="inline">LoggerFactory.getLogger()</code> returns a Logger — you never call <code class="inline">new Logger()</code>. The factory decides FileLogger vs ConsoleLogger.</span>
+        </div>
+      </div>
+
+      <div class="pattern-cat">
+        <div class="pattern-cat-head">
+          <span class="pat-dot pat-dot-s"></span>
+          <h3>Structural</h3>
+        </div>
+        <p>Controls <strong>how classes and objects are composed</strong> so larger structures can solve problems in a flexible, decoupled way.</p>
+        <div class="pattern-tags">
+          <span class="ptag">Decorator</span>
+          <span class="ptag">Proxy</span>
+          <span class="ptag">Composite</span>
+          <span class="ptag">Adapter</span>
+          <span class="ptag">Bridge</span>
+          <span class="ptag">Facade</span>
+          <span class="ptag">Flyweight</span>
+        </div>
+        <div class="tip-box" style="margin-top:12px;">
+          <span class="tip-icon">💡</span>
+          <span class="tip-text" style="font-size:12px;"><strong>Example:</strong> Java's <code class="inline">BufferedInputStream</code> wraps an <code class="inline">InputStream</code> (Decorator) — adds buffering without touching the original class.</span>
+        </div>
+      </div>
+
+      <div class="pattern-cat">
+        <div class="pattern-cat-head">
+          <span class="pat-dot pat-dot-b"></span>
+          <h3>Behavioural</h3>
+        </div>
+        <p>Controls <strong>how objects communicate and distribute responsibility</strong>. Concerned with algorithms and assignment of duties between objects.</p>
+        <div class="pattern-tags">
+          <span class="ptag">State</span>
+          <span class="ptag">Strategy</span>
+          <span class="ptag">Observer</span>
+          <span class="ptag">Chain of Resp.</span>
+          <span class="ptag">Template</span>
+          <span class="ptag">Command</span>
+          <span class="ptag">Iterator</span>
+        </div>
+        <div class="tip-box" style="margin-top:12px;">
+          <span class="tip-icon">💡</span>
+          <span class="tip-text" style="font-size:12px;"><strong>Example:</strong> A Kafka consumer uses Observer — multiple subscribers react to the same event without the publisher knowing who they are.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="memory-aid">
+      <span class="memory-aid-label">Pattern memory aid</span>
+      <div class="memory-aid-grid">
+        <div>
+          <p class="head" style="color:#DBEAFE;">Creational asks:</p>
+          <p class="body">"Who builds the object, and how do I hide that from the caller?"</p>
+        </div>
+        <div>
+          <p class="head" style="color:#DDD6FE;">Structural asks:</p>
+          <p class="body">"How do I assemble objects into a larger, flexible structure?"</p>
+        </div>
+        <div>
+          <p class="head" style="color:#BBF7D0;">Behavioural asks:</p>
+          <p class="body">"Who is responsible for what, and how do objects talk to each other?"</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       SECTION — BEHAVIOURAL PATTERNS
+  ════════════════════════════════════════ -->
+  <section class="section" id="behavioural-patterns">
+    <div class="section-header">
+      <span class="section-eyebrow">Behavioural Patterns — Deep Dive</span>
+      <span class="section-rule"></span>
+    </div>
+    <h2>Behavioural Design Patterns</h2>
+    <p class="section-intro">Behavioural patterns define <strong>how objects communicate and share responsibility</strong>. They are the most commonly tested patterns in FAANG LLD rounds because they directly reflect real-world system design decisions.</p>
+  </section>
+
+  <!-- ════════════════════════════════
+       STRATEGY PATTERN
+  ═════════════════════════════════ -->
+  <section class="section" id="bp-strategy">
+    <div class="section-header">
+      <span class="section-eyebrow">Behavioural — Pattern 01</span>
+      <span class="section-rule"></span>
+    </div>
+
+    <div class="pattern-title-row">
+      <div class="pattern-icon-badge pib-strategy">♟️</div>
+      <div>
+        <h2>Strategy Pattern</h2>
+        <span class="pt-sub">Define a family of algorithms, encapsulate each one, and make them interchangeable at runtime</span>
+      </div>
+    </div>
+
+    <div class="pattern-intro-strip">
+      <div class="pi-card">
+        <span class="pi-card-label">Category</span>
+        <span class="pi-card-value">Behavioural</span>
+      </div>
+      <div class="pi-card">
+        <span class="pi-card-label">Core Idea</span>
+        <span class="pi-card-value">Swap algorithms without changing the class that uses them</span>
+      </div>
+      <div class="pi-card">
+        <span class="pi-card-label">SOLID Link</span>
+        <span class="pi-card-value">Open/Closed · Single Responsibility</span>
+      </div>
+    </div>
+
+    <!-- Problem / Solution -->
+    <p class="sub-heading">Problem &amp; Solution</p>
+    <div class="prob-sol-grid">
+      <div class="prob-card">
+        <span class="ps-label">Without Strategy</span>
+        <ul>
+          <li>Behaviour controlled by if/else chains</li>
+          <li>Code duplication across similar algorithms</li>
+          <li>Tight coupling — adding new behaviour means editing the class</li>
+          <li>Impossible to swap behaviour at runtime</li>
+        </ul>
+      </div>
+      <div class="sol-card">
+        <span class="ps-label">With Strategy</span>
+        <ul>
+          <li>Each algorithm lives in its own dedicated class</li>
+          <li>The context holds a reference to a strategy interface</li>
+          <li>Behaviour swapped by injecting a different concrete strategy</li>
+          <li>New algorithms added without touching existing code</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- When to use -->
+    <p class="sub-heading">When to Use</p>
+    <div class="when-row">
+      <span class="when-tag">Multiple sorting algorithms</span>
+      <span class="when-tag">Payment methods (UPI, Card, Wallet)</span>
+      <span class="when-tag">Discount / pricing rules</span>
+      <span class="when-tag">Compression formats (ZIP, RAR, LZ4)</span>
+      <span class="when-tag">Navigation routes (fastest, shortest, scenic)</span>
+      <span class="when-tag">Auth strategies (OAuth, JWT, API Key)</span>
+    </div>
+
+    <!-- Generic UML -->
+    <p class="sub-heading">Generic UML Structure</p>
+    <div class="uml-wrap">
+      <svg viewBox="0 0 539 270" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:700px;display:block;margin:0 auto;font-family:'Inter',sans-serif;">
+<rect x="20" y="70" width="180" height="101" rx="6" fill="#EFF3FE" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="20" y="70" width="180" height="26" rx="6" fill="#BFDBFE" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="20" y="88" width="180" height="8" fill="#BFDBFE"/>
+<line x1="20" y1="96" x2="200" y2="96" stroke="#CBD5E1" stroke-width="1.5"/>
+<text x="110" y="87" text-anchor="middle" font-size="12" font-weight="700" fill="#1E3A8A">Context</text>
+<text x="30" y="112" font-size="11" fill="#334155">- strategy: Strategy</text>
+<line x1="20" y1="118" x2="200" y2="118" stroke="#CBD5E1" stroke-width="1"/>
+<text x="30" y="133" font-size="11" fill="#1B4FD8">+ setStrategy(s: Strategy)</text>
+<text x="30" y="148" font-size="11" fill="#1B4FD8">+ executeStrategy()</text>
+<rect x="290.16" y="30" width="120" height="85" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="290.16" y="30" width="120" height="46" rx="6" fill="#E2E8F0" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="290.16" y="68" width="120" height="8" fill="#E2E8F0"/>
+<line x1="290.16" y1="76" x2="410" y2="76" stroke="#CBD5E1" stroke-width="1.5"/>
+<text x="350" y="46" text-anchor="middle" font-size="10" fill="#64748B" font-style="italic">«interface»</text>
+<text x="350" y="62" text-anchor="middle" font-size="12" font-weight="700" fill="#0F172A">Strategy</text>
+<text x="300" y="92" font-size="11" fill="#1B4FD8">+ execute()</text>
+<rect x="210.16000000000003" y="185" width="134" height="65" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="210.16000000000003" y="185" width="134" height="26" rx="6" fill="#E2E8F0" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="210.16000000000003" y="203" width="134" height="8" fill="#E2E8F0"/>
+<line x1="210.16000000000003" y1="211" x2="344" y2="211" stroke="#CBD5E1" stroke-width="1.5"/>
+<text x="277" y="202" text-anchor="middle" font-size="12" font-weight="700" fill="#0F172A">ConcreteStrategyA</text>
+<text x="220" y="227" font-size="11" fill="#1B4FD8">+ execute()</text>
+<rect x="384.40000000000003" y="185" width="134" height="65" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="384.40000000000003" y="185" width="134" height="26" rx="6" fill="#E2E8F0" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="384.40000000000003" y="203" width="134" height="8" fill="#E2E8F0"/>
+<line x1="384.40000000000003" y1="211" x2="519" y2="211" stroke="#CBD5E1" stroke-width="1.5"/>
+<text x="452" y="202" text-anchor="middle" font-size="12" font-weight="700" fill="#0F172A">ConcreteStrategyB</text>
+<text x="394" y="227" font-size="11" fill="#1B4FD8">+ execute()</text>
+<defs>
+  <marker id="d1-open" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5 z" fill="#1B4FD8"/></marker>
+  <marker id="d1-tri" markerWidth="10" markerHeight="10" refX="0" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#FFFFFF" stroke="#64748B" stroke-width="1.3"/></marker>
+</defs>
+<line x1="200" y1="105" x2="290" y2="81" stroke="#1B4FD8" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#d1-open)"/>
+<text x="245" y="85" font-size="10" fill="#1B4FD8" text-anchor="middle">has-a</text>
+<line x1="277" y1="185" x2="326" y2="115" stroke="#64748B" stroke-width="1.5" marker-end="url(#d1-tri)"/>
+<line x1="452" y1="185" x2="380" y2="115" stroke="#64748B" stroke-width="1.5" marker-end="url(#d1-tri)"/>
+<text x="284" y="150" font-size="10" fill="#64748B" text-anchor="middle">is-a</text>
+<text x="434" y="150" font-size="10" fill="#64748B" text-anchor="middle">is-a</text>
+      </svg>
+    </div>
+    <p class="uml-caption">Strategy Pattern — Generic UML. Context has-a Strategy interface; Concrete strategies implement it.</p>
+
+    <!-- How it works steps -->
+    <p class="sub-heading">How It Works — Step by Step</p>
+    <div class="step-list">
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-body">Define a <strong>Strategy interface</strong> with a single method (e.g. <code class="inline">execute()</code>). This is the contract every algorithm must fulfil.</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-body">Create <strong>Concrete Strategy classes</strong> — one per algorithm. Each implements the interface with its own logic. No shared state between strategies.</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-body">The <strong>Context class</strong> holds a reference to the Strategy interface (not a concrete class — this is DIP in action). It delegates execution to whichever strategy is currently set.</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">4</div>
+        <div class="step-body"><strong>At runtime</strong>, inject or swap the strategy via a setter or constructor. The context's behaviour changes without a single line of its own code being modified.</div>
+      </div>
+    </div>
+
+    <!-- Deep Dive Example -->
+    <p class="sub-heading">Deep Dive Example — Payment Gateway</p>
+    <p style="font-size:14px; color:var(--text-2); margin-bottom:14px; line-height:1.7;">An e-commerce checkout needs to support UPI, Credit Card, and Wallet payments. Each has completely different processing logic. New methods (e.g. BNPL) will be added in future.</p>
+
+    <!-- Example UML -->
+    <div class="uml-wrap">
+      <svg viewBox="0 0 681 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:820px;display:block;margin:0 auto;font-family:'Inter',sans-serif;">
+<rect x="20" y="80" width="186" height="101" rx="6" fill="#EFF3FE" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="20" y="80" width="186" height="26" rx="6" fill="#BFDBFE" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="20" y="98" width="186" height="8" fill="#BFDBFE"/>
+<line x1="20" y1="106" x2="206" y2="106" stroke="#CBD5E1" stroke-width="1.5"/>
+<text x="113" y="97" text-anchor="middle" font-size="12" font-weight="700" fill="#1E3A8A">PaymentContext</text>
+<text x="30" y="122" font-size="11" fill="#334155">- strategy: PaymentStrategy</text>
+<line x1="20" y1="128" x2="206" y2="128" stroke="#CBD5E1" stroke-width="1"/>
+<text x="30" y="143" font-size="11" fill="#1B4FD8">+ setStrategy(s)</text>
+<text x="30" y="158" font-size="11" fill="#1B4FD8">+ pay(amount: double)</text>
+<rect x="306.32000000000005" y="30" width="149" height="85" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="306.32000000000005" y="30" width="149" height="46" rx="6" fill="#E2E8F0" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="306.32000000000005" y="68" width="149" height="8" fill="#E2E8F0"/>
+<line x1="306.32000000000005" y1="76" x2="456" y2="76" stroke="#CBD5E1" stroke-width="1.5"/>
+<text x="381" y="46" text-anchor="middle" font-size="10" fill="#64748B" font-style="italic">«interface»</text>
+<text x="381" y="62" text-anchor="middle" font-size="12" font-weight="700" fill="#0F172A">PaymentStrategy</text>
+<text x="316" y="92" font-size="11" fill="#1B4FD8">+ pay(amount: double)</text>
+<rect x="226.32000000000002" y="195" width="120" height="65" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="226.32000000000002" y="195" width="120" height="26" rx="6" fill="#E2E8F0" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="226.32000000000002" y="213" width="120" height="8" fill="#E2E8F0"/>
+<line x1="226.32000000000002" y1="221" x2="346" y2="221" stroke="#CBD5E1" stroke-width="1.5"/>
+<text x="286" y="212" text-anchor="middle" font-size="12" font-weight="700" fill="#0F172A">UPIPayment</text>
+<text x="236" y="237" font-size="11" fill="#1B4FD8">+ pay(amount)</text>
+<rect x="376.32000000000005" y="195" width="134" height="65" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="376.32000000000005" y="195" width="134" height="26" rx="6" fill="#E2E8F0" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="376.32000000000005" y="213" width="134" height="8" fill="#E2E8F0"/>
+<line x1="376.32000000000005" y1="221" x2="511" y2="221" stroke="#CBD5E1" stroke-width="1.5"/>
+<text x="443" y="212" text-anchor="middle" font-size="12" font-weight="700" fill="#0F172A">CreditCardPayment</text>
+<text x="386" y="237" font-size="11" fill="#1B4FD8">+ pay(amount)</text>
+<rect x="540.5600000000001" y="195" width="120" height="65" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="540.5600000000001" y="195" width="120" height="26" rx="6" fill="#E2E8F0" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="540.5600000000001" y="213" width="120" height="8" fill="#E2E8F0"/>
+<line x1="540.5600000000001" y1="221" x2="661" y2="221" stroke="#CBD5E1" stroke-width="1.5"/>
+<text x="601" y="212" text-anchor="middle" font-size="12" font-weight="700" fill="#0F172A">WalletPayment</text>
+<text x="551" y="237" font-size="11" fill="#1B4FD8">+ pay(amount)</text>
+<defs>
+  <marker id="d2-open" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5 z" fill="#1B4FD8"/></marker>
+  <marker id="d2-tri" markerWidth="10" markerHeight="10" refX="0" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#FFFFFF" stroke="#64748B" stroke-width="1.3"/></marker>
+</defs>
+<line x1="206" y1="110" x2="306" y2="85" stroke="#1B4FD8" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#d2-open)"/>
+<text x="256" y="90" font-size="10" fill="#1B4FD8" text-anchor="middle">has-a</text>
+<line x1="286" y1="195" x2="329" y2="115" stroke="#64748B" stroke-width="1.5" marker-end="url(#d2-tri)"/>
+<line x1="443" y1="195" x2="433" y2="115" stroke="#64748B" stroke-width="1.5" marker-end="url(#d2-tri)"/>
+<line x1="601" y1="195" x2="433" y2="115" stroke="#64748B" stroke-width="1.5" marker-end="url(#d2-tri)"/>
+      </svg>
+    </div>
+    <p class="uml-caption">Strategy Pattern — Payment Gateway example UML</p>
+
+    <!-- Full Java Code -->
+    <p class="sub-heading">Full Java Implementation</p>
+    <div class="code-tabs-wrap">
+      <div class="code-tabs-header">
+        <div class="ct-tab active" onclick="ctSwitch(this,'s-iface')">PaymentStrategy.java</div>
+        <div class="ct-tab" onclick="ctSwitch(this,'s-upi')">UPIPayment.java</div>
+        <div class="ct-tab" onclick="ctSwitch(this,'s-card')">CreditCardPayment.java</div>
+        <div class="ct-tab" onclick="ctSwitch(this,'s-wallet')">WalletPayment.java</div>
+        <div class="ct-tab" onclick="ctSwitch(this,'s-ctx')">PaymentContext.java</div>
+        <div class="ct-tab" onclick="ctSwitch(this,'s-main')">Main.java</div>
+      </div>
+      <div id="s-iface" class="ct-pane active"><pre><span class="cm">// Strategy Interface — the contract every algorithm must implement</span>
+<span class="kw">public interface</span> <span class="ty">PaymentStrategy</span> {
+    <span class="kw">void</span> <span class="fn">pay</span>(<span class="kw">double</span> amount);
+}</pre></div>
+      <div id="s-upi" class="ct-pane"><pre><span class="cm">// Concrete Strategy A</span>
+<span class="kw">public class</span> <span class="ty">UPIPayment</span> <span class="kw">implements</span> <span class="ty">PaymentStrategy</span> {
+    <span class="kw">private final</span> <span class="ty">String</span> upiId;
+
+    <span class="kw">public</span> <span class="ty">UPIPayment</span>(<span class="ty">String</span> upiId) {
+        <span class="kw">this</span>.upiId = upiId;
+    }
+
+    <span class="kw">@Override</span>
+    <span class="kw">public void</span> <span class="fn">pay</span>(<span class="kw">double</span> amount) {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Paid ₹"</span> + amount + <span class="st">" via UPI → "</span> + upiId);
+        <span class="cm">// Real impl: call UPI gateway API</span>
+    }
+}</pre></div>
+      <div id="s-card" class="ct-pane"><pre><span class="cm">// Concrete Strategy B</span>
+<span class="kw">public class</span> <span class="ty">CreditCardPayment</span> <span class="kw">implements</span> <span class="ty">PaymentStrategy</span> {
+    <span class="kw">private final</span> <span class="ty">String</span> cardNumber;
+    <span class="kw">private final</span> <span class="ty">String</span> cvv;
+
+    <span class="kw">public</span> <span class="ty">CreditCardPayment</span>(<span class="ty">String</span> cardNumber, <span class="ty">String</span> cvv) {
+        <span class="kw">this</span>.cardNumber = cardNumber;
+        <span class="kw">this</span>.cvv = cvv;
+    }
+
+    <span class="kw">@Override</span>
+    <span class="kw">public void</span> <span class="fn">pay</span>(<span class="kw">double</span> amount) {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Paid ₹"</span> + amount + <span class="st">" via Credit Card ****"</span>
+            + cardNumber.<span class="fn">substring</span>(cardNumber.<span class="fn">length</span>() - 4));
+        <span class="cm">// Real impl: call card network (Visa/Mastercard)</span>
+    }
+}</pre></div>
+      <div id="s-wallet" class="ct-pane"><pre><span class="cm">// Concrete Strategy C</span>
+<span class="kw">public class</span> <span class="ty">WalletPayment</span> <span class="kw">implements</span> <span class="ty">PaymentStrategy</span> {
+    <span class="kw">private final</span> <span class="ty">String</span> walletId;
+
+    <span class="kw">public</span> <span class="ty">WalletPayment</span>(<span class="ty">String</span> walletId) {
+        <span class="kw">this</span>.walletId = walletId;
+    }
+
+    <span class="kw">@Override</span>
+    <span class="kw">public void</span> <span class="fn">pay</span>(<span class="kw">double</span> amount) {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Paid ₹"</span> + amount + <span class="st">" from Wallet → "</span> + walletId);
+        <span class="cm">// Real impl: debit from wallet balance</span>
+    }
+}</pre></div>
+      <div id="s-ctx" class="ct-pane"><pre><span class="cm">// Context — holds a reference to the strategy, delegates to it</span>
+<span class="kw">public class</span> <span class="ty">PaymentContext</span> {
+    <span class="kw">private</span> <span class="ty">PaymentStrategy</span> strategy; <span class="cm">// depends on abstraction (DIP)</span>
+
+    <span class="cm">// Inject at construction time...</span>
+    <span class="kw">public</span> <span class="ty">PaymentContext</span>(<span class="ty">PaymentStrategy</span> strategy) {
+        <span class="kw">this</span>.strategy = strategy;
+    }
+
+    <span class="cm">// ...or swap at runtime</span>
+    <span class="kw">public void</span> <span class="fn">setStrategy</span>(<span class="ty">PaymentStrategy</span> strategy) {
+        <span class="kw">this</span>.strategy = strategy;
+    }
+
+    <span class="kw">public void</span> <span class="fn">pay</span>(<span class="kw">double</span> amount) {
+        <span class="cm">// Context has NO idea which algorithm runs — pure delegation</span>
+        strategy.<span class="fn">pay</span>(amount);
+    }
+}</pre></div>
+      <div id="s-main" class="ct-pane"><pre><span class="kw">public class</span> <span class="ty">Main</span> {
+    <span class="kw">public static void</span> <span class="fn">main</span>(<span class="ty">String</span>[] args) {
+
+        <span class="ty">PaymentContext</span> checkout = <span class="kw">new</span> <span class="ty">PaymentContext</span>(
+            <span class="kw">new</span> <span class="ty">UPIPayment</span>(<span class="st">"user@okaxis"</span>)
+        );
+        checkout.<span class="fn">pay</span>(1500.0);
+        <span class="cm">// → Paid ₹1500.0 via UPI → user@okaxis</span>
+
+        <span class="cm">// User switches to card — no change to PaymentContext code</span>
+        checkout.<span class="fn">setStrategy</span>(<span class="kw">new</span> <span class="ty">CreditCardPayment</span>(<span class="st">"4111111111111111"</span>, <span class="st">"123"</span>));
+        checkout.<span class="fn">pay</span>(3200.0);
+        <span class="cm">// → Paid ₹3200.0 via Credit Card ****1111</span>
+
+        <span class="cm">// Adding BNPL tomorrow = new class. Zero existing code changes.</span>
+    }
+}</pre></div>
+    </div>
+
+    <div class="tip-box" style="margin-top:16px;">
+      <span class="tip-icon">💡</span>
+      <span class="tip-text"><strong>Interview answer:</strong> "I'd identify that the varying behaviour — payment method, sort algorithm, discount rule — belongs in its own interface. The context delegates entirely. Adding new behaviour is a new file, never an edit to existing ones. This honours both OCP and SRP."</span>
+    </div>
+  </section>
+
+  <div class="pattern-divider"></div>
+
+  <!-- ════════════════════════════════
+       OBSERVER PATTERN
+  ═════════════════════════════════ -->
+  <section class="section" id="bp-observer">
+    <div class="section-header">
+      <span class="section-eyebrow">Behavioural — Pattern 02</span>
+      <span class="section-rule"></span>
+    </div>
+
+    <div class="pattern-title-row">
+      <div class="pattern-icon-badge pib-observer">👁️</div>
+      <div>
+        <h2>Observer Pattern</h2>
+        <span class="pt-sub">An object (Observable/Publisher) maintains a list of dependents (Observers) and notifies them automatically on state change</span>
+      </div>
+    </div>
+
+    <div class="pattern-intro-strip">
+      <div class="pi-card">
+        <span class="pi-card-label">Category</span>
+        <span class="pi-card-value">Behavioural</span>
+      </div>
+      <div class="pi-card">
+        <span class="pi-card-label">Core Idea</span>
+        <span class="pi-card-value">One-to-many dependency — publisher notifies all subscribers automatically</span>
+      </div>
+      <div class="pi-card">
+        <span class="pi-card-label">Also Known As</span>
+        <span class="pi-card-value">Publish-Subscribe · Event-Listener · Dependents</span>
+      </div>
+    </div>
+
+    <div class="prob-sol-grid">
+      <div class="prob-card">
+        <span class="ps-label">Without Observer</span>
+        <ul>
+          <li>Publisher must know every subscriber class</li>
+          <li>Adding a new subscriber means editing publisher</li>
+          <li>Polling-based solutions waste resources</li>
+          <li>Tight coupling between data source and consumers</li>
+        </ul>
+      </div>
+      <div class="sol-card">
+        <span class="ps-label">With Observer</span>
+        <ul>
+          <li>Publisher only knows the Observer interface</li>
+          <li>Any number of observers can subscribe/unsubscribe at runtime</li>
+          <li>Publishers push notifications — no polling</li>
+          <li>Open/Closed — add subscribers without changing publisher</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="sub-heading">When to Use</p>
+    <div class="when-row">
+      <span class="when-tag">Stock price trackers</span>
+      <span class="when-tag">Notification / push systems</span>
+      <span class="when-tag">Weather apps</span>
+      <span class="when-tag">Event-driven architectures</span>
+      <span class="when-tag">UI frameworks (MVC)</span>
+      <span class="when-tag">Kafka consumers</span>
+      <span class="when-tag">Subscription services</span>
+    </div>
+
+    <!-- Generic UML -->
+    <p class="sub-heading">Generic UML Structure</p>
+    <div class="uml-wrap">
+      <svg viewBox="0 0 608 341" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px;display:block;margin:0 auto;font-family:'Inter',sans-serif;">
+<rect x="20" y="90" width="120" height="95" rx="6" fill="#ECFDF5" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="20" y="90" width="120" height="26" rx="6" fill="#A7F3D0" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="20" y="108" width="120" height="8" fill="#A7F3D0"/>
+<line x1="20" y1="116" x2="140" y2="116" stroke="#CBD5E1" stroke-width="1.5"/>
+<text x="80" y="107" text-anchor="middle" font-size="12" font-weight="700" fill="#065F46">ObservableData</text>
+<text x="30" y="132" font-size="11" fill="#334155">data1</text>
+<text x="30" y="147" font-size="11" fill="#334155">data2</text>
+<text x="30" y="162" font-size="11" fill="#334155">data3</text>
+<rect x="230" y="30" width="131" height="115" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="230" y="30" width="131" height="46" rx="6" fill="#E2E8F0" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="230" y="68" width="131" height="8" fill="#E2E8F0"/>
+<line x1="230" y1="76" x2="361" y2="76" stroke="#CBD5E1" stroke-width="1.5"/>
+<text x="295" y="46" text-anchor="middle" font-size="10" fill="#64748B" font-style="italic">«interface»</text>
+<text x="295" y="62" text-anchor="middle" font-size="12" font-weight="700" fill="#0F172A">Observable</text>
+<text x="240" y="92" font-size="11" fill="#1B4FD8">+ add(observer)</text>
+<text x="240" y="107" font-size="11" fill="#1B4FD8">+ remove(observer)</text>
+<text x="240" y="122" font-size="11" fill="#1B4FD8">+ notify()</text>
+<rect x="450.88" y="30" width="120" height="85" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="450.88" y="30" width="120" height="46" rx="6" fill="#E2E8F0" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="450.88" y="68" width="120" height="8" fill="#E2E8F0"/>
+<line x1="450.88" y1="76" x2="571" y2="76" stroke="#CBD5E1" stroke-width="1.5"/>
+<text x="511" y="46" text-anchor="middle" font-size="10" fill="#64748B" font-style="italic">«interface»</text>
+<text x="511" y="62" text-anchor="middle" font-size="12" font-weight="700" fill="#0F172A">Observer</text>
+<text x="461" y="92" font-size="11" fill="#1B4FD8">+ update(data)</text>
+<rect x="200" y="220" width="180" height="101" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="200" y="220" width="180" height="26" rx="6" fill="#E2E8F0" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="200" y="238" width="180" height="8" fill="#E2E8F0"/>
+<line x1="200" y1="246" x2="380" y2="246" stroke="#CBD5E1" stroke-width="1.5"/>
+<text x="290" y="237" text-anchor="middle" font-size="12" font-weight="700" fill="#0F172A">ConcreteObservable</text>
+<text x="210" y="262" font-size="11" fill="#334155">- List&lt;Observer&gt; observers</text>
+<text x="210" y="277" font-size="11" fill="#334155">- ObservableData data</text>
+<line x1="200" y1="283" x2="380" y2="283" stroke="#CBD5E1" stroke-width="1"/>
+<text x="210" y="298" font-size="11" fill="#1B4FD8">+ add / remove / notify</text>
+<rect x="460.88" y="220" width="128" height="65" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="460.88" y="220" width="128" height="26" rx="6" fill="#E2E8F0" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="460.88" y="238" width="128" height="8" fill="#E2E8F0"/>
+<line x1="460.88" y1="246" x2="588" y2="246" stroke="#CBD5E1" stroke-width="1.5"/>
+<text x="525" y="237" text-anchor="middle" font-size="12" font-weight="700" fill="#0F172A">ConcreteObserver</text>
+<text x="471" y="262" font-size="11" fill="#1B4FD8">+ update(data)</text>
+<defs>
+  <marker id="d3-open" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5 z" fill="#059669"/></marker>
+  <marker id="d3-open2" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5 z" fill="#64748B"/></marker>
+  <marker id="d3-tri" markerWidth="10" markerHeight="10" refX="0" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#FFFFFF" stroke="#64748B" stroke-width="1.3"/></marker>
+</defs>
+<line x1="140" y1="123" x2="230" y2="110" stroke="#059669" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#d3-open)"/>
+<text x="185" y="109" font-size="10" fill="#059669" text-anchor="middle">uses</text>
+<line x1="361" y1="76" x2="451" y2="64" stroke="#64748B" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#d3-open2)"/>
+<text x="406" y="62" font-size="10" fill="#64748B" text-anchor="middle">has-a</text>
+<line x1="308" y1="220" x2="289" y2="145" stroke="#64748B" stroke-width="1.5" marker-end="url(#d3-tri)"/>
+<text x="278" y="182" font-size="10" fill="#64748B" text-anchor="middle">is-a</text>
+<line x1="525" y1="220" x2="511" y2="115" stroke="#64748B" stroke-width="1.5" marker-end="url(#d3-tri)"/>
+<text x="538" y="168" font-size="10" fill="#64748B" text-anchor="middle">is-a</text>
+      </svg>
+    </div>
+    <p class="uml-caption">Observer Pattern — Generic UML. Observable maintains list of Observers and calls update() on each.</p>
+
+    <!-- Push vs Pull -->
+    <p class="sub-heading">Push Model vs Pull Model</p>
+    <div class="model-toggle-row">
+      <button class="model-btn active" onclick="modelSwitch(this,'obs-push')">📤 Push Model</button>
+      <button class="model-btn"        onclick="modelSwitch(this,'obs-pull')">📥 Pull Model</button>
+    </div>
+
+    <div id="obs-push" class="model-pane active">
+      <div class="prob-sol-grid" style="margin-bottom:14px;">
+        <div class="sol-card">
+          <span class="ps-label">Push — How it works</span>
+          <ul>
+            <li>Observable decides what data observers get</li>
+            <li>Passes data as argument to update(ObservableData)</li>
+            <li>Observer is passive — receives exactly what publisher sends</li>
+            <li>Simpler observer implementation</li>
+          </ul>
+        </div>
+        <div class="prob-card">
+          <span class="ps-label">Push — Watch out</span>
+          <ul>
+            <li>Observer may receive data it doesn't need</li>
+            <li>Coupling grows if ObservableData structure changes</li>
+            <li>Less flexible — observer can't ask for more</li>
+          </ul>
+        </div>
+      </div>
+      <div class="code-tabs-wrap">
+        <div class="code-tabs-header">
+          <div class="ct-tab active" onclick="ctSwitch(this,'push-obs-iface')">Observer.java</div>
+          <div class="ct-tab" onclick="ctSwitch(this,'push-observable-iface')">Observable.java</div>
+          <div class="ct-tab" onclick="ctSwitch(this,'push-concrete-obs')">ConcreteObservable.java</div>
+          <div class="ct-tab" onclick="ctSwitch(this,'push-concrete-observer')">ConcreteObserver.java</div>
+        </div>
+        <div id="push-obs-iface" class="ct-pane active"><pre><span class="cm">// Observer interface — receives data pushed by the publisher</span>
+<span class="kw">public interface</span> <span class="ty">Observer</span> {
+    <span class="kw">void</span> <span class="fn">update</span>(<span class="ty">ObservableData</span> data); <span class="cm">// publisher pushes data object</span>
+}
+
+<span class="cm">// Data transfer object carrying the state change</span>
+<span class="kw">public class</span> <span class="ty">ObservableData</span> {
+    <span class="kw">public final</span> <span class="ty">String</span> stockSymbol;
+    <span class="kw">public final</span> <span class="kw">double</span> price;
+    <span class="kw">public</span> <span class="ty">ObservableData</span>(<span class="ty">String</span> s, <span class="kw">double</span> p) {
+        <span class="kw">this</span>.stockSymbol = s; <span class="kw">this</span>.price = p;
+    }
+}</pre></div>
+        <div id="push-observable-iface" class="ct-pane"><pre><span class="cm">// Observable interface — publisher contract</span>
+<span class="kw">public interface</span> <span class="ty">Observable</span> {
+    <span class="kw">void</span> <span class="fn">add</span>(<span class="ty">Observer</span> o);
+    <span class="kw">void</span> <span class="fn">remove</span>(<span class="ty">Observer</span> o);
+    <span class="kw">void</span> <span class="fn">notifyObservers</span>();
+    <span class="kw">void</span> <span class="fn">setState</span>(<span class="ty">ObservableData</span> data);
+}</pre></div>
+        <div id="push-concrete-obs" class="ct-pane"><pre><span class="kw">public class</span> <span class="ty">StockMarket</span> <span class="kw">implements</span> <span class="ty">Observable</span> {
+    <span class="kw">private final</span> <span class="ty">List</span>&lt;<span class="ty">Observer</span>&gt; observers = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;();
+    <span class="kw">private</span> <span class="ty">ObservableData</span> latestData;
+
+    <span class="kw">@Override</span> <span class="kw">public void</span> <span class="fn">add</span>(<span class="ty">Observer</span> o)    { observers.<span class="fn">add</span>(o); }
+    <span class="kw">@Override</span> <span class="kw">public void</span> <span class="fn">remove</span>(<span class="ty">Observer</span> o) { observers.<span class="fn">remove</span>(o); }
+
+    <span class="kw">@Override</span>
+    <span class="kw">public void</span> <span class="fn">setState</span>(<span class="ty">ObservableData</span> data) {
+        <span class="kw">this</span>.latestData = data;
+        <span class="fn">notifyObservers</span>(); <span class="cm">// auto-notify on every state change</span>
+    }
+
+    <span class="kw">@Override</span>
+    <span class="kw">public void</span> <span class="fn">notifyObservers</span>() {
+        <span class="cm">// PUSH: publisher decides what data observers see</span>
+        <span class="kw">for</span> (<span class="ty">Observer</span> o : observers) {
+            o.<span class="fn">update</span>(latestData);
+        }
+    }
+}</pre></div>
+        <div id="push-concrete-observer" class="ct-pane"><pre><span class="kw">public class</span> <span class="ty">MobileAlertObserver</span> <span class="kw">implements</span> <span class="ty">Observer</span> {
+    <span class="kw">private final</span> <span class="ty">String</span> userId;
+
+    <span class="kw">public</span> <span class="ty">MobileAlertObserver</span>(<span class="ty">String</span> userId) {
+        <span class="kw">this</span>.userId = userId;
+    }
+
+    <span class="kw">@Override</span>
+    <span class="kw">public void</span> <span class="fn">update</span>(<span class="ty">ObservableData</span> data) {
+        <span class="cm">// Receives data pushed by StockMarket — no need to ask for it</span>
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"[ALERT → "</span> + userId + <span class="st">"] "</span>
+            + data.stockSymbol + <span class="st">" is now ₹"</span> + data.price);
+    }
+}
+
+<span class="cm">// Usage</span>
+<span class="ty">StockMarket</span> market = <span class="kw">new</span> <span class="ty">StockMarket</span>();
+market.<span class="fn">add</span>(<span class="kw">new</span> <span class="ty">MobileAlertObserver</span>(<span class="st">"user_001"</span>));
+market.<span class="fn">add</span>(<span class="kw">new</span> <span class="ty">MobileAlertObserver</span>(<span class="st">"user_002"</span>));
+market.<span class="fn">setState</span>(<span class="kw">new</span> <span class="ty">ObservableData</span>(<span class="st">"INFY"</span>, 1842.50));
+<span class="cm">// → [ALERT → user_001] INFY is now ₹1842.5</span>
+<span class="cm">// → [ALERT → user_002] INFY is now ₹1842.5</span></pre></div>
+      </div>
+    </div>
+
+    <div id="obs-pull" class="model-pane">
+      <div class="prob-sol-grid" style="margin-bottom:14px;">
+        <div class="sol-card">
+          <span class="ps-label">Pull — How it works</span>
+          <ul>
+            <li>Observer holds a reference to the Observable object</li>
+            <li>update() takes no parameters — just a signal</li>
+            <li>Observer calls getters on Observable to fetch what it needs</li>
+            <li>Observer controls exactly what data it reads</li>
+          </ul>
+        </div>
+        <div class="prob-card">
+          <span class="ps-label">Pull — Watch out</span>
+          <ul>
+            <li>Observer is tightly coupled to Observable's API</li>
+            <li>Observer must know which getters to call</li>
+            <li>Slightly more complex observer code</li>
+          </ul>
+        </div>
+      </div>
+      <div class="code-tabs-wrap">
+        <div class="code-tabs-header">
+          <div class="ct-tab active" onclick="ctSwitch(this,'pull-observer-iface')">Observer.java</div>
+          <div class="ct-tab" onclick="ctSwitch(this,'pull-concrete-obs')">ConcreteObservable.java</div>
+          <div class="ct-tab" onclick="ctSwitch(this,'pull-concrete-observer')">ConcreteObserver.java</div>
+        </div>
+        <div id="pull-observer-iface" class="ct-pane active"><pre><span class="cm">// Pull model — update() has NO parameters</span>
+<span class="cm">// Observer only knows something changed; it pulls what it needs</span>
+<span class="kw">public interface</span> <span class="ty">Observer</span> {
+    <span class="kw">void</span> <span class="fn">update</span>(); <span class="cm">// no args — just a "something changed" signal</span>
+}</pre></div>
+        <div id="pull-concrete-obs" class="ct-pane"><pre><span class="kw">public class</span> <span class="ty">StockMarket</span> <span class="kw">implements</span> <span class="ty">Observable</span> {
+    <span class="kw">private final</span> <span class="ty">List</span>&lt;<span class="ty">Observer</span>&gt; observers = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;();
+    <span class="kw">private</span> <span class="ty">ObservableData</span> latestData;
+
+    <span class="cm">// Observers pull this data themselves via the getter</span>
+    <span class="kw">public</span> <span class="ty">ObservableData</span> <span class="fn">getLatestData</span>() { <span class="kw">return</span> latestData; }
+
+    <span class="kw">public void</span> <span class="fn">setState</span>(<span class="ty">ObservableData</span> data) {
+        <span class="kw">this</span>.latestData = data;
+        <span class="fn">notifyObservers</span>();
+    }
+
+    <span class="kw">public void</span> <span class="fn">notifyObservers</span>() {
+        <span class="cm">// PULL: just signal — no data passed</span>
+        <span class="kw">for</span> (<span class="ty">Observer</span> o : observers) o.<span class="fn">update</span>();
+    }
+    <span class="cm">// add/remove omitted for brevity</span>
+}</pre></div>
+        <div id="pull-concrete-observer" class="ct-pane"><pre><span class="kw">public class</span> <span class="ty">PortfolioObserver</span> <span class="kw">implements</span> <span class="ty">Observer</span> {
+    <span class="kw">private final</span> <span class="ty">StockMarket</span> market; <span class="cm">// holds reference to observable</span>
+    <span class="kw">private final</span> <span class="ty">String</span> trackedSymbol;
+
+    <span class="kw">public</span> <span class="ty">PortfolioObserver</span>(<span class="ty">StockMarket</span> market, <span class="ty">String</span> symbol) {
+        <span class="kw">this</span>.market = market;
+        <span class="kw">this</span>.trackedSymbol = symbol;
+    }
+
+    <span class="kw">@Override</span>
+    <span class="kw">public void</span> <span class="fn">update</span>() {
+        <span class="cm">// PULLS only what it needs from the observable</span>
+        <span class="ty">ObservableData</span> data = market.<span class="fn">getLatestData</span>();
+        <span class="kw">if</span> (data.stockSymbol.<span class="fn">equals</span>(trackedSymbol)) {
+            <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Portfolio update: "</span>
+                + trackedSymbol + <span class="st">" → ₹"</span> + data.price);
+        }
+    }
+}</pre></div>
+      </div>
+    </div>
+
+    <div class="tip-box" style="margin-top:16px;">
+      <span class="tip-icon">💡</span>
+      <span class="tip-text"><strong>Push vs Pull decision:</strong> Use <strong>Push</strong> when all observers need the same data and you want simpler observer code. Use <strong>Pull</strong> when different observers care about different parts of the state and you want observer autonomy over what they fetch.</span>
+    </div>
+    <div class="tip-box" style="margin-top:10px;">
+      <span class="tip-icon">💡</span>
+      <span class="tip-text"><strong>Interview answer:</strong> "I'd define an Observable interface with add/remove/notify and an Observer interface with update(). The concrete Observable holds the list and calls notify() on setState(). New subscribers just implement Observer — the publisher never changes."</span>
+    </div>
+  </section>
+
+  <div class="pattern-divider"></div>
+
+  <!-- ════════════════════════════════
+       STATE PATTERN
+  ═════════════════════════════════ -->
+  <section class="section" id="bp-state">
+    <div class="section-header">
+      <span class="section-eyebrow">Behavioural — Pattern 03</span>
+      <span class="section-rule"></span>
+    </div>
+
+    <div class="pattern-title-row">
+      <div class="pattern-icon-badge pib-state">🔄</div>
+      <div>
+        <h2>State Pattern</h2>
+        <span class="pt-sub">An object changes its behaviour dynamically when its internal state changes — as if it changed its class at runtime</span>
+      </div>
+    </div>
+
+    <div class="pattern-intro-strip">
+      <div class="pi-card">
+        <span class="pi-card-label">Category</span>
+        <span class="pi-card-value">Behavioural</span>
+      </div>
+      <div class="pi-card">
+        <span class="pi-card-label">Core Idea</span>
+        <span class="pi-card-value">Each state is its own class. The context delegates behaviour to the current state object.</span>
+      </div>
+      <div class="pi-card">
+        <span class="pi-card-label">Signature use-case</span>
+        <span class="pi-card-value">Vending Machine · Traffic Light · Order Lifecycle</span>
+      </div>
+    </div>
+
+    <div class="prob-sol-grid">
+      <div class="prob-card">
+        <span class="ps-label">Without State Pattern</span>
+        <ul>
+          <li>State managed via enums + giant if/switch blocks</li>
+          <li>Adding a new state means editing the context class</li>
+          <li>Transition logic scattered across methods</li>
+          <li>Impossible to test each state in isolation</li>
+        </ul>
+      </div>
+      <div class="sol-card">
+        <span class="ps-label">With State Pattern</span>
+        <ul>
+          <li>Each state is an encapsulated class with its own behaviour</li>
+          <li>Context delegates all operations to current state</li>
+          <li>Transitions are explicit — state sets the next state</li>
+          <li>New states added without touching existing ones</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="sub-heading">When to Use</p>
+    <div class="when-row">
+      <span class="when-tag">Vending machines</span>
+      <span class="when-tag">Traffic signals</span>
+      <span class="when-tag">Order lifecycle (Placed → Shipped → Delivered)</span>
+      <span class="when-tag">ATM flow</span>
+      <span class="when-tag">Game characters (idle / running / jumping)</span>
+      <span class="when-tag">TCP connections</span>
+      <span class="when-tag">Document workflows (Draft → Review → Published)</span>
+    </div>
+
+    <!-- Generic UML -->
+    <p class="sub-heading">Generic UML Structure</p>
+    <div class="uml-wrap">
+      <svg viewBox="0 0 639 290" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:780px;display:block;margin:0 auto;font-family:'Inter',sans-serif;">
+<rect x="20" y="80" width="149" height="101" rx="6" fill="#FFFBEB" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="20" y="80" width="149" height="26" rx="6" fill="#FDE68A" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="20" y="98" width="149" height="8" fill="#FDE68A"/>
+<line x1="20" y1="106" x2="169" y2="106" stroke="#CBD5E1" stroke-width="1.5"/>
+<text x="95" y="97" text-anchor="middle" font-size="12" font-weight="700" fill="#78350F">Context</text>
+<text x="30" y="122" font-size="11" fill="#334155">- state: ProductState</text>
+<line x1="20" y1="128" x2="169" y2="128" stroke="#CBD5E1" stroke-width="1"/>
+<text x="30" y="143" font-size="11" fill="#1B4FD8">+ request()</text>
+<text x="30" y="158" font-size="11" fill="#1B4FD8">+ setState(state)</text>
+<rect x="269.36" y="25" width="131" height="100" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="269.36" y="25" width="131" height="46" rx="6" fill="#E2E8F0" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="269.36" y="63" width="131" height="8" fill="#E2E8F0"/>
+<line x1="269.36" y1="71" x2="400" y2="71" stroke="#CBD5E1" stroke-width="1.5"/>
+<text x="335" y="41" text-anchor="middle" font-size="10" fill="#64748B" font-style="italic">«interface»</text>
+<text x="335" y="57" text-anchor="middle" font-size="12" font-weight="700" fill="#0F172A">ProductState</text>
+<text x="279" y="87" font-size="11" fill="#1B4FD8">+ op1(Product obj)</text>
+<text x="279" y="102" font-size="11" fill="#1B4FD8">+ op2(Product obj)</text>
+<rect x="199.36" y="205" width="120" height="65" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="199.36" y="205" width="120" height="26" rx="6" fill="#E2E8F0" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="199.36" y="223" width="120" height="8" fill="#E2E8F0"/>
+<line x1="199.36" y1="231" x2="319" y2="231" stroke="#CBD5E1" stroke-width="1.5"/>
+<text x="259" y="222" text-anchor="middle" font-size="12" font-weight="700" fill="#0F172A">State1</text>
+<text x="209" y="247" font-size="11" fill="#1B4FD8">+ op1/op2(ctx)</text>
+<rect x="349.36" y="205" width="120" height="65" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="349.36" y="205" width="120" height="26" rx="6" fill="#E2E8F0" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="349.36" y="223" width="120" height="8" fill="#E2E8F0"/>
+<line x1="349.36" y1="231" x2="469" y2="231" stroke="#CBD5E1" stroke-width="1.5"/>
+<text x="409" y="222" text-anchor="middle" font-size="12" font-weight="700" fill="#0F172A">State2</text>
+<text x="359" y="247" font-size="11" fill="#1B4FD8">+ op1/op2(ctx)</text>
+<rect x="499.36" y="205" width="120" height="65" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="499.36" y="205" width="120" height="26" rx="6" fill="#E2E8F0" stroke="#CBD5E1" stroke-width="1.5"/>
+<rect x="499.36" y="223" width="120" height="8" fill="#E2E8F0"/>
+<line x1="499.36" y1="231" x2="619" y2="231" stroke="#CBD5E1" stroke-width="1.5"/>
+<text x="559" y="222" text-anchor="middle" font-size="12" font-weight="700" fill="#0F172A">State3</text>
+<text x="509" y="247" font-size="11" fill="#1B4FD8">+ op1/op2(ctx)</text>
+<defs>
+  <marker id="d4-open" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5 z" fill="#D97706"/></marker>
+  <marker id="d4-tri" markerWidth="10" markerHeight="10" refX="0" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#FFFFFF" stroke="#64748B" stroke-width="1.3"/></marker>
+</defs>
+<line x1="169" y1="110" x2="269" y2="85" stroke="#D97706" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#d4-open)"/>
+<text x="219" y="90" font-size="10" fill="#D97706" text-anchor="middle">has-a</text>
+<line x1="259" y1="205" x2="296" y2="125" stroke="#64748B" stroke-width="1.5" marker-end="url(#d4-tri)"/>
+<line x1="409" y1="205" x2="335" y2="125" stroke="#64748B" stroke-width="1.5" marker-end="url(#d4-tri)"/>
+<line x1="559" y1="205" x2="374" y2="125" stroke="#64748B" stroke-width="1.5" marker-end="url(#d4-tri)"/>
+<text x="389" y="175" font-size="10" fill="#64748B" text-anchor="middle">is-a</text>
+      </svg>
+    </div>
+    <p class="uml-caption">State Pattern — Generic UML. Context has-a State interface. Each concrete state implements behaviour and can trigger transitions.</p>
+
+    <!-- How it works -->
+    <p class="sub-heading">How It Works — Step by Step</p>
+    <div class="step-list">
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-body">Define a <strong>State interface</strong> with all operations the context supports. Each operation receives the <strong>context object</strong> as a parameter so the state can trigger transitions.</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-body">Create <strong>Concrete State classes</strong> — one per state. Each implements the full interface. If an operation is invalid in that state, throw an exception or log a warning.</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-body">The <strong>Context class</strong> has-a State field. All operations delegate directly to the current state — no if/switch logic in the context.</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">4</div>
+        <div class="step-body"><strong>Transitions are handled by the state itself</strong> — when an operation changes the machine's state, the state calls <code class="inline">context.setState(new NextState())</code>. The context never decides transitions.</div>
+      </div>
+    </div>
+
+    <!-- Deep Dive Example -->
+    <p class="sub-heading">Deep Dive Example — Vending Machine</p>
+    <p style="font-size:14px; color:var(--text-2); margin-bottom:14px; line-height:1.7;">A vending machine has four states: <strong>Idle</strong> (waiting), <strong>HasMoney</strong> (coin inserted), <strong>Dispensing</strong> (releasing product), and <strong>OutOfStock</strong>. Each state permits only certain operations — inserting a coin when it's already dispensing must throw an error, not silently corrupt state.</p>
+
+    <!-- State transition diagram -->
+    <div class="uml-wrap" style="margin-bottom:6px;">
+      <svg viewBox="0 -15 609 207" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:720px;display:block;margin:0 auto;font-family:'Inter',sans-serif;">
+<rect x="20" y="60" width="63" height="42" rx="21" fill="#FFFBEB" stroke="#FDE68A" stroke-width="1.5"/>
+<text x="51" y="85" text-anchor="middle" font-size="12" font-weight="600" fill="#78350F">Idle</text>
+<rect x="152.88" y="60" width="90" height="42" rx="21" fill="#EFF3FE" stroke="#BFDBFE" stroke-width="1.5"/>
+<text x="198" y="85" text-anchor="middle" font-size="12" font-weight="600" fill="#1E3A8A">HasMoney</text>
+<rect x="312.64" y="60" width="103" height="42" rx="21" fill="#ECFDF5" stroke="#A7F3D0" stroke-width="1.5"/>
+<text x="364" y="85" text-anchor="middle" font-size="12" font-weight="600" fill="#065F46">Dispensing</text>
+<rect x="485.84" y="60" width="103" height="42" rx="21" fill="#FFF1F2" stroke="#FECDD3" stroke-width="1.5"/>
+<text x="537" y="85" text-anchor="middle" font-size="12" font-weight="600" fill="#BE123C">OutOfStock</text>
+<defs>
+  <marker id="d5-arr" markerWidth="8" markerHeight="8" refX="7" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5 z" fill="#64748B"/></marker>
+  <marker id="d5-arr-red" markerWidth="8" markerHeight="8" refX="7" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5 z" fill="#E11D48"/></marker>
+</defs>
+<line x1="83" y1="81" x2="153" y2="81" stroke="#64748B" stroke-width="1.5" marker-end="url(#d5-arr)"/>
+<text x="118" y="73" text-anchor="middle" font-size="9.5" fill="#64748B">insertCoin()</text>
+<line x1="243" y1="81" x2="313" y2="81" stroke="#64748B" stroke-width="1.5" marker-end="url(#d5-arr)"/>
+<text x="278" y="73" text-anchor="middle" font-size="9.5" fill="#64748B">selectProduct()</text>
+<line x1="416" y1="81" x2="486" y2="81" stroke="#64748B" stroke-width="1.5" marker-end="url(#d5-arr)"/>
+<text x="451" y="73" text-anchor="middle" font-size="9.5" fill="#64748B">stock = 0</text>
+<path d="M 364 102 Q 364 157 208 157 Q 66 157 51 102" fill="none" stroke="#64748B" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#d5-arr)"/>
+<text x="208" y="173" text-anchor="middle" font-size="9.5" fill="#64748B">dispense() completes → back to Idle</text>
+<path d="M 198 60 Q 198 15 125 15 Q 66 15 51 60" fill="none" stroke="#E11D48" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#d5-arr-red)"/>
+<text x="125" y="7" text-anchor="middle" font-size="9.5" fill="#E11D48">refund() → back to Idle</text>
+      </svg>
+    </div>
+    <p class="uml-caption">Vending Machine — State transition diagram</p>
+
+    <!-- Full Java Code -->
+    <p class="sub-heading" style="margin-top:20px;">Full Java Implementation</p>
+    <div class="code-tabs-wrap">
+      <div class="code-tabs-header">
+        <div class="ct-tab active" onclick="ctSwitch(this,'vm-state-iface')">VendingMachineState.java</div>
+        <div class="ct-tab" onclick="ctSwitch(this,'vm-context')">VendingMachine.java</div>
+        <div class="ct-tab" onclick="ctSwitch(this,'vm-idle')">IdleState.java</div>
+        <div class="ct-tab" onclick="ctSwitch(this,'vm-hasmoney')">HasMoneyState.java</div>
+        <div class="ct-tab" onclick="ctSwitch(this,'vm-dispensing')">DispensingState.java</div>
+        <div class="ct-tab" onclick="ctSwitch(this,'vm-outofstock')">OutOfStockState.java</div>
+        <div class="ct-tab" onclick="ctSwitch(this,'vm-main')">Main.java</div>
+      </div>
+
+      <div id="vm-state-iface" class="ct-pane active"><pre><span class="cm">// State interface — context object passed in so state can trigger transitions</span>
+<span class="kw">public interface</span> <span class="ty">VendingMachineState</span> {
+    <span class="kw">void</span> <span class="fn">insertCoin</span>(<span class="ty">VendingMachine</span> ctx);
+    <span class="kw">void</span> <span class="fn">selectProduct</span>(<span class="ty">VendingMachine</span> ctx);
+    <span class="kw">void</span> <span class="fn">dispense</span>(<span class="ty">VendingMachine</span> ctx);
+    <span class="kw">void</span> <span class="fn">refund</span>(<span class="ty">VendingMachine</span> ctx);
+}</pre></div>
+
+      <div id="vm-context" class="ct-pane"><pre><span class="cm">// Context — has-a State; delegates ALL operations to it</span>
+<span class="kw">public class</span> <span class="ty">VendingMachine</span> {
+    <span class="kw">private</span> <span class="ty">VendingMachineState</span> currentState;
+    <span class="kw">private int</span> stock;
+
+    <span class="kw">public</span> <span class="ty">VendingMachine</span>(<span class="kw">int</span> stock) {
+        <span class="kw">this</span>.stock = stock;
+        <span class="cm">// Start in the right state based on stock</span>
+        <span class="kw">this</span>.currentState = (stock &gt; 0)
+            ? <span class="kw">new</span> <span class="ty">IdleState</span>()
+            : <span class="kw">new</span> <span class="ty">OutOfStockState</span>();
+    }
+
+    <span class="cm">// Called by state classes to trigger transitions</span>
+    <span class="kw">public void</span> <span class="fn">setState</span>(<span class="ty">VendingMachineState</span> state) {
+        <span class="kw">this</span>.currentState = state;
+    }
+
+    <span class="kw">public int</span>  <span class="fn">getStock</span>()             { <span class="kw">return</span> stock; }
+    <span class="kw">public void</span> <span class="fn">decrementStock</span>()        { stock--; }
+
+    <span class="cm">// All public operations delegate to currentState — ZERO if/switch</span>
+    <span class="kw">public void</span> <span class="fn">insertCoin</span>()   { currentState.<span class="fn">insertCoin</span>(<span class="kw">this</span>); }
+    <span class="kw">public void</span> <span class="fn">selectProduct</span>(){ currentState.<span class="fn">selectProduct</span>(<span class="kw">this</span>); }
+    <span class="kw">public void</span> <span class="fn">dispense</span>()     { currentState.<span class="fn">dispense</span>(<span class="kw">this</span>); }
+    <span class="kw">public void</span> <span class="fn">refund</span>()       { currentState.<span class="fn">refund</span>(<span class="kw">this</span>); }
+}</pre></div>
+
+      <div id="vm-idle" class="ct-pane"><pre><span class="cm">// IdleState — machine is waiting for a coin</span>
+<span class="kw">public class</span> <span class="ty">IdleState</span> <span class="kw">implements</span> <span class="ty">VendingMachineState</span> {
+
+    <span class="kw">@Override</span>
+    <span class="kw">public void</span> <span class="fn">insertCoin</span>(<span class="ty">VendingMachine</span> ctx) {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Coin accepted."</span>);
+        ctx.<span class="fn">setState</span>(<span class="kw">new</span> <span class="ty">HasMoneyState</span>()); <span class="cm">// ← transition</span>
+    }
+
+    <span class="kw">@Override</span>
+    <span class="kw">public void</span> <span class="fn">selectProduct</span>(<span class="ty">VendingMachine</span> ctx) {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Please insert a coin first."</span>);
+    }
+
+    <span class="kw">@Override</span>
+    <span class="kw">public void</span> <span class="fn">dispense</span>(<span class="ty">VendingMachine</span> ctx) {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Cannot dispense. No payment received."</span>);
+    }
+
+    <span class="kw">@Override</span>
+    <span class="kw">public void</span> <span class="fn">refund</span>(<span class="ty">VendingMachine</span> ctx) {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Nothing to refund."</span>);
+    }
+}</pre></div>
+
+      <div id="vm-hasmoney" class="ct-pane"><pre><span class="cm">// HasMoneyState — coin inserted, waiting for product selection</span>
+<span class="kw">public class</span> <span class="ty">HasMoneyState</span> <span class="kw">implements</span> <span class="ty">VendingMachineState</span> {
+
+    <span class="kw">@Override</span>
+    <span class="kw">public void</span> <span class="fn">insertCoin</span>(<span class="ty">VendingMachine</span> ctx) {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Coin already inserted. Select a product."</span>);
+    }
+
+    <span class="kw">@Override</span>
+    <span class="kw">public void</span> <span class="fn">selectProduct</span>(<span class="ty">VendingMachine</span> ctx) {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Product selected. Dispensing..."</span>);
+        ctx.<span class="fn">setState</span>(<span class="kw">new</span> <span class="ty">DispensingState</span>()); <span class="cm">// ← transition</span>
+    }
+
+    <span class="kw">@Override</span>
+    <span class="kw">public void</span> <span class="fn">dispense</span>(<span class="ty">VendingMachine</span> ctx) {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Select a product before dispensing."</span>);
+    }
+
+    <span class="kw">@Override</span>
+    <span class="kw">public void</span> <span class="fn">refund</span>(<span class="ty">VendingMachine</span> ctx) {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Coin refunded."</span>);
+        ctx.<span class="fn">setState</span>(<span class="kw">new</span> <span class="ty">IdleState</span>()); <span class="cm">// ← back to idle</span>
+    }
+}</pre></div>
+
+      <div id="vm-dispensing" class="ct-pane"><pre><span class="cm">// DispensingState — product is being released</span>
+<span class="kw">public class</span> <span class="ty">DispensingState</span> <span class="kw">implements</span> <span class="ty">VendingMachineState</span> {
+
+    <span class="kw">@Override</span>
+    <span class="kw">public void</span> <span class="fn">insertCoin</span>(<span class="ty">VendingMachine</span> ctx) {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Please wait — dispensing in progress."</span>);
+    }
+
+    <span class="kw">@Override</span>
+    <span class="kw">public void</span> <span class="fn">selectProduct</span>(<span class="ty">VendingMachine</span> ctx) {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Already dispensing."</span>);
+    }
+
+    <span class="kw">@Override</span>
+    <span class="kw">public void</span> <span class="fn">dispense</span>(<span class="ty">VendingMachine</span> ctx) {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Product dispensed. Enjoy!"</span>);
+        ctx.<span class="fn">decrementStock</span>();
+
+        <span class="cm">// Transition: stock decides next state</span>
+        <span class="kw">if</span> (ctx.<span class="fn">getStock</span>() &gt; 0) {
+            ctx.<span class="fn">setState</span>(<span class="kw">new</span> <span class="ty">IdleState</span>());
+        } <span class="kw">else</span> {
+            <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Machine is now out of stock."</span>);
+            ctx.<span class="fn">setState</span>(<span class="kw">new</span> <span class="ty">OutOfStockState</span>());
+        }
+    }
+
+    <span class="kw">@Override</span>
+    <span class="kw">public void</span> <span class="fn">refund</span>(<span class="ty">VendingMachine</span> ctx) {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Cannot refund — already dispensing."</span>);
+    }
+}</pre></div>
+
+      <div id="vm-outofstock" class="ct-pane"><pre><span class="cm">// OutOfStockState — machine is empty; rejects all operations</span>
+<span class="kw">public class</span> <span class="ty">OutOfStockState</span> <span class="kw">implements</span> <span class="ty">VendingMachineState</span> {
+
+    <span class="kw">@Override</span>
+    <span class="kw">public void</span> <span class="fn">insertCoin</span>(<span class="ty">VendingMachine</span> ctx) {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Out of stock. Coin returned."</span>);
+    }
+
+    <span class="kw">@Override</span>
+    <span class="kw">public void</span> <span class="fn">selectProduct</span>(<span class="ty">VendingMachine</span> ctx) {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Out of stock. Cannot select product."</span>);
+    }
+
+    <span class="kw">@Override</span>
+    <span class="kw">public void</span> <span class="fn">dispense</span>(<span class="ty">VendingMachine</span> ctx) {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Out of stock. Nothing to dispense."</span>);
+    }
+
+    <span class="kw">@Override</span>
+    <span class="kw">public void</span> <span class="fn">refund</span>(<span class="ty">VendingMachine</span> ctx) {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Nothing to refund."</span>);
+    }
+}</pre></div>
+
+      <div id="vm-main" class="ct-pane"><pre><span class="kw">public class</span> <span class="ty">Main</span> {
+    <span class="kw">public static void</span> <span class="fn">main</span>(<span class="ty">String</span>[] args) {
+
+        <span class="ty">VendingMachine</span> vm = <span class="kw">new</span> <span class="ty">VendingMachine</span>(2); <span class="cm">// 2 items in stock</span>
+
+        vm.<span class="fn">insertCoin</span>();      <span class="cm">// → Coin accepted. [Idle → HasMoney]</span>
+        vm.<span class="fn">insertCoin</span>();      <span class="cm">// → Coin already inserted.</span>
+        vm.<span class="fn">selectProduct</span>();   <span class="cm">// → Product selected. [HasMoney → Dispensing]</span>
+        vm.<span class="fn">dispense</span>();        <span class="cm">// → Product dispensed. [Dispensing → Idle]</span>
+
+        vm.<span class="fn">insertCoin</span>();      <span class="cm">// → Coin accepted. [Idle → HasMoney]</span>
+        vm.<span class="fn">refund</span>();          <span class="cm">// → Coin refunded. [HasMoney → Idle]</span>
+
+        vm.<span class="fn">insertCoin</span>();      <span class="cm">// → Coin accepted.</span>
+        vm.<span class="fn">selectProduct</span>();   <span class="cm">// → Product selected.</span>
+        vm.<span class="fn">dispense</span>();        <span class="cm">// → Product dispensed. Machine is now out of stock.</span>
+                               <span class="cm">//   [Dispensing → OutOfStock]</span>
+
+        vm.<span class="fn">insertCoin</span>();      <span class="cm">// → Out of stock. Coin returned.</span>
+    }
+}</pre></div>
+    </div>
+
+    <div class="tip-box" style="margin-top:16px;">
+      <span class="tip-icon">💡</span>
+      <span class="tip-text"><strong>Key insight:</strong> Notice that <code class="inline">VendingMachine.insertCoin()</code> has <strong>zero if/switch logic</strong>. It just calls <code class="inline">currentState.insertCoin(this)</code>. All decision-making lives in the state classes. Adding a "Maintenance" state tomorrow means one new file — nothing else changes.</span>
+    </div>
+    <div class="tip-box" style="margin-top:10px;">
+      <span class="tip-icon">💡</span>
+      <span class="tip-text"><strong>Strategy vs State:</strong> They look structurally similar but solve different problems. Strategy changes <em>how</em> an operation is performed (algorithm selection). State changes <em>what</em> operations are valid (behaviour based on current lifecycle stage). Strategy is typically set externally; State transitions happen internally.</span>
+    </div>
+    <div class="tip-box" style="margin-top:10px;">
+      <span class="tip-icon">💡</span>
+      <span class="tip-text"><strong>Interview answer:</strong> "I'd model each state as a class implementing a State interface. The context delegates all operations to currentState and exposes setState() for transitions. No if/switch in the context — adding a new state is a new file."</span>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       SECTION 4 — RELATIONSHIPS
+  ════════════════════════════════════════ -->
+  <section class="section" id="relations">
+    <div class="section-header">
+      <span class="section-eyebrow">Object Relationships</span>
+      <span class="section-rule"></span>
+    </div>
+    <h2>Has-A vs Is-A</h2>
+    <p class="section-intro">The most misused concept in OOP design. Getting this right is the difference between a flexible system and an inheritance nightmare that collapses on the first requirement change.</p>
+
+    <div class="rel-grid">
+      <div class="rel-card">
+        <h3>Is-A Relationship</h3>
+        <span class="mono-label">→ Inheritance</span>
+        <p>Class B <em>is a type of</em> class A. B inherits all properties and behaviours of A. Use sparingly — inheritance is the tightest coupling in OOP.</p>
+        <p style="font-size:12.5px; color:var(--text-3);">Only use when you can <em>truthfully</em> say the subclass IS the parent — not just shares some behaviour with it.</p>
+<pre style="font-size:11.5px; margin-top:10px; border-radius:var(--radius-sm);">Dog <span class="kw">extends</span> Animal    <span class="cm">// ✅ Dog IS an Animal</span>
+Car <span class="kw">extends</span> Vehicle   <span class="cm">// ✅ Car IS a Vehicle</span>
+Stack <span class="kw">extends</span> Vector  <span class="cm">// ❌ Stack is NOT a Vector</span></pre>
+      </div>
+
+      <div class="rel-card">
+        <h3>Has-A Relationship</h3>
+        <span class="mono-label">→ Composition / Aggregation</span>
+        <p>Class A <em>contains or uses</em> an instance of class B. This is the <strong>preferred relationship</strong> — loosely coupled, easily swappable, and mockable in tests.</p>
+        <p style="font-size:12.5px; color:var(--text-3);">"Favour composition over inheritance." — Gang of Four</p>
+<pre style="font-size:11.5px; margin-top:10px; border-radius:var(--radius-sm);">Car <span class="kw">has</span> Engine        <span class="cm">// ✅ Car HAS-A Engine</span>
+Employee <span class="kw">has</span> Address  <span class="cm">// ✅ Employee HAS-A Address</span></pre>
+      </div>
+    </div>
+
+    <p style="font-size:14px; font-weight:600; color:var(--navy); margin-bottom:12px;">Has-A comes in two strengths:</p>
+    <div class="sub-rel-row">
+      <div class="sub-rel">
+        <span class="sub-rel-icon">🔗</span>
+        <div>
+          <div class="sub-rel-name">Aggregation — Weak relationship</div>
+          <div class="sub-rel-desc">The contained object can exist independently. If the parent is destroyed, the child lives on.<br>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; color:var(--brand);">Department HAS-A Professor</span> — Delete the Department; the Professor still exists and can join another.</div>
+        </div>
+      </div>
+      <div class="sub-rel">
+        <span class="sub-rel-icon">🔒</span>
+        <div>
+          <div class="sub-rel-name">Composition — Strong relationship</div>
+          <div class="sub-rel-desc">The contained object cannot exist without the parent. If the parent is destroyed, the child is too.<br>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; color:var(--brand);">House HAS-A Room</span> — Destroy the House; all Rooms cease to exist.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="warn-box" style="margin-top:18px;">
+      <span class="tip-icon">⚠️</span>
+      <div class="warn-text"><strong>Classic interview mistake:</strong> Inheriting purely for code reuse — e.g., <code style="font-family:'Space Mono',monospace;font-size:11px;">Stack extends Vector</code> in Java. A Stack should HAVE-A Vector internally, not inherit from one. Otherwise callers can invoke <code style="font-family:'Space Mono',monospace;font-size:11px;">vector.add(0, element)</code> and bypass the Stack's push/pop contract entirely.</div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       SECTION 5 — CHEATSHEET
+  ════════════════════════════════════════ -->
+  <section class="section" id="cheatsheet">
+    <div class="section-header">
+      <span class="section-eyebrow">Interview Reference</span>
+      <span class="section-rule"></span>
+    </div>
+    <h2>Interview Quick Reference</h2>
+    <p class="section-intro">The phrases and mental models to reach for under pressure. Each card maps to a common interviewer prompt.</p>
+
+    <div class="cheat-grid">
+      <div class="cheat-card">
+        <h4>🔠 SOLID one-liners</h4>
+        <ul>
+          <li><strong>S</strong> — One reason to change</li>
+          <li><strong>O</strong> — Extend, don't modify</li>
+          <li><strong>L</strong> — Subclass works everywhere parent does</li>
+          <li><strong>I</strong> — Don't force empty method stubs</li>
+          <li><strong>D</strong> — Depend on interfaces, not classes</li>
+        </ul>
+      </div>
+      <div class="cheat-card">
+        <h4>🔨 When to use each category</h4>
+        <ul>
+          <li>Object creation is complex → Creational</li>
+          <li>Need to wrap or adapt classes → Structural</li>
+          <li>Objects react to events or state → Behavioural</li>
+        </ul>
+      </div>
+      <div class="cheat-card">
+        <h4>🧬 Inheritance vs Composition</h4>
+        <ul>
+          <li>Is-A (inheritance) → tight coupling, use rarely</li>
+          <li>Has-A (composition) → loose coupling, prefer this</li>
+          <li>Aggregation = parts survive the whole</li>
+          <li>Composition = parts die with the whole</li>
+        </ul>
+      </div>
+      <div class="cheat-card">
+        <h4>🚨 Red flags to call out</h4>
+        <ul>
+          <li>Class description needs "and" → SRP violation</li>
+          <li>Editing proven code to add features → OCP</li>
+          <li>Empty or throw-stub method → LSP or ISP</li>
+          <li><code class="inline">new ConcreteClass()</code> inside a service → DIP</li>
+        </ul>
+      </div>
+      <div class="cheat-card">
+        <h4>🎯 Most asked patterns</h4>
+        <ul>
+          <li>Singleton, Factory, Builder — Creational</li>
+          <li>Proxy, Decorator, Adapter — Structural</li>
+          <li>Observer, Strategy, State — Behavioural</li>
+        </ul>
+      </div>
+      <div class="cheat-card">
+        <h4>📝 LLD round structure</h4>
+        <ul>
+          <li>Clarify requirements (2 min)</li>
+          <li>Identify entities and classes</li>
+          <li>Define relationships (Has-A / Is-A)</li>
+          <li>Apply patterns where appropriate</li>
+          <li>Validate every class against SOLID</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer class="page-footer">
+    <span class="footer-brand">GrowthScript // LLD Bible</span>
+    <span class="footer-note">Foundations · SOLID · Patterns · Relationships</span>
+  </footer>
+
+</main>
+
+<script>
+function switchTab(clickedTab, targetId) {
+  const pair = clickedTab.closest('.code-pair');
+  pair.querySelectorAll('.cpt').forEach(t => t.classList.remove('active'));
+  pair.querySelectorAll('.code-pane').forEach(p => p.classList.remove('active'));
+  clickedTab.classList.add('active');
+  document.getElementById(targetId).classList.add('active');
+}
+
+function ctSwitch(clickedTab, targetId) {
+  const wrap = clickedTab.closest('.code-tabs-wrap');
+  wrap.querySelectorAll('.ct-tab').forEach(t => t.classList.remove('active'));
+  wrap.querySelectorAll('.ct-pane').forEach(p => p.classList.remove('active'));
+  clickedTab.classList.add('active');
+  document.getElementById(targetId).classList.add('active');
+}
+
+function modelSwitch(clickedBtn, targetId) {
+  const section = clickedBtn.closest('.section');
+  section.querySelectorAll('.model-btn').forEach(b => b.classList.remove('active'));
+  section.querySelectorAll('.model-pane').forEach(p => p.classList.remove('active'));
+  clickedBtn.classList.add('active');
+  document.getElementById(targetId).classList.add('active');
+}
+
+// Highlight active sidebar link on scroll
+const sections = document.querySelectorAll('section[id], div[id]');
+const sideLinks = document.querySelectorAll('.sidebar-link');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      sideLinks.forEach(l => {
+        l.classList.toggle('active', l.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, { threshold: 0.3, rootMargin: '-60px 0px -60% 0px' });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

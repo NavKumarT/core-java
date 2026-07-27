@@ -1,0 +1,1955 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java Collections Bible — GrowthScript Engineering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy:#0F172A; --navy-mid:#1E293B; --brand:#1B4FD8; --brand-soft:#EFF3FE; --brand-mid:#DBEAFE;
+    --accent2:#7C3AED; --accent2-soft:#F5F3FF; --success:#059669; --success-soft:#ECFDF5;
+    --success-border:#A7F3D0; --warn:#D97706; --warn-soft:#FFFBEB; --warn-border:#FDE68A;
+    --warn-text:#78350F; --warn-text-strong:#92400E; --danger:#E11D48; --danger-soft:#FFF1F2;
+    --danger-border:#FECDD3; --purple:#9333EA; --purple-soft:#FDF4FF;
+    --text-1:#0F172A; --text-2:#334155; --text-3:#64748B; --text-4:#94A3B8;
+    --border:#E2E8F0; --border-strong:#CBD5E1; --surface:#FFFFFF; --page:#F8FAFC; --code-bg:#F1F5F9;
+    --sidebar-w:240px; --radius-sm:6px; --radius:10px; --radius-lg:14px;
+    --syn-kw:#6D28D9; --syn-cm:#94A3B8; --syn-st:#059669; --syn-ty:#D97706; --syn-fn:#1B4FD8;
+    color-scheme:light;
+  }
+  [data-theme="dark"] {
+    --navy:#E2E8F0; --navy-mid:#CBD5E1; --brand:#6D9BFF; --brand-soft:#1A2540; --brand-mid:#2A3B66;
+    --accent2:#A78BFA; --accent2-soft:#2A2150; --success:#34D399; --success-soft:#103326;
+    --success-border:#1D5C44; --warn:#FBBF24; --warn-soft:#3A2A0A; --warn-border:#5C4310;
+    --warn-text:#FDE68A; --warn-text-strong:#FCD34D; --danger:#FB7185; --danger-soft:#3A1620;
+    --danger-border:#5C2330; --purple:#D8B4FE; --purple-soft:#2A1A40;
+    --text-1:#E8ECF2; --text-2:#B6C0CE; --text-3:#8895A7; --text-4:#647082;
+    --border:#2A3441; --border-strong:#3D4859; --surface:#161D29; --page:#0D1219; --code-bg:#0F1722;
+    --syn-kw:#C4A7FF; --syn-cm:#6B7888; --syn-st:#6EE7B7; --syn-ty:#FCD34D; --syn-fn:#7FB3FF;
+    color-scheme:dark;
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family:'Inter',-apple-system,sans-serif; background:var(--page); color:var(--text-1); font-size:15px; line-height:1.7; -webkit-font-smoothing:antialiased; display:flex; min-height:100vh; transition:background 0.2s,color 0.2s; }
+  .sidebar { width:var(--sidebar-w); flex-shrink:0; position:sticky; top:0; height:100vh; overflow-y:auto; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:0 0 32px; transition:background 0.2s,border-color 0.2s; }
+  .sidebar-brand { padding:16px 20px 14px; border-bottom:1px solid var(--border); margin-bottom:8px; position:sticky; top:0; background:var(--surface); z-index:10; display:flex; flex-direction:column; gap:10px; }
+  .brand-row { display:flex; flex-direction:column; }
+  .sidebar-logo { font-family:'Space Mono',monospace; font-size:12px; font-weight:700; color:var(--brand); letter-spacing:0.04em; display:block; margin-bottom:2px; }
+  .sidebar-tagline { font-size:11px; color:var(--text-4); }
+  .sidebar-group { padding:12px 0 4px; }
+  .sidebar-group-label { font-family:'Space Mono',monospace; font-size:9.5px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-4); padding:0 20px; margin-bottom:4px; display:block; }
+  .sidebar-link { display:flex; align-items:center; gap:8px; padding:6px 20px; font-size:13px; color:var(--text-2); text-decoration:none; border-left:2px solid transparent; transition:all 0.12s; line-height:1.4; }
+  .sidebar-link:hover { color:var(--brand); background:var(--brand-soft); border-left-color:var(--brand-mid); }
+  .sidebar-link.active { color:var(--brand); background:var(--brand-soft); border-left-color:var(--brand); font-weight:500; }
+  .sidebar-link .sl-dot { width:5px; height:5px; border-radius:50%; background:var(--border-strong); flex-shrink:0; }
+  .sidebar-link.active .sl-dot,.sidebar-link:hover .sl-dot { background:var(--brand); }
+  .sidebar-sub-link { display:flex; align-items:center; gap:8px; padding:4px 20px 4px 34px; font-size:12px; color:var(--text-3); text-decoration:none; border-left:2px solid transparent; transition:all 0.12s; }
+  .sidebar-sub-link:hover { color:var(--brand); background:var(--brand-soft); }
+  .theme-toggle { display:flex; align-items:center; background:var(--page); border:1px solid var(--border); border-radius:20px; padding:3px; width:fit-content; }
+  .theme-toggle-btn { display:flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; border:none; background:transparent; color:var(--text-3); cursor:pointer; font-size:13px; transition:all 0.15s; }
+  .theme-toggle-btn.active { background:var(--surface); color:var(--brand); box-shadow:0 1px 3px rgba(0,0,0,0.1); }
+  .main { flex:1; min-width:0; padding:48px 64px 80px 64px; max-width:1100px; }
+  .page-title-block { padding-bottom:36px; border-bottom:1px solid var(--border); margin-bottom:52px; }
+  .page-eyebrow { font-family:'Space Mono',monospace; font-size:11px; font-weight:700; letter-spacing:0.1em; color:var(--text-4); text-transform:uppercase; margin-bottom:10px; display:block; }
+  .page-title-block h1 { font-size:30px; font-weight:600; color:var(--navy); letter-spacing:-0.02em; line-height:1.2; margin-bottom:10px; }
+  .page-title-block > p { font-size:15px; color:var(--text-2); max-width:680px; line-height:1.65; }
+  .tc-row { display:flex; gap:16px; margin-top:18px; flex-wrap:wrap; }
+  .tc-pill { font-size:12px; color:var(--text-3); display:flex; align-items:center; gap:5px; }
+  .tc-pill span { width:6px; height:6px; border-radius:50%; background:var(--brand); display:inline-block; }
+  .section { margin-bottom:60px; scroll-margin-top:32px; }
+  .section-header { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+  .section-eyebrow { font-family:'Space Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.1em; color:var(--text-4); text-transform:uppercase; white-space:nowrap; }
+  .section-rule { flex:1; height:1px; background:var(--border); }
+  .section h2 { font-size:21px; font-weight:600; color:var(--navy); letter-spacing:-0.02em; margin-bottom:8px; }
+  .section-intro { font-size:14.5px; color:var(--text-2); margin-bottom:28px; max-width:760px; line-height:1.7; }
+  .sub-heading { font-size:14px; font-weight:600; color:var(--navy); margin:28px 0 10px; display:flex; align-items:center; gap:8px; }
+  .sub-heading::after { content:''; flex:1; height:1px; background:var(--border); }
+  .section-divider { height:1px; background:var(--border); margin:48px 0; }
+  .body-p { font-size:14px; color:var(--text-2); margin-bottom:14px; line-height:1.7; }
+  .split-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px; }
+  .rule-card { background:var(--page); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
+  .rule-card-label { font-family:'Space Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-4); margin-bottom:10px; display:block; }
+  .rule-list { list-style:none; }
+  .rule-list li { font-size:13px; color:var(--text-2); padding-left:18px; position:relative; margin-bottom:6px; line-height:1.6; }
+  .rule-list li::before { content:'→'; position:absolute; left:0; color:var(--brand); font-size:11px; top:2px; }
+  .rule-list li.no::before  { content:'✗'; color:var(--danger);  font-size:12px; }
+  .rule-list li.yes::before { content:'✓'; color:var(--success); font-size:12px; }
+  .tip-box { display:flex; gap:10px; background:var(--brand-soft); border:1px solid var(--brand-mid); border-radius:var(--radius); padding:11px 14px; margin-top:14px; }
+  .tip-icon { flex-shrink:0; font-size:14px; margin-top:2px; }
+  .tip-text { font-size:12.5px; color:var(--navy-mid); line-height:1.6; }
+  .tip-text strong { color:var(--brand); font-weight:600; }
+  [data-theme="dark"] .tip-text { color:var(--text-2); }
+  .warn-box { display:flex; gap:10px; background:var(--warn-soft); border:1px solid var(--warn-border); border-radius:var(--radius); padding:11px 14px; margin-top:12px; }
+  .warn-text { font-size:12.5px; color:var(--warn-text); line-height:1.6; }
+  .warn-text strong { color:var(--warn-text-strong); font-weight:600; }
+  .danger-box { display:flex; gap:10px; background:var(--danger-soft); border:1px solid var(--danger-border); border-radius:var(--radius); padding:11px 14px; margin-top:12px; }
+  .danger-text { font-size:12.5px; color:var(--danger); line-height:1.6; }
+  .danger-text strong { font-weight:600; }
+  pre { background:var(--code-bg); border-top:1px solid var(--border); padding:14px 16px; overflow-x:auto; font-family:'Space Mono',monospace; font-size:12px; line-height:1.8; color:var(--text-1); }
+  code.inline { font-family:'Space Mono',monospace; font-size:11.5px; background:var(--code-bg); padding:1px 5px; border-radius:4px; color:var(--text-1); }
+  .kw { color:var(--syn-kw); font-weight:700; }
+  .cm { color:var(--syn-cm); font-style:italic; }
+  .st { color:var(--syn-st); }
+  .ty { color:var(--syn-ty); }
+  .fn { color:var(--syn-fn); }
+  .an { color:var(--syn-ty); font-weight:600; }
+  .code-pair { margin-top:14px; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  .code-pair-tabs { display:flex; border-bottom:1px solid var(--border); }
+  .cpt { flex:1; padding:7px 14px; font-size:12px; font-weight:600; color:var(--text-3); text-align:center; cursor:pointer; transition:all 0.12s; user-select:none; }
+  .cpt.bad { border-right:1px solid var(--border); }
+  .cpt.bad.active  { background:var(--danger-soft); color:var(--danger); }
+  .cpt.good.active { background:var(--success-soft); color:var(--success); }
+  .code-pane { display:none; }
+  .code-pane.active { display:block; }
+  .code-pane pre { border-top:none; border-radius:0; }
+  .code-tabs-wrap { border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; margin-top:14px; }
+  .code-tabs-header { display:flex; overflow-x:auto; border-bottom:1px solid var(--border); background:var(--page); }
+  .ct-tab { padding:9px 16px; font-size:12px; font-weight:500; color:var(--text-3); cursor:pointer; white-space:nowrap; border-right:1px solid var(--border); transition:all 0.12s; font-family:'Space Mono',monospace; user-select:none; flex-shrink:0; }
+  .ct-tab:hover { color:var(--brand); background:var(--brand-soft); }
+  .ct-tab.active { color:var(--brand); background:var(--surface); border-bottom:2px solid var(--brand); font-weight:700; }
+  .ct-pane { display:none; }
+  .ct-pane.active { display:block; }
+  .ct-pane pre { border-top:none; border-radius:0; font-size:12px; }
+  .step-list { display:flex; flex-direction:column; gap:8px; margin-bottom:18px; }
+  .step-item { display:flex; gap:12px; align-items:flex-start; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:10px 14px; }
+  .step-num { flex-shrink:0; width:22px; height:22px; border-radius:50%; background:var(--brand); color:#fff; font-family:'Space Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:2px; }
+  .step-body { font-size:13px; color:var(--text-2); line-height:1.6; }
+  .step-body strong { color:var(--navy); }
+  .code-block-wrap { border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-top:12px; margin-bottom:4px; }
+  .code-block-label { font-family:'Space Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-4); background:var(--page); padding:7px 14px; border-bottom:1px solid var(--border); display:block; }
+  .code-block-wrap pre { border-top:none; }
+  .ref-table { width:100%; border-collapse:collapse; font-size:13px; margin-top:14px; border-radius:var(--radius); overflow:hidden; border:1px solid var(--border); }
+  .ref-table th { background:var(--page); color:var(--navy); font-weight:600; text-align:left; padding:10px 14px; border-bottom:2px solid var(--border); font-family:'Space Mono',monospace; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; }
+  .ref-table td { padding:9px 14px; border-bottom:1px solid var(--border); color:var(--text-2); vertical-align:top; line-height:1.6; }
+  .ref-table tr:last-child td { border-bottom:none; }
+  .ref-table tr:hover td { background:var(--brand-soft); }
+  .ref-table .yes { color:var(--success); font-weight:600; }
+  .ref-table .no  { color:var(--danger);  font-weight:600; }
+  .cheat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; }
+  .cheat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
+  .cheat-card h4 { font-size:12.5px; font-weight:600; color:var(--navy); margin-bottom:8px; }
+  .cheat-card ul { list-style:none; }
+  .cheat-card li { font-size:12px; color:var(--text-2); padding-left:13px; position:relative; line-height:1.55; margin-bottom:4px; }
+  .cheat-card li::before { content:'→'; position:absolute; left:0; color:var(--brand); font-size:10.5px; top:1px; }
+  /* Thread state diagram */
+  .state-diagram { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; overflow-x:auto; margin-bottom:6px; }
+  /* Concept pill tags */
+  .tag-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .tag { font-size:11.5px; font-weight:500; padding:3px 10px; border-radius:20px; border:1px solid var(--border); color:var(--text-2); background:var(--page); font-family:'Space Mono',monospace; }
+  .tag-brand  { background:var(--brand-soft);   border-color:var(--brand-mid);      color:var(--brand);   }
+  .tag-warn   { background:var(--warn-soft);    border-color:var(--warn-border);    color:var(--warn);    }
+  .tag-danger { background:var(--danger-soft);  border-color:var(--danger-border);  color:var(--danger);  }
+  .tag-green  { background:var(--success-soft); border-color:var(--success-border); color:var(--success); }
+  /* Comparison table accent rows */
+  .ref-table tr.accent td { background:var(--brand-soft); font-weight:500; }
+  .page-footer { border-top:1px solid var(--border); padding:20px 0 0; display:flex; justify-content:space-between; align-items:center; }
+  .footer-brand { font-family:'Space Mono',monospace; font-size:11px; font-weight:700; color:var(--brand); }
+  .footer-note  { font-size:11.5px; color:var(--text-4); }
+  @media(max-width:860px){
+    body{flex-direction:column;}
+    .sidebar{width:100%;height:auto;position:static;border-right:none;border-bottom:1px solid var(--border);padding-bottom:0;}
+    .sidebar-group{display:flex;flex-wrap:wrap;padding:8px 16px;gap:4px;}
+    .sidebar-group-label{display:none;}
+    .sidebar-link{padding:5px 10px;border-left:none;border-radius:20px;border:1px solid var(--border);font-size:12px;}
+    .sidebar-link:hover,.sidebar-link.active{background:var(--brand-soft);border-color:var(--brand-mid);}
+    .sidebar-sub-link{display:none;}
+    .main{padding:32px 20px 60px;}
+    .split-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-row">
+      <span class="sidebar-logo">GS // Collections Bible</span>
+      <span class="sidebar-tagline">Interview Reference</span>
+    </div>
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <button class="theme-toggle-btn active" id="btn-light">☀️</button>
+      <button class="theme-toggle-btn" id="btn-dark">🌙</button>
+    </div>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Foundations</span>
+    <a href="#foundations" class="sidebar-link active"><span class="sl-dot"></span>Why Collections Exist</a>
+    <a href="#hierarchy" class="sidebar-link"><span class="sl-dot"></span>Collections Hierarchy</a>
+    <a href="#core-interfaces" class="sidebar-link"><span class="sl-dot"></span>Collection, List, Queue Interfaces</a>
+    <a href="#cpp-rosetta" class="sidebar-link"><span class="sl-dot"></span>C++ STL → Java Rosetta Stone</a>
+    <a href="#cpp-rosetta" class="sidebar-sub-link">vector, map, priority_queue...</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Lists</span>
+    <a href="#arraylist" class="sidebar-link"><span class="sl-dot"></span>ArrayList</a>
+    <a href="#arraylist" class="sidebar-sub-link">Growth, complexity, methods</a>
+    <a href="#linkedlist" class="sidebar-link"><span class="sl-dot"></span>LinkedList</a>
+    <a href="#legacy-list" class="sidebar-link"><span class="sl-dot"></span>Vector &amp; Stack (Legacy)</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Queues &amp; Deques</span>
+    <a href="#queue-arraydeque" class="sidebar-link"><span class="sl-dot"></span>Queue &amp; ArrayDeque</a>
+    <a href="#queue-arraydeque" class="sidebar-sub-link">offer/poll/peek vs add/remove/element</a>
+    <a href="#priorityqueue" class="sidebar-link"><span class="sl-dot"></span>PriorityQueue</a>
+    <a href="#priorityqueue" class="sidebar-sub-link">Min-heap, max-heap, custom comparator</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Sets</span>
+    <a href="#hashset" class="sidebar-link"><span class="sl-dot"></span>HashSet</a>
+    <a href="#linkedhashset-treeset" class="sidebar-link"><span class="sl-dot"></span>LinkedHashSet &amp; TreeSet</a>
+    <a href="#comparable-comparator" class="sidebar-link"><span class="sl-dot"></span>Comparable vs Comparator</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Maps</span>
+    <a href="#hashmap" class="sidebar-link"><span class="sl-dot"></span>HashMap — Internal Working</a>
+    <a href="#hashmap" class="sidebar-sub-link">Buckets, hashing, treeification</a>
+    <a href="#linkedhashmap-lru" class="sidebar-link"><span class="sl-dot"></span>LinkedHashMap &amp; LRU Cache</a>
+    <a href="#treemap" class="sidebar-link"><span class="sl-dot"></span>TreeMap &amp; NavigableMap</a>
+    <a href="#hashtable-iterators" class="sidebar-link"><span class="sl-dot"></span>Hashtable &amp; Iterators</a>
+    <a href="#hashtable-iterators" class="sidebar-sub-link">Fail-fast vs fail-safe</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Utility Classes</span>
+    <a href="#arrays-utility" class="sidebar-link"><span class="sl-dot"></span>Arrays Utility Class</a>
+    <a href="#collections-utility" class="sidebar-link"><span class="sl-dot"></span>Collections Utility Class</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">DSA &amp; LeetCode</span>
+    <a href="#dsa-patterns" class="sidebar-link"><span class="sl-dot"></span>Collections for DSA Patterns</a>
+    <a href="#dsa-patterns" class="sidebar-sub-link">Top-K, frequency maps, sliding window</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Reference</span>
+    <a href="#faang-qa" class="sidebar-link"><span class="sl-dot"></span>FAANG Rapid-Fire Q&amp;A</a>
+    <a href="#cheatsheet" class="sidebar-link"><span class="sl-dot"></span>Interview Cheatsheet</a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+<div class="page-title-block">
+  <span class="page-eyebrow">java.util</span>
+  <h1>Java Collections Bible</h1>
+  <p>Complete Java Collections Framework reference for FAANG/product-based interviews — the full hierarchy, every core implementation with complexity and code, HashMap's internal bucket mechanics, a dedicated C++ STL → Java translation guide, and the collection choices that come up constantly in LeetCode-style DSA rounds.</p>
+  <div class="tc-row">
+    <span class="tc-pill"><span></span>ArrayList vs LinkedList</span>
+    <span class="tc-pill"><span></span>HashMap Internals</span>
+    <span class="tc-pill"><span></span>PriorityQueue</span>
+    <span class="tc-pill"><span></span>TreeMap / TreeSet</span>
+    <span class="tc-pill"><span></span>C++ STL Mapping</span>
+    <span class="tc-pill"><span></span>DSA Patterns</span>
+  </div>
+</div>
+<!-- ═══ SECTION 1: FOUNDATIONS ═══ -->
+<section class="section" id="foundations">
+  <div class="section-header"><span class="section-eyebrow">java.util</span><span class="section-rule"></span></div>
+  <h2>Why the Collections Framework Exists</h2>
+  <p class="section-intro">A plain Java array has a fatal limitation for real-world data structures: its size is FIXED at creation and can never change.</p>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">The core problem — arrays can't grow</span>
+<pre><span class="kw">int</span>[] A = <span class="kw">new</span> <span class="kw">int</span>[10]; <span class="cm">// exactly 10 slots, forever — no resize(), no push_back()</span>
+<span class="cm">// Need an 11th element? You must allocate a NEW array and copy everything over.</span>
+<span class="cm">// The Collections Framework automates exactly this "allocate bigger, copy, replace"</span>
+<span class="cm">// dance behind a clean, standard API — plus adds sets, maps, queues, sorted</span>
+<span class="cm">// structures, and a common set of interfaces so algorithms can work generically</span>
+<span class="cm">// across any of them</span></pre>
+  </div>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">What the framework provides beyond "resizable arrays"</span>
+      <ul class="rule-list">
+        <li><strong>Dynamic collections</strong> — ArrayList, LinkedList: grow and shrink automatically</li>
+        <li><strong>Distinct collections</strong> — Set: automatically rejects duplicates</li>
+        <li><strong>Distinct + sorted collections</strong> — SortedSet/TreeSet: duplicates rejected AND elements kept in order</li>
+        <li><strong>Key-value storage</strong> — Map: the one branch NOT part of the Collection hierarchy, covered separately</li>
+        <li>A common set of interfaces (Collection, List, Set, Queue) so code can be written against the ABSTRACTION, swapping implementations freely</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">"Collection" vs "Collections" — a classic interview trip-up</span>
+      <ul class="rule-list">
+        <li><code class="inline">Collection</code> (singular) — the root INTERFACE: List, Set, Queue all extend it</li>
+        <li><code class="inline">Collections</code> (plural) — a UTILITY CLASS full of static helper methods: <code class="inline">Collections.sort()</code>, <code class="inline">Collections.reverse()</code>, <code class="inline">Collections.unmodifiableList()</code></li>
+        <li>Same relationship as <code class="inline">Arrays</code> (utility class) to array types themselves</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Coming from C++:</strong> think of the Collections Framework as Java's answer to the STL containers — <code class="inline">ArrayList</code> ≈ <code class="inline">vector</code>, <code class="inline">HashMap</code> ≈ <code class="inline">unordered_map</code>, <code class="inline">TreeMap</code> ≈ <code class="inline">map</code>. A dedicated side-by-side translation table is in the C++ → Java Rosetta Stone section below — bookmark it for your LeetCode transition.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 2: COLLECTIONS HIERARCHY ═══ -->
+<section class="section" id="hierarchy">
+  <div class="section-header"><span class="section-eyebrow">The Big Picture</span><span class="section-rule"></span></div>
+  <h2>The Complete Collections Hierarchy</h2>
+  <p class="section-intro">Every collection class implements a chain of interfaces rooted at <code class="inline">Iterable</code>. <strong>Map is deliberately NOT part of this hierarchy</strong> — it doesn't extend Collection at all, since a Map's fundamental unit is a key-value PAIR, not a single element.</p>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">Collection hierarchy — List, Queue, Set all descend from Collection</span>
+<pre>                           Iterable
+                               │
+                          Collection
+         ______________________┼_____________________
+        │                      │                     │
+       List                  Queue                  Set
+        │                      │                     │
+  ──────┼────────┬─────    ────┼──────         ──────┼────────┬────────
+  │      │        │        │         │         │      │        │
+ArrayList LinkedList Vector Deque PriorityQueue HashSet LinkedHashSet SortedSet
+                     │        │                                       │
+                   Stack   ArrayDeque                              TreeSet</pre>
+  </div>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">Map hierarchy — completely separate from Collection</span>
+<pre>                     Map
+          ___________┼____________
+         │            │           │
+     HashMap   LinkedHashMap  Hashtable (Legacy)
+         │
+     SortedMap
+         │
+      TreeMap</pre>
+  </div>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Reading the tree</span>
+      <ul class="rule-list">
+        <li><code class="inline">Iterable</code> — the root; anything Iterable can be used in a for-each loop</li>
+        <li><code class="inline">Collection</code> — adds add/remove/size/contains-style bulk operations</li>
+        <li><code class="inline">List</code> — ordered, allows duplicates, index-based access</li>
+        <li><code class="inline">Set</code> — no duplicates; <code class="inline">SortedSet</code>/<code class="inline">TreeSet</code> additionally keeps elements sorted</li>
+        <li><code class="inline">Queue</code> — designed for FIFO processing; <code class="inline">Deque</code> extends it for double-ended access; <code class="inline">PriorityQueue</code> extends it for heap-ordered access</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Why Map is separate</span>
+      <ul class="rule-list">
+        <li>Collection's core contract is "a bag of single elements" — add(E), iterator() over E</li>
+        <li>Map's core contract is "a set of key→value associations" — put(K,V), get(K) — a fundamentally different shape</li>
+        <li>Map DOES integrate with Collection indirectly: <code class="inline">map.keySet()</code> returns a <code class="inline">Set&lt;K&gt;</code>, <code class="inline">map.values()</code> returns a <code class="inline">Collection&lt;V&gt;</code>, <code class="inline">map.entrySet()</code> returns a <code class="inline">Set&lt;Map.Entry&lt;K,V&gt;&gt;</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="warn-box">
+    <span class="tip-icon">⚠️</span>
+    <span class="warn-text"><strong>Interview trap:</strong> "Does Map extend Collection?" — NO. This is asked constantly and the naive assumption (everything in java.util must be a Collection) is wrong. Map is a first-class citizen of the Collections FRAMEWORK, but not of the Collection INTERFACE hierarchy.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 3: CORE INTERFACES ═══ -->
+<section class="section" id="core-interfaces">
+  <div class="section-header"><span class="section-eyebrow">The Contracts</span><span class="section-rule"></span></div>
+  <h2>Collection, List &amp; Queue Interfaces</h2>
+  <p class="section-intro">Every concrete class you'll use (ArrayList, HashSet, ArrayDeque...) implements one of these interfaces. Knowing exactly which methods live where — and their return-value contracts — is baseline interview material.</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th>Collection interface method</th><th>Behavior</th></tr></thead>
+    <tbody>
+      <tr><td><code class="inline">add(E e)</code></td><td>Adds an element; returns boolean (false if a Set rejects a duplicate)</td></tr>
+      <tr><td><code class="inline">addAll(Collection&lt;? extends E&gt; c)</code></td><td>Adds every element of another collection</td></tr>
+      <tr><td><code class="inline">remove(Object o)</code></td><td>Removes the first matching element (by equals())</td></tr>
+      <tr><td><code class="inline">removeAll(Collection&lt;?&gt; c)</code></td><td>Removes every element also present in c (set difference)</td></tr>
+      <tr><td><code class="inline">retainAll(Collection&lt;?&gt; c)</code></td><td>Keeps only elements also present in c (set intersection)</td></tr>
+      <tr><td><code class="inline">clear()</code></td><td>Removes all elements</td></tr>
+      <tr><td><code class="inline">isEmpty()</code> / <code class="inline">size()</code></td><td>Emptiness check / element count</td></tr>
+      <tr><td><code class="inline">contains(Object o)</code> / <code class="inline">containsAll(Collection&lt;?&gt; c)</code></td><td>Membership tests</td></tr>
+      <tr><td><code class="inline">equals(Object o)</code></td><td>Structural equality — contents-based, not reference-based</td></tr>
+      <tr><td><code class="inline">iterator()</code></td><td>Returns an Iterator&lt;E&gt; for traversal / safe removal during iteration</td></tr>
+      <tr><td><code class="inline">toArray()</code></td><td>Snapshot as an Object[] (or T[] with a typed overload)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">List interface — adds index-based access</span>
+      <ul class="rule-list">
+        <li><code class="inline">add(int index, E e)</code> / <code class="inline">remove(int index)</code> — positional insert/delete</li>
+        <li><code class="inline">get(int index)</code> / <code class="inline">set(int index, E e)</code> — positional read/overwrite</li>
+        <li><code class="inline">subList(int from, int to)</code> — a VIEW backed by the original list, not a copy</li>
+        <li><code class="inline">indexOf(Object o)</code> / <code class="inline">lastIndexOf(Object o)</code> — first/last occurrence</li>
+        <li><code class="inline">listIterator()</code> / <code class="inline">listIterator(int index)</code> — a bidirectional iterator, covered in the Iterators section</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Set interface — deliberately minimal</span>
+      <ul class="rule-list">
+        <li>Adds NO new methods beyond Collection — it's purely a CONTRACT change (no duplicates), not an API change</li>
+        <li><code class="inline">add()</code> returns <code class="inline">false</code> if the element is already present, instead of throwing</li>
+        <li>Everything else (iteration, removal, bulk ops) is inherited as-is from Collection</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'q-methods')">Queue interface — the null vs exception split</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'q-example')">Queue methods in action</div>
+    </div>
+    <div id="q-methods" class="ct-pane active"><pre><span class="cm">// Queue offers TWO parallel method families for the same operations —</span>
+<span class="cm">// one returns a sentinel value on failure, the other throws</span>
+
+<span class="cm">//  Operation      Throws on failure        Returns special value</span>
+<span class="cm">//  Insert         add(e)                   offer(e)  -> false</span>
+<span class="cm">//  Remove         remove()                 poll()    -> null</span>
+<span class="cm">//  Examine        element()                peek()    -> null</span>
+
+<span class="cm">// poll()    -> null on empty queue, NO exception</span>
+<span class="cm">// remove()  -> throws NoSuchElementException on empty queue</span>
+<span class="cm">// peek()    -> null on empty queue, NO exception</span>
+<span class="cm">// element() -> throws NoSuchElementException on empty queue</span></pre></div>
+    <div id="q-example" class="ct-pane"><pre><span class="ty">Queue</span>&lt;<span class="ty">Integer</span>&gt; q = <span class="kw">new</span> <span class="ty">LinkedList</span>&lt;&gt;();
+
+q.<span class="fn">offer</span>(1); q.<span class="fn">offer</span>(2);
+
+<span class="ty">System</span>.out.<span class="fn">println</span>(q.<span class="fn">poll</span>());   <span class="cm">// 1 — removes and returns head</span>
+<span class="ty">System</span>.out.<span class="fn">println</span>(q.<span class="fn">peek</span>());   <span class="cm">// 2 — returns head WITHOUT removing</span>
+
+q.<span class="fn">poll</span>(); <span class="cm">// queue now empty</span>
+<span class="ty">System</span>.out.<span class="fn">println</span>(q.<span class="fn">poll</span>());   <span class="cm">// null — empty queue, no exception</span>
+<span class="cm">// q.remove();  // would throw NoSuchElementException instead</span>
+
+<span class="cm">// PREFER offer()/poll()/peek() in almost all production and interview code —</span>
+<span class="cm">// they let you check for "empty" with a simple null check instead of a try/catch</span></pre></div>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 4: C++ STL → JAVA ROSETTA STONE ═══ -->
+<section class="section" id="cpp-rosetta">
+  <div class="section-header"><span class="section-eyebrow">For the C++ → Java Transition</span><span class="section-rule"></span></div>
+  <h2>C++ STL → Java Collections Rosetta Stone</h2>
+  <p class="section-intro">If your DSA muscle memory is in C++, this table is your fastest path to fluency — every STL container you reach for on LeetCode has a near-exact Java equivalent, with a few sharp-edged differences called out below the table.</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th>C++ STL</th><th>Java Equivalent</th><th>Key Difference to Watch</th></tr></thead>
+    <tbody>
+      <tr><td><code class="inline">vector&lt;T&gt;</code></td><td><code class="inline">ArrayList&lt;T&gt;</code></td><td>No <code class="inline">[]</code> operator — use <code class="inline">.get(i)</code>/<code class="inline">.set(i,v)</code>. T must be a reference type (Integer, not int)</td></tr>
+      <tr><td><code class="inline">list&lt;T&gt;</code></td><td><code class="inline">LinkedList&lt;T&gt;</code></td><td>Both doubly-linked; Java's also implements Deque, so it doubles as a stack/queue</td></tr>
+      <tr><td><code class="inline">deque&lt;T&gt;</code></td><td><code class="inline">ArrayDeque&lt;T&gt;</code></td><td>Java's ArrayDeque cannot hold null elements — C++ deque has no such restriction</td></tr>
+      <tr><td><code class="inline">stack&lt;T&gt;</code></td><td><code class="inline">Deque&lt;T&gt;</code> used as a stack (push/pop/peek)</td><td>Avoid java.util.Stack (legacy, synchronized, slower) — use <code class="inline">Deque&lt;T&gt; stack = new ArrayDeque&lt;&gt;();</code></td></tr>
+      <tr><td><code class="inline">queue&lt;T&gt;</code></td><td><code class="inline">Queue&lt;T&gt;</code> / <code class="inline">ArrayDeque&lt;T&gt;</code></td><td>Use offer()/poll()/peek() — the non-throwing method family</td></tr>
+      <tr><td><code class="inline">priority_queue&lt;T&gt;</code> (max-heap by default)</td><td><code class="inline">PriorityQueue&lt;T&gt;</code> (MIN-heap by default!)</td><td><strong>Opposite default</strong> — see the dedicated warning below, this trips up nearly everyone</td></tr>
+      <tr><td><code class="inline">set&lt;T&gt;</code></td><td><code class="inline">TreeSet&lt;T&gt;</code></td><td>Both sorted, both O(log n); TreeSet needs Comparable or a Comparator for custom types</td></tr>
+      <tr><td><code class="inline">unordered_set&lt;T&gt;</code></td><td><code class="inline">HashSet&lt;T&gt;</code></td><td>Both O(1) average, no ordering guarantee — direct equivalent</td></tr>
+      <tr><td><code class="inline">map&lt;K,V&gt;</code></td><td><code class="inline">TreeMap&lt;K,V&gt;</code></td><td>Both sorted by key, both O(log n) — direct equivalent</td></tr>
+      <tr><td><code class="inline">unordered_map&lt;K,V&gt;</code></td><td><code class="inline">HashMap&lt;K,V&gt;</code></td><td>Both O(1) average — direct equivalent; this is your most-used container for frequency maps</td></tr>
+      <tr><td><code class="inline">multiset&lt;T&gt;</code></td><td>No direct equivalent</td><td>Simulate with <code class="inline">TreeMap&lt;T, Integer&gt;</code> (value = count) or <code class="inline">Map&lt;T, Integer&gt;</code> for an unordered version</td></tr>
+      <tr><td><code class="inline">pair&lt;A,B&gt;</code></td><td>No built-in equivalent</td><td>Use <code class="inline">Map.Entry&lt;A,B&gt;</code> (via <code class="inline">Map.entry(a,b)</code>), a small custom record, or int[]/Object[] as a quick hack</td></tr>
+      <tr><td><code class="inline">array&lt;T,N&gt;</code> / <code class="inline">T arr[N]</code></td><td><code class="inline">T[]</code> (plain Java array)</td><td>Java arrays have <code class="inline">.length</code> (no parens, unlike .size()); fixed-size just like C++ arrays</td></tr>
+    </tbody>
+  </table>
+
+  <div class="danger-box">
+    <span class="tip-icon">🚫</span>
+    <span class="danger-text"><strong>The #1 gotcha for C++ transplants: PriorityQueue defaults to a MIN-heap, not a max-heap.</strong> C++'s <code class="inline">priority_queue&lt;int&gt;</code> gives you the LARGEST element on top by default. Java's <code class="inline">PriorityQueue&lt;Integer&gt;</code> gives you the SMALLEST. Forgetting this flips the logic of every heap-based LeetCode solution you port over. Fix: <code class="inline">new PriorityQueue&lt;&gt;(Collections.reverseOrder())</code> for a max-heap, exactly like C++'s <code class="inline">priority_queue&lt;int, vector&lt;int&gt;, greater&lt;int&gt;&gt;</code> flips ITS default to a min-heap.</span>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'cr-vector')">vector → ArrayList</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'cr-pq')">priority_queue → PriorityQueue (both directions)</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'cr-stack')">stack → Deque</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'cr-map')">unordered_map → HashMap (frequency count)</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'cr-pair')">pair → Map.Entry</div>
+    </div>
+    <div id="cr-vector" class="ct-pane active"><pre><span class="cm">// C++:  vector&lt;int&gt; v; v.push_back(5); v[0]; v.size();</span>
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; v = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;();
+v.<span class="fn">add</span>(5);         <span class="cm">// push_back</span>
+v.<span class="fn">get</span>(0);        <span class="cm">// v[0] — no [] operator on objects in Java</span>
+v.<span class="fn">size</span>();       <span class="cm">// v.size() — same name, but a method call, no parens omitted</span>
+v.<span class="fn">remove</span>(v.<span class="fn">size</span>() - 1); <span class="cm">// pop_back — CAUTION: remove(int) is index-based;</span>
+                                 <span class="cm">// remove(Integer.valueOf(5)) removes the VALUE 5 instead — a classic Java trap</span></pre></div>
+    <div id="cr-pq" class="ct-pane"><pre><span class="cm">// C++ max-heap (default):        priority_queue&lt;int&gt; pq;</span>
+<span class="cm">// Java equivalent (max-heap):</span>
+<span class="ty">PriorityQueue</span>&lt;<span class="ty">Integer</span>&gt; maxHeap = <span class="kw">new</span> <span class="ty">PriorityQueue</span>&lt;&gt;(<span class="ty">Collections</span>.<span class="fn">reverseOrder</span>());
+maxHeap.<span class="fn">offer</span>(3); maxHeap.<span class="fn">offer</span>(7); maxHeap.<span class="fn">offer</span>(1);
+maxHeap.<span class="fn">peek</span>(); <span class="cm">// 7 — largest on top, matching C++'s default</span>
+
+<span class="cm">// C++ min-heap:  priority_queue&lt;int, vector&lt;int&gt;, greater&lt;int&gt;&gt; pq;</span>
+<span class="cm">// Java equivalent (min-heap, and Java's OWN default — no comparator needed):</span>
+<span class="ty">PriorityQueue</span>&lt;<span class="ty">Integer</span>&gt; minHeap = <span class="kw">new</span> <span class="ty">PriorityQueue</span>&lt;&gt;();
+minHeap.<span class="fn">offer</span>(3); minHeap.<span class="fn">offer</span>(7); minHeap.<span class="fn">offer</span>(1);
+minHeap.<span class="fn">peek</span>(); <span class="cm">// 1 — smallest on top</span></pre></div>
+    <div id="cr-stack" class="ct-pane"><pre><span class="cm">// C++:  stack&lt;int&gt; s; s.push(1); s.top(); s.pop();</span>
+<span class="ty">Deque</span>&lt;<span class="ty">Integer</span>&gt; stack = <span class="kw">new</span> <span class="ty">ArrayDeque</span>&lt;&gt;(); <span class="cm">// NOT java.util.Stack — that's legacy/synchronized</span>
+stack.<span class="fn">push</span>(1);     <span class="cm">// s.push(1)</span>
+stack.<span class="fn">push</span>(2);
+stack.<span class="fn">peek</span>();     <span class="cm">// s.top() -> 2, does NOT remove</span>
+stack.<span class="fn">pop</span>();      <span class="cm">// s.pop() -> removes and returns 2</span>
+stack.<span class="fn">isEmpty</span>(); <span class="cm">// s.empty()</span>
+
+<span class="cm">// Deque's push/pop operate on the HEAD — exactly matching stack semantics.</span>
+<span class="cm">// This is the idiomatic Java way to get a stack for LeetCode problems.</span></pre></div>
+    <div id="cr-map" class="ct-pane"><pre><span class="cm">// C++:  unordered_map&lt;char,int&gt; freq; for (char c : s) freq[c]++;</span>
+<span class="ty">Map</span>&lt;<span class="ty">Character</span>, <span class="ty">Integer</span>&gt; freq = <span class="kw">new</span> <span class="ty">HashMap</span>&lt;&gt;();
+<span class="kw">for</span> (<span class="kw">char</span> c : s.<span class="fn">toCharArray</span>()) {
+    freq.<span class="fn">merge</span>(c, 1, <span class="ty">Integer</span>::sum);   <span class="cm">// idiomatic "increment or initialize" — no operator[] in Java</span>
+    <span class="cm">// equivalent longer form:</span>
+    <span class="cm">// freq.put(c, freq.getOrDefault(c, 0) + 1);</span>
+}
+<span class="cm">// C++'s freq[c] auto-creates a 0 entry on first access — Java has NO such</span>
+<span class="cm">// auto-vivification. getOrDefault()/merge()/computeIfAbsent() are the fix.</span></pre></div>
+    <div id="cr-pair" class="ct-pane"><pre><span class="cm">// C++:  pair&lt;int,int&gt; p = {1, 2}; p.first; p.second;</span>
+<span class="ty">Map</span>.<span class="ty">Entry</span>&lt;<span class="ty">Integer</span>, <span class="ty">Integer</span>&gt; p = <span class="ty">Map</span>.<span class="fn">entry</span>(1, 2); <span class="cm">// Java 9+, IMMUTABLE</span>
+p.<span class="fn">getKey</span>();   <span class="cm">// p.first</span>
+p.<span class="fn">getValue</span>(); <span class="cm">// p.second</span>
+
+<span class="cm">// For a MUTABLE pair, or storing pairs in a PriorityQueue/collection,</span>
+<span class="cm">// a tiny custom class or int[] of length 2 is more common in practice:</span>
+<span class="kw">int</span>[] pairAsArray = {1, 2};       <span class="cm">// quick and common in LeetCode solutions</span>
+<span class="ty">PriorityQueue</span>&lt;<span class="kw">int</span>[]&gt; pq = <span class="kw">new</span> <span class="ty">PriorityQueue</span>&lt;&gt;((a, b) -&gt; a[0] - b[0]); <span class="cm">// heap of pairs, ordered by first element</span></pre></div>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 5: ARRAYLIST ═══ -->
+<section class="section" id="arraylist">
+  <div class="section-header"><span class="section-eyebrow">The Default List</span><span class="section-rule"></span></div>
+  <h2>ArrayList</h2>
+  <p class="section-intro">Backed by a resizable array under the hood — the workhorse List implementation, and your default choice unless you have a specific reason not to use it.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">How growth works internally</span>
+      <ul class="rule-list">
+        <li>Backed by an <code class="inline">Object[]</code> that starts at a small default capacity (10, if unspecified)</li>
+        <li>When full, a new array of ~1.5x the current capacity is allocated and all elements are copied over — an O(n) operation, but AMORTIZED O(1) per add() across many calls</li>
+        <li>Supplying an initial capacity when you know the approximate size avoids repeated resize-and-copy cycles</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Time complexity</span>
+      <ul class="rule-list">
+        <li><code class="inline">get(i)</code> / <code class="inline">set(i, v)</code> — O(1), direct array indexing</li>
+        <li><code class="inline">add(v)</code> (at end) — amortized O(1)</li>
+        <li><code class="inline">add(i, v)</code> / <code class="inline">remove(i)</code> (middle) — O(n), shifts all subsequent elements</li>
+        <li><code class="inline">contains(v)</code> / <code class="inline">indexOf(v)</code> — O(n), linear scan</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'al-create')">Creating &amp; initial capacity</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'al-access')">Accessing elements — the [] trap</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'al-foreach')">forEach()</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'al-iterator')">Iterator — safe removal</div>
+    </div>
+    <div id="al-create" class="ct-pane active"><pre><span class="ty">ArrayList</span>&lt;<span class="ty">Integer</span>&gt; al1 = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;(20);            <span class="cm">// initial CAPACITY = 20 (not size — size() is still 0)</span>
+<span class="ty">ArrayList</span>&lt;<span class="ty">Integer</span>&gt; al2 = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;(<span class="ty">List</span>.<span class="fn">of</span>(10)); <span class="cm">// pre-populated from an existing List — size() is 1</span>
+<span class="ty">ArrayList</span>&lt;<span class="ty">Integer</span>&gt; al3 = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;();              <span class="cm">// default capacity 10, size() is 0</span></pre></div>
+    <div id="al-access" class="ct-pane"><pre><span class="cm">// WRONG — Java collections are NOT arrays, no [] operator exists on objects</span>
+<span class="cm">// al1[0]; // COMPILE ERROR</span>
+
+<span class="cm">// CORRECT</span>
+al1.<span class="fn">get</span>(0);
+al1.<span class="fn">set</span>(0, 99);
+
+<span class="cm">// This is one of the most immediate C++/Python muscle-memory corrections —</span>
+<span class="cm">// every List access goes through get()/set(), never [].</span></pre></div>
+    <div id="al-foreach" class="ct-pane"><pre>al1.<span class="fn">forEach</span>((x) -&gt; {
+    <span class="ty">System</span>.out.<span class="fn">println</span>(x);
+});
+
+<span class="cm">// Method reference form — equally common, terser:</span>
+al1.<span class="fn">forEach</span>(<span class="ty">System</span>.out::println);</pre></div>
+    <div id="al-iterator" class="ct-pane"><pre><span class="ty">Iterator</span>&lt;<span class="ty">Integer</span>&gt; it = al2.<span class="fn">iterator</span>();
+
+<span class="kw">while</span> (it.<span class="fn">hasNext</span>()) {
+    <span class="ty">System</span>.out.<span class="fn">println</span>(it.<span class="fn">next</span>());
+}
+
+<span class="cm">// Why use an Iterator instead of a for-each loop when you need to REMOVE</span>
+<span class="cm">// elements during traversal:</span>
+<span class="ty">Iterator</span>&lt;<span class="ty">Integer</span>&gt; it2 = al1.<span class="fn">iterator</span>();
+<span class="kw">while</span> (it2.<span class="fn">hasNext</span>()) {
+    <span class="kw">if</span> (it2.<span class="fn">next</span>() % 2 == 0) {
+        it2.<span class="fn">remove</span>(); <span class="cm">// SAFE removal during iteration — the only safe way</span>
+    }
+}
+<span class="cm">// for (int x : al1) { if (x % 2 == 0) al1.remove(x); } // THROWS</span>
+<span class="cm">// ConcurrentModificationException — see the Iterators section for why</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>LeetCode-specific gotcha:</strong> <code class="inline">al1.remove(5)</code> is ambiguous-looking but NOT actually ambiguous — Java resolves it by overload: <code class="inline">remove(int index)</code> removes the element AT index 5, while <code class="inline">remove(Integer.valueOf(5))</code> or <code class="inline">remove((Integer) 5)</code> removes the VALUE 5. This overload resolution catches people constantly when translating C++'s <code class="inline">erase(find(v))</code> patterns.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 6: LINKEDLIST ═══ -->
+<section class="section" id="linkedlist">
+  <div class="section-header"><span class="section-eyebrow">Doubly-Linked</span><span class="section-rule"></span></div>
+  <h2>LinkedList</h2>
+  <p class="section-intro">Java implements <code class="inline">LinkedList</code> as a genuine <strong>doubly linked list</strong> — every node holds references to both its previous and next node. It implements both <code class="inline">List</code> and <code class="inline">Deque</code>, so it can serve as a list, a stack, or a queue.</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th>Aspect</th><th>ArrayList</th><th>LinkedList</th></tr></thead>
+    <tbody>
+      <tr><td>Backing structure</td><td>Resizable array</td><td>Doubly linked nodes</td></tr>
+      <tr><td>get(i) / random access</td><td class="yes">O(1)</td><td class="no">O(n) — must walk from head or tail</td></tr>
+      <tr><td>Insert/delete at head or tail</td><td class="no">O(n) at head, amortized O(1) at tail</td><td class="yes">O(1) — no shifting, just re-link pointers</td></tr>
+      <tr><td>Insert/delete in the middle</td><td class="no">O(n) — must shift elements</td><td>O(n) to FIND the position, then O(1) to splice</td></tr>
+      <tr><td>Memory overhead</td><td>Lower — just the array + unused capacity</td><td>Higher — each node stores 2 extra references (prev/next)</td></tr>
+      <tr><td>Initial capacity constructor</td><td class="yes">Yes — new ArrayList&lt;&gt;(20)</td><td class="no">No — nodes are allocated one at a time, no notion of "capacity"</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">LinkedList used as List, Stack, and Queue — all via the same class</span>
+<pre><span class="ty">LinkedList</span>&lt;<span class="ty">Integer</span>&gt; ll = <span class="kw">new</span> <span class="ty">LinkedList</span>&lt;&gt;();
+
+<span class="cm">// As a List</span>
+ll.<span class="fn">add</span>(1); ll.<span class="fn">add</span>(2); ll.<span class="fn">add</span>(0, 0); <span class="cm">// insert at index 0</span>
+
+<span class="cm">// As a Deque (Stack-style, via push/pop on the head)</span>
+ll.<span class="fn">push</span>(99);  <span class="cm">// insert at head</span>
+ll.<span class="fn">pop</span>();    <span class="cm">// remove from head</span>
+
+<span class="cm">// As a Queue (via offer/poll)</span>
+ll.<span class="fn">offer</span>(5); <span class="cm">// insert at tail</span>
+ll.<span class="fn">poll</span>();   <span class="cm">// remove from head — FIFO order</span>
+
+<span class="cm">// Direct head/tail access without removal</span>
+ll.<span class="fn">getFirst</span>(); ll.<span class="fn">getLast</span>();
+ll.<span class="fn">peekFirst</span>(); ll.<span class="fn">peekLast</span>(); <span class="cm">// null-safe versions</span></pre>
+  </div>
+
+  <div class="warn-box">
+    <span class="tip-icon">⚠️</span>
+    <span class="warn-text"><strong>Interview reality check:</strong> despite the theoretical O(1) insert/delete, <code class="inline">ArrayList</code> outperforms <code class="inline">LinkedList</code> in most practical benchmarks due to CPU cache locality — array elements sit contiguously in memory, while linked-list nodes are scattered and require pointer-chasing. Default to ArrayList unless you specifically need frequent head/tail operations or are implementing something like an LRU cache's internal list.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 7: VECTOR & STACK (LEGACY) ═══ -->
+<section class="section" id="legacy-list">
+  <div class="section-header"><span class="section-eyebrow">Know Them, Avoid Them</span><span class="section-rule"></span></div>
+  <h2>Vector &amp; Stack (Legacy)</h2>
+  <p class="section-intro">Both predate the Collections Framework (Java 1.0) and were retrofitted to implement its interfaces. Both are still around and interview-relevant to RECOGNIZE, but neither should be your first choice in new code.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Vector</span>
+      <ul class="rule-list">
+        <li>Essentially a synchronized ArrayList — every method is <code class="inline">synchronized</code>, adding locking overhead even in single-threaded code</li>
+        <li>Grows by DOUBLING its capacity by default (vs ArrayList's ~1.5x)</li>
+        <li>Modern replacement: <code class="inline">ArrayList</code>, or <code class="inline">Collections.synchronizedList(new ArrayList&lt;&gt;())</code> / <code class="inline">CopyOnWriteArrayList</code> if you actually need thread safety</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Stack</span>
+      <ul class="rule-list">
+        <li>Extends <code class="inline">Vector</code> — inherits ALL of Vector's baggage (synchronized, doubling growth) just to add push/pop/peek</li>
+        <li>Also technically lets you call List methods like <code class="inline">add(int, E)</code> on it, which can silently break stack discipline — a real design wart</li>
+        <li>Modern replacement: <code class="inline">Deque&lt;T&gt; stack = new ArrayDeque&lt;&gt;();</code> using push()/pop()/peek() — faster, no synchronization overhead, and the JDK docs themselves recommend this</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">Legacy vs modern stack — side by side</span>
+<pre><span class="cm">// Legacy — works, but avoid in new code</span>
+<span class="ty">Stack</span>&lt;<span class="ty">Integer</span>&gt; legacyStack = <span class="kw">new</span> <span class="ty">Stack</span>&lt;&gt;();
+legacyStack.<span class="fn">push</span>(1);
+legacyStack.<span class="fn">pop</span>();
+
+<span class="cm">// Modern — preferred for interviews and production alike</span>
+<span class="ty">Deque</span>&lt;<span class="ty">Integer</span>&gt; modernStack = <span class="kw">new</span> <span class="ty">ArrayDeque</span>&lt;&gt;();
+modernStack.<span class="fn">push</span>(1);
+modernStack.<span class="fn">pop</span>();</pre>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "Vector and Stack are legacy, synchronized classes retrofitted into the Collections Framework. ArrayList/ArrayDeque are their unsynchronized, faster modern replacements — I use java.util.Stack only when reading legacy code, never when writing new code."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 8: QUEUE & ARRAYDEQUE ═══ -->
+<section class="section" id="queue-arraydeque">
+  <div class="section-header"><span class="section-eyebrow">Double-Ended</span><span class="section-rule"></span></div>
+  <h2>ArrayDeque — The Modern Swiss Army Knife</h2>
+  <p class="section-intro"><code class="inline">ArrayDeque</code> ("Array Double Ended Queue") is backed by a resizable array and can efficiently insert/remove from BOTH ends — making it the go-to implementation for stacks, queues, and sliding-window problems alike.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Key characteristics</span>
+      <ul class="rule-list">
+        <li>Backed by a resizable array (specifically a circular buffer), NOT a linked list</li>
+        <li>All core operations — offerFirst/offerLast/pollFirst/pollLast — are <strong>amortized O(1)</strong></li>
+        <li>Faster than LinkedList for stack/queue use in nearly all real benchmarks, due to array cache-locality</li>
+        <li>Does NOT permit <code class="inline">null</code> elements — offering null throws <code class="inline">NullPointerException</code> (unlike LinkedList)</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Three roles, one class</span>
+      <ul class="rule-list">
+        <li><strong>As a Queue (FIFO)</strong>: offer() adds to tail, poll() removes from head</li>
+        <li><strong>As a Stack (LIFO)</strong>: push() adds to head, pop() removes from head</li>
+        <li><strong>As a Deque</strong>: explicit offerFirst/offerLast/pollFirst/pollLast for direct double-ended control — the classic sliding-window-maximum tool</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'ad-basic')">Basic operations</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ad-traversal')">Traversal</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ad-slidingwindow')">Classic use: sliding window maximum</div>
+    </div>
+    <div id="ad-basic" class="ct-pane active"><pre><span class="ty">Deque</span>&lt;<span class="ty">Integer</span>&gt; dq = <span class="kw">new</span> <span class="ty">ArrayDeque</span>&lt;&gt;();
+
+dq.<span class="fn">offerLast</span>(10);   <span class="cm">// insert at end — [10]</span>
+dq.<span class="fn">offerFirst</span>(5);   <span class="cm">// insert at beginning — [5, 10]</span>
+dq.<span class="fn">offerLast</span>(20);   <span class="cm">// [5, 10, 20]</span>
+
+<span class="ty">System</span>.out.<span class="fn">println</span>(dq.<span class="fn">peekFirst</span>()); <span class="cm">// 5 — no removal</span>
+<span class="ty">System</span>.out.<span class="fn">println</span>(dq.<span class="fn">peekLast</span>());  <span class="cm">// 20 — no removal</span>
+
+dq.<span class="fn">pollFirst</span>();  <span class="cm">// removes 5 -> [10, 20]</span>
+dq.<span class="fn">pollLast</span>();   <span class="cm">// removes 20 -> [10]</span></pre></div>
+    <div id="ad-traversal" class="ct-pane"><pre>dq.<span class="fn">forEach</span>((x) -&gt; <span class="ty">System</span>.out.<span class="fn">println</span>(x)); <span class="cm">// head-to-tail order</span>
+
+<span class="cm">// Reverse traversal — a Deque-exclusive convenience:</span>
+<span class="ty">Iterator</span>&lt;<span class="ty">Integer</span>&gt; descIt = dq.<span class="fn">descendingIterator</span>();
+<span class="kw">while</span> (descIt.<span class="fn">hasNext</span>()) {
+    <span class="ty">System</span>.out.<span class="fn">println</span>(descIt.<span class="fn">next</span>()); <span class="cm">// tail-to-head order</span>
+}</pre></div>
+    <div id="ad-slidingwindow" class="ct-pane"><pre><span class="cm">// LeetCode 239 "Sliding Window Maximum" — the textbook ArrayDeque application.</span>
+<span class="cm">// Maintain a deque of INDICES, keeping it in decreasing order of VALUE.</span>
+<span class="kw">int</span>[] <span class="fn">maxSlidingWindow</span>(<span class="kw">int</span>[] nums, <span class="kw">int</span> k) {
+    <span class="ty">Deque</span>&lt;<span class="ty">Integer</span>&gt; deque = <span class="kw">new</span> <span class="ty">ArrayDeque</span>&lt;&gt;(); <span class="cm">// stores INDICES</span>
+    <span class="kw">int</span>[] result = <span class="kw">new</span> <span class="kw">int</span>[nums.length - k + 1];
+
+    <span class="kw">for</span> (<span class="kw">int</span> i = 0; i &lt; nums.length; i++) {
+        <span class="kw">while</span> (!deque.<span class="fn">isEmpty</span>() &amp;&amp; deque.<span class="fn">peekFirst</span>() &lt;= i - k) {
+            deque.<span class="fn">pollFirst</span>(); <span class="cm">// drop indices that fell out of the window</span>
+        }
+        <span class="kw">while</span> (!deque.<span class="fn">isEmpty</span>() &amp;&amp; nums[deque.<span class="fn">peekLast</span>()] &lt; nums[i]) {
+            deque.<span class="fn">pollLast</span>(); <span class="cm">// drop smaller values — they can never be the max again</span>
+        }
+        deque.<span class="fn">offerLast</span>(i);
+        <span class="kw">if</span> (i &gt;= k - 1) {
+            result[i - k + 1] = nums[deque.<span class="fn">peekFirst</span>()]; <span class="cm">// front of deque = current window max</span>
+        }
+    }
+    <span class="kw">return</span> result;
+} <span class="cm">// O(n) overall — each index is pushed and popped at most once</span></pre></div>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 9: PRIORITYQUEUE ═══ -->
+<section class="section" id="priorityqueue">
+  <div class="section-header"><span class="section-eyebrow">Heap-Backed</span><span class="section-rule"></span></div>
+  <h2>PriorityQueue</h2>
+  <p class="section-intro">Implemented as a <strong>binary heap</strong>, backed by a resizable array (not actual tree nodes — just clever index arithmetic: for index i, children live at 2i+1 and 2i+2). <strong>Min-heap by default</strong> — the SMALLEST element always sits at the head.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Complexity</span>
+      <ul class="rule-list">
+        <li><code class="inline">offer()</code> / <code class="inline">poll()</code> — O(log n), sift up/down to restore heap order</li>
+        <li><code class="inline">peek()</code> — O(1), always the root</li>
+        <li><code class="inline">contains()</code> / arbitrary <code class="inline">remove(Object)</code> — O(n), no shortcut for finding an arbitrary element in a heap</li>
+        <li>Iteration order (<code class="inline">forEach</code>, the iterator) is <strong>NOT sorted</strong> — only <code class="inline">poll()</code> repeatedly gives you sorted output</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Core operations</span>
+      <ul class="rule-list">
+        <li><code class="inline">offer(e)</code> — insert, restoring heap property</li>
+        <li><code class="inline">poll()</code> — remove and return the smallest (or highest-priority) element</li>
+        <li><code class="inline">peek()</code> — view the smallest without removing</li>
+        <li><code class="inline">forEach()</code> — visits every element, but in internal array order, NOT priority order</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'pq-minheap')">Default min-heap</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pq-comparatorclass')">Max-heap via a Comparator class</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pq-lambda')">Max-heap via lambda (modern, preferred)</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pq-topk')">Classic use: Top-K elements</div>
+    </div>
+    <div id="pq-minheap" class="ct-pane active"><pre><span class="ty">PriorityQueue</span>&lt;<span class="ty">Integer</span>&gt; p = <span class="kw">new</span> <span class="ty">PriorityQueue</span>&lt;&gt;(); <span class="cm">// min-heap by default</span>
+
+p.<span class="fn">offer</span>(5); p.<span class="fn">offer</span>(1); p.<span class="fn">offer</span>(3);
+
+p.<span class="fn">peek</span>();  <span class="cm">// 1 — smallest</span>
+p.<span class="fn">poll</span>();  <span class="cm">// removes and returns 1</span>
+p.<span class="fn">poll</span>();  <span class="cm">// removes and returns 3</span>
+p.<span class="fn">poll</span>();  <span class="cm">// removes and returns 5</span></pre></div>
+    <div id="pq-comparatorclass" class="ct-pane"><pre><span class="cm">// From your notes — a custom Comparator class that flips the natural order</span>
+<span class="kw">class</span> <span class="ty">MyComp</span> <span class="kw">implements</span> <span class="ty">Comparator</span>&lt;<span class="ty">Integer</span>&gt; {
+    <span class="an">@Override</span>
+    <span class="kw">public</span> <span class="kw">int</span> <span class="fn">compare</span>(<span class="ty">Integer</span> o1, <span class="ty">Integer</span> o2) {
+        <span class="kw">if</span> (o1 &lt; o2) <span class="kw">return</span> 1;   <span class="cm">// "o1 is bigger" in heap-order terms — flips the usual convention</span>
+        <span class="kw">if</span> (o1 &gt; o2) <span class="kw">return</span> -1;
+        <span class="kw">return</span> 0;
+    }
+}
+<span class="cm">// Above comparator creates a MAX HEAP — PriorityQueue always puts the</span>
+<span class="cm">// element the Comparator treats as "smallest" (negative compare result) at</span>
+<span class="cm">// the head; by inverting the sign, the LARGEST value ends up "smallest"</span>
+
+<span class="ty">PriorityQueue</span>&lt;<span class="ty">Integer</span>&gt; maxHeap = <span class="kw">new</span> <span class="ty">PriorityQueue</span>&lt;&gt;(<span class="kw">new</span> <span class="ty">MyComp</span>());
+maxHeap.<span class="fn">offer</span>(5); maxHeap.<span class="fn">offer</span>(1); maxHeap.<span class="fn">offer</span>(3);
+maxHeap.<span class="fn">peek</span>(); <span class="cm">// 5 — largest on top now</span></pre></div>
+    <div id="pq-lambda" class="ct-pane"><pre><span class="cm">// The modern, terser equivalent of the MyComp class above</span>
+<span class="ty">PriorityQueue</span>&lt;<span class="ty">Integer</span>&gt; maxHeap = <span class="kw">new</span> <span class="ty">PriorityQueue</span>&lt;&gt;((a, b) -&gt; b - a); <span class="cm">// reversed subtraction</span>
+<span class="cm">// CAUTION: (a, b) -> b - a can silently overflow for values near</span>
+<span class="cm">// Integer.MIN_VALUE/MAX_VALUE — safer in interviews to write:</span>
+<span class="ty">PriorityQueue</span>&lt;<span class="ty">Integer</span>&gt; maxHeapSafe = <span class="kw">new</span> <span class="ty">PriorityQueue</span>&lt;&gt;(<span class="ty">Collections</span>.<span class="fn">reverseOrder</span>());
+
+<span class="cm">// Custom objects, ordered by a specific field — very common in LeetCode:</span>
+<span class="ty">PriorityQueue</span>&lt;<span class="kw">int</span>[]&gt; pq = <span class="kw">new</span> <span class="ty">PriorityQueue</span>&lt;&gt;((a, b) -&gt; a[1] - b[1]); <span class="cm">// min-heap ordered by index 1</span></pre></div>
+    <div id="pq-topk" class="ct-pane"><pre><span class="cm">// LeetCode 215 "Kth Largest Element" — maintain a min-heap of size K.</span>
+<span class="cm">// The SMALLEST of the K largest-seen elements sits at the head — evict it</span>
+<span class="cm">// whenever the heap grows past K, and whatever survives IS the top K.</span>
+<span class="kw">int</span> <span class="fn">findKthLargest</span>(<span class="kw">int</span>[] nums, <span class="kw">int</span> k) {
+    <span class="ty">PriorityQueue</span>&lt;<span class="ty">Integer</span>&gt; minHeap = <span class="kw">new</span> <span class="ty">PriorityQueue</span>&lt;&gt;(); <span class="cm">// plain min-heap — no comparator needed</span>
+    <span class="kw">for</span> (<span class="kw">int</span> n : nums) {
+        minHeap.<span class="fn">offer</span>(n);
+        <span class="kw">if</span> (minHeap.<span class="fn">size</span>() &gt; k) {
+            minHeap.<span class="fn">poll</span>(); <span class="cm">// evict the smallest — keeps only the K largest seen so far</span>
+        }
+    }
+    <span class="kw">return</span> minHeap.<span class="fn">peek</span>(); <span class="cm">// the smallest of the K largest = the Kth largest overall</span>
+} <span class="cm">// O(n log k) — much better than sorting the whole array (O(n log n)) when k << n</span></pre></div>
+  </div>
+
+  <div class="danger-box">
+    <span class="tip-icon">🚫</span>
+    <span class="danger-text"><strong>Interview trap:</strong> iterating a PriorityQueue with a for-each loop or <code class="inline">forEach()</code> does NOT visit elements in priority order — it walks the internal array in whatever order the heap happens to store them. Only repeated <code class="inline">poll()</code> calls guarantee sorted output.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 10: HASHSET ═══ -->
+<section class="section" id="hashset">
+  <div class="section-header"><span class="section-eyebrow">No Duplicates, No Order</span><span class="section-rule"></span></div>
+  <h2>HashSet</h2>
+  <p class="section-intro">Internally, <code class="inline">HashSet</code> is just a thin wrapper around a <code class="inline">HashMap</code> — every element you add becomes a KEY in a backing map, with a shared dummy constant as the value. Understanding HashMap's internals (covered in depth later) tells you everything about HashSet's behavior.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Key characteristics</span>
+      <ul class="rule-list">
+        <li>No duplicate elements — determined via <code class="inline">hashCode()</code> + <code class="inline">equals()</code></li>
+        <li>No ordering guarantee whatsoever — iteration order can even change between runs</li>
+        <li>Average O(1) for add/remove/contains; worst case O(n) with severe hash collisions (or O(log n) since Java 8's bucket treeification, covered in the HashMap section)</li>
+        <li>Allows a single <code class="inline">null</code> element</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Constructor tuning</span>
+      <ul class="rule-list">
+        <li><code class="inline">new HashSet&lt;&gt;(initialCapacity, loadFactor)</code> — pre-size to avoid rehashing if you know the approximate element count</li>
+        <li>loadFactor controls the fill-ratio threshold that triggers a resize (default 0.75) — lower = more memory, fewer collisions; higher = less memory, more collisions</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">Basic operations</span>
+<pre><span class="ty">HashSet</span>&lt;<span class="ty">Integer</span>&gt; hs = <span class="kw">new</span> <span class="ty">HashSet</span>&lt;&gt;(20, 0.5f); <span class="cm">// capacity hint 20, resize at 50% full</span>
+
+hs.<span class="fn">add</span>(5);
+hs.<span class="fn">add</span>(5);   <span class="cm">// no-op — add() returns false, set unchanged</span>
+hs.<span class="fn">remove</span>(5);
+
+<span class="cm">// Classic LeetCode use: O(1) duplicate/membership check</span>
+<span class="kw">boolean</span> <span class="fn">hasDuplicate</span>(<span class="kw">int</span>[] nums) {
+    <span class="ty">Set</span>&lt;<span class="ty">Integer</span>&gt; seen = <span class="kw">new</span> <span class="ty">HashSet</span>&lt;&gt;();
+    <span class="kw">for</span> (<span class="kw">int</span> n : nums) {
+        <span class="kw">if</span> (!seen.<span class="fn">add</span>(n)) <span class="kw">return</span> <span class="kw">true</span>; <span class="cm">// add() returns false if n was already present</span>
+    }
+    <span class="kw">return</span> <span class="kw">false</span>;
+} <span class="cm">// O(n) time, O(n) space — the standard "seen set" pattern</span></pre>
+  </div>
+
+  <div class="warn-box">
+    <span class="tip-icon">⚠️</span>
+    <span class="warn-text">Storing a mutable custom object in a HashSet and then mutating a field that affects <code class="inline">hashCode()</code> AFTER insertion corrupts the set — the element becomes unfindable, stuck in the wrong bucket. Only use immutable keys, or keys whose hashCode-affecting fields never change post-insertion.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 11: LINKEDHASHSET & TREESET ═══ -->
+<section class="section" id="linkedhashset-treeset">
+  <div class="section-header"><span class="section-eyebrow">Ordered Variants</span><span class="section-rule"></span></div>
+  <h2>LinkedHashSet &amp; TreeSet</h2>
+  <p class="section-intro">Both solve HashSet's "no ordering" limitation, in two different ways: LinkedHashSet preserves INSERTION order cheaply; TreeSet maintains full SORTED order at a higher cost.</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th></th><th>HashSet</th><th>LinkedHashSet</th><th>TreeSet</th></tr></thead>
+    <tbody>
+      <tr><td>Ordering</td><td>None</td><td>Insertion order</td><td>Sorted (natural or Comparator)</td></tr>
+      <tr><td>add/remove/contains</td><td>O(1) average</td><td>O(1) average</td><td>O(log n)</td></tr>
+      <tr><td>Backing structure</td><td>Hash table</td><td>Hash table + doubly linked list</td><td>Red-Black Tree</td></tr>
+      <tr><td>Allows null</td><td>Yes (one)</td><td>Yes (one)</td><td>No (throws NullPointerException)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'ts-basic')">TreeSet basics</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ts-comparable')">Comparable — custom objects in TreeSet</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ts-navigable')">NavigableSet methods</div>
+    </div>
+    <div id="ts-basic" class="ct-pane active"><pre><span class="ty">TreeSet</span>&lt;<span class="ty">Integer</span>&gt; ts = <span class="kw">new</span> <span class="ty">TreeSet</span>&lt;&gt;(
+        <span class="ty">List</span>.<span class="fn">of</span>(10, 20, 30, 43, 53)
+);
+<span class="ty">System</span>.out.<span class="fn">println</span>(ts); <span class="cm">// [10, 20, 30, 43, 53] — always iterates in sorted order</span></pre></div>
+    <div id="ts-comparable" class="ct-pane"><pre><span class="cm">// To store custom objects in a TreeSet, the class MUST implement Comparable —</span>
+<span class="cm">// otherwise TreeSet has no way to decide ordering, and throws ClassCastException</span>
+<span class="cm">// the moment you try to add a second element</span>
+<span class="kw">class</span> <span class="ty">Point</span> <span class="kw">implements</span> <span class="ty">Comparable</span>&lt;<span class="ty">Point</span>&gt; { <span class="cm">// generic form — modern, type-safe</span>
+    <span class="kw">private</span> <span class="kw">int</span> x;
+    <span class="kw">private</span> <span class="kw">int</span> y;
+
+    <span class="an">@Override</span>
+    <span class="kw">public</span> <span class="kw">int</span> <span class="fn">compareTo</span>(<span class="ty">Point</span> p) {
+        <span class="kw">if</span> (x &lt; p.x) <span class="kw">return</span> -1;
+        <span class="kw">if</span> (x &gt; p.x) <span class="kw">return</span> 1;
+        <span class="kw">return</span> 0;
+    }
+}
+<span class="cm">// NOTE: an older/raw style takes an Object and casts internally —</span>
+<span class="cm">// "public int compareTo(Object o) { Point p = (Point) o; ... }" —</span>
+<span class="cm">// but with generics available, always prefer Comparable&lt;Point&gt; over the raw</span>
+<span class="cm">// Comparable, exactly the same reasoning as raw types vs parameterized types</span>
+<span class="cm">// covered in the Generics Bible</span>
+
+<span class="ty">TreeSet</span>&lt;<span class="ty">Point</span>&gt; points = <span class="kw">new</span> <span class="ty">TreeSet</span>&lt;&gt;();
+points.<span class="fn">add</span>(<span class="kw">new</span> <span class="ty">Point</span>(3, 4));
+points.<span class="fn">add</span>(<span class="kw">new</span> <span class="ty">Point</span>(1, 2)); <span class="cm">// sorted by x automatically</span></pre></div>
+    <div id="ts-navigable" class="ct-pane"><pre><span class="ty">TreeSet</span>&lt;<span class="ty">Integer</span>&gt; ts = <span class="kw">new</span> <span class="ty">TreeSet</span>&lt;&gt;(<span class="ty">List</span>.<span class="fn">of</span>(10, 20, 30, 40));
+
+ts.<span class="fn">first</span>();          <span class="cm">// 10 — smallest</span>
+ts.<span class="fn">last</span>();           <span class="cm">// 40 — largest</span>
+ts.<span class="fn">ceiling</span>(25);      <span class="cm">// 30 — smallest element &gt;= 25</span>
+ts.<span class="fn">floor</span>(25);        <span class="cm">// 20 — largest element &lt;= 25</span>
+ts.<span class="fn">higher</span>(20);       <span class="cm">// 30 — smallest element &gt; 20 (strictly)</span>
+ts.<span class="fn">lower</span>(20);        <span class="cm">// 10 — largest element &lt; 20 (strictly)</span>
+ts.<span class="fn">headSet</span>(30);      <span class="cm">// [10, 20] — view of elements &lt; 30</span>
+ts.<span class="fn">tailSet</span>(20);      <span class="cm">// [20, 30, 40] — view of elements &gt;= 20</span>
+<span class="cm">// These "nearest neighbor" queries are exactly why TreeSet shows up in</span>
+<span class="cm">// interval-scheduling and "find closest value" style LeetCode problems —</span>
+<span class="cm">// operations no HashSet could ever offer</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "TreeSet is Java's std::set equivalent — Red-Black Tree backed, O(log n) everything, and unlike HashSet it exposes navigation methods (ceiling/floor/higher/lower) that make it the right tool whenever a problem needs 'nearest value' queries, not just membership."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 12: COMPARABLE VS COMPARATOR ═══ -->
+<section class="section" id="comparable-comparator">
+  <div class="section-header"><span class="section-eyebrow">Ordering Logic</span><span class="section-rule"></span></div>
+  <h2>Comparable vs Comparator</h2>
+  <p class="section-intro">Both define ordering, but at different scopes: <code class="inline">Comparable</code> gives a class ONE natural, built-in ordering. <code class="inline">Comparator</code> defines ordering EXTERNALLY, letting you have as many different orderings as you need without touching the class itself.</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th></th><th>Comparable</th><th>Comparator</th></tr></thead>
+    <tbody>
+      <tr><td>Package</td><td>java.lang</td><td>java.util</td></tr>
+      <tr><td>Method to implement</td><td><code class="inline">compareTo(T o)</code> — one argument</td><td><code class="inline">compare(T o1, T o2)</code> — two arguments</td></tr>
+      <tr><td>Where it's defined</td><td>Inside the class itself — "this object's natural order"</td><td>Externally — a separate class, lambda, or method reference</td></tr>
+      <tr><td>How many orderings per class</td><td>Exactly one</td><td>As many as you want</td></tr>
+      <tr><td>Used automatically by</td><td>TreeSet/TreeMap (no explicit Comparator given), Collections.sort(list) with no 2nd arg</td><td>TreeSet/TreeMap (Comparator constructor), Collections.sort(list, comparator), List.sort(comparator)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'cc-comparable')">Comparable — natural order</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'cc-comparator-class')">Comparator — a named class</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'cc-comparator-lambda')">Comparator — lambda &amp; comparing()</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'cc-chaining')">Chaining — thenComparing</div>
+    </div>
+    <div id="cc-comparable" class="ct-pane active"><pre><span class="kw">class</span> <span class="ty">Employee</span> <span class="kw">implements</span> <span class="ty">Comparable</span>&lt;<span class="ty">Employee</span>&gt; {
+    <span class="ty">String</span> name;
+    <span class="kw">int</span> salary;
+
+    <span class="an">@Override</span>
+    <span class="kw">public</span> <span class="kw">int</span> <span class="fn">compareTo</span>(<span class="ty">Employee</span> other) {
+        <span class="kw">return</span> <span class="ty">Integer</span>.<span class="fn">compare</span>(<span class="kw">this</span>.salary, other.salary); <span class="cm">// natural order = ascending salary</span>
+    }
+}
+<span class="ty">List</span>&lt;<span class="ty">Employee</span>&gt; employees = <span class="fn">getEmployees</span>();
+<span class="ty">Collections</span>.<span class="fn">sort</span>(employees); <span class="cm">// uses compareTo() automatically — no Comparator needed</span></pre></div>
+    <div id="cc-comparator-class" class="ct-pane"><pre><span class="cm">// From your notes — a standalone comparator class, reusable anywhere</span>
+<span class="kw">class</span> <span class="ty">My</span> <span class="kw">implements</span> <span class="ty">Comparator</span>&lt;<span class="ty">Integer</span>&gt; {
+    <span class="an">@Override</span>
+    <span class="kw">public</span> <span class="kw">int</span> <span class="fn">compare</span>(<span class="ty">Integer</span> i1, <span class="ty">Integer</span> i2) {
+        <span class="kw">if</span> (i1 &lt; i2) <span class="kw">return</span> 1;
+        <span class="kw">if</span> (i1 &gt; i2) <span class="kw">return</span> -1;
+        <span class="kw">return</span> 0;
+    } <span class="cm">// this comparator sorts in DESCENDING order — inverted sign convention</span>
+}
+<span class="kw">int</span>[] a = {5, 2, 8, 1};
+<span class="ty">Integer</span>[] boxed = {5, 2, 8, 1}; <span class="cm">// Arrays.sort(a, comparator) needs a REFERENCE type array — see Arrays section</span>
+<span class="ty">Arrays</span>.<span class="fn">sort</span>(boxed, <span class="kw">new</span> <span class="ty">My</span>()); <span class="cm">// [8, 5, 2, 1]</span></pre></div>
+    <div id="cc-comparator-lambda" class="ct-pane"><pre><span class="cm">// Modern equivalent of the class above</span>
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; list = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;(<span class="ty">List</span>.<span class="fn">of</span>(5, 2, 8, 1));
+list.<span class="fn">sort</span>((a, b) -&gt; b - a); <span class="cm">// descending</span>
+
+<span class="cm">// Comparator.comparing() — extract a key, compare on that key</span>
+<span class="ty">List</span>&lt;<span class="ty">Employee</span>&gt; employees = <span class="fn">getEmployees</span>();
+employees.<span class="fn">sort</span>(<span class="ty">Comparator</span>.<span class="fn">comparing</span>(e -&gt; e.name));       <span class="cm">// ascending by name</span>
+employees.<span class="fn">sort</span>(<span class="ty">Comparator</span>.<span class="fn">comparingInt</span>(e -&gt; e.salary)); <span class="cm">// ascending by salary, no autoboxing</span>
+employees.<span class="fn">sort</span>(<span class="ty">Comparator</span>.<span class="fn">comparing</span>(<span class="ty">Employee</span>::name).<span class="fn">reversed</span>()); <span class="cm">// descending by name</span></pre></div>
+    <div id="cc-chaining" class="ct-pane"><pre><span class="cm">// Multi-key sort: primary key, then a tie-breaker — thenComparing()</span>
+employees.<span class="fn">sort</span>(
+    <span class="ty">Comparator</span>.<span class="fn">comparingInt</span>((<span class="ty">Employee</span> e) -&gt; e.salary).<span class="fn">reversed</span>() <span class="cm">// highest salary first...</span>
+              .<span class="fn">thenComparing</span>(e -&gt; e.name)                       <span class="cm">// ...ties broken alphabetically by name</span>
+);
+<span class="cm">// Equivalent to C++'s multi-field comparator lambda, but composed declaratively</span>
+<span class="cm">// instead of written out as a chain of if/else comparisons</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "Comparable is intrusive — it's baked into the class as its one natural order. Comparator is non-intrusive — it lives outside the class, so you can sort the same objects a dozen different ways without ever touching the class definition." This is exactly the Strategy pattern applied to ordering.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 13: HASHMAP INTERNAL WORKING ═══ -->
+<section class="section" id="hashmap">
+  <div class="section-header"><span class="section-eyebrow">The Deepest Dive</span><span class="section-rule"></span></div>
+  <h2>HashMap — Internal Working</h2>
+  <p class="section-intro">HashMap is the single most interview-tested collection in Java. Understanding its bucket-array-plus-collision-chain design — and how it changed in Java 8 — separates "I use HashMap" from "I understand HashMap."</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">The core data structure</span>
+      <ul class="rule-list">
+        <li>Backed by an array of "buckets" (<code class="inline">Node[] table</code>), default initial size 16</li>
+        <li>A key's bucket index is computed from its <code class="inline">hashCode()</code>, further mixed and masked against the array length</li>
+        <li>Multiple keys CAN land in the same bucket (a "collision") — each bucket holds a chain of entries for that index</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">load factor &amp; resizing</span>
+      <ul class="rule-list">
+        <li>Default load factor: 0.75 — when the map is 75% full (size &gt; capacity × 0.75), it RESIZES</li>
+        <li>Resize doubles the bucket array size and re-buckets every existing entry — an expensive O(n) operation, amortized across many inserts</li>
+        <li>Pre-sizing with a known capacity (<code class="inline">new HashMap&lt;&gt;(expectedSize)</code>) avoids repeated resizes, exactly like ArrayList's initial capacity</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'hm-buckets')">Step by step: put() and get()</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'hm-treeify')">Java 8+: bucket treeification</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'hm-hashcode')">Why hashCode() + equals() must agree</div>
+    </div>
+    <div id="hm-buckets" class="ct-pane active"><pre><span class="cm">// put(key, value):</span>
+<span class="cm">// 1. Compute hash = key.hashCode(), then mix bits (HashMap applies</span>
+<span class="cm">//    "hash ^ (hash >>> 16)" to spread high bits into low bits, reducing</span>
+<span class="cm">//    collisions for keys whose low bits alone are similar)</span>
+<span class="cm">// 2. bucketIndex = hash & (table.length - 1)   // fast modulo via bitmask,</span>
+<span class="cm">//    only works because table.length is always a power of 2</span>
+<span class="cm">// 3. If the bucket is empty, place the new Node there directly</span>
+<span class="cm">// 4. If the bucket already has entries, walk the chain:</span>
+<span class="cm">//    - if a key.equals() an existing entry's key, OVERWRITE its value</span>
+<span class="cm">//    - otherwise, append a new Node to the chain (or tree, see next tab)</span>
+
+<span class="cm">// get(key): same hash + bucketIndex computation, then walk the bucket's</span>
+<span class="cm">// chain comparing equals() until a match is found, or return null</span>
+
+<span class="ty">Map</span>&lt;<span class="ty">String</span>, <span class="ty">Integer</span>&gt; map = <span class="kw">new</span> <span class="ty">HashMap</span>&lt;&gt;();
+map.<span class="fn">put</span>(<span class="st">"apple"</span>, 1);   <span class="cm">// hashCode() computed, bucket found, Node inserted</span>
+map.<span class="fn">put</span>(<span class="st">"apple"</span>, 2);   <span class="cm">// same key -> same bucket -> equals() match -> VALUE OVERWRITTEN, not duplicated</span>
+map.<span class="fn">get</span>(<span class="st">"apple"</span>);      <span class="cm">// 2</span></pre></div>
+    <div id="hm-treeify" class="ct-pane"><pre><span class="cm">// PRE-Java 8: every bucket was a plain LINKED LIST of colliding entries.</span>
+<span class="cm">// Worst case (all keys collide into one bucket): O(n) lookup — a</span>
+<span class="cm">// pathological but real DENIAL-OF-SERVICE vector if an attacker can craft</span>
+<span class="cm">// keys with identical hashCode()s (this was a real historical CVE class)</span>
+
+<span class="cm">// Java 8+ FIX: if a single bucket's chain grows past TREEIFY_THRESHOLD (8),</span>
+<span class="cm">// AND the table itself has at least 64 buckets, that bucket's linked list</span>
+<span class="cm">// is converted into a balanced RED-BLACK TREE instead — worst-case lookup</span>
+<span class="cm">// within that bucket drops from O(n) to O(log n)</span>
+
+<span class="cm">// It converts BACK to a linked list if the bucket shrinks below</span>
+<span class="cm">// UNTREEIFY_THRESHOLD (6) after removals — hysteresis avoids thrashing</span>
+<span class="cm">// back and forth right at the boundary</span>
+
+<span class="cm">// This is entirely an INTERNAL optimization — HashMap's public API and</span>
+<span class="cm">// Big-O contract (average O(1)) are unaffected; it only improves the</span>
+<span class="cm">// WORST case from O(n) to O(log n) per bucket</span></pre></div>
+    <div id="hm-hashcode" class="ct-pane"><pre><span class="cm">// The contract: if a.equals(b) is true, then a.hashCode() MUST equal b.hashCode()</span>
+<span class="cm">// (the reverse isn't required — different objects CAN share a hashCode; that's</span>
+<span class="cm">// just a collision, handled by the bucket chain)</span>
+
+<span class="kw">class</span> <span class="ty">BadKey</span> {
+    <span class="kw">int</span> id;
+    <span class="an">@Override</span>
+    <span class="kw">public</span> <span class="kw">boolean</span> <span class="fn">equals</span>(<span class="ty">Object</span> o) {
+        <span class="kw">return</span> o <span class="kw">instanceof</span> <span class="ty">BadKey</span> &amp;&amp; ((<span class="ty">BadKey</span>) o).id == <span class="kw">this</span>.id;
+    }
+    <span class="cm">// NO hashCode() override — inherits Object's IDENTITY-based hashCode()</span>
+    <span class="cm">// Two BadKey objects with the same id are equals()-equal, but almost</span>
+    <span class="cm">// certainly land in DIFFERENT buckets (different default hashCodes) —</span>
+    <span class="cm">// map.get(new BadKey(5)) will NEVER find an entry put with a different</span>
+    <span class="cm">// BadKey(5) instance, even though they're "equal." A silent, brutal bug.</span>
+}
+<span class="cm">// RULE: whenever you override equals(), you MUST override hashCode() too —</span>
+<span class="cm">// most IDEs and records (Java 16+) generate both together automatically</span></pre></div>
+  </div>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th>Operation</th><th>Average case</th><th>Worst case (pre-Java 8)</th><th>Worst case (Java 8+)</th></tr></thead>
+    <tbody>
+      <tr><td>get / put / remove</td><td>O(1)</td><td>O(n) — all keys collide into one bucket</td><td>O(log n) — bucket treeifies past 8 entries</td></tr>
+    </tbody>
+  </table>
+
+  <div class="danger-box">
+    <span class="tip-icon">🚫</span>
+    <span class="danger-text"><strong>Interview one-liner:</strong> "HashMap is an array of buckets, where each bucket handles hash collisions via a linked list — or, since Java 8, a red-black tree once a bucket gets crowded (8+ entries in a table of 64+ buckets). Correctness depends entirely on the hashCode()/equals() contract being honored; breaking it produces silent, hard-to-debug lookup failures rather than an exception."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 14: LINKEDHASHMAP & LRU CACHE ═══ -->
+<section class="section" id="linkedhashmap-lru">
+  <div class="section-header"><span class="section-eyebrow">Order-Preserving</span><span class="section-rule"></span></div>
+  <h2>LinkedHashMap &amp; the LRU Cache Pattern</h2>
+  <p class="section-intro"><code class="inline">LinkedHashMap</code> combines a hash table (for O(1) lookup) with a doubly linked list threading through all entries (for predictable iteration order) — and with one constructor flag, becomes a complete, interview-famous LRU cache implementation.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">How it maintains order internally</span>
+      <ul class="rule-list">
+        <li>Every entry is ALSO a node in a doubly linked list — each holds <code class="inline">before</code>/<code class="inline">after</code> references to its neighbors in iteration order</li>
+        <li>The hash table portion is used for O(1) key lookup, exactly like HashMap</li>
+        <li>The linked list portion is used purely for iteration order — get()/put() still go through hashing, not list traversal</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Insertion order example (from your notes)</span>
+      <ul class="rule-list">
+        <li>Inserting key 12 then key 17 links them: <code class="inline">[12,A] &lt;-&gt; [17,B]</code></li>
+        <li>The hash bucket for each key still points directly to its node for O(1) access</li>
+        <li>Iterating the map walks the LINKED LIST, not the buckets — which is exactly why iteration order matches insertion order, unlike plain HashMap</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">Insertion-order iteration — the default mode</span>
+<pre><span class="ty">LinkedHashMap</span>&lt;<span class="ty">Integer</span>, <span class="ty">String</span>&gt; lhm = <span class="kw">new</span> <span class="ty">LinkedHashMap</span>&lt;&gt;();
+lhm.<span class="fn">put</span>(12, <span class="st">"A"</span>);
+lhm.<span class="fn">put</span>(17, <span class="st">"B"</span>);
+lhm.<span class="fn">put</span>(3, <span class="st">"C"</span>);
+
+<span class="kw">for</span> (<span class="ty">Map</span>.<span class="ty">Entry</span>&lt;<span class="ty">Integer</span>, <span class="ty">String</span>&gt; e : lhm.<span class="fn">entrySet</span>()) {
+    <span class="ty">System</span>.out.<span class="fn">println</span>(e.<span class="fn">getKey</span>() + <span class="st">"="</span> + e.<span class="fn">getValue</span>());
+}
+<span class="cm">// Prints in the EXACT order inserted: 12=A, 17=B, 3=C</span>
+<span class="cm">// A plain HashMap makes NO such guarantee — same puts, unpredictable order</span></pre>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'lru-constructor')">The access-order constructor</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'lru-full')">Complete LRU Cache implementation</div>
+    </div>
+    <div id="lru-constructor" class="ct-pane active"><pre><span class="ty">LinkedHashMap</span>&lt;<span class="ty">Integer</span>, <span class="ty">String</span>&gt; lhm = <span class="kw">new</span> <span class="ty">LinkedHashMap</span>&lt;&gt;(
+    initialCapacity, <span class="cm">// e.g. 5</span>
+    loadFactor,       <span class="cm">// e.g. 0.75f</span>
+    accessOrder        <span class="cm">// true = order by LAST ACCESS, not insertion</span>
+);
+
+<span class="cm">// When accessOrder = true:</span>
+<span class="cm">// - Every get() call MOVES that entry to the END of the iteration order</span>
+<span class="cm">// - The entry at the START (front) of the iteration is therefore always</span>
+<span class="cm">//   the LEAST recently used one — exactly the property an LRU cache needs</span>
+<span class="ty">LinkedHashMap</span>&lt;<span class="ty">Integer</span>, <span class="ty">String</span>&gt; accessOrdered = <span class="kw">new</span> <span class="ty">LinkedHashMap</span>&lt;&gt;(5, 0.75f, <span class="kw">true</span>);</pre></div>
+    <div id="lru-full" class="ct-pane"><pre><span class="cm">// The classic "Design an LRU Cache" interview question, solved in ~15 lines</span>
+<span class="kw">class</span> <span class="ty">LRUCache</span>&lt;K, V&gt; <span class="kw">extends</span> <span class="ty">LinkedHashMap</span>&lt;K, V&gt; {
+    <span class="kw">private</span> <span class="kw">final</span> <span class="kw">int</span> capacity;
+
+    <span class="ty">LRUCache</span>(<span class="kw">int</span> capacity) {
+        <span class="kw">super</span>(capacity, 0.75f, <span class="kw">true</span>); <span class="cm">// accessOrder = true is the key ingredient</span>
+        <span class="kw">this</span>.capacity = capacity;
+    }
+
+    <span class="an">@Override</span>
+    <span class="kw">protected</span> <span class="kw">boolean</span> <span class="fn">removeEldestEntry</span>(<span class="ty">Map</span>.<span class="ty">Entry</span>&lt;K, V&gt; eldest) {
+        <span class="kw">return</span> <span class="fn">size</span>() &gt; capacity; <span class="cm">// hook called automatically after every put() —</span>
+    }                                <span class="cm">// returning true auto-evicts the LEAST recently used entry</span>
+}
+
+<span class="ty">LRUCache</span>&lt;<span class="ty">Integer</span>, <span class="ty">String</span>&gt; cache = <span class="kw">new</span> <span class="ty">LRUCache</span>&lt;&gt;(3);
+cache.<span class="fn">put</span>(1, <span class="st">"a"</span>); cache.<span class="fn">put</span>(2, <span class="st">"b"</span>); cache.<span class="fn">put</span>(3, <span class="st">"c"</span>);
+cache.<span class="fn">get</span>(1);              <span class="cm">// touches key 1 -> moves it to "most recently used"</span>
+cache.<span class="fn">put</span>(4, <span class="st">"d"</span>);        <span class="cm">// exceeds capacity -> evicts key 2 (the actual least recently used)</span>
+<span class="ty">System</span>.out.<span class="fn">println</span>(cache.<span class="fn">containsKey</span>(2)); <span class="cm">// false — evicted</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Why this is a favorite interview question:</strong> it tests whether you know LinkedHashMap has BOTH an access-order mode AND a protected override hook (<code class="inline">removeEldestEntry</code>) specifically designed for cache eviction — turning a ~100-line hand-rolled doubly-linked-list-plus-hashmap solution into a ~15-line subclass.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 15: TREEMAP ═══ -->
+<section class="section" id="treemap">
+  <div class="section-header"><span class="section-eyebrow">Sorted Keys</span><span class="section-rule"></span></div>
+  <h2>TreeMap &amp; NavigableMap</h2>
+  <p class="section-intro">Implemented as a <strong>Red-Black Tree</strong> — a self-balancing binary search tree that guarantees O(log n) for insertion, deletion, and search, while keeping keys always in sorted order. Java's direct equivalent of C++'s <code class="inline">std::map</code>.</p>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'tm-basic')">Creating &amp; populating</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'tm-navigable')">Navigable methods — ceiling, floor, etc.</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'tm-usecase')">Classic use: order statistics / range queries</div>
+    </div>
+    <div id="tm-basic" class="ct-pane active"><pre><span class="ty">TreeMap</span>&lt;<span class="ty">Integer</span>, <span class="ty">String</span>&gt; tm = <span class="kw">new</span> <span class="ty">TreeMap</span>&lt;&gt;();
+
+<span class="cm">// Initialize directly from an existing Map</span>
+tm = <span class="kw">new</span> <span class="ty">TreeMap</span>&lt;&gt;(<span class="ty">Map</span>.<span class="fn">of</span>(
+    1, <span class="st">"A"</span>,
+    2, <span class="st">"B"</span>
+));
+
+tm.<span class="fn">put</span>(4, <span class="st">"C"</span>);
+<span class="ty">System</span>.out.<span class="fn">println</span>(tm); <span class="cm">// {1=A, 2=B, 4=C} — ALWAYS printed in sorted key order</span></pre></div>
+    <div id="tm-navigable" class="ct-pane"><pre><span class="ty">TreeMap</span>&lt;<span class="ty">Integer</span>, <span class="ty">String</span>&gt; tm = <span class="kw">new</span> <span class="ty">TreeMap</span>&lt;&gt;(<span class="ty">Map</span>.<span class="fn">of</span>(1, <span class="st">"A"</span>, 5, <span class="st">"B"</span>, 10, <span class="st">"C"</span>));
+
+tm.<span class="fn">ceilingEntry</span>(5).<span class="fn">getValue</span>();  <span class="cm">// "B" — smallest key &gt;= 5</span>
+tm.<span class="fn">floorEntry</span>(7).<span class="fn">getValue</span>();    <span class="cm">// "B" — largest key &lt;= 7</span>
+tm.<span class="fn">higherKey</span>(5);              <span class="cm">// 10 — smallest key &gt; 5</span>
+tm.<span class="fn">lowerKey</span>(5);               <span class="cm">// 1  — largest key &lt; 5</span>
+tm.<span class="fn">firstKey</span>();               <span class="cm">// 1  — smallest key</span>
+tm.<span class="fn">lastKey</span>();                <span class="cm">// 10 — largest key</span>
+
+tm.<span class="fn">containsKey</span>(5);            <span class="cm">// true</span>
+tm.<span class="fn">containsValue</span>(<span class="st">"C"</span>);         <span class="cm">// true — O(n), unlike containsKey's O(log n)</span>
+
+tm.<span class="fn">headMap</span>(5);                <span class="cm">// {1=A} — keys &lt; 5 (view)</span>
+tm.<span class="fn">tailMap</span>(5);                <span class="cm">// {5=B, 10=C} — keys &gt;= 5 (view)</span>
+tm.<span class="fn">subMap</span>(1, 10);             <span class="cm">// {1=A, 5=B} — keys in [1, 10) (view)</span></pre></div>
+    <div id="tm-usecase" class="ct-pane"><pre><span class="cm">// TreeMap shines for "closest value" / range-based interview problems —</span>
+<span class="cm">// something a HashMap fundamentally cannot do (it has no notion of order)</span>
+
+<span class="cm">// Example: Exam room seat assignment / calendar booking style problems —</span>
+<span class="cm">// find the nearest available slot before/after a given time</span>
+<span class="ty">TreeMap</span>&lt;<span class="ty">Integer</span>, <span class="ty">String</span>&gt; bookings = <span class="kw">new</span> <span class="ty">TreeMap</span>&lt;&gt;();
+bookings.<span class="fn">put</span>(900, <span class="st">"Meeting A"</span>);
+bookings.<span class="fn">put</span>(1030, <span class="st">"Meeting B"</span>);
+bookings.<span class="fn">put</span>(1400, <span class="st">"Meeting C"</span>);
+
+<span class="ty">Integer</span> nextMeetingAfter = bookings.<span class="fn">higherKey</span>(1030); <span class="cm">// 1400 — what's next after 10:30's meeting</span>
+<span class="ty">Integer</span> lastBeforeNoon   = bookings.<span class="fn">floorKey</span>(1200);  <span class="cm">// 1030 — the latest booking at or before noon</span>
+
+<span class="cm">// Also very common: frequency-sorted output, e.g. "top K frequent, ties</span>
+<span class="cm">// broken by value" via a TreeMap&lt;Integer, List&lt;Integer&gt;&gt; bucket structure</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "Reach for TreeMap over HashMap whenever a problem needs sorted iteration, range queries, or nearest-key lookups — HashMap wins on raw speed (O(1) vs O(log n)) whenever ordering genuinely doesn't matter."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 16: HASHTABLE & ITERATORS ═══ -->
+<section class="section" id="hashtable-iterators">
+  <div class="section-header"><span class="section-eyebrow">Legacy &amp; Traversal</span><span class="section-rule"></span></div>
+  <h2>Hashtable (Legacy) &amp; Iterator Deep Dive</h2>
+  <p class="section-intro"><code class="inline">Hashtable</code> predates the Collections Framework, same story as Vector/Stack. Meanwhile, understanding exactly how iteration works — and why concurrent modification breaks it — is a recurring "explain what happens" interview question.</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th></th><th>Hashtable</th><th>HashMap</th></tr></thead>
+    <tbody>
+      <tr><td>Thread safety</td><td>Synchronized on every method — thread-safe but slow</td><td>Not synchronized — must wrap externally if needed</td></tr>
+      <tr><td>Null keys/values</td><td>Neither allowed — throws NullPointerException</td><td>One null key, multiple null values allowed</td></tr>
+      <tr><td>Iteration</td><td>Fail-fast Iterator; legacy Enumeration also available</td><td>Fail-fast Iterator</td></tr>
+      <tr><td>Modern replacement</td><td colspan="2"><code class="inline">HashMap</code> (single-threaded) or <code class="inline">ConcurrentHashMap</code> (multi-threaded, far better concurrent performance via lock striping)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Iterable, Iterator, ListIterator — three related but distinct things</span>
+      <ul class="rule-list">
+        <li><code class="inline">Iterable&lt;T&gt;</code> — the interface that makes a for-each loop possible; declares <code class="inline">iterator()</code></li>
+        <li><code class="inline">Iterator&lt;T&gt;</code> — one-directional cursor: <code class="inline">hasNext()</code>, <code class="inline">next()</code>, <code class="inline">remove()</code></li>
+        <li><code class="inline">ListIterator&lt;T&gt;</code> (List only) — BIDIRECTIONAL: adds <code class="inline">hasPrevious()</code>, <code class="inline">previous()</code>, plus <code class="inline">set()</code> and <code class="inline">add()</code> during traversal</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Fail-fast vs fail-safe iterators</span>
+      <ul class="rule-list">
+        <li><strong>Fail-fast</strong> (ArrayList, HashMap, HashSet, ...): detects structural modification during iteration via an internal <code class="inline">modCount</code> counter, throws <code class="inline">ConcurrentModificationException</code></li>
+        <li><strong>Fail-safe</strong> (ConcurrentHashMap, CopyOnWriteArrayList): iterates over a snapshot or tolerates concurrent changes, never throws — but may not reflect the very latest modifications</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'it-listiterator')">ListIterator — bidirectional</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'it-cme')">ConcurrentModificationException — why it happens</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'it-safe')">Safe removal patterns</div>
+    </div>
+    <div id="it-listiterator" class="ct-pane active"><pre><span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; list = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;(<span class="ty">List</span>.<span class="fn">of</span>(1, 2, 3));
+<span class="ty">ListIterator</span>&lt;<span class="ty">Integer</span>&gt; lit = list.<span class="fn">listIterator</span>();
+
+<span class="kw">while</span> (lit.<span class="fn">hasNext</span>()) {
+    <span class="kw">int</span> val = lit.<span class="fn">next</span>();
+    <span class="kw">if</span> (val == 2) lit.<span class="fn">set</span>(20); <span class="cm">// in-place replace during traversal — plain Iterator can't do this</span>
+}
+
+<span class="kw">while</span> (lit.<span class="fn">hasPrevious</span>()) { <span class="cm">// walk BACKWARD from wherever next() left off</span>
+    <span class="ty">System</span>.out.<span class="fn">println</span>(lit.<span class="fn">previous</span>());
+}
+<span class="cm">// list is now [1, 20, 3]</span></pre></div>
+    <div id="it-cme" class="ct-pane"><pre><span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; list = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;(<span class="ty">List</span>.<span class="fn">of</span>(1, 2, 3, 4));
+
+<span class="kw">for</span> (<span class="ty">Integer</span> x : list) {
+    <span class="kw">if</span> (x == 2) list.<span class="fn">remove</span>(x); <span class="cm">// modifying the list WHILE the for-each loop's hidden</span>
+}                                <span class="cm">// Iterator is still using it -> ConcurrentModificationException</span>
+
+<span class="cm">// WHY: the for-each loop desugars to using list.iterator() internally.</span>
+<span class="cm">// Every structural modification (add/remove) increments an internal</span>
+<span class="cm">// modCount field. Each call to it.next() checks "does modCount still</span>
+<span class="cm">// match what I saw when I was created?" — if not, it throws immediately,</span>
+<span class="cm">// rather than risk silently corrupted/undefined iteration behavior</span></pre></div>
+    <div id="it-safe" class="ct-pane"><pre><span class="cm">// FIX 1: use the Iterator's OWN remove() — it updates modCount correctly</span>
+<span class="ty">Iterator</span>&lt;<span class="ty">Integer</span>&gt; it = list.<span class="fn">iterator</span>();
+<span class="kw">while</span> (it.<span class="fn">hasNext</span>()) {
+    <span class="kw">if</span> (it.<span class="fn">next</span>() == 2) it.<span class="fn">remove</span>(); <span class="cm">// SAFE — the only removal the iterator itself sanctions</span>
+}
+
+<span class="cm">// FIX 2 (Java 8+): removeIf() — cleanest for simple predicate-based removal</span>
+list.<span class="fn">removeIf</span>(x -&gt; x == 2);
+
+<span class="cm">// FIX 3: iterate over a COPY if you need to modify the original freely</span>
+<span class="kw">for</span> (<span class="ty">Integer</span> x : <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;(list)) {
+    <span class="kw">if</span> (x == 2) list.<span class="fn">remove</span>(x);
+}</pre></div>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 17: ARRAYS UTILITY CLASS ═══ -->
+<section class="section" id="arrays-utility">
+  <div class="section-header"><span class="section-eyebrow">java.util.Arrays</span><span class="section-rule"></span></div>
+  <h2>Arrays Utility Class</h2>
+  <p class="section-intro">A static-method toolbox for working with plain arrays — sorting, searching, filling, comparing, and converting to/from Lists. Every method is <code class="inline">static</code>, called as <code class="inline">Arrays.method(...)</code>, never instantiated.</p>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'ar-sort')">sort()</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ar-binarysearch')">binarySearch()</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ar-fill')">fill()</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ar-copyof')">copyOf() / copyOfRange()</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ar-compare')">compare() &amp; equals()</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ar-comparator')">sort() with a Comparator</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ar-aslist')">asList() — the "fixed-size" trap</div>
+    </div>
+    <div id="ar-sort" class="ct-pane active"><pre><span class="kw">int</span>[] a = {5, 2, 8, 1, 9};
+<span class="ty">Arrays</span>.<span class="fn">sort</span>(a);         <span class="cm">// [1, 2, 5, 8, 9] — ascending, in place</span>
+<span class="ty">Arrays</span>.<span class="fn">sort</span>(a, 1, 3);   <span class="cm">// sort only the [from, to) range — indices 1 and 2 here</span>
+
+<span class="cm">// Primitive int[] sort uses Dual-Pivot Quicksort — O(n log n) average, NOT stable</span>
+<span class="cm">// Object[] sort (e.g. Integer[], String[]) uses TimSort — O(n log n), STABLE</span>
+<span class="cm">// This stability difference matters for multi-key sorts — see the</span>
+<span class="cm">// Comparable vs Comparator section for chained/stable sorting</span></pre></div>
+    <div id="ar-binarysearch" class="ct-pane"><pre><span class="kw">int</span>[] a = {1, 2, 5, 8, 9}; <span class="cm">// MUST be sorted first — binarySearch's precondition</span>
+
+<span class="kw">int</span> idx = <span class="ty">Arrays</span>.<span class="fn">binarySearch</span>(a, 8); <span class="cm">// 3 — index if found</span>
+<span class="kw">int</span> missing = <span class="ty">Arrays</span>.<span class="fn">binarySearch</span>(a, 4); <span class="cm">// negative — NOT found</span>
+<span class="cm">// When not found, the return is: -(insertion point) - 1</span>
+<span class="cm">// so you can recover the insertion point via: -(missing) - 1</span></pre></div>
+    <div id="ar-fill" class="ct-pane"><pre><span class="kw">int</span>[] a = <span class="kw">new</span> <span class="kw">int</span>[5];
+<span class="ty">Arrays</span>.<span class="fn">fill</span>(a, 10);       <span class="cm">// [10, 10, 10, 10, 10] — whole array</span>
+<span class="ty">Arrays</span>.<span class="fn">fill</span>(a, 1, 3, 0); <span class="cm">// [10, 0, 0, 10, 10] — fill only range [1, 3)</span>
+
+<span class="cm">// Common DSA use: initializing a dp[] or visited[] array to a sentinel value</span>
+<span class="kw">int</span>[] dp = <span class="kw">new</span> <span class="kw">int</span>[n];
+<span class="ty">Arrays</span>.<span class="fn">fill</span>(dp, <span class="ty">Integer</span>.MAX_VALUE);</pre></div>
+    <div id="ar-copyof" class="ct-pane"><pre><span class="kw">int</span>[] a = {1, 2, 3, 4, 5};
+
+<span class="kw">int</span>[] b = <span class="ty">Arrays</span>.<span class="fn">copyOf</span>(a, 4);        <span class="cm">// [1, 2, 3, 4] — first 4 elements, new array</span>
+<span class="kw">int</span>[] c = <span class="ty">Arrays</span>.<span class="fn">copyOf</span>(a, 8);        <span class="cm">// [1, 2, 3, 4, 5, 0, 0, 0] — PADS with default value if longer</span>
+<span class="kw">int</span>[] d = <span class="ty">Arrays</span>.<span class="fn">copyOfRange</span>(a, 1, 4); <span class="cm">// [2, 3, 4] — copy of range [1, 4)</span></pre></div>
+    <div id="ar-compare" class="ct-pane"><pre><span class="kw">int</span>[] x = {1, 2, 3};
+<span class="kw">int</span>[] y = {1, 2, 4};
+
+<span class="ty">Arrays</span>.<span class="fn">compare</span>(x, y); <span class="cm">// LEXICOGRAPHIC comparison —</span>
+<span class="cm">//  1  -> x is "greater" (first array)</span>
+<span class="cm">//  0  -> arrays are equal element-by-element</span>
+<span class="cm">// -1  -> y is "greater" (second array)</span>
+<span class="cm">// Here: returns a NEGATIVE value (x &lt; y, since 3 &lt; 4 at the first differing index)</span>
+
+<span class="ty">Arrays</span>.<span class="fn">equals</span>(x, y); <span class="cm">// false — plain boolean element-wise equality, NOT ordering</span></pre></div>
+    <div id="ar-comparator" class="ct-pane"><pre><span class="cm">// Arrays.sort(primitiveArray, comparator) does NOT compile — primitives</span>
+<span class="cm">// have no natural way to plug into a Comparator&lt;T&gt;. You need a REFERENCE array:</span>
+<span class="ty">Integer</span>[] boxed = {5, 2, 8, 1};
+
+<span class="kw">class</span> <span class="ty">My</span> <span class="kw">implements</span> <span class="ty">Comparator</span>&lt;<span class="ty">Integer</span>&gt; {
+    <span class="an">@Override</span>
+    <span class="kw">public</span> <span class="kw">int</span> <span class="fn">compare</span>(<span class="ty">Integer</span> i1, <span class="ty">Integer</span> i2) {
+        <span class="kw">if</span> (i1 &lt; i2) <span class="kw">return</span> 1;
+        <span class="kw">if</span> (i1 &gt; i2) <span class="kw">return</span> -1;
+        <span class="kw">return</span> 0;
+    } <span class="cm">// descending order</span>
+}
+<span class="ty">Arrays</span>.<span class="fn">sort</span>(boxed, <span class="kw">new</span> <span class="ty">My</span>()); <span class="cm">// [8, 5, 2, 1]</span>
+<span class="ty">Arrays</span>.<span class="fn">sort</span>(boxed, (a, b) -&gt; b - a); <span class="cm">// same result, modern lambda form</span></pre></div>
+    <div id="ar-aslist" class="ct-pane"><pre><span class="ty">Integer</span>[] arr = {1, 2, 3};
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; list = <span class="ty">Arrays</span>.<span class="fn">asList</span>(arr); <span class="cm">// a FIXED-SIZE view backed by the array — NOT a normal ArrayList</span>
+
+<span class="cm">// list.add(4); // throws UnsupportedOperationException — can't resize a fixed view</span>
+list.<span class="fn">set</span>(0, 99); <span class="cm">// this WORKS — and mutates the underlying arr[] too, since it's a VIEW</span>
+<span class="ty">System</span>.out.<span class="fn">println</span>(arr[0]); <span class="cm">// 99 — the array changed through the "list"</span>
+
+<span class="cm">// Want a REAL, resizable, independent list? Wrap it explicitly:</span>
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; realList = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;(<span class="ty">Arrays</span>.<span class="fn">asList</span>(arr));
+realList.<span class="fn">add</span>(4); <span class="cm">// fine now</span></pre></div>
+  </div>
+
+  <div class="warn-box">
+    <span class="tip-icon">⚠️</span>
+    <span class="warn-text"><strong>Interview trap:</strong> <code class="inline">Arrays.asList()</code> does NOT return a normal mutable list — it's a fixed-size view directly backed by the original array. Calling <code class="inline">.add()</code> or <code class="inline">.remove()</code> on it throws <code class="inline">UnsupportedOperationException</code>. This trips up nearly everyone once, usually while trying to quickly build a mutable list from array literals.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 18: COLLECTIONS UTILITY CLASS ═══ -->
+<section class="section" id="collections-utility">
+  <div class="section-header"><span class="section-eyebrow">java.util.Collections</span><span class="section-rule"></span></div>
+  <h2>Collections Utility Class</h2>
+  <p class="section-intro">Not to be confused with the <code class="inline">Collection</code> interface — this is a static-method toolbox operating ON collections: sorting, searching, wrapping for immutability/thread-safety, and a handful of quick factory methods.</p>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'cu-sort')">sort() &amp; reverse()</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'cu-minmax')">min() / max() / frequency()</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'cu-immutable')">unmodifiableList() vs List.of()</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'cu-sync')">synchronizedList() — thread safety</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'cu-empty')">emptyList() / singletonList()</div>
+    </div>
+    <div id="cu-sort" class="ct-pane active"><pre><span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; list = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;(<span class="ty">List</span>.<span class="fn">of</span>(3, 1, 4, 1, 5));
+
+<span class="ty">Collections</span>.<span class="fn">sort</span>(list);                     <span class="cm">// [1, 1, 3, 4, 5] — natural order, needs Comparable</span>
+<span class="ty">Collections</span>.<span class="fn">sort</span>(list, <span class="ty">Collections</span>.<span class="fn">reverseOrder</span>()); <span class="cm">// [5, 4, 3, 1, 1] — descending</span>
+<span class="ty">Collections</span>.<span class="fn">reverse</span>(list);                  <span class="cm">// reverses CURRENT order in place, doesn't sort</span>
+<span class="ty">Collections</span>.<span class="fn">shuffle</span>(list);                  <span class="cm">// randomizes order — useful for randomized testing</span>
+
+<span class="cm">// Note: List has its own instance method too, functionally equivalent:</span>
+list.<span class="fn">sort</span>(<span class="kw">null</span>); <span class="cm">// null Comparator = natural order — same as Collections.sort(list)</span></pre></div>
+    <div id="cu-minmax" class="ct-pane"><pre><span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; list = <span class="ty">List</span>.<span class="fn">of</span>(3, 1, 4, 1, 5, 9);
+
+<span class="ty">Collections</span>.<span class="fn">max</span>(list); <span class="cm">// 9</span>
+<span class="ty">Collections</span>.<span class="fn">min</span>(list); <span class="cm">// 1</span>
+<span class="ty">Collections</span>.<span class="fn">frequency</span>(list, 1); <span class="cm">// 2 — how many times 1 appears</span>
+
+<span class="cm">// Binary search on a SORTED list — mirrors Arrays.binarySearch</span>
+<span class="ty">Collections</span>.<span class="fn">binarySearch</span>(<span class="ty">List</span>.<span class="fn">of</span>(1, 3, 5, 7), 5); <span class="cm">// 2</span></pre></div>
+    <div id="cu-immutable" class="ct-pane"><pre><span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; mutable = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;(<span class="ty">List</span>.<span class="fn">of</span>(1, 2, 3));
+
+<span class="cm">// Collections.unmodifiableList() — a VIEW; changes to the underlying list</span>
+<span class="cm">// STILL show through, only direct mutation THROUGH the view is blocked</span>
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; view = <span class="ty">Collections</span>.<span class="fn">unmodifiableList</span>(mutable);
+mutable.<span class="fn">add</span>(4);
+<span class="ty">System</span>.out.<span class="fn">println</span>(view); <span class="cm">// [1, 2, 3, 4] — the view reflects the underlying change!</span>
+<span class="cm">// view.add(5); // throws UnsupportedOperationException</span>
+
+<span class="cm">// List.of() (Java 9+) — a genuinely IMMUTABLE copy, not a view over anything mutable</span>
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; truly_immutable = <span class="ty">List</span>.<span class="fn">of</span>(1, 2, 3);
+<span class="cm">// No way to mutate this at all, from any reference — the safer modern choice</span>
+<span class="cm">// when you just need a constant list, e.g. for a method's default return value</span></pre></div>
+    <div id="cu-sync" class="ct-pane"><pre><span class="cm">// Wraps a normal (unsynchronized) list with synchronized method access</span>
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; syncList = <span class="ty">Collections</span>.<span class="fn">synchronizedList</span>(<span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;());
+
+<span class="cm">// CAUTION: individual method calls (add, get, size) are synchronized, but</span>
+<span class="cm">// COMPOUND operations still need EXTERNAL synchronization to be atomic:</span>
+<span class="kw">synchronized</span> (syncList) { <span class="cm">// manual lock needed for check-then-act sequences</span>
+    <span class="kw">if</span> (!syncList.<span class="fn">contains</span>(5)) {
+        syncList.<span class="fn">add</span>(5);
+    }
+}
+<span class="cm">// Also, ITERATING a synchronized collection still requires manual</span>
+<span class="cm">// synchronization around the whole loop — the iterator itself isn't thread-safe</span>
+<span class="cm">// For most concurrent use cases, java.util.concurrent's ConcurrentHashMap /</span>
+<span class="cm">// CopyOnWriteArrayList are better modern choices than synchronizedXxx wrappers</span></pre></div>
+    <div id="cu-empty" class="ct-pane"><pre><span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; empty = <span class="ty">Collections</span>.<span class="fn">emptyList</span>();       <span class="cm">// immutable, shared singleton instance — no allocation</span>
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; single = <span class="ty">Collections</span>.<span class="fn">singletonList</span>(5); <span class="cm">// immutable, exactly one element</span>
+<span class="ty">Map</span>&lt;<span class="ty">String</span>, <span class="ty">Integer</span>&gt; singleMap = <span class="ty">Collections</span>.<span class="fn">singletonMap</span>(<span class="st">"key"</span>, 1);
+
+<span class="cm">// Useful for default return values, avoiding allocating a new empty</span>
+<span class="cm">// ArrayList() every time a method needs to return "nothing":</span>
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; <span class="fn">findMatches</span>(...) {
+    <span class="kw">if</span> (noMatches) <span class="kw">return</span> <span class="ty">Collections</span>.<span class="fn">emptyList</span>(); <span class="cm">// clean, no-allocation, obviously-empty signal</span>
+    ...
+}</pre></div>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 19: DSA PATTERNS ═══ -->
+<section class="section" id="dsa-patterns">
+  <div class="section-header"><span class="section-eyebrow">LeetCode Toolkit</span><span class="section-rule"></span></div>
+  <h2>Collections for Common DSA Patterns</h2>
+  <p class="section-intro">A quick-reference of which collection to reach for, mapped to the recurring problem shapes you'll hit constantly once you start solving LeetCode in Java instead of C++.</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th>Pattern</th><th>Collection</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Frequency counting</td><td>HashMap&lt;T, Integer&gt;</td><td>O(1) increment/lookup via merge()/getOrDefault()</td></tr>
+      <tr><td>Top-K / Kth largest</td><td>PriorityQueue</td><td>O(n log k) beats sorting the whole array when k &lt;&lt; n</td></tr>
+      <tr><td>Sliding window max/min</td><td>ArrayDeque (monotonic)</td><td>O(1) amortized per element, maintains a decreasing/increasing window</td></tr>
+      <tr><td>Graph adjacency list</td><td>Map&lt;Integer, List&lt;Integer&gt;&gt;</td><td>Sparse graphs — avoids an O(V²) adjacency matrix</td></tr>
+      <tr><td>Visited-node tracking (BFS/DFS)</td><td>HashSet / boolean[]</td><td>O(1) membership check; array is faster when node IDs are dense integers</td></tr>
+      <tr><td>Duplicate / "seen" detection</td><td>HashSet</td><td>O(1) add-and-check via the add() return value</td></tr>
+      <tr><td>Nearest value / range query</td><td>TreeMap / TreeSet</td><td>ceiling/floor/higher/lower — impossible with a HashMap</td></tr>
+      <tr><td>LRU / ordered cache</td><td>LinkedHashMap (accessOrder=true)</td><td>Built-in eviction hook via removeEldestEntry()</td></tr>
+      <tr><td>Monotonic stack (next greater element)</td><td>ArrayDeque used as a stack</td><td>Push/pop from one end, O(1) each</td></tr>
+      <tr><td>Union-Find / Disjoint Set</td><td>int[] parent array (custom, not a JDK class)</td><td>Java has no built-in Union-Find — you implement path compression + union by rank yourself</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'dsa-freq')">Frequency map — Two Sum / Anagram style</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'dsa-monostack')">Monotonic stack — Next Greater Element</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'dsa-graph')">Graph adjacency list + BFS</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'dsa-topk')">Top-K frequent elements</div>
+    </div>
+    <div id="dsa-freq" class="ct-pane active"><pre><span class="cm">// LeetCode 1 "Two Sum" — the canonical HashMap pattern</span>
+<span class="kw">int</span>[] <span class="fn">twoSum</span>(<span class="kw">int</span>[] nums, <span class="kw">int</span> target) {
+    <span class="ty">Map</span>&lt;<span class="ty">Integer</span>, <span class="ty">Integer</span>&gt; seen = <span class="kw">new</span> <span class="ty">HashMap</span>&lt;&gt;(); <span class="cm">// value -> index</span>
+    <span class="kw">for</span> (<span class="kw">int</span> i = 0; i &lt; nums.length; i++) {
+        <span class="kw">int</span> complement = target - nums[i];
+        <span class="kw">if</span> (seen.<span class="fn">containsKey</span>(complement)) {
+            <span class="kw">return</span> <span class="kw">new</span> <span class="kw">int</span>[]{seen.<span class="fn">get</span>(complement), i};
+        }
+        seen.<span class="fn">put</span>(nums[i], i);
+    }
+    <span class="kw">return</span> <span class="kw">new</span> <span class="kw">int</span>[]{};
+} <span class="cm">// O(n) time, O(n) space — one pass instead of the naive O(n²)</span>
+
+<span class="cm">// LeetCode 242 "Valid Anagram" — frequency map comparison</span>
+<span class="kw">boolean</span> <span class="fn">isAnagram</span>(<span class="ty">String</span> s, <span class="ty">String</span> t) {
+    <span class="kw">if</span> (s.length() != t.length()) <span class="kw">return</span> <span class="kw">false</span>;
+    <span class="ty">Map</span>&lt;<span class="ty">Character</span>, <span class="ty">Integer</span>&gt; count = <span class="kw">new</span> <span class="ty">HashMap</span>&lt;&gt;();
+    <span class="kw">for</span> (<span class="kw">char</span> c : s.<span class="fn">toCharArray</span>()) count.<span class="fn">merge</span>(c, 1, <span class="ty">Integer</span>::sum);
+    <span class="kw">for</span> (<span class="kw">char</span> c : t.<span class="fn">toCharArray</span>()) count.<span class="fn">merge</span>(c, -1, <span class="ty">Integer</span>::sum);
+    <span class="kw">return</span> count.<span class="fn">values</span>().<span class="fn">stream</span>().<span class="fn">allMatch</span>(v -&gt; v == 0);
+}</pre></div>
+    <div id="dsa-monostack" class="ct-pane"><pre><span class="cm">// LeetCode 496 "Next Greater Element" — the monotonic (decreasing) stack pattern</span>
+<span class="kw">int</span>[] <span class="fn">nextGreaterElement</span>(<span class="kw">int</span>[] nums) {
+    <span class="kw">int</span>[] result = <span class="kw">new</span> <span class="kw">int</span>[nums.length];
+    <span class="ty">Arrays</span>.<span class="fn">fill</span>(result, -1);
+    <span class="ty">Deque</span>&lt;<span class="ty">Integer</span>&gt; stack = <span class="kw">new</span> <span class="ty">ArrayDeque</span>&lt;&gt;(); <span class="cm">// stores INDICES, kept in decreasing value order</span>
+
+    <span class="kw">for</span> (<span class="kw">int</span> i = 0; i &lt; nums.length; i++) {
+        <span class="kw">while</span> (!stack.<span class="fn">isEmpty</span>() &amp;&amp; nums[stack.<span class="fn">peek</span>()] &lt; nums[i]) {
+            result[stack.<span class="fn">pop</span>()] = nums[i]; <span class="cm">// found the "next greater" for whatever's on top</span>
+        }
+        stack.<span class="fn">push</span>(i);
+    }
+    <span class="kw">return</span> result;
+} <span class="cm">// O(n) — each index is pushed and popped at most once, despite the nested loop look</span></pre></div>
+    <div id="dsa-graph" class="ct-pane"><pre><span class="cm">// Building a graph and running BFS — the standard Map&lt;Integer, List&lt;Integer&gt;&gt; adjacency list</span>
+<span class="ty">Map</span>&lt;<span class="ty">Integer</span>, <span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt;&gt; graph = <span class="kw">new</span> <span class="ty">HashMap</span>&lt;&gt;();
+
+<span class="kw">void</span> <span class="fn">addEdge</span>(<span class="kw">int</span> u, <span class="kw">int</span> v) {
+    graph.<span class="fn">computeIfAbsent</span>(u, k -&gt; <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;()).<span class="fn">add</span>(v); <span class="cm">// auto-creates the list on first edge from u</span>
+    graph.<span class="fn">computeIfAbsent</span>(v, k -&gt; <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;()).<span class="fn">add</span>(u); <span class="cm">// undirected — add both directions</span>
+}
+
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; <span class="fn">bfs</span>(<span class="kw">int</span> start) {
+    <span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; order = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;();
+    <span class="ty">Set</span>&lt;<span class="ty">Integer</span>&gt; visited = <span class="kw">new</span> <span class="ty">HashSet</span>&lt;&gt;();
+    <span class="ty">Queue</span>&lt;<span class="ty">Integer</span>&gt; queue = <span class="kw">new</span> <span class="ty">ArrayDeque</span>&lt;&gt;();
+
+    queue.<span class="fn">offer</span>(start);
+    visited.<span class="fn">add</span>(start);
+
+    <span class="kw">while</span> (!queue.<span class="fn">isEmpty</span>()) {
+        <span class="kw">int</span> node = queue.<span class="fn">poll</span>();
+        order.<span class="fn">add</span>(node);
+        <span class="kw">for</span> (<span class="kw">int</span> neighbor : graph.<span class="fn">getOrDefault</span>(node, <span class="ty">List</span>.<span class="fn">of</span>())) {
+            <span class="kw">if</span> (visited.<span class="fn">add</span>(neighbor)) { <span class="cm">// add() returns false if already visited — a neat one-liner combo</span>
+                queue.<span class="fn">offer</span>(neighbor);
+            }
+        }
+    }
+    <span class="kw">return</span> order;
+}</pre></div>
+    <div id="dsa-topk" class="ct-pane"><pre><span class="cm">// LeetCode 347 "Top K Frequent Elements" — HashMap + PriorityQueue combo,</span>
+<span class="cm">// one of the most common two-collection combos in interviews</span>
+<span class="kw">int</span>[] <span class="fn">topKFrequent</span>(<span class="kw">int</span>[] nums, <span class="kw">int</span> k) {
+    <span class="ty">Map</span>&lt;<span class="ty">Integer</span>, <span class="ty">Integer</span>&gt; freq = <span class="kw">new</span> <span class="ty">HashMap</span>&lt;&gt;();
+    <span class="kw">for</span> (<span class="kw">int</span> n : nums) freq.<span class="fn">merge</span>(n, 1, <span class="ty">Integer</span>::sum);
+
+    <span class="cm">// min-heap of size k, ordered by FREQUENCY (ascending) — smallest freq evicted first</span>
+    <span class="ty">PriorityQueue</span>&lt;<span class="ty">Map</span>.<span class="ty">Entry</span>&lt;<span class="ty">Integer</span>, <span class="ty">Integer</span>&gt;&gt; heap =
+        <span class="kw">new</span> <span class="ty">PriorityQueue</span>&lt;&gt;((a, b) -&gt; a.<span class="fn">getValue</span>() - b.<span class="fn">getValue</span>());
+
+    <span class="kw">for</span> (<span class="ty">Map</span>.<span class="ty">Entry</span>&lt;<span class="ty">Integer</span>, <span class="ty">Integer</span>&gt; entry : freq.<span class="fn">entrySet</span>()) {
+        heap.<span class="fn">offer</span>(entry);
+        <span class="kw">if</span> (heap.<span class="fn">size</span>() &gt; k) heap.<span class="fn">poll</span>();
+    }
+
+    <span class="kw">int</span>[] result = <span class="kw">new</span> <span class="kw">int</span>[k];
+    <span class="kw">for</span> (<span class="kw">int</span> i = k - 1; i &gt;= 0; i--) result[i] = heap.<span class="fn">poll</span>().<span class="fn">getKey</span>();
+    <span class="kw">return</span> result;
+} <span class="cm">// O(n log k) — the HashMap+PriorityQueue combo generalizes to countless</span>
+  <span class="cm">// "top K by some computed metric" problems</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Transition tip:</strong> the biggest mental shift from C++ isn't syntax, it's that Java has NO operator overloading — <code class="inline">map[key]++</code> becomes <code class="inline">map.merge(key, 1, Integer::sum)</code>, and container comparisons/output need explicit methods (<code class="inline">.equals()</code>, <code class="inline">Arrays.toString()</code>) instead of <code class="inline">==</code> or <code class="inline">cout &lt;&lt;</code>. Once merge()/getOrDefault()/computeIfAbsent() feel natural, the rest of the transition is just renaming methods.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 20: FAANG Q&A ═══ -->
+<section class="section" id="faang-qa">
+  <div class="section-header"><span class="section-eyebrow">FAANG Rapid Fire</span><span class="section-rule"></span></div>
+  <h2>FAANG Rapid-Fire Q&amp;A — Product-Based Interview Questions</h2>
+  <p class="section-intro">Collections questions cluster around implementation choice justification, HashMap internals, and complexity trade-offs. These are the ones that come up constantly in product-based company interviews.</p>
+
+  <p class="sub-heading">Behavior / output prediction</p>
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'pq-removeoverload')">remove(int) vs remove(Object)</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pq-hashmapnull')">HashMap null key behavior</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pq-immutableview')">unmodifiableList "immutability" trap</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pq-pqiteration')">PriorityQueue iteration order</div>
+    </div>
+    <div id="pq-removeoverload" class="ct-pane active"><pre><span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; list = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;(<span class="ty">List</span>.<span class="fn">of</span>(10, 20, 30));
+list.<span class="fn">remove</span>(1);         <span class="cm">// Q: what does the list contain after this?</span>
+<span class="cm">// A: [10, 30] — remove(int) is INDEX-based; removed the element AT index 1 (value 20)</span>
+
+list.<span class="fn">remove</span>(<span class="ty">Integer</span>.valueOf(10)); <span class="cm">// removes the VALUE 10 (via the Object overload) -> [30]</span>
+<span class="cm">// The overload resolution is based on the STATIC type of the argument —</span>
+<span class="cm">// an int literal picks remove(int), an Integer object picks remove(Object)</span></pre></div>
+    <div id="pq-hashmapnull" class="ct-pane"><pre><span class="ty">Map</span>&lt;<span class="ty">String</span>, <span class="ty">Integer</span>&gt; hm = <span class="kw">new</span> <span class="ty">HashMap</span>&lt;&gt;();
+hm.<span class="fn">put</span>(<span class="kw">null</span>, 1);      <span class="cm">// Q: does this compile / work?</span>
+hm.<span class="fn">put</span>(<span class="st">"a"</span>, <span class="kw">null</span>);   <span class="cm">// Q: what about this?</span>
+<span class="cm">// A: BOTH work fine on HashMap — exactly ONE null key is allowed (stored</span>
+<span class="cm">// in bucket 0, special-cased), and any number of null VALUES are allowed.</span>
+<span class="cm">// Hashtable and ConcurrentHashMap, by contrast, allow NEITHER —</span>
+<span class="cm">// throwing NullPointerException immediately on either</span></pre></div>
+    <div id="pq-immutableview" class="ct-pane"><pre><span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; mutable = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;(<span class="ty">List</span>.<span class="fn">of</span>(1, 2, 3));
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; readOnly = <span class="ty">Collections</span>.<span class="fn">unmodifiableList</span>(mutable);
+
+mutable.<span class="fn">add</span>(4);
+<span class="ty">System</span>.out.<span class="fn">println</span>(readOnly.<span class="fn">size</span>()); <span class="cm">// Q: what does this print?</span>
+<span class="cm">// A: 4 — NOT 3! unmodifiableList() wraps the SAME underlying list; it only</span>
+<span class="cm">// blocks mutation calls made THROUGH the wrapper. Changes to the original</span>
+<span class="cm">// still show through. This is "read-only," not truly "immutable" — a very</span>
+<span class="cm">// commonly misunderstood distinction</span></pre></div>
+    <div id="pq-pqiteration" class="ct-pane"><pre><span class="ty">PriorityQueue</span>&lt;<span class="ty">Integer</span>&gt; pq = <span class="kw">new</span> <span class="ty">PriorityQueue</span>&lt;&gt;(<span class="ty">List</span>.<span class="fn">of</span>(5, 1, 8, 2));
+<span class="kw">for</span> (<span class="kw">int</span> x : pq) <span class="ty">System</span>.out.<span class="fn">print</span>(x + <span class="st">" "</span>); <span class="cm">// Q: does this print "1 2 5 8"?</span>
+<span class="cm">// A: NOT guaranteed! for-each / iterator() on a PriorityQueue visits the</span>
+<span class="cm">// internal array in whatever order the heap happens to store elements —</span>
+<span class="cm">// only sorted by the heap PROPERTY (each parent &lt;= its children), not</span>
+<span class="cm">// fully sorted. Only repeated poll() calls guarantee ascending output.</span></pre></div>
+  </div>
+
+  <p class="sub-heading">Short-answer FAANG questions</p>
+  <div class="cheat-grid">
+    <div class="cheat-card">
+      <h4>❓ ArrayList vs LinkedList — when would you actually choose each?</h4>
+      <ul>
+        <li>ArrayList: default choice — O(1) random access, better cache locality, most real workloads favor it</li>
+        <li>LinkedList: frequent insert/delete at both ends with rare random access — e.g. implementing a Deque manually (though ArrayDeque usually wins even there)</li>
+        <li>In practice, ArrayList wins most benchmarks even for "LinkedList's strong suit" due to cache effects</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ How does HashMap handle collisions, and how did that change in Java 8?</h4>
+      <ul>
+        <li>Colliding keys land in the same bucket, stored as a linked list of entries pre-Java 8</li>
+        <li>Java 8+: a bucket converts to a red-black tree once it exceeds 8 entries (with table size ≥ 64) — worst-case O(n) becomes O(log n)</li>
+        <li>Requires hashCode()/equals() to be correctly implemented for correctness at all</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Why is HashMap's default initial capacity always a power of 2?</h4>
+      <ul>
+        <li>Bucket index is computed via <code class="inline">hash & (capacity - 1)</code> — a bitmask trick that's only equivalent to modulo when capacity is a power of 2</li>
+        <li>Bitwise AND is significantly cheaper than the % operator — a deliberate performance optimization</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ HashSet vs TreeSet vs LinkedHashSet — pick one for each scenario?</h4>
+      <ul>
+        <li>Just need fast membership, don't care about order → HashSet</li>
+        <li>Need sorted iteration or nearest-value queries → TreeSet</li>
+        <li>Need insertion-order iteration with fast lookup → LinkedHashSet</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Why does PriorityQueue default to a min-heap?</h4>
+      <ul>
+        <li>Pure JDK design convention — matches natural ordering (Comparable's compareTo), where "smallest first" is the default sense of "least"</li>
+        <li>C++'s priority_queue defaults the opposite way (max-heap) — a common source of ported-bug in cross-language interviews</li>
+        <li>Both directions are one line away via a Comparator either way</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ What makes an iterator "fail-fast," and why design it that way?</h4>
+      <ul>
+        <li>Detects concurrent structural modification via a modCount check, throws ConcurrentModificationException rather than risk silently wrong/corrupted iteration</li>
+        <li>It's a best-effort DEBUGGING aid, not a hard concurrency guarantee — not reliably thrown in all cases, and never rely on it for actual thread-safety</li>
+        <li>Fail-safe alternatives (ConcurrentHashMap) trade this detection for lock-free concurrent iteration instead</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Why can't you just use a HashMap when order matters?</h4>
+      <ul>
+        <li>HashMap gives NO ordering guarantee at all — bucket layout depends on hash values and internal resizing history, not insertion sequence</li>
+        <li>LinkedHashMap (insertion or access order) or TreeMap (sorted order) are the correct tools depending on which "order" you actually need</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Explain how you'd implement an LRU cache, and why LinkedHashMap fits.</h4>
+      <ul>
+        <li>Need O(1) get/put AND O(1) "move to most-recent" AND O(1) eviction of least-recent — a hand-rolled HashMap + doubly linked list combo</li>
+        <li>LinkedHashMap with accessOrder=true already threads a doubly linked list through its entries in access order — override removeEldestEntry() and you get the whole thing "for free"</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ What's the time complexity difference between TreeMap and HashMap, and when do you accept the tradeoff?</h4>
+      <ul>
+        <li>HashMap: O(1) average for get/put/remove. TreeMap: O(log n) for the same operations</li>
+        <li>Accept TreeMap's overhead whenever you need sorted iteration, range queries, or nearest-key lookups — capabilities HashMap simply cannot provide</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Comparable vs Comparator — which would you use to sort Employees by salary, then by name?</h4>
+      <ul>
+        <li>Comparable if "by salary" is genuinely the class's ONE natural, canonical order</li>
+        <li>Comparator (with thenComparing for the name tie-break) for anything else — especially since you likely want MULTIPLE different sort orders for the same Employee class across your codebase</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Why is Vector/Stack/Hashtable considered legacy, and what replaces each?</h4>
+      <ul>
+        <li>All three predate the Collections Framework and are unconditionally synchronized — a real performance cost even single-threaded</li>
+        <li>Vector → ArrayList. Stack → Deque (ArrayDeque). Hashtable → HashMap (single-threaded) or ConcurrentHashMap (multi-threaded)</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ What's the actual difference between Collection and Collections?</h4>
+      <ul>
+        <li>Collection (singular): the root INTERFACE — List, Set, Queue all extend it</li>
+        <li>Collections (plural): a static UTILITY CLASS of helper methods operating on collections — sort, reverse, unmodifiableList, etc.</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Design a data structure with O(1) insert, delete, AND getRandom() — which collections would you combine?</h4>
+      <ul>
+        <li>ArrayList for O(1) getRandom() (index-based) and O(1) amortized insert (append)</li>
+        <li>HashMap&lt;value, index&gt; to locate any value's position in O(1)</li>
+        <li>Delete trick: swap the target with the LAST array element, update the map, then remove the last element in O(1) — avoids the O(n) shift a naive middle-removal would cost</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 21: CHEATSHEET ═══ -->
+<section class="section" id="cheatsheet">
+  <div class="section-header"><span class="section-eyebrow">Interview Reference</span><span class="section-rule"></span></div>
+  <h2>Interview Cheatsheet</h2>
+  <p class="section-intro">One-liners for when you're under pressure. Know these cold.</p>
+
+  <div class="cheat-grid">
+    <div class="cheat-card">
+      <h4>🗂️ The hierarchy essentials</h4>
+      <ul>
+        <li>Iterable → Collection → {List, Queue, Set}</li>
+        <li>Map is SEPARATE — does not extend Collection</li>
+        <li>Collection (interface) ≠ Collections (utility class)</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>📋 ArrayList vs LinkedList</h4>
+      <ul>
+        <li>ArrayList: O(1) get/set, amortized O(1) end-insert, O(n) middle insert/delete</li>
+        <li>LinkedList: O(1) head/tail insert/delete, O(n) random access</li>
+        <li>ArrayList wins most real benchmarks — default to it</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🧱 Queue method families</h4>
+      <ul>
+        <li>Throws: add() / remove() / element()</li>
+        <li>Returns sentinel: offer() / poll() / peek()</li>
+        <li>Prefer the offer/poll/peek family — null-checkable, no try/catch</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🔀 ArrayDeque as stack/queue</h4>
+      <ul>
+        <li>Stack: push()/pop()/peek() on the head</li>
+        <li>Queue: offer() tail, poll() head</li>
+        <li>Prefer over legacy Stack/LinkedList — faster, cache-friendly</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>⛰️ PriorityQueue</h4>
+      <ul>
+        <li>MIN-heap by default (opposite of C++!)</li>
+        <li>Max-heap: new PriorityQueue&lt;&gt;(Collections.reverseOrder())</li>
+        <li>Iteration order ≠ sorted order — only poll() guarantees it</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🧮 HashMap internals</h4>
+      <ul>
+        <li>Array of buckets; index = hash(key) & (capacity - 1)</li>
+        <li>Collisions → linked list, treeified to red-black tree past 8 entries (Java 8+)</li>
+        <li>equals()-equal objects MUST share hashCode(), or lookups silently fail</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🔗 LinkedHashMap &amp; LRU</h4>
+      <ul>
+        <li>Hash table + doubly linked list for order</li>
+        <li>accessOrder=true → order by last access, not insertion</li>
+        <li>Override removeEldestEntry() for automatic LRU eviction</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🌳 TreeMap / TreeSet</h4>
+      <ul>
+        <li>Red-Black Tree — O(log n) everything, always sorted</li>
+        <li>ceiling/floor/higher/lower — nearest-value queries HashMap can't do</li>
+        <li>Custom objects need Comparable&lt;T&gt; or an explicit Comparator</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>⚖️ Comparable vs Comparator</h4>
+      <ul>
+        <li>Comparable: ONE natural order, defined INSIDE the class (compareTo)</li>
+        <li>Comparator: MANY external orders (compare), as many as needed</li>
+        <li>Comparator.comparing().thenComparing() for multi-key sorts</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🚫 Legacy classes to avoid</h4>
+      <ul>
+        <li>Vector → use ArrayList</li>
+        <li>Stack → use Deque (ArrayDeque)</li>
+        <li>Hashtable → use HashMap or ConcurrentHashMap</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🔁 Iterators</h4>
+      <ul>
+        <li>Iterator: one-directional; ListIterator: bidirectional + set()/add()</li>
+        <li>Fail-fast: throws ConcurrentModificationException (ArrayList, HashMap)</li>
+        <li>Safe removal: it.remove(), or list.removeIf(predicate)</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🧰 Arrays vs Collections (utility classes)</h4>
+      <ul>
+        <li>Arrays.sort/binarySearch/fill/copyOf — operate on raw arrays</li>
+        <li>Collections.sort/max/min/unmodifiableList — operate on Collection objects</li>
+        <li>Arrays.asList() is a FIXED-SIZE view, not a resizable list</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🌉 C++ → Java quick map</h4>
+      <ul>
+        <li>vector→ArrayList, unordered_map→HashMap, map→TreeMap</li>
+        <li>priority_queue (max default) → PriorityQueue (MIN default!)</li>
+        <li>stack→Deque, pair→Map.Entry or int[]/custom class</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🎯 DSA pattern → collection</h4>
+      <ul>
+        <li>Frequency count → HashMap&lt;T,Integer&gt; + merge()</li>
+        <li>Top-K → PriorityQueue, size-capped at k</li>
+        <li>Sliding window / monotonic stack → ArrayDeque</li>
+        <li>Graph adjacency → Map&lt;Integer,List&lt;Integer&gt;&gt; + computeIfAbsent()</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🚨 Top interview traps</h4>
+      <ul>
+        <li>list.remove(int) is index-based; remove(Integer) is value-based</li>
+        <li>Arrays.asList() throws on add()/remove() — fixed-size view</li>
+        <li>Collections.unmodifiableList() is a VIEW, not a true immutable copy</li>
+        <li>PriorityQueue iteration order ≠ sorted order</li>
+        <li>Java's PriorityQueue min-heap default is OPPOSITE of C++'s priority_queue</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="page-footer">
+  <span class="footer-brand">GrowthScript // Java Collections Bible</span>
+  <span class="footer-note">List · Set · Queue · Map · HashMap Internals · C++ STL Mapping · DSA Patterns</span>
+</footer>
+</main>
+
+<script>
+function ctSwitch(tab, id) {
+  const wrap = tab.closest('.code-tabs-wrap');
+  wrap.querySelectorAll('.ct-tab').forEach(t => t.classList.remove('active'));
+  wrap.querySelectorAll('.ct-pane').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+function switchTab(tab, id) {
+  const pair = tab.closest('.code-pair');
+  pair.querySelectorAll('.cpt').forEach(t => t.classList.remove('active'));
+  pair.querySelectorAll('.code-pane').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+function toggleTheme() {
+  const html = document.documentElement;
+  const dark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', dark ? 'light' : 'dark');
+  document.getElementById('btn-light').classList.toggle('active',  dark);
+  document.getElementById('btn-dark').classList.toggle('active',  !dark);
+  localStorage.setItem('collections-theme', dark ? 'light' : 'dark');
+}
+(function(){
+  const saved = localStorage.getItem('collections-theme');
+  if (saved === 'dark') {
+    document.documentElement.setAttribute('data-theme','dark');
+    document.getElementById('btn-light').classList.remove('active');
+    document.getElementById('btn-dark').classList.add('active');
+  }
+})();
+const sections  = document.querySelectorAll('section[id]');
+const sideLinks = document.querySelectorAll('.sidebar-link');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const id = e.target.id;
+      sideLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#'+id));
+    }
+  });
+}, { threshold: 0.15, rootMargin: '-60px 0px -60% 0px' });
+sections.forEach(s => obs.observe(s));
+</script>
+</body>
+</html>
