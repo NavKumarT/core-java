@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spring Boot Bible — Section 8: Service Discovery & Registration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0f14; --bg-elev:#111820; --bg-elev-2:#161f2a; --border:#233042;
+  --text:#dbe4ee; --text-dim:#8a9bb0; --text-faint:#5c6b7e;
+  --accent:#6DB33F; --accent-soft:#6DB33F22;
+  --accent-2:#4fa3d1; --accent-2-soft:#4fa3d122;
+  --sd:#2dd4bf; --sd-soft:#2dd4bf22;
+  --warn:#e0a94f; --warn-soft:#e0a94f22;
+  --danger:#e0655f; --danger-soft:#e0655f22;
+  --code-bg:#0d1420; --code-border:#1e2a3a;
+  --shadow: 0 8px 24px rgba(0,0,0,0.35); --radius: 10px; --sidebar-w: 300px;
+}
+html[data-theme="light"]{
+  --bg:#f6f4ee; --bg-elev:#ffffff; --bg-elev-2:#eef0e8; --border:#dcdccf;
+  --text:#1c231d; --text-dim:#586257; --text-faint:#8b9188;
+  --accent:#3f7d1f; --accent-soft:#3f7d1f1a;
+  --accent-2:#1f6f9c; --accent-2-soft:#1f6f9c1a;
+  --sd:#0f8f80; --sd-soft:#0f8f8018;
+  --warn:#8a5a12; --warn-soft:#8a5a1218;
+  --danger:#a3352f; --danger-soft:#a3352f18;
+  --code-bg:#fbfaf5; --code-border:#e2e0d2;
+  --shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;line-height:1.65;font-size:15.5px;}
+::selection{background:var(--sd-soft);color:var(--sd);}
+h1,h2,h3,h4{font-family:'Space Mono',monospace;letter-spacing:-0.01em;color:var(--text);}
+code, pre, .mono{font-family:'Space Mono',monospace;}
+a{color:var(--accent-2);text-decoration:none;}
+a:hover{text-decoration:underline;}
+
+.shell{display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;border-right:1px solid var(--border);background:var(--bg-elev);position:sticky;top:0;height:100vh;overflow-y:auto;padding:22px 16px 60px;}
+.sidebar::-webkit-scrollbar{width:6px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:4px;padding:0 6px;}
+.brand-badge{width:34px;height:34px;border-radius:8px;background:var(--sd);display:flex;align-items:center;justify-content:center;font-family:'Space Mono';font-weight:700;color:#0b0f14;font-size:13px;flex-shrink:0;}
+.brand-text{font-family:'Space Mono';font-weight:700;font-size:14.5px;line-height:1.2;}
+.brand-text span{display:block;font-size:10.5px;color:var(--text-faint);font-weight:400;margin-top:2px;letter-spacing:0.04em;}
+.theme-toggle{margin:14px 6px 20px;width:calc(100% - 12px);background:var(--bg-elev-2);border:1px solid var(--border);color:var(--text-dim);padding:8px 10px;border-radius:8px;font-family:'Inter';font-size:12.5px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
+.theme-toggle:hover{color:var(--text);border-color:var(--sd);}
+.nav-group{margin-bottom:6px;}
+.nav-group-title{font-size:10.5px;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-faint);padding:14px 8px 6px;font-family:'Space Mono';}
+.nav-link{display:block;padding:7px 10px;border-radius:7px;font-size:13px;color:var(--text-dim);margin-bottom:1px;border-left:2px solid transparent;}
+.nav-link:hover{background:var(--bg-elev-2);color:var(--text);text-decoration:none;}
+.nav-link.active{background:var(--sd-soft);color:var(--sd);border-left:2px solid var(--sd);font-weight:600;}
+.nav-link .vid-no{color:var(--text-faint);margin-right:5px;}
+
+main{flex:1;min-width:0;padding:48px 56px 120px;max-width:980px;}
+.hero{margin-bottom:44px;}
+.hero-eyebrow{font-family:'Space Mono';font-size:11.5px;color:var(--sd);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.hero-eyebrow::before{content:"";width:20px;height:1px;background:var(--sd);}
+.hero h1{font-size:32px;margin:0 0 12px;line-height:1.25;}
+.hero p{color:var(--text-dim);font-size:15.5px;max-width:680px;}
+.scope-box{margin-top:20px;border:1px solid var(--border);background:var(--bg-elev);border-radius:var(--radius);padding:16px 18px;font-size:13px;color:var(--text-dim);}
+.scope-box b{color:var(--text);}
+
+section.topic{margin-bottom:56px;scroll-margin-top:24px;}
+.topic-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;border-bottom:1px solid var(--border);padding-bottom:14px;}
+.topic-no{font-family:'Space Mono';color:var(--sd);font-size:13px;background:var(--sd-soft);padding:3px 9px;border-radius:20px;flex-shrink:0;}
+.topic-head h2{font-size:22px;margin:0;}
+.topic-sub{color:var(--text-faint);font-size:12.5px;margin:8px 0 22px;}
+
+p{color:var(--text-dim);}
+h3.subhead{font-size:16.5px;color:var(--text);margin:28px 0 10px;display:flex;align-items:center;gap:8px;}
+h3.subhead::before{content:"";width:3px;height:15px;background:var(--accent-2);border-radius:2px;}
+h4.minihead{font-size:13.5px;color:var(--text);margin:18px 0 8px;font-family:'Inter';font-weight:700;}
+ul,ol{color:var(--text-dim);padding-left:22px;}
+li{margin-bottom:6px;}
+strong{color:var(--text);}
+
+.ann-box{border:1px solid var(--code-border);background:var(--bg-elev);border-radius:var(--radius);margin:14px 0;overflow:hidden;}
+.ann-box-head{display:flex;align-items:center;gap:10px;padding:11px 16px;background:var(--sd-soft);border-bottom:1px solid var(--code-border);}
+.ann-tag{font-family:'Space Mono';font-weight:700;color:var(--sd);font-size:14px;}
+.ann-loc{margin-left:auto;font-size:10.5px;color:var(--text-faint);font-family:'Space Mono';text-transform:uppercase;letter-spacing:0.05em;}
+.ann-body{padding:12px 16px;}
+.ann-body p{margin:4px 0 8px;font-size:13.5px;}
+.ann-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0;}
+@media(max-width:760px){.ann-grid{grid-template-columns:1fr;}}
+
+.code-panel{border:1px solid var(--code-border);border-radius:var(--radius);overflow:hidden;margin:16px 0;background:var(--code-bg);}
+.code-tabs{display:flex;background:var(--bg-elev-2);border-bottom:1px solid var(--code-border);overflow-x:auto;}
+.code-tab{padding:9px 16px;font-family:'Space Mono';font-size:12px;color:var(--text-faint);cursor:pointer;border-right:1px solid var(--code-border);white-space:nowrap;user-select:none;}
+.code-tab:hover{color:var(--text-dim);}
+.code-tab.active{color:var(--sd);background:var(--code-bg);border-bottom:2px solid var(--sd);margin-bottom:-1px;}
+.code-body{position:relative;}
+.code-pane{display:none;padding:16px 18px;overflow-x:auto;}
+.code-pane.active{display:block;}
+pre{margin:0;font-size:12.8px;line-height:1.65;color:#c7d3e0;}
+html[data-theme="light"] pre{color:#333c30;}
+.kw{color:#c586c0;}
+.ann{color:var(--sd);font-weight:700;}
+.str{color:#ce9178;}
+.cm{color:var(--text-faint);font-style:italic;}
+.ty{color:#4ec9b0;}
+.cl{color:#e5c07b;}
+
+.callout{border-radius:var(--radius);padding:14px 16px;margin:16px 0;border:1px solid;font-size:13.5px;}
+.callout.info{background:var(--accent-2-soft);border-color:var(--accent-2);color:var(--text);}
+.callout.warn{background:var(--warn-soft);border-color:var(--warn);color:var(--text);}
+.callout.pitfall{background:var(--danger-soft);border-color:var(--danger);color:var(--text);}
+.callout b.lbl{display:block;font-family:'Space Mono';font-size:11px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;}
+.callout.info b.lbl{color:var(--accent-2);}
+.callout.warn b.lbl{color:var(--warn);}
+.callout.pitfall b.lbl{color:var(--danger);}
+.callout p{margin:0;color:var(--text-dim);}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left;color:var(--text-dim);}
+th{background:var(--bg-elev-2);color:var(--text);font-family:'Space Mono';font-size:11.5px;text-transform:uppercase;letter-spacing:0.04em;}
+tr:hover td{background:var(--bg-elev-2);}
+
+.diagram{border:1px solid var(--code-border);background:var(--code-bg);border-radius:var(--radius);padding:22px 18px;margin:18px 0;overflow-x:auto;}
+.dflow{display:flex;align-items:stretch;gap:10px;min-width:max-content;flex-wrap:wrap;}
+.dbox{flex-shrink:0;min-width:120px;border:1px solid var(--border);background:var(--bg-elev);border-radius:8px;padding:12px 14px;text-align:center;}
+.dbox .t{font-family:'Space Mono';font-size:12px;color:var(--text);font-weight:700;}
+.dbox .s{font-size:10.5px;color:var(--text-faint);margin-top:4px;}
+.dbox.accent{border-color:var(--sd);background:var(--sd-soft);}
+.dbox.accent .t{color:var(--sd);}
+.dbox.warn{border-color:var(--warn);background:var(--warn-soft);}
+.dbox.warn .t{color:var(--warn);}
+.dbox.dim{opacity:0.55;}
+.darrow{flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-family:'Space Mono';font-size:16px;min-width:24px;}
+.dstack{display:flex;flex-direction:column;gap:8px;}
+.dcol{display:flex;flex-direction:column;gap:8px;align-items:center;}
+.dphase-label{font-family:'Space Mono';font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;text-align:center;margin-top:8px;}
+
+.qa-section{margin-top:26px;}
+.qa-tabs{display:flex;gap:8px;margin-bottom:14px;}
+.qa-tab-btn{font-family:'Space Mono';font-size:11.5px;padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg-elev);color:var(--text-dim);cursor:pointer;text-transform:uppercase;letter-spacing:0.04em;}
+.qa-tab-btn.common.active{background:var(--accent-2-soft);border-color:var(--accent-2);color:var(--accent-2);}
+.qa-tab-btn.faang.active{background:var(--danger-soft);border-color:var(--danger);color:var(--danger);}
+.qa-pane{display:none;}
+.qa-pane.active{display:block;}
+details.qa{border:1px solid var(--border);border-radius:8px;margin-bottom:8px;background:var(--bg-elev);overflow:hidden;}
+details.qa[open]{border-color:var(--accent-2);}
+details.qa summary{padding:12px 16px;cursor:pointer;font-weight:600;font-size:13.8px;list-style:none;display:flex;align-items:flex-start;gap:10px;color:var(--text);}
+details.qa summary::-webkit-details-marker{display:none;}
+details.qa summary::before{content:"Q";flex-shrink:0;font-family:'Space Mono';font-size:11px;color:var(--accent-2);background:var(--accent-2-soft);width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+details.qa .qa-answer{padding:0 16px 16px 46px;color:var(--text-dim);font-size:13.5px;}
+details.qa .qa-answer p{margin:0 0 8px;color:var(--text-dim);}
+details.qa .qa-answer p:last-child{margin-bottom:0;}
+
+.divider{height:1px;background:linear-gradient(90deg,var(--border),transparent);margin:44px 0;}
+.footer-note{color:var(--text-faint);font-size:12px;text-align:center;padding:30px 0 10px;}
+
+@media(max-width:900px){
+  .shell{flex-direction:column;}
+  .sidebar{position:relative;width:100%;height:auto;}
+  main{padding:32px 20px 80px;}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-badge">◎</div>
+    <div class="brand-text">Spring Boot Bible<span>Section 8 · Discovery</span></div>
+  </div>
+  <button class="theme-toggle" id="themeToggle">🌙 Dark mode <span>⇄</span></button>
+
+  <div class="nav-group">
+    <div class="nav-group-title">Foundations</div>
+    <a class="nav-link" href="#traffic-intro"><span class="vid-no">102</span>Microservices Traffic</a>
+    <a class="nav-link" href="#discovery-intro"><span class="vid-no">103</span>Intro to Service Discovery</a>
+    <a class="nav-link" href="#why-not-lb"><span class="vid-no">104</span>Why Not Traditional LBs</a>
+    <a class="nav-link" href="#discovery-mechanics"><span class="vid-no">105</span>Discovery & Registration Mechanics</a>
+    <a class="nav-link" href="#client-side-discovery"><span class="vid-no">106</span>Client-Side Discovery & LB</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Eureka Setup</div>
+    <a class="nav-link" href="#spring-cloud-support"><span class="vid-no">107</span>Spring Cloud Support</a>
+    <a class="nav-link" href="#eureka-server-setup"><span class="vid-no">108</span>Eureka Server Setup</a>
+    <a class="nav-link" href="#accounts-eureka"><span class="vid-no">109</span>Accounts → Eureka</a>
+    <a class="nav-link" href="#loans-cards-eureka"><span class="vid-no">110</span>Loans & Cards → Eureka</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Lifecycle & Health</div>
+    <a class="nav-link" href="#deregistration"><span class="vid-no">111</span>De-registration on Shutdown</a>
+    <a class="nav-link" href="#heartbeats"><span class="vid-no">112</span>Heartbeat Mechanism</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Inter-Service Calls</div>
+    <a class="nav-link" href="#feign-client"><span class="vid-no">113-114</span>Feign Client</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Production Resilience</div>
+    <a class="nav-link" href="#self-preservation"><span class="vid-no">115</span>Eureka Self-Preservation Mode</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Docker Integration</div>
+    <a class="nav-link" href="#docker-images-sd"><span class="vid-no">116</span>Docker Images & Push</a>
+    <a class="nav-link" href="#compose-sd"><span class="vid-no">117</span>Update Docker Compose</a>
+    <a class="nav-link" href="#compose-start-sd"><span class="vid-no">118</span>Start via Compose</a>
+    <a class="nav-link" href="#e2e-demo-sd"><span class="vid-no">119</span>End-to-End Demo</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Advanced Note</div>
+    <a class="nav-link" href="#graalvm-note"><span class="vid-no">120</span>GraalVM Compatibility Note</a>
+  </div>
+</aside>
+
+<main>
+  <div class="hero">
+    <div class="hero-eyebrow">Section 8 · Spring Boot Bible</div>
+    <h1>Service Discovery & Registration in Microservices</h1>
+    <p>Every time Accounts needs to call Loans, it faces a question a monolith never has to ask: <em>"at this exact moment, which network address is a healthy instance of Loans actually running at?"</em> In a cloud-native system where instances scale up and down and get replaced constantly, that address is never fixed. This section covers the standard production answer — a self-updating service registry (Eureka), client-side discovery and load balancing, declarative inter-service calls (Feign), and the failure-detection mechanics (heartbeats, self-preservation) that keep the whole thing correct even when the network itself misbehaves.</p>
+    <div class="scope-box">
+      <b>How to use this document:</b> Topics 102–106 build the conceptual case for service discovery before any Eureka-specific code appears — worth reading in full even if you're impatient to get to the implementation, since "why client-side discovery over a traditional load balancer" is one of the most common system-design interview questions this section maps directly onto.
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="traffic-intro">
+    <div class="topic-head"><span class="topic-no">102</span><h2>Brief Introduction About Microservices Traffic</h2></div>
+    <p class="topic-sub">Two fundamentally different kinds of traffic flow through a microservices system — this section is about only one of them.</p>
+
+    <table>
+      <tr><th>Traffic type</th><th>Also called</th><th>Example</th><th>Concern of this section?</th></tr>
+      <tr><td><strong>Client-to-service</strong></td><td>North-south traffic</td><td>A mobile app calling <code>POST /api/create</code> on Accounts through a public-facing entry point</td><td>No — covered separately under API Gateway topics</td></tr>
+      <tr><td><strong>Service-to-service</strong></td><td>East-west traffic</td><td>Accounts internally calling Loans and Cards to assemble a "customer summary" response</td><td><strong>Yes — this entire section</strong></td></tr>
+    </table>
+
+    <p>East-west traffic is what makes microservices genuinely different from a monolith at the networking level: in a monolith, one module calling another is just a Java method call, resolved at compile time, with zero network involved. In microservices, that same logical dependency becomes a <strong>real network call</strong> to a separate, independently-deployed, independently-scaled process — one whose exact network location isn't fixed and can't be assumed.</p>
+
+    <div class="callout info"><b class="lbl">Why this deserves its own section</b><p>Section 4 already containerized these services and Section 6 centralized their configuration, but nothing so far has addressed <em>how one running service instance finds another running service instance's actual network address</em> at the moment it needs to call it. That's the entire subject of this section.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q1-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q1-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q1-common">
+        <details class="qa"><summary>What's the difference between north-south and east-west traffic?</summary><div class="qa-answer"><p>North-south traffic is external client traffic entering the system from outside (a browser or mobile app calling an API). East-west traffic is internal, service-to-service traffic within the system — one microservice calling another to fulfill part of a request.</p></div></details>
+        <details class="qa"><summary>Why does a monolith not have this problem at all?</summary><div class="qa-answer"><p>In a monolith, one module calling another is an in-process method call resolved at compile/class-load time — there's no network address to discover because both modules run in the same process. Microservices turn that same logical call into a real network call between separately deployed processes, which is exactly what introduces the "where is the other service right now" problem.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q1-faang">
+        <details class="qa"><summary>Why does the east-west vs north-south distinction matter for how you design security and observability, not just discovery?</summary><div class="qa-answer"><p>North-south traffic crosses a trust boundary (public internet to your system) and typically gets one consistent security/observability treatment at a single choke point — an API Gateway enforcing auth, rate limiting, and centralized logging for every external request. East-west traffic happens between already-trusted internal services, at a much higher volume and much lower per-call latency budget, so applying the same heavyweight gateway-style processing to every internal call would be both a performance problem and often unnecessary given the calls originate from your own trusted services. This is why internal service-to-service auth (e.g. mutual TLS, service-to-service tokens) and internal observability (distributed tracing propagated between services) are typically designed as separate, lighter-weight concerns from north-south API Gateway policy — a distinction interviewers listen for when discussing microservices security architecture.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="discovery-intro">
+    <div class="topic-head"><span class="topic-no">103</span><h2>Introduction to Service Discovery & Registration Inside Microservices</h2></div>
+    <p class="topic-sub">The problem, precisely stated — and the two-part mechanism that solves it.</p>
+
+    <h3 class="subhead">Why hardcoded addresses stop working</h3>
+    <p>In a traditional, static deployment, a service ran on a fixed server with a fixed IP — hardcoding <code>http://10.0.4.12:8080</code> as "the Loans service" in Accounts's config was ugly but functional, because that address rarely changed. In a modern cloud-native/containerized deployment, this assumption completely breaks down:</p>
+    <ul>
+      <li><strong>Instances are ephemeral</strong> — a container restarting (crash, redeploy, node eviction) typically comes back with a <em>different</em> IP address entirely.</li>
+      <li><strong>Auto-scaling constantly changes the instance count</strong> — the set of "currently running Loans instances" grows and shrinks based on load, sometimes multiple times an hour.</li>
+      <li><strong>Deployments replace instances wholesale</strong> — a rolling deploy doesn't update existing instances in place; it terminates old ones and starts entirely new ones at new addresses.</li>
+    </ul>
+    <p>Any hardcoded address is stale almost immediately in this environment. The system needs a way to answer <em>"who are the currently healthy instances of Loans, right now"</em> as a live query, not a fixed config value.</p>
+
+    <h3 class="subhead">The two-part solution</h3>
+    <table>
+      <tr><th>Mechanism</th><th>What it does</th></tr>
+      <tr><td><strong>Service Registration</strong></td><td>Every service instance announces itself to a central <strong>Service Registry</strong> on startup — "I am Loans, I'm at 172.18.0.5:8090, I'm healthy" — and keeps that registration alive via periodic heartbeats for as long as it runs.</td></tr>
+      <tr><td><strong>Service Discovery</strong></td><td>Any client that needs to call another service queries the Service Registry — "give me all healthy instances of Loans" — and gets back a current, accurate list, resolved at call time rather than assumed from static config.</td></tr>
+    </table>
+
+    <div class="diagram">
+      <div class="dflow">
+        <div class="dbox"><div class="t">Loans instance #1</div><div class="s">registers on startup</div></div>
+        <div class="darrow">→</div>
+        <div class="dbox accent"><div class="t">Service Registry</div><div class="s">live, self-updating directory</div></div>
+        <div class="darrow">←</div>
+        <div class="dbox"><div class="t">Accounts</div><div class="s">queries registry to find Loans</div></div>
+      </div>
+    </div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q2-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q2-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q2-common">
+        <details class="qa"><summary>Why can't microservices just hardcode each other's IP addresses in configuration?</summary><div class="qa-answer"><p>Because instances in a containerized/cloud environment are ephemeral — restarts, auto-scaling, and rolling deployments constantly change which addresses are actually running a given service, so any hardcoded address goes stale almost immediately.</p></div></details>
+        <details class="qa"><summary>What's the difference between service registration and service discovery?</summary><div class="qa-answer"><p>Registration is a service instance announcing itself to a central registry on startup (and keeping that registration alive via heartbeats). Discovery is a client querying that registry to find the current, healthy instances of a service it needs to call.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q2-faang">
+        <details class="qa"><summary>Could you solve this problem with DNS alone, without a dedicated service registry like Eureka?</summary><div class="qa-answer"><p>Partially — DNS-based discovery (as used natively by Kubernetes Services, for instance) works by resolving a stable service name to a current set of backing IPs, updated as instances come and go. The gap versus a dedicated registry like Eureka is DNS's typically coarser health-awareness and caching/TTL behavior — DNS resolvers and clients often cache results for some interval, meaning a just-failed instance might still be returned until the cache expires, whereas a registry with active heartbeat-based health tracking (covered in topics 111–112) can reflect instance health changes faster and more precisely. In practice, Kubernetes-native environments do lean on DNS-based discovery successfully (backed by its own controller continuously updating DNS/Endpoints records), while Eureka-style registries remain common specifically in non-Kubernetes or Spring-Cloud-centric deployments — the two represent genuinely different implementations of the same underlying registration/discovery idea.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="why-not-lb">
+    <div class="topic-head"><span class="topic-no">104</span><h2>Why Not Traditional Load Balancers for Microservices</h2></div>
+    <p class="topic-sub">A very common interview question — the precise, technical reasons a conventional LB architecture doesn't fit this problem well.</p>
+
+    <h3 class="subhead">How a traditional load balancer works</h3>
+    <p>A conventional load balancer (hardware appliance or something like a statically-configured nginx/HAProxy) sits in front of a pool of backend servers whose addresses are configured — usually manually or via a slow-to-update configuration management process — into the LB itself. Every request flows through the LB, which picks a backend and forwards the request.</p>
+
+    <div class="diagram">
+      <div class="dflow">
+        <div class="dbox"><div class="t">Client</div></div>
+        <div class="darrow">→</div>
+        <div class="dbox warn"><div class="t">Load Balancer</div><div class="s">statically-configured backend pool list</div></div>
+        <div class="darrow">→</div>
+        <div class="dstack">
+          <div class="dbox"><div class="t">Backend A</div></div>
+          <div class="dbox"><div class="t">Backend B</div></div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="subhead">Why this breaks down for microservices specifically</h3>
+    <table>
+      <tr><th>Problem</th><th>Why it hurts in a microservices context</th></tr>
+      <tr><td><strong>Static, manually-maintained backend list</strong></td><td>With instances scaling and being replaced constantly, keeping the LB's backend list current would require near-continuous reconfiguration — the exact same staleness problem as hardcoded addresses, just moved one layer up</td></tr>
+      <tr><td><strong>Single point of failure</strong></td><td>Every single east-west call — potentially thousands per second across dozens of services — now depends on one central component being up; an LB outage takes down inter-service communication system-wide</td></tr>
+      <tr><td><strong>Extra network hop on every call</strong></td><td>Routing every internal call through a central LB adds latency to the enormous volume of service-to-service traffic, unlike client-to-service (north-south) traffic where one extra hop through a gateway is a comparatively rare, acceptable cost</td></tr>
+      <tr><td><strong>Doesn't scale operationally to N services</strong></td><td>A traditional LB is typically provisioned per-application or per-pool; a system with dozens of independently-scaling microservices each needing dynamic backend awareness would require either one LB per service (expensive, complex) or a shared LB becoming an even bigger bottleneck and coordination point</td></tr>
+      <tr><td><strong>Coarse health checking</strong></td><td>Traditional LB health checks are typically simple (TCP connect, basic HTTP ping) and configured with slower intervals than the heartbeat-driven, near-real-time health tracking a dedicated service registry provides</td></tr>
+    </table>
+
+    <div class="callout warn"><b class="lbl">The interview-ready framing</b><p>The precise answer isn't "traditional load balancers are bad" — they're excellent for their actual use case (client-to-service/north-south traffic hitting a relatively stable, centrally-managed entry point). The problem is specifically applying that <em>static, centralized</em> model to <em>dynamic, high-volume, decentralized</em> east-west traffic between constantly-changing microservice instances — a fundamentally different traffic shape that needs a fundamentally different, self-updating, decentralized mechanism.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q3-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q3-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q3-common">
+        <details class="qa"><summary>Name two reasons a traditional load balancer struggles as the sole mechanism for microservices east-west traffic.</summary><div class="qa-answer"><p>Any two of: its backend list is statically/manually configured and goes stale quickly given constant instance churn; it's a single point of failure for all traffic passing through it; it adds a network hop/latency to every internal call; and it doesn't scale operationally when dozens of independently-scaling services each need dynamic backend awareness.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q3-faang">
+        <details class="qa"><summary>Is a traditional load balancer still useful anywhere in a microservices architecture, given these limitations?</summary><div class="qa-answer"><p>Yes — it remains the right tool for north-south traffic specifically: a comparatively stable, centrally-managed entry point (an API Gateway or a cloud load balancer like an AWS ALB) sitting between external clients and the system is exactly the traffic shape traditional LBs handle well (lower relative volume than aggregate east-west traffic, a natural single well-monitored ingress point where centralizing auth/rate-limiting/TLS termination is actually desirable rather than a bottleneck). The distinction this topic draws isn't "LBs are obsolete," it's "the traditional centralized LB model is the wrong tool specifically for dynamic, high-volume, decentralized east-west traffic" — client-side discovery (covered next) is the purpose-built alternative for that specific traffic shape, while north-south traffic still benefits from a traditional/cloud LB or gateway.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="discovery-mechanics">
+    <div class="topic-head"><span class="topic-no">105</span><h2>Service Discovery & Registration Inside Microservices — The Two Architectural Patterns</h2></div>
+    <p class="topic-sub">Server-side discovery vs client-side discovery — a foundational distinction, and where each is used in practice.</p>
+
+    <h3 class="subhead">Pattern 1: Server-side discovery</h3>
+    <p>The client sends its request to a well-known intermediary (a router or load balancer), which itself queries the service registry and forwards the request to a chosen healthy instance. The client is entirely unaware discovery is happening — it just calls one fixed address, and the intermediary does the discovery and routing work.</p>
+    <div class="diagram">
+      <div class="dflow">
+        <div class="dbox"><div class="t">Client</div></div>
+        <div class="darrow">→</div>
+        <div class="dbox warn"><div class="t">Router / LB</div><div class="s">queries registry, then forwards</div></div>
+        <div class="darrow">↔</div>
+        <div class="dbox accent"><div class="t">Service Registry</div></div>
+        <div class="darrow">→</div>
+        <div class="dbox"><div class="t">Chosen instance</div></div>
+      </div>
+    </div>
+    <p>Real-world examples: AWS Application Load Balancer integrated with ECS Service Discovery; Kubernetes Services (kube-proxy routing to pod IPs behind a stable virtual IP); a dedicated router tier like Netflix's older Zuul-as-router setups.</p>
+
+    <h3 class="subhead">Pattern 2: Client-side discovery</h3>
+    <p>The client itself directly queries the service registry, receives the full list of healthy instances, and applies its own load-balancing logic to pick one — then calls that instance directly, with no intermediary in the actual request path.</p>
+    <div class="diagram">
+      <div class="dflow">
+        <div class="dbox"><div class="t">Client</div><div class="s">embeds discovery client + LB logic</div></div>
+        <div class="darrow">↔</div>
+        <div class="dbox accent"><div class="t">Service Registry</div></div>
+        <div class="darrow">→ (direct call)</div>
+        <div class="dbox"><div class="t">Chosen instance</div></div>
+      </div>
+    </div>
+    <p>Real-world example, and the one this course implements: <strong>Netflix Eureka</strong> as the registry, paired with <strong>Spring Cloud LoadBalancer</strong> (the modern replacement for the retired Netflix Ribbon) doing client-side instance selection.</p>
+
+    <h3 class="subhead">Direct comparison</h3>
+    <table>
+      <tr><th>Aspect</th><th>Server-side discovery</th><th>Client-side discovery</th></tr>
+      <tr><td>Discovery logic lives in</td><td>A central router/LB tier</td><td>Every individual client</td></tr>
+      <tr><td>Extra network hop per call?</td><td>Yes — through the router/LB</td><td>No — client calls the instance directly</td></tr>
+      <tr><td>Single point of failure risk</td><td>Higher — router/LB tier is shared infrastructure</td><td>Lower — no shared component sits in the request path itself (though the registry is still a dependency for periodic lookups)</td></tr>
+      <tr><td>Client complexity</td><td>Low — client just calls one fixed address</td><td>Higher — every client needs discovery-client + load-balancer logic built in</td></tr>
+      <tr><td>Language/platform coupling</td><td>None — any client, any language, works identically</td><td>Requires a discovery-client library for the client's specific language/framework</td></tr>
+      <tr><td>Common real-world example</td><td>Kubernetes Services, AWS ALB + ECS</td><td>Netflix Eureka + Spring Cloud LoadBalancer</td></tr>
+    </table>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q4-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q4-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q4-common">
+        <details class="qa"><summary>What's the core difference between server-side and client-side service discovery?</summary><div class="qa-answer"><p>In server-side discovery, a central router/load balancer queries the registry and forwards requests — the client just calls one fixed address, unaware discovery happened. In client-side discovery, the calling service itself queries the registry directly and picks an instance to call, with no intermediary in the request path.</p></div></details>
+        <details class="qa"><summary>Which pattern does Eureka implement?</summary><div class="qa-answer"><p>Client-side discovery — each client embeds a Eureka discovery client and a load balancer (Spring Cloud LoadBalancer) to query the registry and pick an instance itself, calling it directly.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q4-faang">
+        <details class="qa"><summary>What's the real trade-off between these two patterns beyond "one has an extra hop"?</summary><div class="qa-answer"><p>Client-side discovery avoids the extra hop and the shared-component failure risk, but pushes real complexity into every single client — each service needs a compatible discovery-client library, meaning this pattern couples you somewhat to a specific ecosystem (Eureka has first-class Spring Cloud support; a client written in a different language/stack needs its own compatible Eureka client library, which may be less mature or unavailable). Server-side discovery centralizes that complexity into one well-maintained router/LB tier, making it trivially usable by clients in any language with zero special libraries — a meaningful advantage in a genuinely polyglot organization — at the cost of that tier becoming both a latency addition and an operational dependency for all east-west traffic. This is exactly why Kubernetes-native environments (a genuinely language-agnostic platform) lean toward server-side-style discovery via Services/DNS, while Spring-Cloud-centric, largely-Java shops (like this course's setup) often find client-side discovery via Eureka a natural fit.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="client-side-discovery">
+    <div class="topic-head"><span class="topic-no">106</span><h2>How Client-Side Service Discovery & Load Balancing Works</h2></div>
+    <p class="topic-sub">The exact sequence of events, end to end, for a single inter-service call.</p>
+
+    <h3 class="subhead">Step-by-step mechanics</h3>
+    <ol>
+      <li><strong>Registration</strong> — On startup, each Loans instance's embedded Eureka Client sends a <code>REGISTER</code> call to the Eureka Server, containing its service ID (`LOANS`), host, port, and health-check URL.</li>
+      <li><strong>Heartbeats</strong> — Every 30 seconds (default), each registered instance sends a <code>RENEW</code> (heartbeat) call to the Eureka Server to confirm it's still alive.</li>
+      <li><strong>Registry caching (server side)</strong> — The Eureka Server maintains an in-memory registry of every currently-known-healthy instance across all registered services.</li>
+      <li><strong>Registry fetch (client side)</strong> — When Accounts starts up, its own embedded Eureka Client fetches a full copy of the registry from the Eureka Server and caches it <strong>locally</strong>, refreshing this local cache periodically (also every 30 seconds by default) rather than calling the Eureka Server on every single business request.</li>
+      <li><strong>Instance selection</strong> — When Accounts's code needs to call Loans, the client-side load balancer (Spring Cloud LoadBalancer) looks up `LOANS` in the locally-cached registry, gets back a list of currently-healthy instances, and picks one using a load-balancing strategy (round-robin by default).</li>
+      <li><strong>Direct call</strong> — Accounts calls the chosen Loans instance <strong>directly</strong> over the network — no intermediary router or LB sits in this request's path at all.</li>
+    </ol>
+
+    <div class="diagram">
+      <div class="dflow">
+        <div class="dcol">
+          <div class="dphase-label">1. Startup</div>
+          <div class="dbox"><div class="t">Loans #1, #2</div><div class="s">REGISTER + heartbeats</div></div>
+        </div>
+        <div class="darrow">→</div>
+        <div class="dcol">
+          <div class="dphase-label">2. Registry</div>
+          <div class="dbox accent"><div class="t">Eureka Server</div><div class="s">in-memory registry</div></div>
+        </div>
+        <div class="darrow">← periodic fetch</div>
+        <div class="dcol">
+          <div class="dphase-label">3. Client cache</div>
+          <div class="dbox"><div class="t">Accounts</div><div class="s">local registry cache + LB</div></div>
+        </div>
+        <div class="darrow">direct call →</div>
+        <div class="dcol">
+          <div class="dphase-label">4. Request</div>
+          <div class="dbox warn"><div class="t">Loans #2</div><div class="s">selected instance</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout info"><b class="lbl">Why the local cache matters more than it might seem</b><p>Because Accounts's Eureka Client caches the registry locally and refreshes on an interval (rather than querying Eureka Server per-request), a single business request calling Loans never actually depends on Eureka Server being reachable <em>at that exact moment</em> — it depends on the local cache being reasonably fresh. This is a deliberate resilience trade-off: Eureka favors <strong>availability over strict consistency</strong> (an instance of the AP side of the CAP theorem in practice) — client calls keep working using a slightly-stale cached view even if the Eureka Server itself is temporarily unreachable, rather than every single service-to-service call failing the instant the registry is unavailable.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q5-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q5-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q5-common">
+        <details class="qa"><summary>Does Accounts query Eureka Server on every single call to Loans?</summary><div class="qa-answer"><p>No — Accounts's Eureka Client fetches and locally caches the registry, refreshing on a periodic interval (default 30 seconds), and picks an instance from that local cache for each call. It doesn't hit Eureka Server for every individual business request.</p></div></details>
+        <details class="qa"><summary>What load-balancing strategy does Spring Cloud LoadBalancer use by default?</summary><div class="qa-answer"><p>Round-robin — distributing calls evenly, in rotation, across the currently-known healthy instances of the target service.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q5-faang">
+        <details class="qa"><summary>What CAP-theorem trade-off is Eureka making, and why is it the right choice for this specific use case?</summary><div class="qa-answer"><p>Eureka is explicitly designed as an <strong>AP</strong> system (Availability + Partition tolerance, sacrificing strict Consistency) rather than CP — during a network partition or temporary Eureka Server unavailability, clients keep operating on their last-known-good cached registry rather than refusing to serve any inter-service calls at all. This is the right trade-off for service discovery specifically because a slightly stale registry (occasionally routing to an instance that just went down, caught and retried) is a far smaller problem than every single inter-service call across the entire system failing the moment the registry has a hiccup — availability of the overall system matters more here than perfect real-time accuracy of "which exact instances exist right now." Contrast this with, say, a leader-election or distributed-lock use case, where strict consistency genuinely matters more than availability, and a CP system (like Zookeeper) would be the more appropriate choice.</p></div></details>
+        <details class="qa"><summary>Since the client's registry view can be stale, what happens if Accounts's load balancer picks an instance that has actually just gone down?</summary><div class="qa-answer"><p>The call fails (typically a connection refused/timeout), and it's the calling application's responsibility to handle that failure gracefully — commonly via a retry against a different instance (Spring Cloud LoadBalancer and Spring Retry can be configured to automatically retry a failed call against another instance from the same cached list), combined with a circuit breaker (covered in later resilience-focused sections) to stop repeatedly hitting a service that's failing broadly rather than just one bad instance. This is precisely why client-side discovery systems are always paired with retry/resilience logic in production — the registry's eventual consistency is an accepted trade-off specifically because the failure mode (an occasional failed call to a just-died instance) is cheap to detect and recover from at the calling layer.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="spring-cloud-support">
+    <div class="topic-head"><span class="topic-no">107</span><h2>Spring Cloud Support for Service Discovery & Registration</h2></div>
+    <p class="topic-sub">The DiscoveryClient abstraction, and where Eureka fits among the alternatives.</p>
+
+    <h3 class="subhead">The DiscoveryClient abstraction</h3>
+    <p>Spring Cloud defines a common <code>DiscoveryClient</code> interface that abstracts over the specific service-registry implementation — application code that depends on service discovery (including Feign, covered later in this section) programs against this interface, not against Eureka specifically. This means switching the underlying registry technology is, in principle, a dependency and configuration change rather than an application-code rewrite.</p>
+
+    <table>
+      <tr><th>Implementation</th><th>Backing technology</th><th>Notes</th></tr>
+      <tr><td><strong>Netflix Eureka</strong></td><td>Purpose-built AP registry from Netflix OSS</td><td>The most common choice in Spring-Cloud-centric systems; what this course uses</td></tr>
+      <tr><td><strong>HashiCorp Consul</strong></td><td>General-purpose service mesh/registry tool</td><td>Also provides KV config storage and health checking; popular outside pure-Spring shops</td></tr>
+      <tr><td><strong>Apache Zookeeper</strong></td><td>General-purpose distributed coordination service (CP-oriented)</td><td>Older, more consistency-focused option; also used for leader election, distributed locks</td></tr>
+      <tr><td><strong>Kubernetes-native discovery</strong></td><td>Kubernetes Services + built-in DNS</td><td>When deployed on Kubernetes, discovery can be delegated to the platform itself, removing the need for Eureka entirely</td></tr>
+    </table>
+
+    <div class="callout warn"><b class="lbl">Why this course still teaches Eureka even though Kubernetes exists</b><p>Kubernetes-native discovery is genuinely the more common production choice today for teams already running on Kubernetes — it needs no extra service to operate, and it's server-side discovery baked into the platform. Eureka remains valuable to learn because (a) many real systems still run on plain VMs/Docker Compose/non-Kubernetes infrastructure where a dedicated registry is necessary, (b) it teaches the underlying concepts (registration, heartbeats, client-side load balancing) explicitly rather than hiding them inside platform magic, and (c) it's still a very live interview topic precisely because of how clearly it illustrates these mechanics.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q6-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q6-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q6-common">
+        <details class="qa"><summary>What is Spring Cloud's DiscoveryClient interface for?</summary><div class="qa-answer"><p>It's a common abstraction for service discovery that application code programs against, independent of the specific registry technology (Eureka, Consul, Zookeeper) — letting the underlying implementation be swapped via dependencies/config rather than requiring application code changes.</p></div></details>
+        <details class="qa"><summary>Name two alternatives to Eureka for service discovery.</summary><div class="qa-answer"><p>Any two of: HashiCorp Consul, Apache Zookeeper, and Kubernetes-native discovery via Services and built-in DNS.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q6-faang">
+        <details class="qa"><summary>How consistency-focused is Zookeeper compared to Eureka, and why would that matter for choosing between them?</summary><div class="qa-answer"><p>Zookeeper is fundamentally a CP system (built on a consensus protocol, ZAB, prioritizing strict consistency) — during a network partition, a Zookeeper cluster favors correctness over availability, potentially refusing writes/reads on a minority partition rather than risk inconsistency. This makes Zookeeper an excellent fit for use cases genuinely requiring strong consistency (distributed locks, leader election, where an inconsistent view could cause real correctness bugs like two nodes both believing they're the leader), but a comparatively poor fit for service discovery specifically, where — as discussed in topic 106 — availability during a partition (clients continuing to operate on a stale-but-usable cached registry) matters more than perfect real-time accuracy. This CP-vs-AP distinction is exactly why Eureka, purpose-built as AP, became the more natural default for service discovery in the Spring Cloud ecosystem despite Zookeeper being a capable, earlier-established distributed systems tool.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="eureka-server-setup">
+    <div class="topic-head"><span class="topic-no">108</span><h2>Setup Service Discovery Agent Using Eureka Server</h2></div>
+    <p class="topic-sub">The registry is, once again, just another Spring Boot application.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="es1">pom.xml</div>
+        <div class="code-tab" data-pane="es2">EurekaServerApplication.java</div>
+        <div class="code-tab" data-pane="es3">application.yml</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="es1"><pre>&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-cloud-starter-netflix-eureka-server&lt;/artifactId&gt;
+&lt;/dependency&gt;</pre></div>
+        <div class="code-pane" id="es2"><pre><span class="ann">@SpringBootApplication</span>
+<span class="ann">@EnableEurekaServer</span>
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">EurekaServerApplication</span> {
+    <span class="kw">public</span> <span class="kw">static</span> <span class="kw">void</span> main(String[] args) {
+        SpringApplication.run(EurekaServerApplication.<span class="kw">class</span>, args);
+    }
+}</pre></div>
+        <div class="code-pane" id="es3"><pre><span class="cl">server</span>:
+  <span class="cl">port</span>: <span class="str">8761</span>
+
+<span class="cl">spring</span>:
+  <span class="cl">application</span>:
+    <span class="cl">name</span>: <span class="str">eurekaserver</span>
+
+<span class="cl">eureka</span>:
+  <span class="cl">client</span>:
+    <span class="cl">register-with-eureka</span>: <span class="kw">false</span>
+    <span class="cl">fetch-registry</span>: <span class="kw">false</span></pre></div>
+      </div>
+    </div>
+
+    <div class="ann-grid">
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@EnableEurekaServer</span></div><div class="ann-body"><p>Turns an ordinary Spring Boot application into a Eureka registry server — auto-configures the registration/heartbeat/lookup REST endpoints and the built-in web dashboard.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">eureka.client.register-with-eureka</span></div><div class="ann-body"><p>Set to <code>false</code> because, by default, every Eureka-aware Spring Boot app (including the server itself, which also has the Eureka client on its classpath) tries to register itself as a client — this flag prevents the standalone server from trying to register with itself.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">eureka.client.fetch-registry</span></div><div class="ann-body"><p>Also set to <code>false</code> for the same reason — the server doesn't need to fetch a copy of the registry from itself, since it <em>is</em> the registry.</p></div></div>
+    </div>
+
+    <p>Port <code>8761</code> is the Eureka convention (not a hard requirement) and serves a built-in web dashboard showing every currently registered instance, its status, and metadata — extremely useful for manually verifying registration during development.</p>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q7-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q7-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q7-common">
+        <details class="qa"><summary>What annotation turns a Spring Boot app into a Eureka Server?</summary><div class="qa-answer"><p>`@EnableEurekaServer`, from the `spring-cloud-starter-netflix-eureka-server` dependency.</p></div></details>
+        <details class="qa"><summary>Why does the Eureka Server itself set register-with-eureka and fetch-registry to false?</summary><div class="qa-answer"><p>Because the Eureka client machinery is present even on the server (it's built on the same underlying libraries), and without disabling these, the server would attempt to register itself as a client of itself and fetch a registry copy from itself — unnecessary and potentially confusing in a standalone single-server setup.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q7-faang">
+        <details class="qa"><summary>Is running a single Eureka Server instance appropriate for production, given topic 104 flagged single-points-of-failure as a core problem this whole section is solving?</summary><div class="qa-answer"><p>No — a single Eureka Server instance would itself become exactly the single point of failure this section otherwise avoids by using client-side discovery. Production Eureka deployments run a <strong>peer-aware cluster</strong> of multiple Eureka Server instances that replicate their registries to each other (each instance both serves clients and registers itself as a "client" of its peers, which is why `register-with-eureka`/`fetch-registry` default to `true` — this course's `false` override is specifically for the simplified single-instance learning setup). Clients are configured with multiple Eureka Server URLs and can reach any available peer, so no single Eureka Server instance being down takes down discovery for the whole system — this is standard, expected production configuration, not an advanced edge case.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="accounts-eureka">
+    <div class="topic-head"><span class="topic-no">109</span><h2>Making Code Changes in Accounts Microservice to Connect to Eureka Server</h2></div>
+    <p class="topic-sub">Turning Accounts into a Eureka Client — both a registrant and a discoverer.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="ac1">pom.xml</div>
+        <div class="code-tab" data-pane="ac2">application.yml</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="ac1"><pre>&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-cloud-starter-netflix-eureka-client&lt;/artifactId&gt;
+&lt;/dependency&gt;</pre></div>
+        <div class="code-pane" id="ac2"><pre><span class="cl">spring</span>:
+  <span class="cl">application</span>:
+    <span class="cl">name</span>: <span class="str">accounts</span>
+
+<span class="cl">eureka</span>:
+  <span class="cl">instance</span>:
+    <span class="cl">prefer-ip-address</span>: <span class="kw">true</span>
+  <span class="cl">client</span>:
+    <span class="cl">fetch-registry</span>: <span class="kw">true</span>
+    <span class="cl">register-with-eureka</span>: <span class="kw">true</span>
+    <span class="cl">service-url</span>:
+      <span class="cl">defaultZone</span>: <span class="str">http://localhost:8761/eureka/</span></pre></div>
+      </div>
+    </div>
+
+    <div class="ann-grid">
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">spring.application.name</span></div><div class="ann-body"><p>Doubles here as the <strong>service ID</strong> Accounts registers under in Eureka — every other service discovers this one by exactly this name (uppercased by convention, e.g. `ACCOUNTS`). Getting this consistent across every service is essential, since Feign clients (topic 113) reference this exact name.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">eureka.instance.prefer-ip-address</span></div><div class="ann-body"><p>When `true`, the instance registers using its actual IP address rather than its hostname — important in containerized environments where hostnames may not resolve correctly between containers, while IP addresses (on a shared Docker network) reliably do.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">eureka.client.service-url.defaultZone</span></div><div class="ann-body"><p>The address of the Eureka Server this client registers with and fetches the registry from. In production with a Eureka cluster, this would be a comma-separated list of every peer's URL for resilience, as discussed in the previous topic's FAANG answer.</p></div></div>
+    </div>
+
+    <div class="callout info"><b class="lbl">No extra annotation typically needed</b><p>In modern Spring Cloud versions, simply having `spring-cloud-starter-netflix-eureka-client` on the classpath is enough to auto-configure Accounts as a Eureka client — the older, explicit `@EnableDiscoveryClient` (or `@EnableEurekaClient`) annotation is now optional/implicit in most setups, though you may still see it used explicitly for clarity in some codebases or older Spring Cloud versions.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q8-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q8-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q8-common">
+        <details class="qa"><summary>What name does a service register under in Eureka?</summary><div class="qa-answer"><p>Its `spring.application.name` value — this is the service ID other services use (via Feign or the discovery client directly) to look it up in the registry, so it needs to be consistent and known across the whole system.</p></div></details>
+        <details class="qa"><summary>Why does prefer-ip-address matter specifically in a Docker/container environment?</summary><div class="qa-answer"><p>Container hostnames may not be reliably resolvable between different containers' network namespaces, whereas IP addresses on a shared Docker network reliably work — registering by IP avoids potential hostname-resolution failures when another service tries to actually call the registered instance.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q8-faang">
+        <details class="qa"><summary>What happens if two different services accidentally set the same spring.application.name?</summary><div class="qa-answer"><p>Eureka would register both under the same service ID, meaning any client discovering that service ID would receive a mixed pool of instances belonging to two logically different services — a load-balanced call could land on either one unpredictably, almost certainly causing incorrect behavior or errors (mismatched API contracts) at the calling side. This is a genuine production risk worth explicit safeguarding against — e.g. via naming conventions enforced in code review, or automated checks in CI that verify `spring.application.name` uniqueness across a service catalog, since Eureka itself has no built-in mechanism to detect or prevent this collision; it will happily register whatever name it's given.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="loans-cards-eureka">
+    <div class="topic-head"><span class="topic-no">110</span><h2>Making Code Changes in Loans & Cards Microservice to Connect to Eureka Server</h2></div>
+    <p class="topic-sub">The identical treatment, applied to the remaining two services.</p>
+
+    <p>Loans and Cards each receive the same three changes as Accounts: add `spring-cloud-starter-netflix-eureka-client`, confirm `spring.application.name` is set correctly (`loans`, `cards`), and point `eureka.client.service-url.defaultZone` at the same Eureka Server. Once all three are running, the Eureka dashboard at <code>http://localhost:8761</code> shows all three service IDs, each with their currently registered, healthy instances.</p>
+
+    <div class="callout info"><b class="lbl">This is what makes Feign (topic 113) possible</b><p>With all three services registered under consistent, known service IDs, any one of them can now discover and call any other purely by service name — <code>http://LOANS/api/fetch</code> resolves through Eureka to a real instance address, never a hardcoded IP. This is the exact capability the whole section has been building toward.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q9-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q9-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q9-common">
+        <details class="qa"><summary>Once Loans and Cards are also Eureka clients, what can Accounts do that it couldn't before?</summary><div class="qa-answer"><p>Discover Loans and Cards purely by their registered service names, without knowing or hardcoding any specific instance address — enabling dynamic, load-balanced inter-service calls, most conveniently via Feign clients.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q9-faang">
+        <details class="qa"><summary>Does registering with Eureka alone give Loans and Cards the ability to call each other, or is something else still needed?</summary><div class="qa-answer"><p>Registration and discovery only solve "how do I find a healthy instance's address" — actually making the call still requires an HTTP client (RestTemplate with `@LoadBalanced`, WebClient, or Feign) that integrates with the discovery client to resolve a service name into an actual instance and issue the request. Eureka registration by itself doesn't make any calls happen; it just makes the information needed to make those calls discoverable — which is exactly why the very next topics introduce Feign as the piece that actually issues the calls, built on top of this now-working discovery foundation.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="deregistration">
+    <div class="topic-head"><span class="topic-no">111</span><h2>De-registration from Eureka Server When Microservices Shutdown</h2></div>
+    <p class="topic-sub">Graceful shutdown vs crash — and why the difference matters for registry accuracy.</p>
+
+    <h3 class="subhead">Graceful shutdown</h3>
+    <p>When a Spring Boot application shuts down normally (receives SIGTERM, or is stopped via Actuator's shutdown endpoint), its Eureka Client explicitly sends a <code>DEREGISTER</code> call to the Eureka Server as part of the shutdown sequence — immediately removing that instance from the registry. Any client refreshing its local cache after this point will correctly no longer see the shut-down instance as available.</p>
+
+    <div class="callout pitfall"><b class="lbl">The gap: ungraceful termination</b><p>If a process is killed abruptly (<code>kill -9</code>, an out-of-memory kill, a host crash), there's no opportunity for the shutdown hook to run the deregistration call at all — the instance simply stops sending heartbeats, with <strong>no explicit notification</strong> to the Eureka Server that it's gone. The registry doesn't know immediately; it only finds out indirectly, once the instance's heartbeats stop arriving — which is exactly the subject of the next topic.</p></div>
+
+    <table>
+      <tr><th>Shutdown type</th><th>Registry awareness</th><th>Window of staleness</th></tr>
+      <tr><td>Graceful (SIGTERM, normal stop)</td><td>Immediate — explicit DEREGISTER call</td><td>~None</td></tr>
+      <tr><td>Ungraceful (kill -9, crash, host failure)</td><td>Delayed — only detected via missed heartbeats</td><td>Up to the heartbeat eviction timeout (default 90s) — covered next</td></tr>
+    </table>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q10-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q10-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q10-common">
+        <details class="qa"><summary>What happens to a service instance's registry entry when it shuts down gracefully?</summary><div class="qa-answer"><p>Its Eureka Client sends an explicit deregistration call to the Eureka Server as part of the shutdown sequence, immediately removing it from the registry.</p></div></details>
+        <details class="qa"><summary>Why doesn't deregistration happen on an ungraceful crash?</summary><div class="qa-answer"><p>An abrupt kill (kill -9, OOM kill, host crash) gives the process no chance to run its shutdown hooks, including the deregistration call — the Eureka Server only learns the instance is gone indirectly, once it stops receiving that instance's heartbeats.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q10-faang">
+        <details class="qa"><summary>What's the practical production consequence of the ungraceful-shutdown gap, and how should calling services be designed to tolerate it?</summary><div class="qa-answer"><p>Between an ungraceful crash and the eventual heartbeat-timeout eviction (up to 90 seconds by default), the Eureka registry — and therefore every client's locally cached copy — can still list the dead instance as available, meaning some fraction of load-balanced calls during that window will be routed to an instance that's actually gone and will fail. This is precisely why production services calling other services via Eureka-based discovery must never assume a returned instance is definitely reachable — retry-on-a-different-instance logic (as discussed in topic 106's FAANG answer) is what actually makes this gap tolerable in practice, converting an occasional failed call into an occasional, transparently-retried, slightly-slower successful call rather than a visible failure.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="heartbeats">
+    <div class="topic-head"><span class="topic-no">112</span><h2>Demo of Heartbeats Mechanism to Eureka Server from Clients</h2></div>
+    <p class="topic-sub">The failure-detection safety net for exactly the ungraceful-shutdown gap from the previous topic.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">eureka.instance heartbeat config</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="cl">eureka</span>:
+  <span class="cl">instance</span>:
+    <span class="cl">lease-renewal-interval-in-seconds</span>: <span class="str">30</span>
+    <span class="cl">lease-expiration-duration-in-seconds</span>: <span class="str">90</span></pre></div></div>
+    </div>
+
+    <table>
+      <tr><th>Property</th><th>Meaning</th></tr>
+      <tr><td><code>lease-renewal-interval-in-seconds</code></td><td>How often the client sends a heartbeat (RENEW call) to the Eureka Server — default 30 seconds</td></tr>
+      <tr><td><code>lease-expiration-duration-in-seconds</code></td><td>How long the Eureka Server waits without receiving a heartbeat before considering the instance dead and evicting it from the registry — default 90 seconds</td></tr>
+    </table>
+
+    <p>Each heartbeat effectively "renews the lease" an instance holds on its registry entry. If three consecutive heartbeats are missed (90s ÷ 30s), the Eureka Server assumes the instance is no longer alive and removes it — this is exactly the mechanism that eventually closes the staleness window from an ungraceful shutdown, just not instantly.</p>
+
+    <div class="callout warn"><b class="lbl">The direct trade-off in these two numbers</b><p>Shortening these intervals (faster heartbeats, shorter expiration) detects failures faster but increases the constant background network/CPU load of heartbeat traffic across potentially hundreds of instances, and increases the risk of false-positive evictions during brief network hiccups. Lengthening them reduces overhead and false positives but widens the staleness window discussed in the previous topic. The defaults (30s/90s) are a deliberately conservative, production-tested balance — and this exact tension is also what motivates the next topic's self-preservation mechanism.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q11-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q11-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q11-common">
+        <details class="qa"><summary>What are the default heartbeat interval and eviction timeout in Eureka?</summary><div class="qa-answer"><p>A heartbeat every 30 seconds (`lease-renewal-interval-in-seconds`), and the server considers an instance dead and evicts it after 90 seconds without a heartbeat (`lease-expiration-duration-in-seconds`) — three missed heartbeats.</p></div></details>
+        <details class="qa"><summary>What problem does the heartbeat mechanism solve that graceful deregistration doesn't cover?</summary><div class="qa-answer"><p>Detecting instances that disappeared without explicitly deregistering — crashes, kill -9, host failures — where the only signal the Eureka Server has that something is wrong is the absence of expected heartbeats.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q11-faang">
+        <details class="qa"><summary>Would shortening the heartbeat interval to, say, 5 seconds be a good idea to detect failures faster?</summary><div class="qa-answer"><p>Not without careful consideration — at real scale (hundreds or thousands of instances across many services), a 5-second heartbeat interval multiplies the constant background heartbeat traffic the Eureka Server must process roughly 6x compared to the 30-second default, which can itself become a meaningful load/scaling concern on the registry. It also makes the system more sensitive to brief, non-fatal network blips being misread as instance failure (a single missed heartbeat under a shorter interval represents a much smaller true elapsed time before the server starts suspecting trouble), increasing the risk of unnecessary evictions during transient issues — exactly the "network trap" scenario the next topic's self-preservation mode exists to guard against. In practice, the 30s/90s defaults represent a well-tested balance, and teams needing faster failure detection typically look to complementary mechanisms (client-side circuit breakers reacting to actual call failures in real time) rather than solely tuning heartbeat intervals more aggressively.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="feign-client">
+    <div class="topic-head"><span class="topic-no">113-114</span><h2>Feign Client Code Changes to Invoke Other Microservices</h2></div>
+    <p class="topic-sub">Declarative, interface-based inter-service calls — built directly on top of Eureka discovery and client-side load balancing.</p>
+
+    <h3 class="subhead">The problem Feign solves</h3>
+    <p>Without Feign, calling Loans from Accounts via discovery still means writing boilerplate: building a `RestTemplate` (annotated `@LoadBalanced` to hook into the discovery-aware load balancer), manually constructing the URL with the service ID, handling serialization, and writing this pattern repeatedly for every inter-service call. <strong>OpenFeign</strong> (Spring Cloud's integration of Netflix Feign) replaces all of this with a plain Java <strong>interface</strong> — you declare the shape of the remote API you want to call, and Feign generates a working implementation at runtime that automatically integrates with Eureka discovery and the load balancer.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="fc1">pom.xml (Accounts)</div>
+        <div class="code-tab" data-pane="fc2">AccountsApplication.java</div>
+        <div class="code-tab" data-pane="fc3">LoansFeignClient.java</div>
+        <div class="code-tab" data-pane="fc4">CardsFeignClient.java</div>
+        <div class="code-tab" data-pane="fc5">Usage in service layer</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="fc1"><pre>&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-cloud-starter-openfeign&lt;/artifactId&gt;
+&lt;/dependency&gt;</pre></div>
+        <div class="code-pane" id="fc2"><pre><span class="ann">@SpringBootApplication</span>
+<span class="ann">@EnableFeignClients</span>
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">AccountsApplication</span> {
+    <span class="kw">public</span> <span class="kw">static</span> <span class="kw">void</span> main(String[] args) {
+        SpringApplication.run(AccountsApplication.<span class="kw">class</span>, args);
+    }
+}</pre></div>
+        <div class="code-pane" id="fc3"><pre><span class="ann">@FeignClient</span>(name = <span class="str">"loans"</span>)
+<span class="kw">public</span> <span class="kw">interface</span> <span class="cl">LoansFeignClient</span> {
+
+    <span class="ann">@GetMapping</span>(value = <span class="str">"/api/fetch"</span>, consumes = <span class="str">"application/json"</span>)
+    <span class="kw">public</span> ResponseEntity&lt;LoansDto&gt; fetchLoanDetails(
+        <span class="ann">@RequestHeader</span>(<span class="str">"eazybank-correlation-id"</span>)
+        String correlationId,
+        <span class="ann">@RequestParam</span> String mobileNumber
+    );
+}</pre></div>
+        <div class="code-pane" id="fc4"><pre><span class="ann">@FeignClient</span>(name = <span class="str">"cards"</span>)
+<span class="kw">public</span> <span class="kw">interface</span> <span class="cl">CardsFeignClient</span> {
+
+    <span class="ann">@GetMapping</span>(value = <span class="str">"/api/fetch"</span>, consumes = <span class="str">"application/json"</span>)
+    <span class="kw">public</span> ResponseEntity&lt;CardsDto&gt; fetchCardDetails(
+        <span class="ann">@RequestHeader</span>(<span class="str">"eazybank-correlation-id"</span>)
+        String correlationId,
+        <span class="ann">@RequestParam</span> String mobileNumber
+    );
+}</pre></div>
+        <div class="code-pane" id="fc5"><pre><span class="ann">@Service</span>
+<span class="ann">@AllArgsConstructor</span>
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">CustomerServiceImpl</span> <span class="kw">implements</span> ICustomerService {
+
+    <span class="kw">private</span> <span class="kw">final</span> AccountsRepository accountsRepository;
+    <span class="kw">private</span> <span class="kw">final</span> LoansFeignClient loansFeignClient;
+    <span class="kw">private</span> <span class="kw">final</span> CardsFeignClient cardsFeignClient;
+
+    <span class="ann">@Override</span>
+    <span class="kw">public</span> CustomerDetailsDto fetchCustomerDetails(String correlationId, String mobileNumber) {
+        <span class="cm">// looks and reads exactly like a normal method call —</span>
+        <span class="cm">// Feign transparently resolves "loans"/"cards" via Eureka,</span>
+        <span class="cm">// picks an instance via the load balancer, and issues the HTTP call</span>
+        ResponseEntity&lt;LoansDto&gt; loansResponse =
+            loansFeignClient.fetchLoanDetails(correlationId, mobileNumber);
+        ResponseEntity&lt;CardsDto&gt; cardsResponse =
+            cardsFeignClient.fetchCardDetails(correlationId, mobileNumber);
+
+        CustomerDetailsDto customerDetailsDto = <span class="kw">new</span> CustomerDetailsDto();
+        customerDetailsDto.setLoansDto(loansResponse.getBody());
+        customerDetailsDto.setCardsDto(cardsResponse.getBody());
+        <span class="kw">return</span> customerDetailsDto;
+    }
+}</pre></div>
+      </div>
+    </div>
+
+    <h3 class="subhead">Annotation reference</h3>
+    <div class="ann-grid">
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@EnableFeignClients</span></div><div class="ann-body"><p>Placed on the main application class — tells Spring to scan for `@FeignClient`-annotated interfaces and generate proxy implementations for each, registering them as injectable beans.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@FeignClient(name = "loans")</span></div><div class="ann-body"><p>The `name` attribute is the target service's registered Eureka service ID — exactly the `spring.application.name` value Loans registered under back in topic 110. This is the critical link between Feign and Eureka discovery: Feign resolves this name to a real instance address via the discovery client under the hood.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">Method signatures</span></div><div class="ann-body"><p>Feign interface methods are annotated with the exact same Spring MVC mapping annotations (`@GetMapping`, `@RequestParam`, `@RequestHeader`) used on the actual controller being called — Feign mirrors the target's real REST contract, so the interface effectively documents "this is what I expect to call, and how."</p></div></div>
+    </div>
+
+    <div class="callout info"><b class="lbl">A real pattern worth noting: correlation ID propagation</b><p>The `eazybank-correlation-id` header threaded through both Feign clients is a practical illustration of a production concern flagged back in Section 1's exception-handling notes — propagating a single request-tracing identifier across every hop of a multi-service call chain (Accounts → Loans, Accounts → Cards) so a single customer-facing request can be traced end-to-end in logs across all three services, not just within whichever one happened to log an error.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q12-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q12-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q12-common">
+        <details class="qa"><summary>What is a Feign client, in one sentence?</summary><div class="qa-answer"><p>A plain Java interface, annotated with Spring MVC mapping annotations and `@FeignClient`, for which Spring Cloud OpenFeign generates a working implementation at runtime that calls the named remote service — automatically integrating with Eureka discovery and client-side load balancing.</p></div></details>
+        <details class="qa"><summary>What does the name attribute in @FeignClient(name = "loans") refer to?</summary><div class="qa-answer"><p>The target service's registered Eureka service ID (its `spring.application.name`) — Feign uses this name to discover and call a real, currently-healthy instance of that service.</p></div></details>
+        <details class="qa"><summary>What annotation is required on the main application class to enable Feign clients?</summary><div class="qa-answer"><p>`@EnableFeignClients` — it triggers scanning for `@FeignClient`-annotated interfaces and generates their proxy implementations.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q12-faang">
+        <details class="qa"><summary>In the fetchCustomerDetails method, the two Feign calls (to Loans and Cards) run sequentially — what's the performance implication, and how would you fix it?</summary><div class="qa-answer"><p>Sequential calls mean the total latency for this composite endpoint is roughly the <em>sum</em> of both downstream calls' latencies, when they're actually independent of each other and could run <strong>concurrently</strong> — the Cards call doesn't need to wait for the Loans call to finish. This is a real, common performance issue in API-composition patterns. Fixes include: wrapping each Feign call in a `CompletableFuture.supplyAsync(...)` and joining both before assembling the response, or — more idiomatically in a reactive stack — using WebClient with reactive composition (`Mono.zip`) instead of blocking Feign calls, letting both downstream calls execute in parallel and reducing the composite endpoint's total latency to roughly the <em>slower</em> of the two calls rather than their sum.</p></div></details>
+        <details class="qa"><summary>What happens to this composite endpoint if the Loans service is temporarily completely down — not just one bad instance, but the whole service unavailable?</summary><div class="qa-answer"><p>Without any additional resilience configuration, the Feign call to Loans throws an exception (after Eureka-driven retries against different instances are exhausted, if configured, or immediately if no healthy instances are discoverable at all) — and depending on how that exception propagates, the entire composite `fetchCustomerDetails` call likely fails outright, even though the Cards portion might have succeeded fine. This is precisely the motivation for pairing Feign with a <strong>circuit breaker and fallback</strong> (typically Resilience4j in modern Spring Cloud, configured via `@CircuitBreaker` with a fallback method, or a Feign-specific fallback class) — so a Loans outage degrades this endpoint gracefully (e.g. returning customer + Cards data with a null/placeholder for Loans, rather than a complete 500 error) instead of a single downstream dependency's outage cascading into a hard failure of an otherwise-healthy composite request. This pattern is covered in more depth in dedicated resilience sections, but the seed of "why you need it" is exactly this composite-Feign-call scenario.</p></div></details>
+        <details class="qa"><summary>Why pass the correlation ID as an explicit method parameter/header rather than relying on some kind of implicit thread-local propagation?</summary><div class="qa-answer"><p>Explicit propagation through method signatures and headers is what actually survives the network boundary — a thread-local value set in Accounts's request-handling thread has no way to automatically appear in Loans's request-handling thread, since they're entirely separate processes/JVMs communicating only via the HTTP request itself. The correlation ID has to be serialized into something that crosses the wire — an HTTP header is the standard mechanism — and explicitly threading it through the Feign interface's method signature (rather than hoping some interceptor magically attaches it) keeps the propagation visible and unambiguous in the code, at the cost of slightly more verbose method signatures. Some teams do automate this via a Feign `RequestInterceptor` that reads a thread-local (populated by an inbound request filter) and attaches it to every outgoing Feign call automatically — trading a bit of implicit "magic" for removing the need to thread the parameter through every single method signature by hand.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="self-preservation">
+    <div class="topic-head"><span class="topic-no">115</span><h2>Eureka Self-Preservation Mode to Avoid Network Trap Issues</h2></div>
+    <p class="topic-sub">Guarding against mass, false-positive eviction during a network blip — a genuinely important production safety mechanism.</p>
+
+    <h3 class="subhead">The "network trap" scenario</h3>
+    <p>Imagine a brief network partition or connectivity blip between the Eureka Server and a large fraction of its registered clients — not because those instances actually died, but because of a transient network issue (a router hiccup, a brief DNS problem, a temporary overload). If the Eureka Server naively applies the heartbeat-eviction rule from topic 112 literally, it would see a mass wave of missed heartbeats across <em>many, many instances simultaneously</em> and evict all of them — even though every one of those instances is actually still healthy and serving traffic just fine. This is the "network trap": a transient, non-fatal issue causing the registry to falsely believe most of the system just died.</p>
+
+    <div class="diagram">
+      <div class="dflow">
+        <div class="dbox warn"><div class="t">Network blip</div><div class="s">many instances miss heartbeats simultaneously</div></div>
+        <div class="darrow">→</div>
+        <div class="dbox"><div class="t">Naive eviction</div><div class="s">registry wrongly empties out — mass false-positive</div></div>
+      </div>
+    </div>
+
+    <h3 class="subhead">How self-preservation mode prevents this</h3>
+    <p>Eureka Server continuously tracks the <strong>ratio of expected heartbeats to actually-received heartbeats</strong> across its <em>entire</em> registry. If that ratio drops below a threshold (85% by default) within a rolling window, Eureka concludes it's more likely experiencing a systemic network problem than a genuine mass instance failure, and enters <strong>self-preservation mode</strong>: it stops evicting instances entirely, preserving the registry in its last-known-good state until heartbeat renewals recover to a healthy ratio.</p>
+
+    <div class="callout info"><b class="lbl">The core insight</b><p>A single instance missing its heartbeats is treated as "that instance probably died" (topic 112's normal eviction logic). But <em>many</em> instances missing heartbeats <em>at the same time</em> is statistically far more likely to be a shared, systemic problem (a network issue, or a problem with the Eureka Server's own connectivity) than every one of those independent instances coincidentally dying simultaneously — self-preservation encodes exactly this statistical reasoning directly into Eureka's eviction logic.</p></div>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">application.yml (dev/testing override only)</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="cl">eureka</span>:
+  <span class="cl">server</span>:
+    <span class="cl">enable-self-preservation</span>: <span class="kw">false</span>
+    <span class="cl">renewal-percent-threshold</span>: <span class="str">0.85</span></pre></div></div>
+    </div>
+
+    <div class="callout pitfall"><b class="lbl">Disabling this in production is a genuine anti-pattern</b><p><code>enable-self-preservation: false</code> is commonly set during local development/demos specifically because a single-instance, single-Eureka-Server local setup makes eviction timing easy to observe and test without self-preservation's protective delay getting in the way. Leaving it disabled in production removes exactly the safety net that prevents a transient network issue from wrongly emptying out your entire service registry — a real, well-documented cause of production incidents in systems that copy dev-time Eureka config into production without reviewing it. This is a favorite "spot the mistake" interview scenario.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q13-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q13-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q13-common">
+        <details class="qa"><summary>What problem does Eureka's self-preservation mode solve?</summary><div class="qa-answer"><p>It prevents mass, false-positive eviction of healthy instances during a transient network issue — if too many instances miss heartbeats simultaneously, Eureka assumes a systemic network problem rather than genuine mass instance failure, and stops evicting until heartbeat renewals recover.</p></div></details>
+        <details class="qa"><summary>What's the default renewal threshold that triggers self-preservation mode?</summary><div class="qa-answer"><p>85% — if the ratio of received-to-expected heartbeats across the whole registry drops below this within a rolling window, Eureka enters self-preservation mode and stops evicting instances.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q13-faang">
+        <details class="qa"><summary>What's the trade-off self-preservation mode accepts, and why is it still the right default?</summary><div class="qa-answer"><p>While in self-preservation mode, Eureka also stops evicting instances that are <em>genuinely</em> dead (not just the ones affected by the network blip) — so the registry can hold onto some truly-dead entries longer than the normal 90-second eviction window would otherwise allow, meaning clients might occasionally route to a dead instance and need to rely on their own retry logic (as discussed in topic 106/111) more than usual during this period. This is an accepted trade-off because the alternative — naive eviction during a network blip — is strictly worse: it would potentially empty out the <em>entire</em> registry of an otherwise fully healthy system, causing every single service-to-service call across the whole platform to fail with "no instances available," a far more severe outage than a temporarily elevated rate of retried calls to a few actually-dead instances. Self-preservation deliberately trades a small amount of registry staleness for avoiding a catastrophic, self-inflicted, false-positive mass outage.</p></div></details>
+        <details class="qa"><summary>How would you actually detect and respond to a Eureka Server sitting in self-preservation mode in a production monitoring setup?</summary><div class="qa-answer"><p>Eureka Server's own dashboard and Actuator metrics expose whether the server is currently in self-preservation mode (visible via the dashboard UI banner, and programmatically via Eureka's status/info endpoints or exposed metrics), which should be wired into monitoring/alerting — an alert firing when self-preservation activates lets an on-call engineer investigate the underlying network issue causing widespread missed heartbeats, rather than only noticing something's wrong once it manifests as user-facing failures. Response typically involves diagnosing the actual network/connectivity problem (is it isolated to the Eureka Server's own network path, or affecting a broader set of services) rather than trying to "fix" self-preservation mode itself, since it's a symptom being correctly reported, not the underlying problem.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="docker-images-sd">
+    <div class="topic-head"><span class="topic-no">116</span><h2>Generating Docker Images with Service Discovery Changes & Pushing to Docker Hub</h2></div>
+    <p class="topic-sub">Rebuilding every image now that Eureka client and Feign are part of each service.</p>
+
+    <p>Following the exact same workflow established in Section 4, every service touched in this section — Accounts, Loans, Cards (now Eureka clients, with Accounts additionally carrying Feign clients), plus the new Eureka Server itself — needs a fresh image build and push to Docker Hub, tagged to reflect this section's changes (e.g. `:s8`).</p>
+
+    <div class="callout warn"><b class="lbl">Don't forget: another new service joins the Compose file</b><p>Just as Section 6 added a brand-new Config Server image, this round adds a brand-new <strong>Eureka Server</strong> image that's never been built before — worth double-checking the full list of services the updated Compose file references, rather than only rebuilding services that already had prior images.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q14-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q14-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q14-common">
+        <details class="qa"><summary>Why does Accounts's image need to be rebuilt in this section, given its core business logic hasn't changed?</summary><div class="qa-answer"><p>Its dependencies and code did change — it now includes the Eureka client, OpenFeign, and the new Feign client interfaces/composite-fetch logic — all of which need to be compiled and packaged into a new image; the previous image predates all of this.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q14-faang">
+        <details class="qa"><summary>Now that Accounts calls Loans and Cards directly at the network level via Feign, does anything about the choice of image-build approach (Dockerfile/Buildpacks/Jib, from Section 4) need to change?</summary><div class="qa-answer"><p>No — the image-build approach is orthogonal to what the application does at runtime; Feign, Eureka client, and any other library additions are just more classpath dependencies bundled into the same JAR the existing Dockerfile/Buildpacks/Jib pipeline already knows how to containerize. This is worth noting explicitly because it reinforces a useful mental model: the containerization concerns from Section 4 and the application's internal architecture (service discovery, inter-service calls) are genuinely decoupled layers — changes to one don't require rethinking the other, which is exactly the kind of separation of concerns that makes a system's moving pieces independently reasoned-about.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="compose-sd">
+    <div class="topic-head"><span class="topic-no">117</span><h2>Updating Docker Compose File to Adapt Service Discovery Changes</h2></div>
+    <p class="topic-sub">Adding the Eureka Server to the multi-container stack, with correct startup ordering once again.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">docker-compose.yml (excerpt)</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="cl">services</span>:
+  <span class="cl">eurekaserver</span>:
+    <span class="cl">image</span>: <span class="str">eazybytes/eurekaserver:s8</span>
+    <span class="cl">container_name</span>: <span class="str">eurekaserver-ms</span>
+    <span class="cl">ports</span>:
+      - <span class="str">"8761:8761"</span>
+    <span class="cl">healthcheck</span>:
+      <span class="cl">test</span>: <span class="str">"curl --fail --silent http://localhost:8761/actuator/health/readiness | grep UP || exit 1"</span>
+      <span class="cl">interval</span>: <span class="str">10s</span>
+      <span class="cl">timeout</span>: <span class="str">5s</span>
+      <span class="cl">retries</span>: <span class="str">10</span>
+      <span class="cl">start_period</span>: <span class="str">10s</span>
+    <span class="cl">depends_on</span>:
+      <span class="cl">configserver</span>:
+        <span class="cl">condition</span>: <span class="str">service_healthy</span>
+    <span class="cl">networks</span>:
+      - <span class="str">eazybank</span>
+
+  <span class="cl">accounts</span>:
+    <span class="cl">image</span>: <span class="str">eazybytes/accounts:s8</span>
+    <span class="cl">extends</span>:
+      <span class="cl">file</span>: <span class="str">common-config.yml</span>
+      <span class="cl">service</span>: <span class="str">microservice-base-config</span>
+    <span class="cl">depends_on</span>:
+      <span class="cl">configserver</span>:
+        <span class="cl">condition</span>: <span class="str">service_healthy</span>
+      <span class="cl">eurekaserver</span>:
+        <span class="cl">condition</span>: <span class="str">service_healthy</span>
+      <span class="cl">rabbit</span>:
+        <span class="cl">condition</span>: <span class="str">service_healthy</span>
+    <span class="cl">environment</span>:
+      <span class="cl">EUREKA_CLIENT_SERVICEURL_DEFAULTZONE</span>: <span class="str">"http://eurekaserver:8761/eureka/"</span></pre></div></div>
+    </div>
+
+    <div class="callout info"><b class="lbl">Building on Section 6's optimizations directly</b><p>Notice this excerpt reuses both the <code>extends: common-config.yml</code> pattern and the healthcheck-gated <code>depends_on</code> pattern established in Section 6 — the Eureka Server slots into the exact same architectural conventions already in place for Config Server and RabbitMQ, rather than needing new patterns invented for it. This is deliberate: once a Compose file has good conventions, adding a new infrastructure dependency should feel incremental, not like starting over.</p></div>
+
+    <div class="callout warn"><b class="lbl">Service name, not localhost, once again</b><p>`EUREKA_CLIENT_SERVICEURL_DEFAULTZONE` uses <code>eurekaserver</code> — the Compose service name — exactly per the container-networking principle established back in Section 4: containers reach each other by service name on the shared Docker network, never `localhost`.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q15-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q15-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q15-common">
+        <details class="qa"><summary>Why does accounts's depends_on now include eurekaserver alongside configserver and rabbit?</summary><div class="qa-answer"><p>Accounts registers itself with, and discovers other services through, the Eureka Server at startup — just like its hard dependency on Config Server for configuration, this is now a genuine startup-time dependency that Compose needs to sequence correctly and gate on health.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q15-faang">
+        <details class="qa"><summary>If eurekaserver's healthcheck only confirms its own actuator endpoint responds, could accounts still start successfully but fail to discover loans/cards?</summary><div class="qa-answer"><p>Yes, potentially — a healthy Eureka Server (its own process/HTTP endpoint responding) doesn't guarantee that Loans and Cards have <em>already</em> registered themselves by the time Accounts starts and tries to discover them; registration itself happens on each client's own startup timeline, independent of whether the Eureka Server itself is healthy. If Accounts starts, successfully connects to a healthy Eureka Server, but queries it before Loans/Cards have completed their own registration, its local registry cache would simply be missing those entries until its next periodic refresh (default 30s) picks them up — meaning an inter-service Feign call attempted very early in Accounts's own startup window could fail with "service not found" even though everything is otherwise configured correctly. In practice this is usually a brief, self-resolving window (the periodic cache refresh catches up within moments) rather than a lasting problem, but it's a good illustration of why `depends_on: service_healthy` on the registry itself is necessary-but-not-sufficient for guaranteeing full discoverability at the instant a dependent service starts — genuinely eliminating this race would require something like a readiness check that specifically confirms all expected peer services are already registered, which is uncommon in practice given the self-healing nature of the periodic refresh.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="compose-start-sd">
+    <div class="topic-head"><span class="topic-no">118</span><h2>Starting All the Microservices Using Docker Compose File</h2></div>
+    <p class="topic-sub">Bringing up the full stack and confirming registration end to end.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">verification workflow</div></div>
+      <div class="code-body"><div class="code-pane active"><pre>$ docker compose up -d
+
+$ docker compose ps
+<span class="cm"># confirm every service, including eurekaserver, reports healthy</span>
+
+<span class="cm"># open http://localhost:8761 in a browser —</span>
+<span class="cm"># the Eureka dashboard should list ACCOUNTS, LOANS, and CARDS,</span>
+<span class="cm"># each with at least one registered, UP instance</span></pre></div></div>
+    </div>
+
+    <p>With the correct healthcheck-gated dependency chain from the previous topic, a single <code>docker compose up -d</code> should bring up the entire stack — databases, Config Server, RabbitMQ, Eureka Server, then the three application services — in the correct order automatically, with each application service successfully registering itself the moment it starts.</p>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q16-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q16-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q16-common">
+        <details class="qa"><summary>How would you visually confirm all three services successfully registered with Eureka after docker compose up?</summary><div class="qa-answer"><p>Open the Eureka dashboard at `http://localhost:8761` in a browser — it lists every currently registered service ID and their instance statuses, so ACCOUNTS, LOANS, and CARDS should each appear with at least one instance marked UP.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q16-faang">
+        <details class="qa"><summary>If accounts shows as "DOWN" or missing entirely on the Eureka dashboard despite docker compose ps showing it as healthy, where would you start debugging?</summary><div class="qa-answer"><p>First check `docker compose logs accounts` for Eureka client registration errors specifically (connection refused/timeout to the configured `defaultZone` URL, or DNS resolution failures for the `eurekaserver` service name) — a service reporting "healthy" via its own Compose healthcheck only confirms its own actuator endpoint is responding, not that its Eureka registration succeeded, since those are two entirely independent subsystems within the app. Common root causes at this stage: a typo or stale value in `EUREKA_CLIENT_SERVICEURL_DEFAULTZONE`, the Eureka client attempting registration before the network alias `eurekaserver` was resolvable (a startup-ordering issue, even with healthcheck gating, if the healthcheck itself was checking the wrong thing), or a `prefer-ip-address` misconfiguration causing the instance to register under an address other services can't actually reach. This is a good illustration of why "the container is healthy" and "the application's internal integrations are actually working correctly" are genuinely different claims that require separately verifying.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="e2e-demo-sd">
+    <div class="topic-head"><span class="topic-no">119</span><h2>Demo of Client-Side Service Discovery & Load Balancing</h2></div>
+    <p class="topic-sub">Proving the whole chain works — scale, discover, load-balance, and correctly route, end to end.</p>
+
+    <h3 class="subhead">The full verification checklist</h3>
+    <ol>
+      <li>Call the composite endpoint on Accounts (the `fetchCustomerDetails`-style endpoint from topic 113) and confirm it returns correctly merged data from Loans and Cards — proving Feign successfully discovered and called both services.</li>
+      <li>Scale Loans to multiple instances: <code>docker compose up -d --scale loans=3</code>.</li>
+      <li>Confirm the Eureka dashboard now shows 3 registered instances under the `LOANS` service ID.</li>
+      <li>Make several repeated calls to the composite Accounts endpoint and observe (via each Loans instance's own logs) that requests are being <strong>distributed across all three instances</strong> — direct, visible proof of round-robin client-side load balancing in action, with no external load balancer involved anywhere in the request path.</li>
+    </ol>
+
+    <div class="callout info"><b class="lbl">Why this demo matters more than it might seem</b><p>This is the moment every concept from this section — registration, heartbeats, client-side discovery, Feign, load balancing — becomes empirically observable rather than theoretical. Seeing requests genuinely spread across multiple dynamically-scaled instances, discovered purely through Eureka with zero hardcoded addresses anywhere in the system, is the concrete payoff of everything built in topics 102 through 118.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q17-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q17-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q17-common">
+        <details class="qa"><summary>How would you prove, empirically, that client-side load balancing is actually distributing requests across multiple Loans instances?</summary><div class="qa-answer"><p>Scale Loans to multiple replicas via Compose, make repeated calls to an Accounts endpoint that internally calls Loans via Feign, and observe each Loans instance's own logs — seeing requests land across different instances (rather than always the same one) confirms the load balancer is genuinely distributing calls.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q17-faang">
+        <details class="qa"><summary>If you scale Loans to 3 instances and immediately start sending requests, would you expect perfectly even round-robin distribution from the very first request?</summary><div class="qa-answer"><p>Not necessarily immediately — the calling service's (Accounts's) local registry cache only refreshes periodically (default 30s), so if requests start flowing before that refresh cycle picks up the newly-scaled instances, early calls might still only be distributed across whichever instances were already known at that point. Additionally, "round-robin" distribution only appears even over a number of calls at least equal to the instance count, cycling through the known list in order — a very small number of test calls (e.g. just 2 calls against 3 instances) wouldn't necessarily visit every instance yet, which isn't a bug, just the expected behavior of a rotating index across a short sample size. A proper verification should account for both the cache-refresh delay and use enough sample calls to observe the full rotation.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="graalvm-note">
+    <div class="topic-head"><span class="topic-no">120</span><h2>Important Note on GraalVM</h2></div>
+    <p class="topic-sub">A compatibility heads-up worth understanding even briefly — reflection-heavy libraries and native-image compilation don't naturally mix.</p>
+
+    <h3 class="subhead">What GraalVM native image is, briefly</h3>
+    <p><strong>GraalVM native image</strong> ahead-of-time compiles a Spring Boot application into a standalone native executable — no JVM needed at runtime, with dramatically faster startup time and lower memory footprint, which matters a great deal for serverless/fast-autoscaling deployment scenarios. Spring Boot 3+ has first-class support for building native images via `spring-boot-starter-parent`'s native-image plugin support.</p>
+
+    <h3 class="subhead">Why Eureka specifically is a friction point</h3>
+    <p>GraalVM native-image compilation works by statically analyzing the application's bytecode ahead of time to determine exactly what classes/methods/reflection usage are reachable — anything relying on <strong>runtime reflection, dynamic proxies, or dynamic classloading</strong> that the static analyzer can't fully see in advance needs to be <strong>explicitly declared</strong> via reflection configuration hints, or the native image will fail at runtime with a class-not-found-style error that never appears when running normally on the JVM. Netflix Eureka's client libraries (and some other Netflix OSS-era libraries generally) were built well before native-image compilation was a mainstream concern, and rely on exactly this kind of dynamic behavior in ways that aren't automatically native-image-friendly out of the box.</p>
+
+    <div class="callout warn"><b class="lbl">The practical takeaway</b><p>If you're planning to compile a Eureka-client-dependent service to a GraalVM native image, expect to need <strong>additional reflection configuration</strong> (either hand-written `reflect-config.json` hints, or relying on Spring AOT processing plus community-maintained GraalVM reachability metadata for Eureka, where available) — it's not a simple drop-in "just works" situation the way a native-image build of a plain, reflection-light Spring Boot REST service typically is. This is exactly the kind of detail that separates "I've read about GraalVM" from "I've actually tried shipping a Eureka-based service as a native image" in an interview conversation.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q18-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q18-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q18-common">
+        <details class="qa"><summary>What is GraalVM native image, in one sentence?</summary><div class="qa-answer"><p>A GraalVM feature that ahead-of-time compiles a Java application (including Spring Boot apps) into a standalone native executable with no JVM required at runtime, offering much faster startup and lower memory usage.</p></div></details>
+        <details class="qa"><summary>Why does Eureka client specifically need extra attention for native-image compilation?</summary><div class="qa-answer"><p>Because native-image compilation relies on ahead-of-time static analysis to determine what's reachable, and Eureka's client libraries use runtime reflection/dynamic behavior patterns that predate native-image tooling — this needs to be explicitly declared via reflection configuration for the native image to work correctly, unlike code that avoids reflection and "just works" under native-image compilation automatically.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q18-faang">
+        <details class="qa"><summary>Why does faster startup time from GraalVM native image matter specifically for a microservices architecture using Eureka-based discovery, beyond generic "faster is better"?</summary><div class="qa-answer"><p>Startup speed directly affects how quickly a newly-scaled instance becomes genuinely useful — from process start, through Spring context initialization, through successful Eureka registration, to actually being discoverable and receiving load-balanced traffic. In an autoscaling scenario reacting to a sudden traffic spike, a JVM-based Spring Boot app might take several seconds to tens of seconds to reach that fully-registered, traffic-ready state, during which the system is still under-provisioned relative to demand; a native-image version reaching the same state in a fraction of the time meaningfully shrinks that under-provisioned window. This is precisely why native image is discussed as particularly valuable for fast-autoscaling and serverless deployment models specifically — the startup-time benefit compounds with exactly the kind of dynamic, elastic infrastructure this whole section's service-discovery mechanics are designed to support.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer-note">Spring Boot Bible · Section 8 of N · Standalone reference document · Generated for interview preparation</div>
+</main>
+</div>
+
+<script>
+const themeToggle = document.getElementById('themeToggle');
+const html = document.documentElement;
+function applyThemeLabel(){
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  themeToggle.innerHTML = isDark ? '🌙 Dark mode <span>⇄</span>' : '☀️ Light mode <span>⇄</span>';
+}
+themeToggle.addEventListener('click', () => {
+  const cur = html.getAttribute('data-theme');
+  html.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+  applyThemeLabel();
+  localStorage.setItem('sb-bible-theme', html.getAttribute('data-theme'));
+});
+(function initTheme(){
+  const saved = localStorage.getItem('sb-bible-theme');
+  if(saved){ html.setAttribute('data-theme', saved); }
+  applyThemeLabel();
+})();
+
+document.querySelectorAll('.code-panel').forEach(panel => {
+  const tabs = panel.querySelectorAll('.code-tab');
+  if(tabs.length <= 1) return;
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.getAttribute('data-pane');
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      panel.querySelectorAll('.code-pane').forEach(p => p.classList.remove('active'));
+      const pane = panel.querySelector('#' + target);
+      if(pane) pane.classList.add('active');
+    });
+  });
+});
+
+document.querySelectorAll('.qa-section').forEach(section => {
+  const btns = section.querySelectorAll('.qa-tab-btn');
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-target');
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      section.querySelectorAll('.qa-pane').forEach(p => p.classList.remove('active'));
+      document.getElementById(target).classList.add('active');
+    });
+  });
+});
+
+const navLinks = document.querySelectorAll('.nav-link');
+const topics = document.querySelectorAll('section.topic');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const id = entry.target.getAttribute('id');
+    const link = document.querySelector('.nav-link[href="#' + id + '"]');
+    if(!link) return;
+    if(entry.isIntersecting){
+      navLinks.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-15% 0px -75% 0px', threshold: 0 });
+topics.forEach(t => observer.observe(t));
+</script>
+</body>
+</html>

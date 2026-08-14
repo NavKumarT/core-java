@@ -1,0 +1,1835 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spring Boot Bible — Section 6: Configuration Management in Microservices</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0f14; --bg-elev:#111820; --bg-elev-2:#161f2a; --border:#233042;
+  --text:#dbe4ee; --text-dim:#8a9bb0; --text-faint:#5c6b7e;
+  --accent:#6DB33F; --accent-soft:#6DB33F22;
+  --accent-2:#4fa3d1; --accent-2-soft:#4fa3d122;
+  --cfg:#a684e8; --cfg-soft:#a684e822;
+  --warn:#e0a94f; --warn-soft:#e0a94f22;
+  --danger:#e0655f; --danger-soft:#e0655f22;
+  --code-bg:#0d1420; --code-border:#1e2a3a;
+  --shadow: 0 8px 24px rgba(0,0,0,0.35); --radius: 10px; --sidebar-w: 300px;
+}
+html[data-theme="light"]{
+  --bg:#f6f4ee; --bg-elev:#ffffff; --bg-elev-2:#eef0e8; --border:#dcdccf;
+  --text:#1c231d; --text-dim:#586257; --text-faint:#8b9188;
+  --accent:#3f7d1f; --accent-soft:#3f7d1f1a;
+  --accent-2:#1f6f9c; --accent-2-soft:#1f6f9c1a;
+  --cfg:#6b3fa8; --cfg-soft:#6b3fa818;
+  --warn:#8a5a12; --warn-soft:#8a5a1218;
+  --danger:#a3352f; --danger-soft:#a3352f18;
+  --code-bg:#fbfaf5; --code-border:#e2e0d2;
+  --shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;line-height:1.65;font-size:15.5px;}
+::selection{background:var(--cfg-soft);color:var(--cfg);}
+h1,h2,h3,h4{font-family:'Space Mono',monospace;letter-spacing:-0.01em;color:var(--text);}
+code, pre, .mono{font-family:'Space Mono',monospace;}
+a{color:var(--accent-2);text-decoration:none;}
+a:hover{text-decoration:underline;}
+
+.shell{display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;border-right:1px solid var(--border);background:var(--bg-elev);position:sticky;top:0;height:100vh;overflow-y:auto;padding:22px 16px 60px;}
+.sidebar::-webkit-scrollbar{width:6px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:4px;padding:0 6px;}
+.brand-badge{width:34px;height:34px;border-radius:8px;background:var(--cfg);display:flex;align-items:center;justify-content:center;font-family:'Space Mono';font-weight:700;color:#fff;font-size:13px;flex-shrink:0;}
+.brand-text{font-family:'Space Mono';font-weight:700;font-size:14.5px;line-height:1.2;}
+.brand-text span{display:block;font-size:10.5px;color:var(--text-faint);font-weight:400;margin-top:2px;letter-spacing:0.04em;}
+.theme-toggle{margin:14px 6px 20px;width:calc(100% - 12px);background:var(--bg-elev-2);border:1px solid var(--border);color:var(--text-dim);padding:8px 10px;border-radius:8px;font-family:'Inter';font-size:12.5px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
+.theme-toggle:hover{color:var(--text);border-color:var(--cfg);}
+.nav-group{margin-bottom:6px;}
+.nav-group-title{font-size:10.5px;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-faint);padding:14px 8px 6px;font-family:'Space Mono';}
+.nav-link{display:block;padding:7px 10px;border-radius:7px;font-size:13px;color:var(--text-dim);margin-bottom:1px;border-left:2px solid transparent;}
+.nav-link:hover{background:var(--bg-elev-2);color:var(--text);text-decoration:none;}
+.nav-link.active{background:var(--cfg-soft);color:var(--cfg);border-left:2px solid var(--cfg);font-weight:600;}
+.nav-link .vid-no{color:var(--text-faint);margin-right:5px;}
+
+main{flex:1;min-width:0;padding:48px 56px 120px;max-width:980px;}
+.hero{margin-bottom:44px;}
+.hero-eyebrow{font-family:'Space Mono';font-size:11.5px;color:var(--cfg);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.hero-eyebrow::before{content:"";width:20px;height:1px;background:var(--cfg);}
+.hero h1{font-size:32px;margin:0 0 12px;line-height:1.25;}
+.hero p{color:var(--text-dim);font-size:15.5px;max-width:680px;}
+.scope-box{margin-top:20px;border:1px solid var(--border);background:var(--bg-elev);border-radius:var(--radius);padding:16px 18px;font-size:13px;color:var(--text-dim);}
+.scope-box b{color:var(--text);}
+
+section.topic{margin-bottom:56px;scroll-margin-top:24px;}
+.topic-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;border-bottom:1px solid var(--border);padding-bottom:14px;}
+.topic-no{font-family:'Space Mono';color:var(--cfg);font-size:13px;background:var(--cfg-soft);padding:3px 9px;border-radius:20px;flex-shrink:0;}
+.topic-head h2{font-size:22px;margin:0;}
+.topic-sub{color:var(--text-faint);font-size:12.5px;margin:8px 0 22px;}
+
+p{color:var(--text-dim);}
+h3.subhead{font-size:16.5px;color:var(--text);margin:28px 0 10px;display:flex;align-items:center;gap:8px;}
+h3.subhead::before{content:"";width:3px;height:15px;background:var(--accent-2);border-radius:2px;}
+h4.minihead{font-size:13.5px;color:var(--text);margin:18px 0 8px;font-family:'Inter';font-weight:700;}
+ul,ol{color:var(--text-dim);padding-left:22px;}
+li{margin-bottom:6px;}
+strong{color:var(--text);}
+
+.ann-box{border:1px solid var(--code-border);background:var(--bg-elev);border-radius:var(--radius);margin:14px 0;overflow:hidden;}
+.ann-box-head{display:flex;align-items:center;gap:10px;padding:11px 16px;background:var(--cfg-soft);border-bottom:1px solid var(--code-border);}
+.ann-tag{font-family:'Space Mono';font-weight:700;color:var(--cfg);font-size:14px;}
+.ann-loc{margin-left:auto;font-size:10.5px;color:var(--text-faint);font-family:'Space Mono';text-transform:uppercase;letter-spacing:0.05em;}
+.ann-body{padding:12px 16px;}
+.ann-body p{margin:4px 0 8px;font-size:13.5px;}
+.ann-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0;}
+@media(max-width:760px){.ann-grid{grid-template-columns:1fr;}}
+
+.code-panel{border:1px solid var(--code-border);border-radius:var(--radius);overflow:hidden;margin:16px 0;background:var(--code-bg);}
+.code-tabs{display:flex;background:var(--bg-elev-2);border-bottom:1px solid var(--code-border);overflow-x:auto;}
+.code-tab{padding:9px 16px;font-family:'Space Mono';font-size:12px;color:var(--text-faint);cursor:pointer;border-right:1px solid var(--code-border);white-space:nowrap;user-select:none;}
+.code-tab:hover{color:var(--text-dim);}
+.code-tab.active{color:var(--cfg);background:var(--code-bg);border-bottom:2px solid var(--cfg);margin-bottom:-1px;}
+.code-body{position:relative;}
+.code-pane{display:none;padding:16px 18px;overflow-x:auto;}
+.code-pane.active{display:block;}
+pre{margin:0;font-size:12.8px;line-height:1.65;color:#c7d3e0;}
+html[data-theme="light"] pre{color:#333c30;}
+.kw{color:#c586c0;}
+.ann{color:var(--cfg);font-weight:700;}
+.str{color:#ce9178;}
+.cm{color:var(--text-faint);font-style:italic;}
+.ty{color:#4ec9b0;}
+.cl{color:#e5c07b;}
+
+.callout{border-radius:var(--radius);padding:14px 16px;margin:16px 0;border:1px solid;font-size:13.5px;}
+.callout.info{background:var(--accent-2-soft);border-color:var(--accent-2);color:var(--text);}
+.callout.warn{background:var(--warn-soft);border-color:var(--warn);color:var(--text);}
+.callout.pitfall{background:var(--danger-soft);border-color:var(--danger);color:var(--text);}
+.callout b.lbl{display:block;font-family:'Space Mono';font-size:11px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;}
+.callout.info b.lbl{color:var(--accent-2);}
+.callout.warn b.lbl{color:var(--warn);}
+.callout.pitfall b.lbl{color:var(--danger);}
+.callout p{margin:0;color:var(--text-dim);}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left;color:var(--text-dim);}
+th{background:var(--bg-elev-2);color:var(--text);font-family:'Space Mono';font-size:11.5px;text-transform:uppercase;letter-spacing:0.04em;}
+tr:hover td{background:var(--bg-elev-2);}
+
+.diagram{border:1px solid var(--code-border);background:var(--code-bg);border-radius:var(--radius);padding:22px 18px;margin:18px 0;overflow-x:auto;}
+.dflow{display:flex;align-items:stretch;gap:10px;min-width:max-content;flex-wrap:wrap;}
+.dbox{flex-shrink:0;min-width:120px;border:1px solid var(--border);background:var(--bg-elev);border-radius:8px;padding:12px 14px;text-align:center;}
+.dbox .t{font-family:'Space Mono';font-size:12px;color:var(--text);font-weight:700;}
+.dbox .s{font-size:10.5px;color:var(--text-faint);margin-top:4px;}
+.dbox.accent{border-color:var(--cfg);background:var(--cfg-soft);}
+.dbox.accent .t{color:var(--cfg);}
+.dbox.warn{border-color:var(--warn);background:var(--warn-soft);}
+.dbox.warn .t{color:var(--warn);}
+.dbox.dim{opacity:0.55;}
+.darrow{flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-family:'Space Mono';font-size:16px;min-width:24px;}
+.dstack{display:flex;flex-direction:column;gap:8px;}
+.dcol{display:flex;flex-direction:column;gap:8px;align-items:center;}
+.dphase-label{font-family:'Space Mono';font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;text-align:center;margin-top:8px;}
+
+.qa-section{margin-top:26px;}
+.qa-tabs{display:flex;gap:8px;margin-bottom:14px;}
+.qa-tab-btn{font-family:'Space Mono';font-size:11.5px;padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg-elev);color:var(--text-dim);cursor:pointer;text-transform:uppercase;letter-spacing:0.04em;}
+.qa-tab-btn.common.active{background:var(--accent-2-soft);border-color:var(--accent-2);color:var(--accent-2);}
+.qa-tab-btn.faang.active{background:var(--danger-soft);border-color:var(--danger);color:var(--danger);}
+.qa-pane{display:none;}
+.qa-pane.active{display:block;}
+details.qa{border:1px solid var(--border);border-radius:8px;margin-bottom:8px;background:var(--bg-elev);overflow:hidden;}
+details.qa[open]{border-color:var(--accent-2);}
+details.qa summary{padding:12px 16px;cursor:pointer;font-weight:600;font-size:13.8px;list-style:none;display:flex;align-items:flex-start;gap:10px;color:var(--text);}
+details.qa summary::-webkit-details-marker{display:none;}
+details.qa summary::before{content:"Q";flex-shrink:0;font-family:'Space Mono';font-size:11px;color:var(--accent-2);background:var(--accent-2-soft);width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+details.qa .qa-answer{padding:0 16px 16px 46px;color:var(--text-dim);font-size:13.5px;}
+details.qa .qa-answer p{margin:0 0 8px;color:var(--text-dim);}
+details.qa .qa-answer p:last-child{margin-bottom:0;}
+
+.divider{height:1px;background:linear-gradient(90deg,var(--border),transparent);margin:44px 0;}
+.footer-note{color:var(--text-faint);font-size:12px;text-align:center;padding:30px 0 10px;}
+
+@media(max-width:900px){
+  .shell{flex-direction:column;}
+  .sidebar{position:relative;width:100%;height:auto;}
+  main{padding:32px 20px 80px;}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-badge">⚙</div>
+    <div class="brand-text">Spring Boot Bible<span>Section 6 · Config Mgmt</span></div>
+  </div>
+  <button class="theme-toggle" id="themeToggle">🌙 Dark mode <span>⇄</span></button>
+
+  <div class="nav-group">
+    <div class="nav-group-title">Foundations</div>
+    <a class="nav-link" href="#challenges"><span class="vid-no">67</span>Config Management Challenges</a>
+    <a class="nav-link" href="#how-config-works"><span class="vid-no">68</span>How Config Works in Spring Boot</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Reading Config Values</div>
+    <a class="nav-link" href="#value-annotation"><span class="vid-no">69</span>@Value Annotation</a>
+    <a class="nav-link" href="#environment-interface"><span class="vid-no">70</span>Environment Interface</a>
+    <a class="nav-link" href="#configuration-properties"><span class="vid-no">71</span>@ConfigurationProperties</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Spring Boot Profiles</div>
+    <a class="nav-link" href="#profiles-intro"><span class="vid-no">72</span>Intro to Profiles</a>
+    <a class="nav-link" href="#profiles-demo"><span class="vid-no">73</span>Profiles Demo — Accounts</a>
+    <a class="nav-link" href="#externalizing"><span class="vid-no">74</span>Externalizing Config (CLI/JVM/Env)</a>
+    <a class="nav-link" href="#activating-profile"><span class="vid-no">75</span>Activating Profiles</a>
+    <a class="nav-link" href="#loans-cards-profiles"><span class="vid-no">76-77</span>Loans & Cards Profiles</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Spring Cloud Config</div>
+    <a class="nav-link" href="#drawbacks"><span class="vid-no">78</span>Drawbacks of Boot-only Config</a>
+    <a class="nav-link" href="#cloud-config-intro"><span class="vid-no">79</span>Intro to Spring Cloud Config</a>
+    <a class="nav-link" href="#config-server-build"><span class="vid-no">80</span>Building the Config Server</a>
+    <a class="nav-link" href="#classpath-location"><span class="vid-no">81</span>Reading from Classpath</a>
+    <a class="nav-link" href="#accounts-config-client"><span class="vid-no">82</span>Accounts as Config Client</a>
+    <a class="nav-link" href="#loans-cards-config-client"><span class="vid-no">83</span>Loans & Cards as Clients</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Config Server Backends</div>
+    <a class="nav-link" href="#filesystem-location"><span class="vid-no">84</span>File System Backend</a>
+    <a class="nav-link" href="#github-backend"><span class="vid-no">85</span>GitHub Repo Backend</a>
+    <a class="nav-link" href="#encryption"><span class="vid-no">86</span>Encryption & Decryption</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Runtime Refresh</div>
+    <a class="nav-link" href="#refresh-actuator"><span class="vid-no">87</span>Refresh via /actuator/refresh</a>
+    <a class="nav-link" href="#cloud-bus"><span class="vid-no">88</span>Refresh via Spring Cloud Bus</a>
+    <a class="nav-link" href="#config-monitor"><span class="vid-no">89</span>Cloud Bus + Config Monitor</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Docker Compose & Probes</div>
+    <a class="nav-link" href="#compose-config-server"><span class="vid-no">90,92</span>Compose Updates for Config Server</a>
+    <a class="nav-link" href="#probes"><span class="vid-no">91</span>Liveness & Readiness Probes</a>
+    <a class="nav-link" href="#compose-optimize"><span class="vid-no">93</span>Optimizing Docker Compose</a>
+    <a class="nav-link" href="#build-push-images"><span class="vid-no">94</span>Build & Push Images</a>
+    <a class="nav-link" href="#e2e-testing"><span class="vid-no">95</span>End-to-End Testing</a>
+    <a class="nav-link" href="#qa-prod-compose"><span class="vid-no">96</span>QA & Prod Compose Files</a>
+  </div>
+</aside>
+
+<main>
+  <div class="hero">
+    <div class="hero-eyebrow">Section 6 · Spring Boot Bible</div>
+    <h1>Configuration Management in Microservices</h1>
+    <p>Almost every real production incident traced back to "config" falls into one of two buckets: a secret leaked because it lived in source control, or a service came up with the wrong value because config drifted silently between environments. This is one of the highest-leverage topics for both real production work and interviews — it's where "I can write a CRUD API" turns into "I understand how a fleet of services stays correctly configured, secured, and updatable without downtime." This section goes from the three ways to read a property inside one Spring Boot app, all the way to a centralized, git-backed, encrypted, runtime-refreshable Spring Cloud Config setup wired into Docker Compose with proper liveness/readiness probes.</p>
+    <div class="scope-box">
+      <b>How to use this document:</b> This section builds cumulatively — profiles (72–77) motivate why config needs externalizing at all, section 78 is the pivot point explaining exactly what Spring Boot alone can't do, and everything from 79 onward (Spring Cloud Config) is the production-grade answer to those specific gaps. Read in order the first time through.
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="challenges">
+    <div class="topic-head"><span class="topic-no">67</span><h2>Introduction to Configuration Management Challenges Inside Microservices</h2></div>
+    <p class="topic-sub">Why config gets exponentially harder as services and environments multiply.</p>
+
+    <h3 class="subhead">What counts as "configuration"</h3>
+    <p>Anything that varies by environment or needs to change without a code change: database URLs and credentials, external service endpoints, timeouts/retry counts, feature flags, logging levels, message broker connection details, third-party API keys. In a single monolith, this was already a manageable problem (one `application.properties`, maybe a few environment-specific overrides). In a microservices system, the same problem multiplies along two axes at once.</p>
+
+    <div class="diagram">
+      <div class="dflow">
+        <div class="dbox"><div class="t">N services</div><div class="s">Accounts, Loans, Cards, and growing</div></div>
+        <div class="darrow">×</div>
+        <div class="dbox"><div class="t">M environments</div><div class="s">dev, QA, staging, prod</div></div>
+        <div class="darrow">=</div>
+        <div class="dbox warn"><div class="t">N × M config sets</div><div class="s">to author, keep consistent, secure, and update</div></div>
+      </div>
+    </div>
+
+    <h3 class="subhead">The concrete problems</h3>
+    <ul>
+      <li><strong>Config is scattered</strong> — bundled inside each service's own JAR/codebase, with no single place to see "what is Accounts's production DB URL right now" without opening that specific service's repo.</li>
+      <li><strong>Changing config requires a redeploy</strong> — a property baked into a packaged JAR means "update a timeout value" and "ship new business logic" go through the exact same slow, risky release pipeline, even though they're fundamentally different kinds of change.</li>
+      <li><strong>Secrets in source control</strong> — database passwords and API keys committed into `application.yml` are visible to anyone with repo read access, present in git history forever (even if later "removed"), and hard to rotate without a code change.</li>
+      <li><strong>No audit trail dedicated to config changes</strong> — "who changed the payment gateway timeout, when, and why" is buried in generic commit history mixed with unrelated code changes, not a first-class, config-specific audit log.</li>
+      <li><strong>Config drift</strong> — with no single source of truth, it's easy for QA and production to silently diverge in ways nobody intended, discovered only when something breaks in one environment but not another.</li>
+      <li><strong>No dynamic refresh</strong> — even a trivial value change (bump a rate limit) needs a full application restart, causing avoidable downtime/disruption for changes that shouldn't need it.</li>
+    </ul>
+
+    <div class="callout info"><b class="lbl">Where this section is headed</b><p>Topics 67–77 establish what Spring Boot gives you out of the box (properties, profiles, externalization) — solid, but still fundamentally tied to each service's own deployment. Topic 78 is the explicit turning point: "here's exactly what's still missing." Topics 79 onward introduce <strong>Spring Cloud Config</strong>, which solves centralization, versioning, and dynamic refresh directly.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q1-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q1-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q1-common">
+        <details class="qa"><summary>Why is configuration management harder in microservices than in a monolith?</summary><div class="qa-answer"><p>A monolith has one deployable unit and typically one config file per environment. Microservices multiply this: N independently deployed services each need their own config across M environments, so the problem scales as N×M rather than staying constant — and without centralization, keeping all those configs consistent and secure becomes a real operational burden.</p></div></details>
+        <details class="qa"><summary>Why is committing database passwords into application.yml a problem?</summary><div class="qa-answer"><p>It exposes the secret to anyone with source-control read access, leaves it permanently in git history even after later removal (removing a file doesn't erase prior commits), and makes rotating the secret require a code change and redeploy rather than an independent operational action.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q1-faang">
+        <details class="qa"><summary>Beyond the operational annoyance, what's the actual production-risk argument for treating config changes and code changes as different classes of deployment?</summary><div class="qa-answer"><p>Code changes carry business-logic risk and typically go through a full test/review/staged-rollout pipeline appropriately. Config changes are often urgent and low-risk-if-correct (bump a connection pool size, flip a feature flag, update a downstream timeout during an incident) — but if the only path to change them is "redeploy the whole service," you either slow down urgent fixes to match the code-release cadence, or you pressure the team into rushing a full redeploy under incident conditions, which is itself a source of new risk (redeploys can fail, cause brief unavailability, or introduce unrelated changes that happened to be sitting in the same branch). Decoupling config changes from code deploys — the core motivation for Spring Cloud Config's dynamic refresh — lets low-risk operational changes ship on their own, faster and safer, timeline.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="how-config-works">
+    <div class="topic-head"><span class="topic-no">68</span><h2>How Configurations Work in Spring Boot</h2></div>
+    <p class="topic-sub">The Environment abstraction, PropertySources, and the full property-precedence order.</p>
+
+    <h3 class="subhead">The Environment abstraction</h3>
+    <p>Spring models all configuration through the <code>Environment</code> interface, which is backed internally by an ordered list of <code>PropertySource</code> objects (<code>MutablePropertySources</code>). Each property source represents one origin of key-value configuration — command-line args, system properties, OS environment variables, `application.yml`, and more. When any part of Spring resolves a property, it walks this ordered list and returns the value from the <strong>first</strong> source that has it — which is exactly the mechanism behind Spring's property precedence.</p>
+
+    <h3 class="subhead">Full property precedence order (highest to lowest)</h3>
+    <ol>
+      <li>Command-line arguments (<code>--server.port=9090</code>)</li>
+      <li><code>SPRING_APPLICATION_JSON</code> (properties embedded as inline JSON in an env var)</li>
+      <li>Servlet init parameters</li>
+      <li>JNDI attributes</li>
+      <li>Java System properties (<code>-Dserver.port=9090</code>)</li>
+      <li>OS environment variables (<code>SERVER_PORT=9090</code>)</li>
+      <li><code>RandomValuePropertySource</code></li>
+      <li>Profile-specific application config outside the packaged jar (<code>application-{profile}.yml</code> in the current directory)</li>
+      <li>Profile-specific application config packaged inside the jar</li>
+      <li>Application config outside the jar (<code>application.yml</code> in the current directory)</li>
+      <li>Application config packaged inside the jar</li>
+      <li><code>@PropertySource</code> annotations on <code>@Configuration</code> classes</li>
+      <li>Default properties (set via <code>SpringApplication.setDefaultProperties</code>)</li>
+    </ol>
+
+    <div class="callout info"><b class="lbl">The one rule that matters most in practice</b><p>Anything set via command-line arguments or environment variables always wins over anything in a packaged `application.yml` — which is precisely what makes "build one immutable image, configure it differently per environment via env vars at deploy time" (the 12-factor app pattern, and exactly what Docker Compose's `environment:` block does) work correctly without ever needing to rebuild the image per environment.</p></div>
+
+    <h3 class="subhead">Relaxed binding</h3>
+    <p>Spring's property binding is deliberately lenient about naming convention — <code>server.port</code>, <code>SERVER_PORT</code>, and <code>server-port</code> all bind to the same underlying property. This exists specifically because different sources have different natural naming conventions (YAML favors kebab-case, environment variables are conventionally SCREAMING_SNAKE_CASE, Java fields are camelCase) — relaxed binding means you don't have to manually transliterate between them.</p>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q2-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q2-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q2-common">
+        <details class="qa"><summary>What is a PropertySource in Spring?</summary><div class="qa-answer"><p>An abstraction representing one origin of key-value configuration data (e.g. command-line args, environment variables, `application.yml`). Spring's `Environment` holds an ordered list of these, and resolves a property by checking them in priority order.</p></div></details>
+        <details class="qa"><summary>What is relaxed binding?</summary><div class="qa-answer"><p>Spring's tolerance for different naming conventions referring to the same property — `server.port`, `SERVER_PORT`, and `server-port` all resolve to the same value — so config doesn't need to be manually reformatted to match each source's natural convention.</p></div></details>
+        <details class="qa"><summary>If the same property is defined in application.yml and as an environment variable, which wins?</summary><div class="qa-answer"><p>The environment variable — OS environment variables sit higher in Spring's property precedence order than packaged `application.yml` values.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q2-faang">
+        <details class="qa"><summary>Why does Spring Boot prioritize command-line arguments and environment variables above the packaged application.yml, architecturally?</summary><div class="qa-answer"><p>This ordering is what makes the 12-factor app principle of "build once, configure per environment" achievable: the same immutable artifact (JAR or container image) can be deployed to dev, QA, and prod with environment-specific values supplied externally at launch time (env vars in a container orchestrator, command-line flags in a systemd unit), without ever needing environment-specific builds. If packaged config took precedence, you'd be forced back into building separate artifacts per environment — reintroducing exactly the "environment inconsistency" and "it works in staging but not prod" problems containerization and externalized config are meant to solve.</p></div></details>
+        <details class="qa"><summary>How would you debug a situation where a property has an unexpected value and you're not sure which PropertySource is actually supplying it?</summary><div class="qa-answer"><p>Spring Boot Actuator's `/actuator/env` endpoint (with `management.endpoints.web.exposure.include=env`) exposes every active `PropertySource` in priority order along with the resolved value for a given key, letting you see exactly which source is "winning" for that property — invaluable for diagnosing precedence surprises without needing to reason through the full ordering manually or add temporary logging. In production, this endpoint is typically restricted/secured given it can expose sensitive configuration, so teams often gate it behind authentication or disable it outside trusted internal networks.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="value-annotation">
+    <div class="topic-head"><span class="topic-no">69</span><h2>Reading Configurations Using @Value Annotation</h2></div>
+    <p class="topic-sub">The simplest way to inject a single property — and its real limitations.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">Usage</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="ann">@RestController</span>
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">AccountsController</span> {
+
+    <span class="ann">@Value</span>(<span class="str">"${build.version}"</span>)
+    <span class="kw">private</span> String buildVersion;
+
+    <span class="cm">// with a default value if the property is absent</span>
+    <span class="ann">@Value</span>(<span class="str">"${mail.enabled:false}"</span>)
+    <span class="kw">private</span> <span class="kw">boolean</span> mailEnabled;
+
+    <span class="cm">// SpEL expression, not just a plain property reference</span>
+    <span class="ann">@Value</span>(<span class="str">"#{'${allowed.origins}'.split(',')}"</span>)
+    <span class="kw">private</span> List&lt;String&gt; allowedOrigins;
+}</pre></div></div>
+    </div>
+
+    <div class="ann-box">
+      <div class="ann-box-head"><span class="ann-tag">@Value</span></div>
+      <div class="ann-body"><p>Field/parameter-level annotation that injects a resolved property value at bean creation time. The <code>${...}</code> syntax is a property placeholder; Spring also supports full <strong>SpEL (Spring Expression Language)</strong> via <code>#{...}</code> for more complex expressions (as in the list-splitting example above). Only works on Spring-managed beans — it does nothing on a plain, manually-instantiated object.</p></div>
+    </div>
+
+    <h3 class="subhead">Limitations</h3>
+    <ul>
+      <li><strong>No compile-time safety</strong> — a typo'd property key (`${moil.enabled}`) is only caught at runtime (or not at all, if a default value masks the typo).</li>
+      <li><strong>Verbose at scale</strong> — injecting 15 related properties means 15 separate `@Value` fields, with no structural grouping.</li>
+      <li><strong>Awkward for nested/complex structures</strong> — binding a list works (as shown) but is clunky via SpEL string-splitting; binding a nested object graph isn't practical at all with `@Value`.</li>
+      <li><strong>Hard to validate</strong> — no built-in way to apply Bean Validation constraints to an `@Value`-injected field.</li>
+      <li><strong>Not testable in isolation</strong> — since it only resolves inside a Spring context, unit-testing a class using `@Value` without spinning up Spring requires manually setting the field via reflection or a constructor workaround.</li>
+    </ul>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q3-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q3-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q3-common">
+        <details class="qa"><summary>How do you provide a default value with @Value if the property might be missing?</summary><div class="qa-answer"><p>Using colon syntax inside the placeholder: `@Value("${property.name:defaultValue}")` — if `property.name` isn't found in any property source, `defaultValue` is used instead.</p></div></details>
+        <details class="qa"><summary>Does @Value work on a plain Java object created with "new"?</summary><div class="qa-answer"><p>No — `@Value` is processed by a Spring `BeanPostProcessor` during bean initialization, so it only resolves on objects that Spring itself creates and manages as beans; manually instantiating a class with `new` bypasses Spring's lifecycle entirely and the field would remain unresolved (null/default).</p></div></details>
+      </div>
+      <div class="qa-pane" id="q3-faang">
+        <details class="qa"><summary>Why would a team standardize on @ConfigurationProperties over @Value for anything beyond a couple of standalone values, even though @Value is simpler for a single property?</summary><div class="qa-answer"><p>Beyond the structural/type-safety benefits (covered in the next topic), `@Value` usage tends to scatter related configuration across many unrelated classes — each class grabs just the one or two properties it needs via its own `@Value` fields, with no single place that documents "here is the full shape of this feature's configuration." `@ConfigurationProperties` centralizes a cohesive configuration group into one typed class, which is easier to document, test, validate as a unit, and reason about — especially valuable as a codebase grows and the same config surface is referenced from multiple places.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="environment-interface">
+    <div class="topic-head"><span class="topic-no">70</span><h2>Reading Configurations Using the Environment Interface</h2></div>
+    <p class="topic-sub">Programmatic, dynamic property access — useful when the key isn't known until runtime.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">Usage</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="ann">@Service</span>
+<span class="ann">@AllArgsConstructor</span>
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">FeatureFlagService</span> {
+
+    <span class="kw">private</span> <span class="kw">final</span> Environment environment;
+
+    <span class="kw">public</span> <span class="kw">boolean</span> isFeatureEnabled(String featureName) {
+        <span class="cm">// property key built dynamically at runtime — @Value can't do this</span>
+        String key = <span class="str">"feature."</span> + featureName + <span class="str">".enabled"</span>;
+        <span class="kw">return</span> environment.getProperty(key, Boolean.<span class="kw">class</span>, <span class="kw">false</span>);
+    }
+
+    <span class="kw">public</span> String requiredValue() {
+        <span class="cm">// throws IllegalStateException if missing — fail fast instead of silently null</span>
+        <span class="kw">return</span> environment.getRequiredProperty(<span class="str">"payment.gateway.url"</span>);
+    }
+
+    <span class="kw">public</span> <span class="kw">boolean</span> isProdProfile() {
+        <span class="kw">return</span> Arrays.asList(environment.getActiveProfiles()).contains(<span class="str">"prod"</span>);
+    }
+}</pre></div></div>
+    </div>
+
+    <div class="ann-box">
+      <div class="ann-box-head"><span class="ann-tag">Environment</span><span class="ann-loc">org.springframework.core.env</span></div>
+      <div class="ann-body"><p>Injectable interface giving programmatic access to properties and active profiles. <code>getProperty(key)</code> returns <code>null</code> if absent; <code>getProperty(key, defaultValue)</code> supplies a fallback; <code>getRequiredProperty(key)</code> throws if the key is missing — useful for "fail fast at startup" semantics on properties that are truly mandatory. <code>getActiveProfiles()</code>/<code>getDefaultProfiles()</code> expose which profiles are currently active.</p></div>
+    </div>
+
+    <h3 class="subhead">When Environment is the right tool over @Value or @ConfigurationProperties</h3>
+    <ul>
+      <li>The property key itself is only known at runtime (built dynamically, as in the feature-flag example above).</li>
+      <li>You need to check active profiles programmatically (`environment.acceptsProfiles(...)`), e.g. for conditional logic beyond what `@Profile` on a bean can express.</li>
+      <li>You're writing infrastructure/framework-level code that needs generic access to configuration without knowing its shape in advance.</li>
+    </ul>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q4-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q4-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q4-common">
+        <details class="qa"><summary>What does environment.getRequiredProperty do differently from getProperty?</summary><div class="qa-answer"><p>`getProperty` returns null (or a supplied default) if the key isn't found. `getRequiredProperty` throws an `IllegalStateException` immediately if the key is missing, which is useful for surfacing a missing mandatory configuration value as a fast, clear startup failure rather than a later, harder-to-diagnose null-related bug.</p></div></details>
+        <details class="qa"><summary>When would you reach for Environment instead of @Value?</summary><div class="qa-answer"><p>When the property key isn't known until runtime (e.g. built dynamically from a variable), or when you need programmatic access to things like the active profiles list, rather than a single statically-known property resolved at bean-creation time.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q4-faang">
+        <details class="qa"><summary>Both @Value and Environment ultimately read from the same PropertySources — what's the actual mechanical difference in when/how each resolves a value?</summary><div class="qa-answer"><p>`@Value` resolution happens once, at bean instantiation time, via a `BeanPostProcessor` (`AutowiredAnnotationBeanPostProcessor`/`CommonAnnotationBeanPostProcessor`) that evaluates the placeholder and injects the resolved value directly into the field — after that point, the field holds a static, resolved value for the bean's lifetime (unless the bean itself is `@RefreshScope`, covered in the runtime-refresh topics later). `Environment.getProperty()` is a live, on-demand lookup against the current `PropertySources` every single time it's called — meaning if the underlying property source content changes at runtime (e.g. after a Spring Cloud Config refresh event updates the environment), a fresh call to `environment.getProperty()` reflects the new value immediately, without needing any special scope annotation, whereas a plain (non-refresh-scoped) `@Value` field would still hold the stale, originally-injected value.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="configuration-properties">
+    <div class="topic-head"><span class="topic-no">71</span><h2>Reading Configurations Using @ConfigurationProperties</h2></div>
+    <p class="topic-sub">Type-safe, structured, validated configuration binding — the production-recommended approach for related property groups.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="cp1">application.yml</div>
+        <div class="code-tab" data-pane="cp2">AccountsContactInfoDto.java</div>
+        <div class="code-tab" data-pane="cp3">AccountsController.java (usage)</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="cp1"><pre><span class="cl">accounts</span>:
+  <span class="cl">message</span>: <span class="str">"Welcome to Accounts microservice"</span>
+  <span class="cl">contact-details</span>:
+    <span class="cl">name</span>: <span class="str">"John Doe"</span>
+    <span class="cl">email</span>: <span class="str">"john@eazybytes.com"</span>
+  <span class="cl">on-call-support</span>:
+    - <span class="str">"(555) 111-2222"</span>
+    - <span class="str">"(555) 333-4444"</span></pre></div>
+        <div class="code-pane" id="cp2"><pre><span class="ann">@ConfigurationProperties</span>(prefix = <span class="str">"accounts"</span>)
+<span class="ann">@Data</span>
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">AccountsContactInfoDto</span> {
+
+    <span class="kw">private</span> String message;
+    <span class="kw">private</span> Map&lt;String, String&gt; contactDetails;
+    <span class="kw">private</span> List&lt;String&gt; onCallSupport;
+}</pre></div>
+        <div class="code-pane" id="cp3"><pre><span class="ann">@RestController</span>
+<span class="ann">@RequestMapping</span>(path = <span class="str">"/api"</span>)
+<span class="ann">@AllArgsConstructor</span>
+<span class="ann">@EnableConfigurationProperties</span>(value = AccountsContactInfoDto.<span class="kw">class</span>)
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">AccountsController</span> {
+
+    <span class="kw">private</span> <span class="kw">final</span> AccountsContactInfoDto accountsContactInfoDto;
+
+    <span class="ann">@GetMapping</span>(<span class="str">"/contact-info"</span>)
+    <span class="kw">public</span> ResponseEntity&lt;AccountsContactInfoDto&gt; getContactInfo() {
+        <span class="kw">return</span> ResponseEntity.ok(accountsContactInfoDto);
+    }
+}</pre></div>
+      </div>
+    </div>
+
+    <h3 class="subhead">Annotation reference</h3>
+    <div class="ann-grid">
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@ConfigurationProperties</span></div><div class="ann-body"><p>Binds an entire prefixed group of properties into a POJO's fields by name-matching (with relaxed binding — `contact-details` in YAML maps to `contactDetails` in Java). Supports nested objects, `List`, `Map`, and even nested `@ConfigurationProperties` classes for deeper structures.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@EnableConfigurationProperties</span></div><div class="ann-body"><p>Registers a `@ConfigurationProperties`-annotated class as a Spring bean, making it injectable elsewhere. Alternative: annotate the properties class itself with `@Component`, which also registers it via component scanning — either works, `@EnableConfigurationProperties` is more explicit about the wiring.</p></div></div>
+    </div>
+
+    <h3 class="subhead">Adding validation</h3>
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">Validated properties class</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="ann">@ConfigurationProperties</span>(prefix = <span class="str">"accounts"</span>)
+<span class="ann">@Validated</span>
+<span class="ann">@Data</span>
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">AccountsContactInfoDto</span> {
+
+    <span class="ann">@NotEmpty</span>
+    <span class="kw">private</span> String message;
+
+    <span class="ann">@NotEmpty</span> <span class="ann">@Size</span>(min = 1)
+    <span class="kw">private</span> List&lt;String&gt; onCallSupport;
+}</pre></div></div>
+    </div>
+    <p><code>@Validated</code> on a `@ConfigurationProperties` class triggers Bean Validation on the bound values <strong>at application startup</strong> — meaning a misconfigured or missing required property fails the application fast, at boot, with a clear error, rather than surfacing as a mysterious null-related bug much later at request time.</p>
+
+    <h3 class="subhead">Three approaches — consolidated comparison</h3>
+    <table>
+      <tr><th>Aspect</th><th>@Value</th><th>Environment</th><th>@ConfigurationProperties</th></tr>
+      <tr><td>Binds</td><td>One value at a time</td><td>One value at a time, on-demand</td><td>A whole related group into one typed object</td></tr>
+      <tr><td>Type safety</td><td>Basic (target field's type)</td><td>Basic (specify target type per call)</td><td>Strong — full object graph, nested types</td></tr>
+      <tr><td>Complex/nested structures</td><td>Awkward (SpEL workarounds)</td><td>Not really applicable</td><td>Native support — Lists, Maps, nested POJOs</td></tr>
+      <tr><td>Validation support</td><td>None built-in</td><td>Manual, in code</td><td>Full Bean Validation via `@Validated`</td></tr>
+      <tr><td>Dynamic/runtime-determined keys</td><td>No — key is fixed at compile time</td><td>Yes — key can be built at runtime</td><td>No — bound to a fixed prefix at startup</td></tr>
+      <tr><td>Best for</td><td>One-off, simple values</td><td>Dynamic lookups, profile checks</td><td>Cohesive configuration groups (recommended default for anything beyond 1–2 values)</td></tr>
+    </table>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q5-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q5-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q5-common">
+        <details class="qa"><summary>What does @ConfigurationProperties(prefix = "accounts") do?</summary><div class="qa-answer"><p>It binds every property under the `accounts.*` namespace in your configuration sources into the fields of the annotated class, matching property names to field names using relaxed binding (so `accounts.contact-details.name` maps to a `name` field inside a `contactDetails` nested object).</p></div></details>
+        <details class="qa"><summary>How do you make a required configuration property fail the application at startup if it's missing?</summary><div class="qa-answer"><p>Annotate the `@ConfigurationProperties` class with `@Validated` and apply Bean Validation constraints (e.g. `@NotEmpty`) on the relevant fields — Spring Boot validates the bound values during startup and fails fast with a clear error if a constraint is violated, rather than allowing the app to start in a misconfigured state.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q5-faang">
+        <details class="qa"><summary>What's the advantage of constructor binding (immutable @ConfigurationProperties, often via a Java record) over the traditional getter/setter POJO style?</summary><div class="qa-answer"><p>Constructor binding creates the properties object as fully immutable — all fields are set once via the constructor and never exposed via setters — which eliminates an entire class of bugs where some other code accidentally mutates configuration state at runtime (configuration should generally be read-only from the application's perspective). It also plays well with Java records, which are a natural fit for pure data-holding configuration classes, and constructor binding fails fast and clearly if a required constructor parameter can't be bound, rather than silently leaving a setter-based field at its default (often null) value. The trade-off is that a record-based configuration class can't be trivially proxied for something like `@RefreshScope`-style dynamic re-binding, since the whole object needs to be reconstructed rather than having individual fields updated — a nuance relevant when combining `@ConfigurationProperties` with the dynamic refresh mechanisms covered later in this section.</p></div></details>
+        <details class="qa"><summary>How would you unit test a class that depends on an @ConfigurationProperties bean, without starting a full Spring context?</summary><div class="qa-answer"><p>Since a `@ConfigurationProperties` class is ultimately just a plain POJO once bound, you can construct it directly in a unit test (`new AccountsContactInfoDto()` plus setters, or the constructor directly for constructor-binding style) and inject that manually-built instance into the class under test — no Spring context needed at all for a pure unit test. If you specifically want to test the <em>binding</em> behavior itself (does `accounts.on-call-support` in a test YAML correctly populate the list, including edge cases like relaxed binding or validation failures), Spring provides `@EnableConfigurationProperties` + `@ConfigurationPropertiesScan` friendly test slices, or more narrowly, `ConfigurationPropertiesBindingContext`/`Binder` utilities, letting you test just the binding logic in a lightweight, targeted way rather than a full `@SpringBootTest`.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="profiles-intro">
+    <div class="topic-head"><span class="topic-no">72</span><h2>Introduction to Spring Boot Profiles</h2></div>
+    <p class="topic-sub">Environment-specific configuration sets, and conditionally-registered beans.</p>
+
+    <p>A <strong>profile</strong> is a named, logical grouping of configuration (and optionally, beans) that's only active when explicitly selected. The core file-naming convention: <code>application-{profile}.yml</code> is layered <em>on top of</em> the base <code>application.yml</code> when that profile is active — the base file's values still apply, and the profile-specific file overrides/adds to them for just that environment.</p>
+
+    <div class="callout warn"><b class="lbl">Two valid syntaxes you'll see across courses/codebases — neither is outdated</b><p>Some instructors/codebases put profile-specific config in <strong>separate files</strong> using the <code>application-{profile}.yml</code> naming convention shown below — Spring Boot auto-discovers and loads these purely by filename the moment that profile is active, no extra directive required. Others put everything in <strong>one file</strong> as multiple YAML documents separated by <code>---</code>, with each document guarded by <code>spring.config.activate.on-profile: qa</code> — this `on-profile` syntax (replacing the older, now-deprecated `spring.profiles: qa` from Boot 2.3 and earlier) was introduced in <strong>Spring Boot 2.4</strong> alongside `spring.config.import`, so it's the newer of the two styles, not a legacy one. You may also see a third, hybrid variant: separate <code>application-{profile}.yml</code> files that <em>also</em> use `on-profile` internally, sometimes paired with an explicit `spring.config.import` in the default file. For conventionally-named files sitting in the default classpath location, that explicit import is redundant — Spring Boot would auto-load them anyway — but it's not wrong; it's often just an explicitness/teaching choice, or becomes genuinely necessary if the files live somewhere Spring wouldn't auto-discover, or if the author wants `optional:`-style control over whether a missing file should fail startup. All three patterns are current, correct Spring Boot 2.4+ configurations — treat this as a style choice, not a version signal.</p></div>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="p1">application.yml</div>
+        <div class="code-tab" data-pane="p2">application-qa.yml</div>
+        <div class="code-tab" data-pane="p3">Profile-conditional bean</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="p1"><pre><span class="cl">spring</span>:
+  <span class="cl">application</span>:
+    <span class="cl">name</span>: <span class="str">accounts</span>
+<span class="cl">logging</span>:
+  <span class="cl">level</span>:
+    <span class="cl">com.eazybytes</span>: <span class="str">DEBUG</span></pre></div>
+        <div class="code-pane" id="p2"><pre><span class="cm"># overrides / supplements application.yml ONLY when profile "qa" is active</span>
+<span class="cl">logging</span>:
+  <span class="cl">level</span>:
+    <span class="cl">com.eazybytes</span>: <span class="str">INFO</span>
+<span class="cl">spring</span>:
+  <span class="cl">datasource</span>:
+    <span class="cl">url</span>: <span class="str">jdbc:mysql://qa-db-host:3306/accountsdb</span></pre></div>
+        <div class="code-pane" id="p3"><pre><span class="ann">@Configuration</span>
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">NotificationConfig</span> {
+
+    <span class="ann">@Bean</span>
+    <span class="ann">@Profile</span>(<span class="str">"prod"</span>)
+    <span class="kw">public</span> NotificationSender realSmsSender() {
+        <span class="kw">return</span> <span class="kw">new</span> TwilioSmsSender();
+    }
+
+    <span class="ann">@Bean</span>
+    <span class="ann">@Profile</span>(<span class="str">"!prod"</span>) <span class="cm">// any profile EXCEPT prod</span>
+    <span class="kw">public</span> NotificationSender fakeSmsSender() {
+        <span class="kw">return</span> <span class="kw">new</span> LoggingOnlySmsSender();
+    }
+}</pre></div>
+      </div>
+    </div>
+
+    <div class="ann-box">
+      <div class="ann-box-head"><span class="ann-tag">@Profile</span></div>
+      <div class="ann-body"><p>Placed on a `@Bean` method or `@Component`/`@Configuration` class to conditionally register it only when the specified profile(s) are active. Supports boolean expressions: <code>"qa | staging"</code> (either), <code>"!prod"</code> (not prod), <code>"prod & eu"</code> (both active). Real-world use: swap a mock external-service client for the real one, only in production.</p></div>
+    </div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q6-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q6-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q6-common">
+        <details class="qa"><summary>What is a Spring profile?</summary><div class="qa-answer"><p>A named grouping of configuration (and optionally beans) that's only applied when explicitly activated — used to vary behavior/config per environment (dev, QA, prod) without maintaining entirely separate codebases.</p></div></details>
+        <details class="qa"><summary>Does application-qa.yml replace application.yml entirely when the qa profile is active?</summary><div class="qa-answer"><p>No — it's layered on top. Base `application.yml` values still apply; `application-qa.yml` only overrides or adds specific values for that profile, following normal property-source precedence (profile-specific config takes priority over the base file).</p></div></details>
+        <details class="qa"><summary>What does @Profile("!prod") mean?</summary><div class="qa-answer"><p>The annotated bean is registered whenever the "prod" profile is NOT among the active profiles — i.e., active in every environment except production.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q6-faang">
+        <details class="qa"><summary>What's the risk of using @Profile-conditional beans heavily to swap real vs fake implementations of external integrations, and how would you mitigate it?</summary><div class="qa-answer"><p>The risk is <strong>environment parity drift</strong> — if non-prod environments run a meaningfully different implementation (a fake SMS sender, a stubbed payment gateway) than production, you lose confidence that tests passing in QA actually validate production behavior; bugs specific to the real integration (serialization quirks, timeout behavior, error handling) only surface in prod, the worst place to discover them. Mitigations: keep the fake/real split as thin as possible (swap only the actual external network call, not surrounding business logic), maintain a staging environment that uses real integrations (perhaps against a sandbox/test instance of the third-party service) specifically to catch integration-level issues before prod, and treat profile-based swapping as appropriate mainly for genuinely expensive/dangerous-to-call-in-non-prod dependencies (real payment processors, real SMS costs) rather than a general-purpose pattern for all external calls.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="profiles-demo">
+    <div class="topic-head"><span class="topic-no">73</span><h2>Demo of Spring Boot Profiles Inside Accounts Microservice</h2></div>
+    <p class="topic-sub">A concrete three-profile setup: default (H2, local), QA, and prod (MySQL).</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="d1">application.yml (default/H2)</div>
+        <div class="code-tab" data-pane="d2">application-qa.yml</div>
+        <div class="code-tab" data-pane="d3">application-prod.yml</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="d1"><pre><span class="cl">spring</span>:
+  <span class="cl">application</span>:
+    <span class="cl">name</span>: <span class="str">accounts</span>
+  <span class="cl">profiles</span>:
+    <span class="cl">active</span>: <span class="str">"default"</span>
+  <span class="cl">datasource</span>:
+    <span class="cl">url</span>: <span class="str">jdbc:h2:mem:testdb</span>
+  <span class="cl">h2</span>:
+    <span class="cl">console</span>:
+      <span class="cl">enabled</span>: <span class="kw">true</span></pre></div>
+        <div class="code-pane" id="d2"><pre><span class="cl">spring</span>:
+  <span class="cl">datasource</span>:
+    <span class="cl">url</span>: <span class="str">jdbc:mysql://qa-accountsdb:3306/accountsdb</span>
+    <span class="cl">username</span>: <span class="str">root</span>
+    <span class="cl">password</span>: <span class="str">"${DB_PASSWORD}"</span>  <span class="cm"># injected via env var, never hardcoded</span>
+  <span class="cl">jpa</span>:
+    <span class="cl">hibernate</span>:
+      <span class="cl">ddl-auto</span>: <span class="str">validate</span>  <span class="cm"># never "update" outside local dev</span></pre></div>
+        <div class="code-pane" id="d3"><pre><span class="cl">spring</span>:
+  <span class="cl">datasource</span>:
+    <span class="cl">url</span>: <span class="str">jdbc:mysql://prod-accountsdb:3306/accountsdb</span>
+    <span class="cl">username</span>: <span class="str">"${DB_USERNAME}"</span>
+    <span class="cl">password</span>: <span class="str">"${DB_PASSWORD}"</span>
+  <span class="cl">jpa</span>:
+    <span class="cl">hibernate</span>:
+      <span class="cl">ddl-auto</span>: <span class="str">validate</span>
+  <span class="cl">logging</span>:
+    <span class="cl">level</span>:
+      <span class="cl">com.eazybytes</span>: <span class="str">WARN</span></pre></div>
+      </div>
+    </div>
+
+    <div class="callout warn"><b class="lbl">Notice what's already different from Section 1</b><p>Recall from Section 1's H2/YAML notes that `ddl-auto: update` was flagged as dev-only. Here it's concrete: default/local uses H2 with permissive settings for fast iteration; QA/prod switch to MySQL with `ddl-auto: validate` (schema managed by a migration tool, not Hibernate inference) and credentials pulled from environment variables rather than hardcoded — profiles are exactly the mechanism that makes this environment-appropriate divergence manageable in one codebase.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q7-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q7-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q7-common">
+        <details class="qa"><summary>Why does the qa/prod config use ddl-auto: validate instead of update, unlike the local/default profile?</summary><div class="qa-answer"><p>`update` risks unreviewed, automatic schema changes, which is acceptable for fast local iteration but unacceptable outside dev — QA and prod should have their schema managed by a deliberate, version-controlled migration tool (Flyway/Liquibase), with Hibernate only validating that entities match the existing schema rather than silently altering it.</p></div></details>
+        <details class="qa"><summary>Why is the database password referenced as ${DB_PASSWORD} instead of a literal string in application-qa.yml?</summary><div class="qa-answer"><p>To avoid committing a real secret into source control — the placeholder is resolved from an environment variable supplied at deploy time (or, as covered later in this section, from an encrypted value fetched from Config Server), keeping the actual credential out of the codebase entirely.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q7-faang">
+        <details class="qa"><summary>What's the risk of copy-pasting near-identical application-qa.yml and application-prod.yml files as this course does, at real organizational scale?</summary><div class="qa-answer"><p>Duplication means every shared setting (logging format, common timeouts, connection pool sizing) has to be kept manually in sync across every environment-specific file for every service — a change that should apply everywhere requires N edits and is easy to partially miss, causing exactly the "config drift" problem named in topic 67. This is one of the concrete motivations for moving to Spring Cloud Config later in this section: a git-backed config repo can express shared base config once and layer environment-specific overrides via profile-scoped files served centrally, and — more importantly — the config source becomes one team's/one repo's responsibility to keep consistent, rather than duplicated inside every individual service's own codebase.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="externalizing">
+    <div class="topic-head"><span class="topic-no">74</span><h2>Externalizing Configurations Using Command-line, JVM & Environment Options</h2></div>
+    <p class="topic-sub">Three ways to override a property outside the packaged JAR — without rebuilding anything.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="e1">1. Command-line argument</div>
+        <div class="code-tab" data-pane="e2">2. JVM system property</div>
+        <div class="code-tab" data-pane="e3">3. OS environment variable</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="e1"><pre>$ java -jar accounts.jar --server.port=9090
+<span class="cm"># Spring Boot's own argument parsing — highest precedence of the three</span></pre></div>
+        <div class="code-pane" id="e2"><pre>$ java -Dserver.port=9090 -jar accounts.jar
+<span class="cm"># standard JVM system property flag — set BEFORE -jar</span></pre></div>
+        <div class="code-pane" id="e3"><pre>$ export SERVER_PORT=9090
+$ java -jar accounts.jar
+<span class="cm"># or inline: SERVER_PORT=9090 java -jar accounts.jar</span>
+<span class="cm"># relaxed binding translates SERVER_PORT -> server.port automatically</span></pre></div>
+      </div>
+    </div>
+
+    <table>
+      <tr><th>Method</th><th>Syntax</th><th>Typical use case</th></tr>
+      <tr><td>Command-line argument</td><td><code>--property.name=value</code></td><td>One-off manual runs, scripts explicitly invoking the JAR</td></tr>
+      <tr><td>JVM system property</td><td><code>-Dproperty.name=value</code></td><td>JVM-level tuning flags alongside app properties, some legacy tooling expects `-D` style</td></tr>
+      <tr><td>OS environment variable</td><td><code>PROPERTY_NAME=value</code></td><td><strong>Most common in containers</strong> — exactly how Docker Compose's `environment:` block and Kubernetes `env:` supply config</td></tr>
+    </table>
+
+    <div class="callout info"><b class="lbl">Why environment variables dominate in containerized deployments</b><p>Command-line args and `-D` flags require modifying the container's <code>ENTRYPOINT</code>/<code>CMD</code> — awkward to vary per environment without templating the Dockerfile itself. Environment variables are supplied entirely outside the image (via `docker run -e`, a Compose `environment:` block, or a Kubernetes `ConfigMap`/`Secret`), which is exactly the separation of "immutable image" from "environment-specific config" that containerization is meant to enable — this is why section 68's precedence order deliberately puts env vars above the packaged config file.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q8-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q8-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q8-common">
+        <details class="qa"><summary>Name the three ways to externalize a Spring Boot property without rebuilding the JAR.</summary><div class="qa-answer"><p>Command-line arguments (`--property.name=value`), JVM system properties (`-Dproperty.name=value`), and OS environment variables (`PROPERTY_NAME=value`, translated via relaxed binding).</p></div></details>
+        <details class="qa"><summary>Why is SERVER_PORT recognized as equivalent to server.port?</summary><div class="qa-answer"><p>Because of Spring's relaxed binding — it tolerates different naming conventions (dot notation, kebab-case, SCREAMING_SNAKE_CASE) referring to the same logical property, since environment variables conventionally can't contain dots or lowercase-with-dashes syntax the way YAML/properties files can.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q8-faang">
+        <details class="qa"><summary>Why do containerized deployments favor environment variables over command-line arguments for configuration, given both are externalization mechanisms Spring Boot supports equally well?</summary><div class="qa-answer"><p>Environment variables can be injected entirely outside the image definition — via the container runtime/orchestrator (`docker run -e`, Compose `environment:`, Kubernetes `ConfigMap`/`Secret` mounted as env vars) — without touching the image's `ENTRYPOINT`/`CMD` at all. Command-line arguments, by contrast, are typically baked into the image's `CMD`/`ENTRYPOINT` or require the orchestrator to override the container's command array per deployment, which is more awkward to template and vary across environments/replicas. Env vars also integrate naturally with secret-management systems (Kubernetes Secrets, cloud secret managers injecting values as env vars at container start), giving a consistent mechanism for both plain config and sensitive values.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="activating-profile">
+    <div class="topic-head"><span class="topic-no">75</span><h2>Activating the Profile Using Command-line, JVM & Environment Options</h2></div>
+    <p class="topic-sub">The special property that selects which profile-specific config layer applies.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="a1">Command-line</div>
+        <div class="code-tab" data-pane="a2">JVM system property</div>
+        <div class="code-tab" data-pane="a3">Environment variable</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="a1"><pre>$ java -jar accounts.jar --spring.profiles.active=qa</pre></div>
+        <div class="code-pane" id="a2"><pre>$ java -Dspring.profiles.active=qa -jar accounts.jar</pre></div>
+        <div class="code-pane" id="a3"><pre>$ export SPRING_PROFILES_ACTIVE=qa
+$ java -jar accounts.jar</pre></div>
+      </div>
+    </div>
+
+    <p>Multiple profiles can be active simultaneously, comma-separated: <code>SPRING_PROFILES_ACTIVE=qa,eu-region</code>. Spring also supports <strong>profile groups</strong> (<code>spring.profiles.group.production=prod,logging-verbose,metrics</code>) letting one named group activate several underlying profiles together as a bundle.</p>
+
+    <div class="callout warn"><b class="lbl">Precedence applies here too</b><p>The exact same precedence order from topic 68 governs which `spring.profiles.active` value wins if set in multiple places — a command-line `--spring.profiles.active=qa` overrides an environment variable `SPRING_PROFILES_ACTIVE=prod`, which overrides a value hardcoded in `application.yml`. This is a common gotcha: hardcoding `spring.profiles.active: default` in `application.yml` "just to be explicit" can silently prevent easy overriding if the precedence isn't well understood — though externally-supplied values still win, since `application.yml` sits at the bottom of the precedence order.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q9-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q9-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q9-common">
+        <details class="qa"><summary>What property activates a Spring profile, and what are the three ways to set it?</summary><div class="qa-answer"><p>`spring.profiles.active` — set via `--spring.profiles.active=qa` (command-line), `-Dspring.profiles.active=qa` (JVM system property), or `SPRING_PROFILES_ACTIVE=qa` (environment variable).</p></div></details>
+        <details class="qa"><summary>Can more than one profile be active at once?</summary><div class="qa-answer"><p>Yes — profiles are comma-separated (e.g. `qa,eu-region`), and all of their profile-specific config files/beans apply together, layered in the order they're listed.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q9-faang">
+        <details class="qa"><summary>What's the practical benefit of Spring's profile groups feature over just listing multiple comma-separated profiles at deploy time everywhere?</summary><div class="qa-answer"><p>Profile groups let you define a reusable, named bundle once (e.g. `spring.profiles.group.production=prod,metrics,audit-logging`) so every deployment pipeline/script only needs to reference the single group name (`SPRING_PROFILES_ACTIVE=production`) rather than every deployment site needing to know and correctly list the full set of underlying profiles individually — reducing the chance that one deployment script activates `prod` but forgets `audit-logging`, a subtle and easy-to-miss drift risk when the full profile list is duplicated across multiple deployment configs/scripts instead of centralized in one group definition.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="loans-cards-profiles">
+    <div class="topic-head"><span class="topic-no">76-77</span><h2>Assignment & Demo: Profile Changes Inside Loans & Cards Microservices</h2></div>
+    <p class="topic-sub">Applying the exact same profile pattern to the other two services — reinforcing it as a repeatable template.</p>
+
+    <p>The assignment: replicate the Accounts service's `application.yml` / `application-qa.yml` / `application-prod.yml` structure for Loans and Cards independently — each service gets its own default/QA/prod configuration set, its own database connection details per environment, and its own `SPRING_PROFILES_ACTIVE` activation at deploy time.</p>
+
+    <div class="callout info"><b class="lbl">The real lesson, again</b><p>Just as in Section 1's Loans & Cards exercise, notice the duplication: three services now each maintain three near-identical profile-config files, with the only real differences being database names/hosts and service-specific values. This is precisely the pain point topic 78 formalizes next — and precisely what centralizing config in a Config Server (topic 79 onward) is designed to eliminate.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q10-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q10-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q10-common">
+        <details class="qa"><summary>What's duplicated across Accounts, Loans, and Cards after this exercise?</summary><div class="qa-answer"><p>The overall profile-file structure and any shared settings (logging patterns, common timeout values, `ddl-auto` strategy per environment) — each service repeats the same pattern independently, even though much of it isn't actually service-specific.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q10-faang">
+        <details class="qa"><summary>If a new mandatory logging format is rolled out organization-wide, how many files need to change with the current (Spring Boot profiles only, no Config Server) setup, and why is that a scaling problem?</summary><div class="qa-answer"><p>With 3 services × 3 environments each potentially needing the update (9 files, or more precisely wherever the logging config is currently duplicated), every file needs a manual, individually-verified edit — and at real organizational scale with dozens of services, this becomes both slow and error-prone (easy to miss one file, or introduce an inconsistency during manual editing). This is the exact motivating problem for centralizing shared configuration in one place (a Config Server backed by a git repo) where a shared base file can be edited once and picked up by every service on their next config refresh — turning an O(N×M) manual edit problem into an O(1) change.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="drawbacks">
+    <div class="topic-head"><span class="topic-no">78</span><h2>Drawbacks of Externalized Configurations Using Spring Boot Alone</h2></div>
+    <p class="topic-sub">The pivot point of this section — precisely what's still missing after 67–77, and why Spring Cloud Config exists.</p>
+
+    <table>
+      <tr><th>Gap</th><th>Why Spring Boot alone doesn't solve it</th></tr>
+      <tr><td><strong>No central visibility</strong></td><td>Config is still physically bundled inside each service's own codebase/JAR — there's no single place to view or manage "all config, across all services and environments" at once.</td></tr>
+      <tr><td><strong>Still requires a restart to change</strong></td><td>Even externalized (env var/command-line) config is only read at startup — changing a value means restarting the process, which for a running production service means at least a brief disruption.</td></tr>
+      <tr><td><strong>No version history dedicated to config</strong></td><td>Config file changes are just regular commits mixed into the application's general git history — no config-specific audit trail, no easy "what changed and when, just for config."</td></tr>
+      <tr><td><strong>Duplication across services</strong></td><td>As seen in 76–77, shared settings get copy-pasted into every service's own profile files, with no single shared source.</td></tr>
+      <tr><td><strong>No built-in encryption</strong></td><td>Sensitive values still need external handling (env-injected secrets) — Spring Boot alone provides no first-class mechanism to store an encrypted secret value inside config and decrypt it transparently.</td></tr>
+      <tr><td><strong>Coordinating rollout across many instances is manual</strong></td><td>Even if you solve "change without restart" for one instance, you still need a way to propagate that change to every running instance/replica of a service consistently.</td></tr>
+    </table>
+
+    <div class="callout pitfall"><b class="lbl">Interview framing</b><p>A strong answer to "why use Spring Cloud Config instead of just Spring Boot's built-in config" is never "Spring Boot config doesn't work" — it works fine for a single service. The precise answer is: <em>it doesn't solve centralization, versioning, dynamic runtime refresh, or built-in secret encryption across a fleet of services</em> — each a distinct, real production gap that Spring Cloud Config specifically closes.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q11-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q11-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q11-common">
+        <details class="qa"><summary>Name two limitations of relying only on Spring Boot's built-in profiles/externalization for a multi-service system.</summary><div class="qa-answer"><p>Any two of: no central visibility across services, requires a restart for any config change, no dedicated version/audit history for config, duplication of shared settings across services, and no built-in secret encryption.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q11-faang">
+        <details class="qa"><summary>Of all these drawbacks, which one has the most direct production-availability impact, and why?</summary><div class="qa-answer"><p>The "requires a restart" limitation, because it directly couples an operational necessity (fixing a misconfigured timeout, rotating a credential, adjusting a rate limit during an incident) to an availability-impacting event (a restart, even a graceful one, briefly reduces serving capacity and risks whatever normally goes wrong during a deploy — failed health checks, connection draining issues). In an incident-response context specifically, needing a full restart to apply a config fix means the fix itself introduces risk and delay exactly when speed and low-risk changes matter most — which is why "change config without restarting the process" (the actuator-refresh and Cloud Bus mechanisms covered later in this section) is one of the most operationally valuable capabilities Spring Cloud Config adds.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="cloud-config-intro">
+    <div class="topic-head"><span class="topic-no">79</span><h2>Introduction to Spring Cloud Config</h2></div>
+    <p class="topic-sub">Client-server architecture for centralized configuration — the production answer to every gap in the previous topic.</p>
+
+    <h3 class="subhead">The architecture</h3>
+    <div class="diagram">
+      <div class="dflow">
+        <div class="dbox warn"><div class="t">Config Backend</div><div class="s">Git repo / classpath / file system / Vault</div></div>
+        <div class="darrow">→</div>
+        <div class="dbox accent"><div class="t">Config Server</div><div class="s">reads backend, serves config over HTTP</div></div>
+        <div class="darrow">↙ ↓ ↘</div>
+        <div class="dstack">
+          <div class="dbox"><div class="t">Accounts (client)</div></div>
+          <div class="dbox"><div class="t">Loans (client)</div></div>
+          <div class="dbox"><div class="t">Cards (client)</div></div>
+        </div>
+      </div>
+    </div>
+
+    <p>A single <strong>Config Server</strong> — itself just another Spring Boot application — sits between a config <strong>backend</strong> (most commonly a Git repository, but also classpath, file system, or a secrets vault) and every <strong>Config Client</strong> (Accounts, Loans, Cards). Each client, at startup, fetches its configuration over HTTP from the Config Server rather than reading only its own bundled `application.yml`. This single change directly addresses every gap from topic 78: one central place to view/manage all config, git-backed versioning and audit history for free, no duplication (shared config lives once in the repo), and — as covered in later topics — dynamic refresh and encryption support built in.</p>
+
+    <h3 class="subhead">The URL pattern — application / profile / label</h3>
+    <p>The Config Server exposes configuration via a REST API following the pattern: <code>/{application}/{profile}[/{label}]</code></p>
+    <table>
+      <tr><th>Path segment</th><th>Meaning</th></tr>
+      <tr><td><code>{application}</code></td><td>The requesting client's `spring.application.name` — determines <em>which</em> service's config file(s) to look for (e.g. `accounts.yml`)</td></tr>
+      <tr><td><code>{profile}</code></td><td>The active Spring profile (e.g. `qa`, `prod`) — determines which profile-specific overlay to apply (e.g. `accounts-qa.yml`)</td></tr>
+      <tr><td><code>{label}</code></td><td>Optional — for a git backend, this is the branch/tag/commit to read from, enabling environment-specific branches if desired</td></tr>
+    </table>
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">example requests</div></div>
+      <div class="code-body"><div class="code-pane active"><pre>GET http://localhost:8071/accounts/default
+GET http://localhost:8071/accounts/qa
+GET http://localhost:8071/accounts/prod/main
+<span class="cm"># the server merges application.yml + application-{profile}.yml equivalents</span>
+<span class="cm"># and returns the combined, resolved property set as JSON</span></pre></div></div>
+    </div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q12-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q12-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q12-common">
+        <details class="qa"><summary>What is Spring Cloud Config, in one sentence?</summary><div class="qa-answer"><p>A client-server system for centralizing microservices configuration — a Config Server reads config from a backend (typically a git repository) and serves it over HTTP to Config Clients at startup (and on refresh), decoupling configuration from each service's own packaged codebase.</p></div></details>
+        <details class="qa"><summary>What does the {application} segment in the Config Server's URL pattern refer to?</summary><div class="qa-answer"><p>The requesting client's `spring.application.name` — it tells the Config Server which service's configuration file(s) to look up and return.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q12-faang">
+        <details class="qa"><summary>Why is a git repository the most common Config Server backend choice over, say, a database?</summary><div class="qa-answer"><p>Git provides version history, diffing, branching, and pull-request-based review for config changes essentially for free — exactly the "dedicated audit trail for config changes" capability identified as missing in topic 78 — without needing to build any of that tooling yourself. It also naturally supports the `{label}` concept (branches/tags mapping to environments or config versions) and integrates with existing developer workflows (the same PR review process used for code can review config changes too). A database backend would require building version history, diffing, and review tooling from scratch to match what git already provides as a side effect of being a version control system.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="config-server-build">
+    <div class="topic-head"><span class="topic-no">80</span><h2>Building Config Server Using Spring Cloud Config</h2></div>
+    <p class="topic-sub">The Config Server is itself just another Spring Boot app, with one enabling annotation.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="cs1">pom.xml</div>
+        <div class="code-tab" data-pane="cs2">ConfigServerApplication.java</div>
+        <div class="code-tab" data-pane="cs3">application.yml</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="cs1"><pre>&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-cloud-config-server&lt;/artifactId&gt;
+&lt;/dependency&gt;</pre></div>
+        <div class="code-pane" id="cs2"><pre><span class="ann">@SpringBootApplication</span>
+<span class="ann">@EnableConfigServer</span>
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">ConfigServerApplication</span> {
+    <span class="kw">public</span> <span class="kw">static</span> <span class="kw">void</span> main(String[] args) {
+        SpringApplication.run(ConfigServerApplication.<span class="kw">class</span>, args);
+    }
+}</pre></div>
+        <div class="code-pane" id="cs3"><pre><span class="cl">server</span>:
+  <span class="cl">port</span>: <span class="str">8071</span>
+
+<span class="cl">spring</span>:
+  <span class="cl">application</span>:
+    <span class="cl">name</span>: <span class="str">configserver</span></pre></div>
+      </div>
+    </div>
+
+    <div class="ann-box">
+      <div class="ann-box-head"><span class="ann-tag">@EnableConfigServer</span></div>
+      <div class="ann-body"><p>The single annotation that turns an ordinary Spring Boot application into a Config Server — auto-configures the REST endpoints (`/{application}/{profile}/{label}` and friends) that clients query, and wires up whichever backend (`native`/`git`/`vault`) is configured via `spring.cloud.config.server.*` properties.</p></div>
+    </div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q13-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q13-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q13-common">
+        <details class="qa"><summary>What annotation turns a Spring Boot app into a Config Server?</summary><div class="qa-answer"><p>`@EnableConfigServer`, from the `spring-cloud-config-server` dependency — it auto-configures the REST endpoints that expose configuration to clients.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q13-faang">
+        <details class="qa"><summary>Is the Config Server itself a single point of failure for the whole system? What happens to Accounts/Loans/Cards if the Config Server is down?</summary><div class="qa-answer"><p>It's a risk specifically at <strong>startup</strong> — a client configured to require Config Server (`spring.config.import=configserver:...`, without `optional:`) will fail to start at all if the Config Server is unreachable during boot. However, once a client has successfully started and cached its configuration in its own local `Environment`, an already-running instance does NOT depend on the Config Server for continued operation — it only needs to reach it again for a runtime refresh (topics 87–89). This means Config Server downtime mainly threatens new deployments/restarts/scale-out events, not already-running healthy instances — but it's still standard practice to run the Config Server itself with multiple replicas behind a load balancer for high availability, and to use `optional:configserver:` prefix so a client can still start with only its local fallback config if Config Server is genuinely unreachable, rather than failing outright.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="classpath-location">
+    <div class="topic-head"><span class="topic-no">81</span><h2>Reading Configurations from the Classpath Location of Config Server</h2></div>
+    <p class="topic-sub">The simplest backend — bundled config files inside the Config Server's own JAR.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="cl1">application.yml</div>
+        <div class="code-tab" data-pane="cl2">Directory layout</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="cl1"><pre><span class="cl">spring</span>:
+  <span class="cl">profiles</span>:
+    <span class="cl">active</span>: <span class="str">native</span>
+  <span class="cl">cloud</span>:
+    <span class="cl">config</span>:
+      <span class="cl">server</span>:
+        <span class="cl">native</span>:
+          <span class="cl">search-locations</span>: <span class="str">"classpath:/config"</span></pre></div>
+        <div class="code-pane" id="cl2"><pre>src/main/resources/config/
+├── accounts.yml
+├── accounts-qa.yml
+├── accounts-prod.yml
+├── loans.yml
+├── cards.yml
+└── application.yml   <span class="cm"># truly shared, applies to every application name</span></pre></div>
+      </div>
+    </div>
+
+    <div class="callout warn"><b class="lbl">"native" here means "local filesystem/classpath," not a platform-native binary</b><p>Confusingly named for beginners — the <code>native</code> Spring profile activated on the <strong>Config Server itself</strong> just means "don't use git, read from local classpath or file system paths instead." This is purely a demo/simple-setup mechanism; it defeats the version-history/audit-trail benefit that made git the recommended backend in the first place, since these files ship inside the Config Server's own JAR with no independent change history.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q14-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q14-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q14-common">
+        <details class="qa"><summary>What does spring.profiles.active=native mean on the Config Server?</summary><div class="qa-answer"><p>It tells the Config Server to source configuration from local classpath or file system locations rather than a git repository — "native" here refers to the local filesystem backend, not any platform-specific meaning.</p></div></details>
+        <details class="qa"><summary>What is application.yml inside the config/ folder used for, versus accounts.yml?</summary><div class="qa-answer"><p>`accounts.yml` is scoped to clients with `spring.application.name=accounts` specifically. A plain `application.yml` in that same folder is treated as truly shared configuration applied to every application name that queries the Config Server, regardless of which service is asking.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q14-faang">
+        <details class="qa"><summary>Why would you avoid the classpath/native backend for a real production Config Server despite it being the simplest to set up?</summary><div class="qa-answer"><p>Because the config files are baked directly into the Config Server's own JAR, changing any configuration requires rebuilding and redeploying the Config Server itself — reintroducing exactly the "config change requires a redeploy" problem that centralizing config was meant to solve, just moved one level up (now it's the Config Server that needs redeploying instead of each individual client). It also forfeits git's version history/audit trail and branch-based environment separation. The classpath backend is genuinely appropriate only for local development/demos or very simple setups where those trade-offs are acceptable — production setups almost always use the git backend (topic 85) instead.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="accounts-config-client">
+    <div class="topic-head"><span class="topic-no">82</span><h2>Updating Accounts Microservice to Read Properties from Config Server</h2></div>
+    <p class="topic-sub">Turning Accounts into a Config Client — fetching its own configuration at startup instead of relying solely on its bundled files.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="ac1">pom.xml</div>
+        <div class="code-tab" data-pane="ac2">application.yml</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="ac1"><pre>&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-cloud-starter-config&lt;/artifactId&gt;
+&lt;/dependency&gt;</pre></div>
+        <div class="code-pane" id="ac2"><pre><span class="cl">spring</span>:
+  <span class="cl">application</span>:
+    <span class="cl">name</span>: <span class="str">accounts</span>
+  <span class="cl">profiles</span>:
+    <span class="cl">active</span>: <span class="str">"qa"</span>
+  <span class="cl">config</span>:
+    <span class="cl">import</span>: <span class="str">"optional:configserver:http://localhost:8071"</span></pre></div>
+      </div>
+    </div>
+
+    <div class="ann-box">
+      <div class="ann-box-head"><span class="ann-tag">spring.config.import</span></div>
+      <div class="ann-body"><p>The modern (Spring Boot 2.4+) way to point a client at a Config Server — added directly to `application.yml`, replacing the older `bootstrap.yml`-based approach from earlier Spring Cloud versions. The <code>optional:</code> prefix means the application will still start (falling back to its own local config) if the Config Server is unreachable, rather than failing hard at startup — an explicit, deliberate resilience choice, not a default.</p></div>
+    </div>
+
+    <div class="callout info"><b class="lbl">What actually happens at startup</b><p>Before the rest of Accounts's own `ApplicationContext` is fully built, Spring Cloud Config's bootstrap phase makes an HTTP call to <code>http://localhost:8071/accounts/qa</code>, receives back a merged property set, and injects it as an additional, high-priority `PropertySource` into the Environment — meaning by the time your `@Value`/`@ConfigurationProperties`/`Environment` code runs, Config-Server-sourced properties are already available exactly like any other property source, just fetched remotely instead of read from a local file.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q15-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q15-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q15-common">
+        <details class="qa"><summary>What property tells a Spring Boot app to fetch its configuration from a Config Server?</summary><div class="qa-answer"><p>`spring.config.import`, pointing at `configserver:` followed by the Config Server's URL — e.g. `spring.config.import: "optional:configserver:http://localhost:8071"`.</p></div></details>
+        <details class="qa"><summary>What does the "optional:" prefix change about this behavior?</summary><div class="qa-answer"><p>Without it, the application fails to start if the Config Server is unreachable. With `optional:`, the application still starts, falling back to whatever local configuration it has, if the Config Server can't be reached.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q15-faang">
+        <details class="qa"><summary>Should a production service use "optional:configserver:..." or the non-optional form — what's the actual trade-off?</summary><div class="qa-answer"><p>It depends on whether the service can safely operate on stale/default local config versus needing to guarantee it never starts with wrong configuration. The non-optional form fails fast and loud if Config Server is unreachable — appropriate when starting with incorrect/incomplete config (e.g. missing a critical downstream URL) is worse than not starting at all. The `optional:` form trades that safety for availability — the service starts even if Config Server is down, which is better for services that can tolerate running on cached/default values temporarily but risks silently running with stale configuration if nobody notices Config Server has been down for a while. Many production setups use `optional:` specifically so that Config Server downtime doesn't cascade into a total outage of dependent services, but pair it with monitoring/alerting on Config Server availability so the "silently running on stale config" risk doesn't go unnoticed.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="loans-cards-config-client">
+    <div class="topic-head"><span class="topic-no">83</span><h2>Updating Loans & Cards Microservice to Read Properties from Config Server</h2></div>
+    <p class="topic-sub">The exact same client-side change, applied to the remaining two services.</p>
+
+    <p>Loans and Cards each get the identical treatment as topic 82: add `spring-cloud-starter-config`, set `spring.application.name` to their own service name (`loans`, `cards`), and point `spring.config.import` at the same Config Server. Each service then independently fetches its own `{application}/{profile}` config from the shared server — <code>/loans/qa</code> and <code>/cards/qa</code> respectively — while any properties placed in a shared `application.yml` inside the config repo/backend apply to all three automatically.</p>
+
+    <div class="callout info"><b class="lbl">This is the payoff moment</b><p>Compare this to the duplication problem named at the end of topic 76–77: a shared setting (say, a common logging pattern or a shared external service URL) now lives <strong>once</strong>, in the Config Server's backend, and all three services pick it up automatically — no more copy-pasting the same value into three separate `application-qa.yml` files.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q16-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q16-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q16-common">
+        <details class="qa"><summary>What determines which config file the Config Server returns to the Loans service versus the Cards service?</summary><div class="qa-answer"><p>Each service's own `spring.application.name` (`loans` vs `cards`) — the Config Server uses this to look up the correspondingly-named config file(s) (`loans.yml`/`loans-{profile}.yml` vs `cards.yml`/`cards-{profile}.yml`) in its backend.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q16-faang">
+        <details class="qa"><summary>If a property is defined in both the shared application.yml and in loans-specific loans.yml on the Config Server, which one wins for the Loans service?</summary><div class="qa-answer"><p>The application-specific file (`loans.yml` or `loans-{profile}.yml`) takes precedence over the shared `application.yml` — Spring Cloud Config merges them with more-specific-wins semantics, following the same general principle as Spring Boot's own profile-specific-overrides-base-file behavior discussed in topic 72. This lets a service override a shared default for its own specific needs while still inheriting everything it doesn't explicitly override.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="filesystem-location">
+    <div class="topic-head"><span class="topic-no">84</span><h2>Reading Configurations from a File System Location</h2></div>
+    <p class="topic-sub">A step up from classpath — config files external to the Config Server's own JAR.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">application.yml</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="cl">spring</span>:
+  <span class="cl">profiles</span>:
+    <span class="cl">active</span>: <span class="str">native</span>
+  <span class="cl">cloud</span>:
+    <span class="cl">config</span>:
+      <span class="cl">server</span>:
+        <span class="cl">native</span>:
+          <span class="cl">search-locations</span>: <span class="str">"file:///opt/config-repo"</span></pre></div></div>
+    </div>
+
+    <p>Still the same <code>native</code> profile mechanism as the classpath approach, but pointing at an external directory on the host filesystem rather than files packaged inside the Config Server's JAR. This decouples config from the Config Server's own build/deploy cycle — you can edit files at <code>/opt/config-repo</code> directly without rebuilding the Config Server — but still lacks any built-in versioning/audit trail unless that directory happens to itself be a git working copy checked out separately (which is essentially reinventing the git backend manually, worse).</p>
+
+    <div class="callout warn"><b class="lbl">Where this fits in practice</b><p>File system backend is a reasonable middle-ground for specific constrained environments (e.g. an air-gapped network with no git server reachable, or a very simple on-prem setup), but for nearly all cloud-native production systems, the git backend (next topic) is the standard, recommended choice — file system backend mainly appears in this course as a stepping stone to build intuition before introducing git.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q17-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q17-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q17-common">
+        <details class="qa"><summary>How does the file system backend differ from the classpath backend for Config Server?</summary><div class="qa-answer"><p>Both use the same `native` profile mechanism, but file system backend points at an external directory path (`file:///...`) outside the Config Server's own JAR, so config files can be edited without rebuilding/redeploying the Config Server itself — unlike classpath, where files are bundled into the JAR.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q17-faang">
+        <details class="qa"><summary>What operational gap does the file system backend still have compared to a git backend, even though it decouples config editing from Config Server redeployment?</summary><div class="qa-answer"><p>No built-in version history, diffing, rollback, or review process — editing a file at `/opt/config-repo` directly is an untracked, unaudited change unless you separately layer version control or change-management tooling on top of that directory yourself. It also doesn't naturally support the `{label}` (branch/tag) concept for environment separation the way a git backend does out of the box. It solves "don't need to redeploy Config Server to change config" but not "have a proper audit trail and review process for config changes," which was one of the core motivations from topic 78.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="github-backend">
+    <div class="topic-head"><span class="topic-no">85</span><h2>Reading Configurations from a GitHub Repository</h2></div>
+    <p class="topic-sub">The production-standard backend — full version history, branching, and review workflows for free.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">application.yml</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="cl">spring</span>:
+  <span class="cl">cloud</span>:
+    <span class="cl">config</span>:
+      <span class="cl">server</span>:
+        <span class="cl">git</span>:
+          <span class="cl">uri</span>: <span class="str">"https://github.com/eazybytes/config-repo"</span>
+          <span class="cl">default-label</span>: <span class="str">main</span>
+          <span class="cl">clone-on-start</span>: <span class="kw">true</span>
+          <span class="cm"># for private repos:</span>
+          <span class="cl">username</span>: <span class="str">"${GIT_USERNAME}"</span>
+          <span class="cl">password</span>: <span class="str">"${GIT_TOKEN}"</span></pre></div></div>
+    </div>
+
+    <p>Note there's no `spring.profiles.active: native` here — the <strong>git backend is Config Server's default</strong> once a `spring.cloud.config.server.git.uri` is configured; `native` was only needed to explicitly opt into the classpath/file-system alternative.</p>
+
+    <h3 class="subhead">Key configuration options</h3>
+    <table>
+      <tr><th>Property</th><th>Purpose</th></tr>
+      <tr><td><code>git.uri</code></td><td>The repository URL — HTTPS or SSH</td></tr>
+      <tr><td><code>git.default-label</code></td><td>Default branch/tag used when a client doesn't specify one — typically `main`</td></tr>
+      <tr><td><code>git.clone-on-start</code></td><td>Whether to eagerly clone the repo at Config Server startup (vs lazily, on first request) — `true` catches connectivity/auth problems immediately at boot rather than on the first client request</td></tr>
+      <tr><td><code>git.username</code> / <code>git.password</code></td><td>Credentials for private repos (personal access token recommended over a raw password)</td></tr>
+      <tr><td><code>git.search-paths</code></td><td>Subdirectories within the repo to search for config files, if not stored at the repo root</td></tr>
+    </table>
+
+    <h3 class="subhead">Branches as environment labels</h3>
+    <p>Because <code>{label}</code> maps directly to a git ref, one common pattern is using <strong>branches to represent environments or config versions</strong> — e.g. a `main` branch as the default/latest config, with clients in different environments pinned to different labels if truly divergent config is needed. More commonly, environment separation is handled via profile-specific files (`accounts-qa.yml`, `accounts-prod.yml`) within a single branch, with branches reserved for genuine config-versioning scenarios (e.g. testing a config change on a feature branch before merging).</p>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q18-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q18-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q18-common">
+        <details class="qa"><summary>What Config Server property points it at a git repository?</summary><div class="qa-answer"><p>`spring.cloud.config.server.git.uri` — once set, the git backend is used, and no `native` profile is needed (native is only for the classpath/filesystem alternative).</p></div></details>
+        <details class="qa"><summary>What does the {label} part of the Config Server's URL pattern correspond to when using a git backend?</summary><div class="qa-answer"><p>A git branch, tag, or commit ID — it tells the Config Server which version/ref of the repository to read the requested config file from.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q18-faang">
+        <details class="qa"><summary>Why is clone-on-start=true generally preferred for production, and what does the Config Server do on subsequent config requests once cloned?</summary><div class="qa-answer"><p>`clone-on-start=true` surfaces connectivity, authentication, or repository-access misconfigurations immediately at Config Server startup — a fast, obvious failure — rather than silently deferring the first clone attempt to whenever the first client happens to request config (which could be moments after a deploy, under production load, a much worse time to discover a broken git credential). After the initial clone, the Config Server maintains a local working copy and, by default, performs a `git pull` before serving each request's underlying data lookup (or on a configurable refresh interval) to pick up new commits — meaning the "source of truth" is genuinely the git repository's current state, not a stale one-time snapshot, without needing to restart the Config Server itself when the repo changes.</p></div></details>
+        <details class="qa"><summary>What's a stronger alternative to storing a raw git username/password in the Config Server's own application.yml for accessing a private repo?</summary><div class="qa-answer"><p>Use a scoped, revocable personal access token (or a dedicated machine/service account's token) instead of a real user's password — narrower permissions (read-only, repo-scoped) and independently revocable without affecting a human's account. Better still, avoid embedding even the token directly in `application.yml`: inject it via an environment variable at Config Server deploy time (exactly the externalization pattern from topic 74), or — going further, tying back into topic 86 — use the Config Server's own encryption support, or an external secrets manager (Vault, AWS Secrets Manager) to supply the git credential at runtime, so the credential never appears in any config file, encrypted or not.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="encryption">
+    <div class="topic-head"><span class="topic-no">86</span><h2>Encryption & Decryption of Properties Inside Config Server</h2></div>
+    <p class="topic-sub">Storing sensitive values safely in a git-backed config repo — a very common interview topic on its own.</p>
+
+    <h3 class="subhead">The problem</h3>
+    <p>Even with git as the backend, storing a plaintext database password or API key directly in a git repository — even a private one — is a security risk: it's readable by anyone with repo access, remains in git history indefinitely, and duplicates the exact secrets-in-source-control problem from topic 67, just relocated to a different repository. Spring Cloud Config Server has built-in symmetric or asymmetric encryption support specifically for this.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="en1">Config Server: symmetric key setup</div>
+        <div class="code-tab" data-pane="en2">Encrypt / decrypt via REST</div>
+        <div class="code-tab" data-pane="en3">Storing the encrypted value</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="en1"><pre><span class="cl">encrypt</span>:
+  <span class="cl">key</span>: <span class="str">"${CONFIG_SERVER_ENCRYPT_KEY}"</span>  <span class="cm"># the symmetric key — never hardcoded</span></pre></div>
+        <div class="code-pane" id="en2"><pre>$ curl -X POST http://localhost:8071/encrypt -d "mySecretPassword"
+686f2b3f...c9f1  <span class="cm"># the ciphertext returned</span>
+
+$ curl -X POST http://localhost:8071/decrypt -d "686f2b3f...c9f1"
+mySecretPassword</pre></div>
+        <div class="code-pane" id="en3"><pre><span class="cm"># in accounts-prod.yml, stored inside the git repo:</span>
+<span class="cl">spring</span>:
+  <span class="cl">datasource</span>:
+    <span class="cl">password</span>: <span class="str">"{cipher}686f2b3f...c9f1"</span>
+
+<span class="cm"># the {cipher} prefix tells Config Server to auto-decrypt this specific</span>
+<span class="cm"># value before serving it to a requesting client — the client receives</span>
+<span class="cm"># the plaintext password, never the ciphertext</span></pre></div>
+      </div>
+    </div>
+
+    <h3 class="subhead">How it fits together</h3>
+    <ol>
+      <li>An operator calls the Config Server's <code>/encrypt</code> endpoint with the plaintext secret, getting back ciphertext.</li>
+      <li>That ciphertext, prefixed with <code>{cipher}</code>, is what actually gets committed to the git config repo — never the plaintext.</li>
+      <li>When a client requests its config, the Config Server automatically detects the <code>{cipher}</code> prefix, decrypts the value using its configured key, and returns the <strong>plaintext</strong> value to the client — decryption is transparent to the client, which never even knows the value was encrypted at rest.</li>
+    </ol>
+
+    <div class="callout pitfall"><b class="lbl">Symmetric key management is itself a real production concern</b><p>The `encrypt.key` used above is a single shared secret — if it leaks, every encrypted value in the repo (past and present) is trivially decryptable. Production-grade setups typically prefer an <strong>asymmetric keystore</strong> (a public/private key pair, where encryption uses the public key and only the Config Server holds the private key) or, increasingly, delegate secret storage entirely to a dedicated secrets manager (HashiCorp Vault, AWS Secrets Manager, Azure Key Vault) rather than managing encryption keys inside the Config Server's own configuration at all — the symmetric-key approach shown here is a solid learning example but a meaningfully weaker security posture than what most FAANG-level production systems actually run.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q19-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q19-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q19-common">
+        <details class="qa"><summary>What does the {cipher} prefix on a property value in the config repo mean?</summary><div class="qa-answer"><p>It signals to the Config Server that this value is encrypted ciphertext and should be automatically decrypted (using the server's configured encryption key) before being served to a requesting client — the client always receives the plaintext value.</p></div></details>
+        <details class="qa"><summary>Where should the plaintext secret ever appear — in the git repo, or only transiently?</summary><div class="qa-answer"><p>Only transiently — a human/operator supplies the plaintext once to the `/encrypt` endpoint to obtain ciphertext, and only the ciphertext (prefixed `{cipher}`) is ever committed to the git repository. The plaintext itself should never be committed anywhere.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q19-faang">
+        <details class="qa"><summary>What's the practical weakness of symmetric-key encryption for this use case, and how does an asymmetric keystore address it?</summary><div class="qa-answer"><p>With a symmetric key, the exact same key both encrypts and decrypts, so anyone (or any system, or any leaked config value/environment variable) with access to that one key can decrypt every secret ever encrypted with it — a single point of compromise with broad blast radius, and rotating the key requires re-encrypting every existing secret. An asymmetric keystore uses a public/private key pair: encryption (which might happen from various operator machines/CI systems) only requires the public key, which is safe to distribute more broadly, while decryption requires the private key, which stays exclusively on the Config Server itself and never needs to be shared with whoever is doing the encrypting. This significantly narrows the set of places a compromise could occur to just wherever the private key lives, and cleanly separates "who can encrypt new secrets" from "who/what can decrypt existing ones."</p></div></details>
+        <details class="qa"><summary>Why might a team choose an external secrets manager (Vault, AWS Secrets Manager) over Config Server's built-in encryption entirely?</summary><div class="qa-answer"><p>Dedicated secrets managers provide capabilities Config Server's built-in encryption doesn't attempt to: automatic secret rotation on a schedule, fine-grained per-secret access policies (which services/roles can read which specific secrets), detailed audit logging of every secret access (not just config changes, but every read), dynamic/short-lived credentials (e.g. Vault issuing a database credential valid for a few hours rather than a long-lived static password), and a security model where secrets never need to be committed to git at all — even as ciphertext — since the secrets manager is the actual source of truth, with Config Server (or the application directly) fetching secrets from it at runtime rather than storing them, even encrypted, in the config repo. Config Server's built-in `{cipher}` mechanism remains a reasonable middle ground for teams not ready to operate a full secrets-manager deployment, but it's explicitly a lighter-weight solution with a smaller feature set.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="refresh-actuator">
+    <div class="topic-head"><span class="topic-no">87</span><h2>Refresh Configurations at Runtime Using the Refresh Actuator Path</h2></div>
+    <p class="topic-sub">The first, most manual mechanism for applying config changes without a restart.</p>
+
+    <h3 class="subhead">The pieces involved</h3>
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="ra1">pom.xml (actuator)</div>
+        <div class="code-tab" data-pane="ra2">application.yml (expose refresh endpoint)</div>
+        <div class="code-tab" data-pane="ra3">@RefreshScope usage</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="ra1"><pre>&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-actuator&lt;/artifactId&gt;
+&lt;/dependency&gt;</pre></div>
+        <div class="code-pane" id="ra2"><pre><span class="cl">management</span>:
+  <span class="cl">endpoints</span>:
+    <span class="cl">web</span>:
+      <span class="cl">exposure</span>:
+        <span class="cl">include</span>: <span class="str">"refresh,health,info"</span></pre></div>
+        <div class="code-pane" id="ra3"><pre><span class="ann">@RestController</span>
+<span class="ann">@RefreshScope</span>
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">AccountsController</span> {
+
+    <span class="ann">@Value</span>(<span class="str">"${build.version}"</span>)
+    <span class="kw">private</span> String buildVersion;
+    <span class="cm">// this field is re-resolved after a refresh event — a plain @Value</span>
+    <span class="cm">// field on a NON-@RefreshScope bean would keep its stale, original value</span>
+}</pre></div>
+      </div>
+    </div>
+
+    <h3 class="subhead">The mechanism</h3>
+    <ol>
+      <li>The config repo is updated (a new value committed and pushed).</li>
+      <li>An operator issues <code>POST http://accounts-instance:8080/actuator/refresh</code> — actuator's refresh endpoint.</li>
+      <li>The client re-fetches its configuration from the Config Server (same as it did at startup) and updates its Environment's property sources with any changed values.</li>
+      <li>Any bean annotated <code>@RefreshScope</code> is <strong>destroyed and lazily recreated</strong> on its next use — meaning its `@Value`/`@ConfigurationProperties`-injected fields are re-resolved against the now-updated Environment, picking up the new values without a full application restart.</li>
+    </ol>
+
+    <div class="ann-box">
+      <div class="ann-box-head"><span class="ann-tag">@RefreshScope</span></div>
+      <div class="ann-body"><p>Marks a bean as belonging to the special "refresh" scope — instead of being a normal eager singleton, Spring wraps it in a proxy that can be told to discard its current instance and lazily rebuild it on next access. This is precisely what makes runtime property updates actually visible in application code — beans NOT marked `@RefreshScope` keep whatever values they were originally created with, even after a refresh event fires.</p></div>
+    </div>
+
+    <div class="callout pitfall"><b class="lbl">The scalability gap this topic deliberately leaves open</b><p>Calling <code>/actuator/refresh</code> only refreshes the <strong>one instance you called it on</strong>. With 3 replicas of Accounts running behind a load balancer, you'd need to call this endpoint on all 3 individually, and that number only grows as you scale out. This exact limitation is what the next two topics (Spring Cloud Bus, then Bus + Config Monitor) solve — this topic is intentionally the "manual, doesn't scale" baseline to make that motivation concrete.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q20-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q20-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q20-common">
+        <details class="qa"><summary>What does @RefreshScope do?</summary><div class="qa-answer"><p>It marks a bean so that, when a refresh event occurs, the bean is discarded and lazily rebuilt on next access — re-resolving any `@Value` or `@ConfigurationProperties`-injected fields against the updated configuration, instead of retaining stale values from when the bean was first created.</p></div></details>
+        <details class="qa"><summary>What triggers a refresh via this mechanism?</summary><div class="qa-answer"><p>An HTTP POST to that specific instance's `/actuator/refresh` endpoint, which causes it to re-fetch config from the Config Server and refresh any `@RefreshScope` beans.</p></div></details>
+        <details class="qa"><summary>What's the main limitation of this approach?</summary><div class="qa-answer"><p>It only refreshes the single instance you call it on — with multiple replicas of a service, you'd need to call the endpoint on every instance individually, which doesn't scale as replica count grows.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q20-faang">
+        <details class="qa"><summary>Why does @RefreshScope work by destroying and recreating the bean rather than just re-injecting new values into the existing instance's fields?</summary><div class="qa-answer"><p>Directly mutating a running bean's fields via reflection would be fragile and unsafe — it wouldn't re-run any constructor logic, wouldn't correctly handle beans with complex initialization (`@PostConstruct` logic, derived/computed fields based on the config), and could leave the bean in an inconsistent state if only some fields were updated mid-use by a concurrent request. Discarding and lazily recreating the bean via its normal Spring lifecycle (constructor, dependency injection, `@PostConstruct`) guarantees the new instance is fully, correctly initialized exactly as if the application had just started fresh with the new config — a much safer and more predictable guarantee than partial in-place field mutation.</p></div></details>
+        <details class="qa"><summary>Is exposing /actuator/refresh publicly a security concern, and how would you secure it in production?</summary><div class="qa-answer"><p>Yes — an unauthenticated, exposed refresh endpoint could let anyone trigger a wave of bean recreation across your fleet (a mild denial-of-service/resource-churn vector) or, combined with a compromised Config Server, be part of a chain propagating malicious config changes into running instances quickly. Production practice: restrict actuator's management endpoints to a separate management port not exposed on the public network (`management.server.port`), require authentication specifically for sensitive actuator endpoints (Spring Security config scoped to `/actuator/**`), and expose only the specific endpoints actually needed (`management.endpoints.web.exposure.include` explicitly listing endpoints, never `include: "*"` in production) rather than defaulting to exposing everything actuator offers.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="cloud-bus">
+    <div class="topic-head"><span class="topic-no">88</span><h2>Refresh Configurations at Runtime Using Spring Cloud Bus</h2></div>
+    <p class="topic-sub">Broadcasting a single refresh trigger to every running instance at once, via a lightweight message broker.</p>
+
+    <h3 class="subhead">The idea</h3>
+    <p><strong>Spring Cloud Bus</strong> links every service instance to a shared, lightweight message broker (RabbitMQ or Kafka), creating a broadcast channel across the whole fleet. Instead of calling <code>/actuator/refresh</code> on every instance individually, you call <code>/actuator/busrefresh</code> on <strong>any one</strong> instance (or on the Config Server itself), and that instance publishes a refresh event onto the bus — every other connected instance, across every service, picks up the event and refreshes itself automatically.</p>
+
+    <div class="diagram">
+      <div class="dflow">
+        <div class="dbox accent"><div class="t">POST /actuator/busrefresh</div><div class="s">called on any ONE instance</div></div>
+        <div class="darrow">→</div>
+        <div class="dbox warn"><div class="t">RabbitMQ / Kafka</div><div class="s">shared message broker</div></div>
+        <div class="darrow">↙ ↓ ↘</div>
+        <div class="dstack">
+          <div class="dbox"><div class="t">Accounts (all replicas)</div></div>
+          <div class="dbox"><div class="t">Loans (all replicas)</div></div>
+          <div class="dbox"><div class="t">Cards (all replicas)</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="cb1">pom.xml</div>
+        <div class="code-tab" data-pane="cb2">application.yml</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="cb1"><pre>&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-cloud-starter-bus-amqp&lt;/artifactId&gt;
+&lt;/dependency&gt;</pre></div>
+        <div class="code-pane" id="cb2"><pre><span class="cl">spring</span>:
+  <span class="cl">rabbitmq</span>:
+    <span class="cl">host</span>: <span class="str">localhost</span>
+    <span class="cl">port</span>: <span class="str">5672</span>
+    <span class="cl">username</span>: <span class="str">guest</span>
+    <span class="cl">password</span>: <span class="str">guest</span>
+
+<span class="cl">management</span>:
+  <span class="cl">endpoints</span>:
+    <span class="cl">web</span>:
+      <span class="cl">exposure</span>:
+        <span class="cl">include</span>: <span class="str">"busrefresh,health,info"</span></pre></div>
+      </div>
+    </div>
+
+    <p>Adding <code>spring-cloud-starter-bus-amqp</code> (plus a running RabbitMQ broker) to every service is the only setup needed — Spring Cloud Bus auto-configures the connection and the event publishing/consuming machinery. `@RefreshScope` beans still work exactly as in the previous topic; what's changed is <em>how the refresh trigger reaches every instance</em>, not what happens once it does.</p>
+
+    <div class="callout info"><b class="lbl">One call instead of N calls</b><p>This directly resolves the scalability gap named at the end of topic 87 — regardless of how many replicas of Accounts/Loans/Cards are running, exactly one HTTP call is needed to refresh the entire fleet, because propagation happens over the message broker rather than requiring the operator (or a script) to enumerate every instance's address.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q21-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q21-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q21-common">
+        <details class="qa"><summary>What problem does Spring Cloud Bus solve compared to calling /actuator/refresh directly?</summary><div class="qa-answer"><p>It removes the need to call the refresh endpoint on every individual instance — instead, calling `/actuator/busrefresh` on just one instance broadcasts the refresh event to every connected instance across the fleet via a shared message broker, so refreshing scales to any number of replicas with one call.</p></div></details>
+        <details class="qa"><summary>What extra infrastructure does Spring Cloud Bus require?</summary><div class="qa-answer"><p>A message broker — commonly RabbitMQ (via `spring-cloud-starter-bus-amqp`) or Kafka — that every service instance connects to, forming the broadcast channel refresh events travel over.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q21-faang">
+        <details class="qa"><summary>What happens if a service instance is temporarily disconnected from the message broker when a busrefresh event is published — does it miss the update permanently?</summary><div class="qa-answer"><p>It depends on the broker's delivery semantics and Cloud Bus's configuration — by default, Spring Cloud Bus events are typically not configured for guaranteed durable delivery to offline consumers (an instance that's down or disconnected at the moment of publish simply doesn't receive that specific event). However, this is usually not a lasting problem in practice: the instance will pick up the current (already-updated) configuration the next time it restarts or performs its own refresh (e.g. its next scheduled Config Server poll, if configured), since Config Server itself remains the ultimate source of truth — the bus event is just a faster notification mechanism, not the only path to eventually-consistent configuration. For genuinely mission-critical refresh delivery guarantees, some teams pair this with periodic scheduled refreshes as a safety net, ensuring an instance never drifts indefinitely even if it missed a specific bus event.</p></div></details>
+        <details class="qa"><summary>Why might a team choose Kafka over RabbitMQ as the Cloud Bus transport, or vice versa?</summary><div class="qa-answer"><p>RabbitMQ is often simpler to operate for this specific use case — a broadcast/fanout messaging pattern for relatively low-volume, low-latency-sensitive refresh events is exactly what RabbitMQ's exchange/queue model handles well with minimal configuration. Kafka is generally chosen when the organization already runs Kafka for other purposes (event streaming, inter-service async communication) and prefers not to operate two different messaging systems, or when they want Cloud Bus events to flow through the same durable, replayable log infrastructure as their other event-driven architecture — Kafka's stronger durability/replay guarantees are generally more capability than a config-refresh broadcast strictly needs, but reusing existing infrastructure is often the deciding factor over the specific technical merits for this one narrow use case.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="config-monitor">
+    <div class="topic-head"><span class="topic-no">89</span><h2>Refresh Config at Runtime Using Spring Cloud Bus & Spring Cloud Config Monitor</h2></div>
+    <p class="topic-sub">The final step — fully automatic refresh triggered directly by a git push, zero manual calls needed.</p>
+
+    <h3 class="subhead">Closing the last manual step</h3>
+    <p>Topic 88 removed the need to call refresh on every instance, but a human (or a script) still has to remember to call <code>/actuator/busrefresh</code> after every config change. <strong>Spring Cloud Config Monitor</strong> closes this final gap: the git repository is configured with a <strong>webhook</strong> that automatically notifies the Config Server the moment a commit is pushed, and the Config Server itself then triggers the bus refresh — no manual step at all.</p>
+
+    <div class="diagram">
+      <div class="dflow">
+        <div class="dbox"><div class="t">git push</div><div class="s">config repo commit</div></div>
+        <div class="darrow">→</div>
+        <div class="dbox warn"><div class="t">Webhook</div><div class="s">GitHub/GitLab POSTs to Config Server</div></div>
+        <div class="darrow">→</div>
+        <div class="dbox accent"><div class="t">POST /monitor</div><div class="s">Config Server's monitor endpoint</div></div>
+        <div class="darrow">→</div>
+        <div class="dbox"><div class="t">RabbitMQ / Kafka</div><div class="s">Config Server publishes bus event</div></div>
+        <div class="darrow">↙ ↓ ↘</div>
+        <div class="dstack">
+          <div class="dbox"><div class="t">Accounts</div></div>
+          <div class="dbox"><div class="t">Loans</div></div>
+          <div class="dbox"><div class="t">Cards</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="cm1">Config Server pom.xml</div>
+        <div class="code-tab" data-pane="cm2">Config Server application.yml</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="cm1"><pre>&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-cloud-config-monitor&lt;/artifactId&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-cloud-starter-bus-amqp&lt;/artifactId&gt;
+&lt;/dependency&gt;</pre></div>
+        <div class="code-pane" id="cm2"><pre><span class="cl">management</span>:
+  <span class="cl">endpoints</span>:
+    <span class="cl">web</span>:
+      <span class="cl">exposure</span>:
+        <span class="cl">include</span>: <span class="str">"busrefresh,health,info,monitor"</span></pre></div>
+      </div>
+    </div>
+
+    <p>On the git hosting side (GitHub, GitLab), a repository webhook is configured to <code>POST</code> to the Config Server's <code>/monitor</code> endpoint on every push event. Config Monitor parses the webhook payload (supports GitHub, GitLab, Bitbucket, and generic formats), determines which applications' config actually changed, and publishes a <code>RefreshRemoteApplicationEvent</code> onto the Cloud Bus — triggering the exact same fleet-wide refresh from topic 88, but now fully automated from a single `git push`.</p>
+
+    <div class="callout info"><b class="lbl">The complete picture — three layers of increasing automation</b><p><code>/actuator/refresh</code> (topic 87): manual, per-instance. <code>/actuator/busrefresh</code> + Cloud Bus (topic 88): manual trigger, but fleet-wide propagation. Config Monitor + webhook (topic 89): fully automatic, triggered directly by the config change itself — this is the production end-state most real Spring Cloud Config deployments converge on.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q22-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q22-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q22-common">
+        <details class="qa"><summary>What does Spring Cloud Config Monitor add on top of Spring Cloud Bus?</summary><div class="qa-answer"><p>Full automation — a git webhook calls the Config Server's `/monitor` endpoint on every push, and Config Monitor automatically publishes the refresh event onto the bus, removing the need for anyone to manually call `/actuator/busrefresh` after a config change.</p></div></details>
+        <details class="qa"><summary>What triggers the /monitor endpoint?</summary><div class="qa-answer"><p>A webhook configured on the git repository (GitHub/GitLab) that sends an HTTP POST to the Config Server whenever a push event occurs.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q22-faang">
+        <details class="qa"><summary>Config Monitor "determines which applications' config actually changed" from the webhook payload — why does that matter instead of just refreshing everything on every push?</summary><div class="qa-answer"><p>A monorepo-style config repository typically holds config for every service (`accounts.yml`, `loans.yml`, `cards.yml`, shared `application.yml`); a single commit might only touch `loans.yml`. Refreshing every service on every push regardless of what changed would cause unnecessary bean recreation churn across services whose config didn't actually change — wasted work, and in a system with `@RefreshScope` beans holding any expensive-to-recreate state, unnecessary risk of disruption. Config Monitor inspects the webhook's diff/changed-files information to scope the refresh event specifically to affected applications where possible, keeping the blast radius of each config change proportional to what actually changed.</p></div></details>
+        <details class="qa"><summary>What security consideration applies specifically to exposing a public /monitor webhook endpoint on the Config Server?</summary><div class="qa-answer"><p>An unauthenticated `/monitor` endpoint is a public trigger for fleet-wide refresh events — while triggering an unwanted refresh isn't as severe as a genuine secret leak, a malicious or misconfigured actor spamming it could cause repeated unnecessary bean-recreation churn across the fleet (a resource-exhaustion/availability concern) or be used to probe which applications exist/are configured. Git providers support webhook payload signing (e.g. GitHub's `X-Hub-Signature-256` header, an HMAC of the payload using a shared secret configured on both the webhook and the Config Server) — Config Server should validate this signature and reject unsigned or incorrectly-signed requests, ensuring only genuine, authorized webhook deliveries from the configured repository can trigger a refresh, rather than trusting any POST request that happens to hit the endpoint.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="compose-config-server">
+    <div class="topic-head"><span class="topic-no">90, 92</span><h2>Updating Docker Compose File to Adapt Config Server Changes</h2></div>
+    <p class="topic-sub">Wiring the Config Server (and RabbitMQ) into the multi-container stack from Section 4, with correct startup ordering.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">docker-compose.yml (excerpt)</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="cl">services</span>:
+  <span class="cl">configserver</span>:
+    <span class="cl">image</span>: <span class="str">eazybytes/configserver:s6</span>
+    <span class="cl">container_name</span>: <span class="str">configserver-ms</span>
+    <span class="cl">ports</span>:
+      - <span class="str">"8071:8071"</span>
+    <span class="cl">healthcheck</span>:
+      <span class="cl">test</span>: <span class="str">"curl --fail --silent http://localhost:8071/actuator/health/readiness | grep UP || exit 1"</span>
+      <span class="cl">interval</span>: <span class="str">10s</span>
+      <span class="cl">timeout</span>: <span class="str">5s</span>
+      <span class="cl">retries</span>: <span class="str">10</span>
+      <span class="cl">start_period</span>: <span class="str">10s</span>
+    <span class="cl">networks</span>:
+      - <span class="str">eazybank</span>
+
+  <span class="cl">rabbit</span>:
+    <span class="cl">image</span>: <span class="str">rabbitmq:3.13-management</span>
+    <span class="cl">container_name</span>: <span class="str">rabbitmq</span>
+    <span class="cl">ports</span>:
+      - <span class="str">"5672:5672"</span>
+      - <span class="str">"15672:15672"</span>
+    <span class="cl">healthcheck</span>:
+      <span class="cl">test</span>: <span class="str">"rabbitmq-diagnostics check_port_connectivity"</span>
+      <span class="cl">interval</span>: <span class="str">10s</span>
+      <span class="cl">timeout</span>: <span class="str">5s</span>
+      <span class="cl">retries</span>: <span class="str">10</span>
+    <span class="cl">networks</span>:
+      - <span class="str">eazybank</span>
+
+  <span class="cl">accounts</span>:
+    <span class="cl">image</span>: <span class="str">eazybytes/accounts:s6</span>
+    <span class="cl">depends_on</span>:
+      <span class="cl">configserver</span>:
+        <span class="cl">condition</span>: <span class="str">service_healthy</span>
+      <span class="cl">rabbit</span>:
+        <span class="cl">condition</span>: <span class="str">service_healthy</span>
+      <span class="cl">accountsdb</span>:
+        <span class="cl">condition</span>: <span class="str">service_healthy</span>
+    <span class="cl">environment</span>:
+      <span class="cl">SPRING_CONFIG_IMPORT</span>: <span class="str">"configserver:http://configserver:8071/"</span>
+      <span class="cl">SPRING_RABBITMQ_HOST</span>: <span class="str">"rabbit"</span>
+    <span class="cl">networks</span>:
+      - <span class="str">eazybank</span></pre></div></div>
+    </div>
+
+    <h3 class="subhead">What changed from Section 4's Compose file, and why</h3>
+    <table>
+      <tr><th>Addition</th><th>Reason</th></tr>
+      <tr><td><code>configserver</code> service</td><td>Now a required dependency for Accounts/Loans/Cards to start correctly (they fetch their config from it at boot)</td></tr>
+      <tr><td><code>rabbit</code> service</td><td>Backs Spring Cloud Bus for the runtime-refresh mechanism from topics 88–89</td></tr>
+      <tr><td><code>depends_on: condition: service_healthy</code> for configserver</td><td>Prevents the classic race condition — a client shouldn't attempt to fetch config from a Config Server that's still starting up (same principle as the DB healthcheck pattern from Section 4)</td></tr>
+      <tr><td><code>SPRING_CONFIG_IMPORT</code> using the service name <code>configserver</code></td><td>Same container-networking principle as Section 4: services reach each other by Compose service name, never `localhost`</td></tr>
+    </table>
+
+    <div class="callout warn"><b class="lbl">Why this dependency chain matters more here than for a typical DB dependency</b><p>Unlike a database, which an application can arguably retry connecting to a few times, a hard (non-`optional:`) `spring.config.import=configserver:...` dependency means the application <strong>will not start at all</strong> without successfully reaching Config Server. A missing healthcheck-gated `depends_on` here doesn't just cause degraded behavior — it can mean the entire service fails to boot on every `docker compose up`, which is exactly why this section pairs so directly with liveness/readiness probes next.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q23-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q23-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q23-common">
+        <details class="qa"><summary>Why does the accounts service in Compose need depends_on for both configserver and rabbit now?</summary><div class="qa-answer"><p>It fetches its own configuration from configserver at startup (a hard requirement without the `optional:` prefix), and it connects to rabbit for Spring Cloud Bus refresh events — both are now genuine startup-time dependencies, not optional add-ons, so Compose needs to know to start them first and wait for them to be healthy.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q23-faang">
+        <details class="qa"><summary>What's a subtle startup-ordering problem this dependency chain could still have, even with healthchecks correctly configured on configserver and rabbit individually?</summary><div class="qa-answer"><p>A healthcheck on `configserver` typically just confirms the Config Server's own process/HTTP endpoint is responding — it doesn't necessarily confirm that Config Server can successfully reach <em>its own</em> backend (e.g. the git repository, or its own dependency chain) at that moment. If Config Server reports itself "healthy" (its actuator endpoint responds) while its git clone is still failing intermittently, a dependent service could pass the `depends_on: service_healthy` gate and still receive an error or stale/empty config on its first request. A more robust healthcheck for Config Server specifically verifies it can actually serve a real config lookup (e.g. hitting `/accounts/default` as part of the healthcheck, not just a generic `/actuator/health`), ensuring "healthy" genuinely means "capable of serving config," not just "process is up."</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="probes">
+    <div class="topic-head"><span class="topic-no">91</span><h2>Introduction to Liveness and Readiness Probes</h2></div>
+    <p class="topic-sub">Two different questions an orchestrator needs answered — "is it alive?" vs "is it ready for traffic?" — and why they're not the same question.</p>
+
+    <h3 class="subhead">Why one health check isn't enough</h3>
+    <p>A naive single <code>/health</code> endpoint conflates two genuinely different questions:</p>
+    <table>
+      <tr><th>Probe</th><th>Question it answers</th><th>What the orchestrator does on failure</th></tr>
+      <tr><td><strong>Liveness</strong></td><td>"Is this process alive, or is it stuck/deadlocked and needs to be killed and restarted?"</td><td>Restarts the container</td></tr>
+      <tr><td><strong>Readiness</strong></td><td>"Is this instance currently able to correctly serve traffic right now?"</td><td>Temporarily removes it from load-balancer rotation (does NOT restart it)</td></tr>
+    </table>
+
+    <p>These genuinely diverge in important cases: a service that's still fetching its initial config from Config Server, or still warming up a cache, or momentarily unable to reach a downstream dependency it needs — is <strong>alive</strong> (the process is healthy, not stuck) but <strong>not yet ready</strong> to correctly handle requests. Treating these identically means either killing/restarting a perfectly healthy process unnecessarily (if you only have a strict "readiness-style" check wired to restart behavior), or routing live traffic to an instance that isn't actually ready to serve it correctly (if you only have a loose "liveness-style" check wired to traffic routing).</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">application.yml</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="cl">management</span>:
+  <span class="cl">endpoint</span>:
+    <span class="cl">health</span>:
+      <span class="cl">probes</span>:
+        <span class="cl">enabled</span>: <span class="kw">true</span>
+  <span class="cl">health</span>:
+    <span class="cl">livenessState</span>:
+      <span class="cl">enabled</span>: <span class="kw">true</span>
+    <span class="cl">readinessState</span>:
+      <span class="cl">enabled</span>: <span class="kw">true</span></pre></div></div>
+    </div>
+
+    <p>With this enabled, Spring Boot Actuator exposes two dedicated endpoints:</p>
+    <table>
+      <tr><th>Endpoint</th><th>Purpose</th></tr>
+      <tr><td><code>/actuator/health/liveness</code></td><td>Reports whether the internal application state is broken beyond recovery — Spring Boot's <code>LivenessState</code> (`CORRECT`/`BROKEN`)</td></tr>
+      <tr><td><code>/actuator/health/readiness</code></td><td>Reports whether the application is currently ready to accept traffic — Spring Boot's <code>ReadinessState</code> (`ACCEPTING_TRAFFIC`/`REFUSING_TRAFFIC`), automatically tied to the application lifecycle (e.g. becomes `ACCEPTING_TRAFFIC` only after the context fully starts, and can be flipped to `REFUSING_TRAFFIC` during graceful shutdown)</td></tr>
+    </table>
+
+    <div class="callout info"><b class="lbl">Where this fits with Docker Compose vs Kubernetes</b><p>Docker Compose's `healthcheck:` (used in the previous topic) is a single, generic mechanism — Compose alone doesn't have a first-class distinction between "liveness" and "readiness" the way Kubernetes does (`livenessProbe` and `readinessProbe` as genuinely separate, independently configurable checks). In this course's Compose setup, the healthcheck is typically pointed at the readiness endpoint specifically, since "can this service correctly serve requests" is usually the more relevant question for gating dependent services' startup — the distinction becomes fully operative once you move to a real orchestrator like Kubernetes (a later section), where both probes get used for their genuinely different purposes.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q24-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q24-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q24-common">
+        <details class="qa"><summary>What's the difference between a liveness probe and a readiness probe?</summary><div class="qa-answer"><p>Liveness answers "is this process alive and not stuck" — failing it typically causes a restart. Readiness answers "is this instance currently able to correctly serve traffic" — failing it removes the instance from load-balancer rotation without restarting it.</p></div></details>
+        <details class="qa"><summary>What Spring Boot Actuator endpoints expose these two checks?</summary><div class="qa-answer"><p>`/actuator/health/liveness` and `/actuator/health/readiness`, enabled via `management.endpoint.health.probes.enabled=true`.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q24-faang">
+        <details class="qa"><summary>Give a concrete scenario where a service should report itself alive but not ready.</summary><div class="qa-answer"><p>Right at startup, while the service is still fetching its initial configuration from Config Server (a required, non-optional dependency in this section's setup) — the JVM process itself is running fine (liveness: healthy), but the application isn't yet in a state to correctly handle a real business request (readiness: not ready) until that config fetch completes and the application context fully initializes. Another example: a temporary, self-healing loss of connectivity to a critical downstream dependency — you don't want the orchestrator to kill and restart a perfectly healthy process just because a downstream call is failing (restarting won't fix a downstream outage), but you do want the load balancer to stop sending it traffic until connectivity recovers, which is exactly the readiness-without-liveness-failure case.</p></div></details>
+        <details class="qa"><summary>What's a risky misconfiguration involving liveness probes specifically, and why is it worse than a readiness misconfiguration?</summary><div class="qa-answer"><p>A liveness probe that's too aggressive or checks the wrong thing (e.g. checking a downstream dependency's health as part of liveness, rather than just "is this process itself functioning") can cause an orchestrator to repeatedly kill and restart a perfectly fine process because of an unrelated external outage — potentially creating a restart loop that never resolves the actual problem (the downstream outage) while adding the instability of constant restarts on top of it. This is strictly worse than a readiness misconfiguration, because a bad readiness check just removes an instance from traffic (a safe, reversible, no-data-loss-risk action), whereas a bad liveness check actively destroys and recreates the process — potentially interrupting in-flight work and adding operational churn without addressing the root cause. The general rule: liveness checks should verify only the process's own internal health (not deadlocked, JVM responsive), while readiness checks are the appropriate place to factor in dependency health.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="compose-optimize">
+    <div class="topic-head"><span class="topic-no">93</span><h2>Optimizing Docker Compose File</h2></div>
+    <p class="topic-sub">Reducing duplication across a growing Compose file using YAML anchors and extension fields.</p>
+
+    <p>With Config Server, RabbitMQ, three databases, and three application services, the Compose file has grown substantially, and a lot of it — common environment variables, common network attachment, common healthcheck retry/timeout settings — repeats nearly verbatim across services. YAML supports <strong>anchors</strong> (<code>&amp;name</code>), <strong>aliases</strong> (<code>*name</code>), and <strong>merge keys</strong> (<code>&lt;&lt;:</code>) to define a block once and reuse it, plus Compose-specific <strong>extension fields</strong> (top-level keys prefixed <code>x-</code>, ignored by Compose itself but usable as anchors).</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">docker-compose.yml (optimized)</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="cl">x-common-variables</span>: &amp;common-variables
+  <span class="cl">SPRING_RABBITMQ_HOST</span>: <span class="str">"rabbit"</span>
+  <span class="cl">SPRING_PROFILES_ACTIVE</span>: <span class="str">"default"</span>
+
+<span class="cl">services</span>:
+  <span class="cl">accounts</span>:
+    <span class="cl">image</span>: <span class="str">eazybytes/accounts:s6</span>
+    <span class="cl">environment</span>:
+      <span class="kw">&lt;&lt;</span>: <span class="kw">*common-variables</span>
+      <span class="cl">SPRING_CONFIG_IMPORT</span>: <span class="str">"configserver:http://configserver:8071/"</span>
+    <span class="cl">networks</span>:
+      - <span class="str">eazybank</span>
+
+  <span class="cl">loans</span>:
+    <span class="cl">image</span>: <span class="str">eazybytes/loans:s6</span>
+    <span class="cl">environment</span>:
+      <span class="kw">&lt;&lt;</span>: <span class="kw">*common-variables</span>
+      <span class="cl">SPRING_CONFIG_IMPORT</span>: <span class="str">"configserver:http://configserver:8071/"</span>
+    <span class="cl">networks</span>:
+      - <span class="str">eazybank</span></pre></div></div>
+    </div>
+
+    <div class="ann-grid">
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">x-common-variables</span></div><div class="ann-body"><p>An extension field — any top-level key prefixed <code>x-</code> is explicitly ignored by Docker Compose's own schema validation, making it a safe place to define reusable YAML blocks without Compose mistaking it for an actual service.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">&amp;common-variables / *common-variables</span></div><div class="ann-body"><p><code>&amp;name</code> defines a YAML anchor (a named reference to that block); <code>*name</code> is an alias that reuses it. Combined with the merge key <code>&lt;&lt;:</code>, a service can pull in the entire shared block and then add/override its own specific keys alongside it.</p></div></div>
+    </div>
+
+    <h3 class="subhead">A different approach: extending a separate common-config.yml file</h3>
+    <p>YAML anchors solve duplication <em>within</em> one file, but everything still lives in a single, growing <code>docker-compose.yml</code>. Docker Compose also supports <code>extends</code> — a service-level directive that pulls in a base service definition from a <strong>separate file entirely</strong>, which several teams (and this course) prefer once the common config itself starts feeling substantial enough to deserve its own file.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="ext1">common-config.yml</div>
+        <div class="code-tab" data-pane="ext2">docker-compose.yml (using extends)</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="ext1"><pre><span class="cl">services</span>:
+  <span class="cl">microservice-base-config</span>:
+    <span class="cl">networks</span>:
+      - <span class="str">eazybank</span>
+    <span class="cl">deploy</span>:
+      <span class="cl">resources</span>:
+        <span class="cl">limits</span>:
+          <span class="cl">memory</span>: <span class="str">700m</span>
+    <span class="cl">environment</span>:
+      <span class="cl">SPRING_RABBITMQ_HOST</span>: <span class="str">"rabbit"</span>
+      <span class="cl">SPRING_PROFILES_ACTIVE</span>: <span class="str">"default"</span>
+      <span class="cl">SPRING_CONFIG_IMPORT</span>: <span class="str">"configserver:http://configserver:8071/"</span>
+      <span class="cl">EUREKA_CLIENT_SERVICEURL_DEFAULTZONE</span>: <span class="str">"http://eureka:8761/eureka/"</span></pre></div>
+        <div class="code-pane" id="ext2"><pre><span class="cl">services</span>:
+  <span class="cl">accounts</span>:
+    <span class="cl">image</span>: <span class="str">eazybytes/accounts:s6</span>
+    <span class="cl">container_name</span>: <span class="str">accounts-ms</span>
+    <span class="cl">ports</span>:
+      - <span class="str">"8080:8080"</span>
+    <span class="cl">extends</span>:
+      <span class="cl">file</span>: <span class="str">common-config.yml</span>
+      <span class="cl">service</span>: <span class="str">microservice-base-config</span>
+    <span class="cl">depends_on</span>:
+      <span class="cl">configserver</span>:
+        <span class="cl">condition</span>: <span class="str">service_healthy</span>
+
+  <span class="cl">loans</span>:
+    <span class="cl">image</span>: <span class="str">eazybytes/loans:s6</span>
+    <span class="cl">container_name</span>: <span class="str">loans-ms</span>
+    <span class="cl">ports</span>:
+      - <span class="str">"8090:8090"</span>
+    <span class="cl">extends</span>:
+      <span class="cl">file</span>: <span class="str">common-config.yml</span>
+      <span class="cl">service</span>: <span class="str">microservice-base-config</span>
+    <span class="cl">depends_on</span>:
+      <span class="cl">configserver</span>:
+        <span class="cl">condition</span>: <span class="str">service_healthy</span></pre></div>
+      </div>
+    </div>
+
+    <div class="ann-box">
+      <div class="ann-box-head"><span class="ann-tag">extends</span></div>
+      <div class="ann-body"><p>Declared per-service, pointing at a <code>file</code> (a separate Compose YAML file) and a <code>service</code> name defined inside it. Compose merges that referenced service's configuration into the current one <em>before</em> applying anything else declared locally — so a service using <code>extends</code> inherits every key from the base definition (`networks`, `environment`, `deploy` limits, etc.) and can still add its own additional or overriding keys (`ports`, `container_name`, `depends_on`) alongside it.</p></div>
+    </div>
+
+    <h4 class="minihead">YAML anchors vs extends — when to reach for which</h4>
+    <table>
+      <tr><th>Aspect</th><th>YAML anchors (&amp;/*)</th><th>extends: (separate file)</th></tr>
+      <tr><td>Where the shared block lives</td><td>Same file, as an <code>x-</code> extension field</td><td>A genuinely separate <code>.yml</code> file</td></tr>
+      <tr><td>What it's built into</td><td>A general YAML language feature — works anywhere YAML is parsed, not Compose-specific</td><td>A Compose-specific directive, understood only by the Compose parser itself</td></tr>
+      <tr><td>Granularity</td><td>Reuses an arbitrary block (env vars, a full service, any YAML node)</td><td>Reuses a whole named <em>service</em> definition as a base</td></tr>
+      <tr><td>Merge behavior</td><td>The <code>&lt;&lt;:</code> merge key does a shallow merge — local keys override merged-in ones</td><td>Compose merges scalar keys (override) and deep-merges nested maps like <code>environment</code>; note it does <strong>not</strong> merge list-type keys like <code>depends_on</code> or <code>volumes</code> — the extending service must redeclare those in full if needed</td></tr>
+      <tr><td>Best for</td><td>Small, single-file setups; sharing narrow fragments (just env vars, just a healthcheck block)</td><td>Sharing a whole base service shape across many services, or when the shared config is substantial enough to warrant its own file for readability</td></tr>
+    </table>
+
+    <div class="callout warn"><b class="lbl">The gotcha that trips people up: extends doesn't merge lists</b><p>If <code>common-config.yml</code>'s base service declared <code>depends_on: [rabbit]</code> and the extending service also needs to depend on <code>configserver</code>, the extending service's own <code>depends_on</code> block <strong>completely replaces</strong> the base one rather than merging with it — you'd need to list <em>both</em> dependencies explicitly in the extending service, not just the new one. This is exactly why the example above declares <code>depends_on</code> directly on <code>accounts</code>/<code>loans</code> rather than inside the shared base file — list-type Compose keys are generally kept out of the shared/extended base and declared per-service instead, precisely to avoid this silent-overwrite trap.</p></div>
+
+    <div class="callout info"><b class="lbl">Why this matters beyond tidiness</b><p>This is the exact same "duplication → drift" concern raised throughout this section (topics 76–78) — just applied to the Compose file itself now instead of application config. A shared setting defined once via an anchor and reused across services can't silently diverge the way three independently-typed copies could.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q25-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q25-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q25-common">
+        <details class="qa"><summary>What does the x- prefix mean on a top-level key in a Compose file?</summary><div class="qa-answer"><p>It marks the key as an extension field, explicitly ignored by Compose's schema validation — a safe place to define reusable YAML content (like a shared block of environment variables) that isn't itself interpreted as a service, network, or volume definition.</p></div></details>
+        <details class="qa"><summary>What do the & and * symbols do in this YAML?</summary><div class="qa-answer"><p>`&name` defines a YAML anchor — a named, reusable reference to that block of content. `*name` is an alias that inserts a copy of the anchored content wherever it's used, avoiding the need to retype the same block repeatedly.</p></div></details>
+        <details class="qa"><summary>What does the extends field do in a Compose file?</summary><div class="qa-answer"><p>It lets a service inherit its configuration from a named service defined in a separate Compose file — specified via `file:` (the other file's path) and `service:` (the base service's name within it) — merging that base configuration into the current service before any locally-declared keys are applied.</p></div></details>
+        <details class="qa"><summary>Does extends merge list-type fields like depends_on from the base file?</summary><div class="qa-answer"><p>No — scalar and map-type keys (like `environment`) merge/deep-merge as expected, but list-type keys such as `depends_on` and `volumes` are replaced entirely by whatever the extending service declares locally, not merged with the base file's list. Any dependencies needed from both the base and the extending service must be listed in full on the extending service itself.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q25-faang">
+        <details class="qa"><summary>Is YAML anchor/merge-key reuse a good long-term strategy for a Compose file that keeps growing, or does it have limits?</summary><div class="qa-answer"><p>It helps meaningfully at moderate scale (a handful of services sharing a handful of common settings, as in this course), but it's still a fairly blunt, all-or-nothing text-reuse mechanism — nested overrides can get visually hard to follow, and YAML anchors don't support any kind of parameterization (you can't anchor a block and substitute just one field per usage without additional merge-key gymnastics). At real organizational scale with many more services, teams typically move beyond hand-maintained Compose files with anchors entirely, toward templating tools (e.g. generating Compose or Kubernetes manifests from a higher-level tool like Helm, Kustomize, or an internal templating layer) that offer genuine parameterization, validation, and reuse across many more services than YAML anchors comfortably support by themselves.</p></div></details>
+        <details class="qa"><summary>Why might a team choose extends over YAML anchors, given anchors can express the same "shared config" idea within one file?</summary><div class="qa-answer"><p>Once the shared configuration itself grows substantial (a full base service shape — networks, resource limits, common env vars, restart policy) it becomes a readability and ownership win to give it a genuinely separate file rather than an `x-` block buried at the top of an already-large `docker-compose.yml` — separate files can be reviewed, diffed, and reasoned about independently, and `extends` is a Compose-native, schema-validated way to express "this service is built on top of that one" versus anchors, which are a generic YAML trick the Compose spec doesn't have any first-class awareness of (Compose just sees the fully-resolved YAML after your editor/parser expands the anchors). The trade-off is the list-merging gotcha covered above, and that `extends` only lets you extend a whole service, not an arbitrary fragment the way an anchor can reuse just a `healthcheck:` block or just a few env vars.</p></div></details>
+        <details class="qa"><summary>Compose also has an "include:" top-level directive for pulling in another compose file — how is that different from extends?</summary><div class="qa-answer"><p><code>include:</code> (added in newer Compose Specification versions) pulls in an <em>entire separate Compose file's services</em> as-is, wholesale, into the current project — useful for composing genuinely independent sub-projects together (e.g. a shared "infrastructure" compose file defining the database/broker services, included by several different applications' own compose files). <code>extends</code> operates at the single-service level — one service inherits from one named base service in another file, then adds/overrides its own keys — which is the right granularity for "these three application services all share 90% of their shape but need their own image/port/name," exactly this course's use case. `include` is the right tool for "reuse this whole set of infrastructure services across multiple independent projects," a different, coarser-grained problem than what topic 93 is solving.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="build-push-images">
+    <div class="topic-head"><span class="topic-no">94</span><h2>Generating Docker Images and Pushing Them into Docker Hub</h2></div>
+    <p class="topic-sub">Rebuilding every image now that each service depends on Config Server + Cloud Bus, and republishing.</p>
+
+    <p>Every service that changed in this section — Accounts, Loans, Cards (now Config Clients with Cloud Bus support), and the brand-new Config Server itself — needs a fresh image build and push, using exactly the same workflow established in Section 4 (build via whichever of Dockerfile/Buildpacks/Jib that service uses, tag with a new version reflecting this section's changes, e.g. `:s6`, and push to Docker Hub).</p>
+
+    <div class="callout warn"><b class="lbl">Don't forget the new service</b><p>Unlike Section 4's rebuild (which only touched existing services), this round specifically adds the Config Server as a brand-new image that also needs to be built and pushed for the first time — easy to overlook if you're only thinking "rebuild what changed" rather than "rebuild everything the updated Compose file now references."</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q26-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q26-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q26-common">
+        <details class="qa"><summary>Why does the Config Server need its own Docker image, separate from Accounts/Loans/Cards?</summary><div class="qa-answer"><p>It's a genuinely separate Spring Boot application (its own JAR, its own dependencies, its own deployment lifecycle) — even though it's conceptually "just configuration," it runs as its own microservice and needs to be containerized and deployed the same way any other service is.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q26-faang">
+        <details class="qa"><summary>Should the Config Server's image tag be versioned independently from the application services' tags, or should everything share one version number across a release?</summary><div class="qa-answer"><p>Independent versioning per service is generally preferable and more honest about what actually changed — the Config Server's own code might be unchanged for months while application services release frequently, and forcing a shared version number across all of them either means bumping the Config Server's tag on every unrelated app release (noisy, misleading version history) or under-versioning services that did change. That said, many teams still track a coordinated "release" identifier separately (e.g. a deployment manifest or Compose file pinning specific per-service versions together) so a specific combination of service versions that's known to work together as a set can be referenced and rolled back as a unit — this is a different concern from each individual image's own version tag, and conflating the two is a common source of confusion.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="e2e-testing">
+    <div class="topic-head"><span class="topic-no">95</span><h2>Testing Config Server Changes End to End Using Docker Compose & Default Profile</h2></div>
+    <p class="topic-sub">Validating the whole chain actually works together, not just each piece in isolation.</p>
+
+    <h3 class="subhead">The end-to-end checklist</h3>
+    <ol>
+      <li><code>docker compose up -d</code> — confirm every service (Config Server, RabbitMQ, 3 databases, 3 application services) reaches a healthy state, in the correct dependency order.</li>
+      <li>Hit a business endpoint on Accounts (e.g. the contact-info endpoint from topic 71) and confirm the value returned matches what's configured in the Config Server's backend — proving the client genuinely fetched its config remotely, not from a bundled local fallback.</li>
+      <li>Change a value in the config repo, push it, and confirm — depending on which refresh mechanism is wired up — either a manual `/actuator/busrefresh` call or (with Config Monitor) the webhook alone propagates the new value to a running instance without any restart.</li>
+      <li>Re-verify the business endpoint reflects the updated value, confirming the full refresh chain (git → Config Server → Cloud Bus → `@RefreshScope` bean) genuinely works, not just each individual piece in isolation.</li>
+    </ol>
+
+    <div class="callout pitfall"><b class="lbl">Why end-to-end testing catches things unit/component testing won't</b><p>Each individual piece (Config Server serving a value, a client's `@RefreshScope` bean re-resolving on a direct actuator call, RabbitMQ delivering a message) can work correctly in isolation while the <em>full chain</em> still fails — e.g. a Compose networking misconfiguration where `SPRING_RABBITMQ_HOST` doesn't actually resolve to the right container, or a webhook secret mismatch that silently drops Config Monitor events. Only an actual end-to-end run through Compose, from a real git push to a verified updated response, proves the whole system genuinely works together.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q27-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q27-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q27-common">
+        <details class="qa"><summary>Why is it not enough to just confirm each service individually reports "healthy" in Compose?</summary><div class="qa-answer"><p>A healthcheck passing only confirms a narrow condition (usually that the process/HTTP endpoint responds) — it doesn't prove the full functional chain (config actually being correctly fetched, refresh events actually propagating end-to-end) works as intended. Only exercising the real behavior — checking an actual returned config value, then changing it and confirming the update propagates — validates the system is functioning correctly as a whole.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q27-faang">
+        <details class="qa"><summary>How would you turn this manual end-to-end verification checklist into an automated test that runs in CI?</summary><div class="qa-answer"><p>Use a tool like Testcontainers to programmatically spin up the same multi-container stack (Config Server, RabbitMQ, application services, using the same images or even the same Compose file via Testcontainers' Compose module) inside a CI pipeline, then write an integration test that: starts the stack, calls the business endpoint to assert the initial config value, programmatically modifies the config source (e.g. writing directly to a test git repo or the classpath/file-system backend used in the test environment), triggers the refresh (calling `/actuator/busrefresh` directly, or simulating the webhook call to `/monitor`), and asserts the business endpoint now returns the updated value — all within an automated, repeatable CI run rather than a manual click-through, catching regressions in the refresh chain automatically on every change to the Config Server or client setup.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="qa-prod-compose">
+    <div class="topic-head"><span class="topic-no">96</span><h2>Preparing Docker Compose Files for QA & Prod Profiles</h2></div>
+    <p class="topic-sub">Environment-specific Compose files, tying together everything from Sections 1, 4, and 6.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="qp1">docker-compose-qa.yml (excerpt)</div>
+        <div class="code-tab" data-pane="qp2">docker-compose-prod.yml (excerpt)</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="qp1"><pre><span class="cl">services</span>:
+  <span class="cl">accounts</span>:
+    <span class="cl">image</span>: <span class="str">eazybytes/accounts:s6</span>
+    <span class="cl">environment</span>:
+      <span class="cl">SPRING_PROFILES_ACTIVE</span>: <span class="str">"qa"</span>
+      <span class="cl">SPRING_CONFIG_IMPORT</span>: <span class="str">"configserver:http://configserver:8071/"</span>
+    <span class="cm"># pulls accounts-qa.yml from Config Server, per topic 79's URL pattern</span></pre></div>
+        <div class="code-pane" id="qp2"><pre><span class="cl">services</span>:
+  <span class="cl">accounts</span>:
+    <span class="cl">image</span>: <span class="str">eazybytes/accounts:s6</span>
+    <span class="cl">environment</span>:
+      <span class="cl">SPRING_PROFILES_ACTIVE</span>: <span class="str">"prod"</span>
+      <span class="cl">SPRING_CONFIG_IMPORT</span>: <span class="str">"configserver:http://configserver:8071/"</span>
+    <span class="cm"># pulls accounts-prod.yml — same image, same Config Server, different profile</span></pre></div>
+      </div>
+    </div>
+
+    <div class="callout info"><b class="lbl">The full arc of this section, made concrete in one line</b><p>Notice what's identical across the QA and prod Compose files: the exact same image (<code>eazybytes/accounts:s6</code>) — the same immutable artifact built once in topic 94. Only <code>SPRING_PROFILES_ACTIVE</code> differs between environments, which determines which profile-specific file the Config Server returns. This is the complete, production-grade realization of "build once, configure per environment" first introduced back in topic 68 — and it's only possible because every piece from this section (profiles, externalization, centralized Config Server, environment variable injection via Compose) works together.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q28-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q28-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q28-common">
+        <details class="qa"><summary>What's the only meaningful difference between the QA and prod Compose files for the accounts service?</summary><div class="qa-answer"><p>The `SPRING_PROFILES_ACTIVE` environment variable — everything else, including the Docker image itself, stays the same. The active profile determines which profile-specific config file (`accounts-qa.yml` vs `accounts-prod.yml`) the Config Server returns to that instance.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q28-faang">
+        <details class="qa"><summary>Why is "same image, different SPRING_PROFILES_ACTIVE per environment" considered a best practice, rather than building separate images per environment?</summary><div class="qa-answer"><p>Building a separate image per environment means you're never actually testing the exact artifact that will run in production — the QA image and prod image, even if built from identical source, are technically different artifacts (different build timestamps, potentially different dependency resolution if built at different times), reintroducing a subtle version of "works in QA, might not work in prod" risk. Using one immutable image across all environments and varying only externalized configuration (profile selection, env vars) guarantees you're testing the literal bytes that will run in production at every earlier stage — this is a core tenet of modern CI/CD practice (build once, promote the same artifact through environments) and is precisely what this section's entire arc — profiles, externalized config, and a centralized Config Server — was built to enable cleanly.</p></div></details>
+        <details class="qa"><summary>Looking back across this whole section, what's the single biggest production-readiness gap that remains even after topics 67–96?</summary><div class="qa-answer"><p>Everything here still assumes a single-host Docker Compose deployment — there's no multi-host scheduling, no automatic instance replacement on host failure, no rolling updates with health-gated rollout, and no real horizontal autoscaling, all of which were flagged as Compose's limitations back in Section 4's Docker Compose topic. The configuration-management architecture built in this section (Config Server, Cloud Bus, profiles, encrypted secrets) is fully orchestrator-agnostic and carries forward cleanly — but the actual deployment/scheduling layer is the next major gap, which is exactly what a proper container orchestrator (Kubernetes, covered in a later section) is built to close.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer-note">Spring Boot Bible · Section 6 of N · Standalone reference document · Generated for interview preparation</div>
+</main>
+</div>
+
+<script>
+const themeToggle = document.getElementById('themeToggle');
+const html = document.documentElement;
+function applyThemeLabel(){
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  themeToggle.innerHTML = isDark ? '🌙 Dark mode <span>⇄</span>' : '☀️ Light mode <span>⇄</span>';
+}
+themeToggle.addEventListener('click', () => {
+  const cur = html.getAttribute('data-theme');
+  html.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+  applyThemeLabel();
+  localStorage.setItem('sb-bible-theme', html.getAttribute('data-theme'));
+});
+(function initTheme(){
+  const saved = localStorage.getItem('sb-bible-theme');
+  if(saved){ html.setAttribute('data-theme', saved); }
+  applyThemeLabel();
+})();
+
+document.querySelectorAll('.code-panel').forEach(panel => {
+  const tabs = panel.querySelectorAll('.code-tab');
+  if(tabs.length <= 1) return;
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.getAttribute('data-pane');
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      panel.querySelectorAll('.code-pane').forEach(p => p.classList.remove('active'));
+      const pane = panel.querySelector('#' + target);
+      if(pane) pane.classList.add('active');
+    });
+  });
+});
+
+document.querySelectorAll('.qa-section').forEach(section => {
+  const btns = section.querySelectorAll('.qa-tab-btn');
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-target');
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      section.querySelectorAll('.qa-pane').forEach(p => p.classList.remove('active'));
+      document.getElementById(target).classList.add('active');
+    });
+  });
+});
+
+const navLinks = document.querySelectorAll('.nav-link');
+const topics = document.querySelectorAll('section.topic');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const id = entry.target.getAttribute('id');
+    const link = document.querySelector('.nav-link[href="#' + id + '"]');
+    if(!link) return;
+    if(entry.isIntersecting){
+      navLinks.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-15% 0px -75% 0px', threshold: 0 });
+topics.forEach(t => observer.observe(t));
+</script>
+</body>
+</html>

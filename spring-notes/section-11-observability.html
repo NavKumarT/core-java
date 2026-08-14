@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spring Boot Bible — Section 11: Observability & Monitoring</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0f14; --bg-elev:#111820; --bg-elev-2:#161f2a; --border:#233042;
+  --text:#dbe4ee; --text-dim:#8a9bb0; --text-faint:#5c6b7e;
+  --accent:#6DB33F; --accent-soft:#6DB33F22;
+  --accent-2:#4fa3d1; --accent-2-soft:#4fa3d122;
+  --obs:#38bdf8; --obs-soft:#38bdf822;
+  --warn:#e0a94f; --warn-soft:#e0a94f22;
+  --danger:#e0655f; --danger-soft:#e0655f22;
+  --code-bg:#0d1420; --code-border:#1e2a3a;
+  --shadow: 0 8px 24px rgba(0,0,0,0.35); --radius: 10px; --sidebar-w: 300px;
+}
+html[data-theme="light"]{
+  --bg:#f6f4ee; --bg-elev:#ffffff; --bg-elev-2:#eef0e8; --border:#dcdccf;
+  --text:#1c231d; --text-dim:#586257; --text-faint:#8b9188;
+  --accent:#3f7d1f; --accent-soft:#3f7d1f1a;
+  --accent-2:#1f6f9c; --accent-2-soft:#1f6f9c1a;
+  --obs:#0e6fa3; --obs-soft:#0e6fa318;
+  --warn:#8a5a12; --warn-soft:#8a5a1218;
+  --danger:#a3352f; --danger-soft:#a3352f18;
+  --code-bg:#fbfaf5; --code-border:#e2e0d2;
+  --shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;line-height:1.65;font-size:15.5px;}
+::selection{background:var(--obs-soft);color:var(--obs);}
+h1,h2,h3,h4{font-family:'Space Mono',monospace;letter-spacing:-0.01em;color:var(--text);}
+code, pre, .mono{font-family:'Space Mono',monospace;}
+a{color:var(--accent-2);text-decoration:none;}
+a:hover{text-decoration:underline;}
+
+.shell{display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;border-right:1px solid var(--border);background:var(--bg-elev);position:sticky;top:0;height:100vh;overflow-y:auto;padding:22px 16px 60px;}
+.sidebar::-webkit-scrollbar{width:6px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:4px;padding:0 6px;}
+.brand-badge{width:34px;height:34px;border-radius:8px;background:var(--obs);display:flex;align-items:center;justify-content:center;font-family:'Space Mono';font-weight:700;color:#0b0f14;font-size:13px;flex-shrink:0;}
+.brand-text{font-family:'Space Mono';font-weight:700;font-size:14.5px;line-height:1.2;}
+.brand-text span{display:block;font-size:10.5px;color:var(--text-faint);font-weight:400;margin-top:2px;letter-spacing:0.04em;}
+.theme-toggle{margin:14px 6px 20px;width:calc(100% - 12px);background:var(--bg-elev-2);border:1px solid var(--border);color:var(--text-dim);padding:8px 10px;border-radius:8px;font-family:'Inter';font-size:12.5px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
+.theme-toggle:hover{color:var(--text);border-color:var(--obs);}
+.nav-group{margin-bottom:6px;}
+.nav-group-title{font-size:10.5px;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-faint);padding:14px 8px 6px;font-family:'Space Mono';}
+.nav-link{display:block;padding:7px 10px;border-radius:7px;font-size:13px;color:var(--text-dim);margin-bottom:1px;border-left:2px solid transparent;}
+.nav-link:hover{background:var(--bg-elev-2);color:var(--text);text-decoration:none;}
+.nav-link.active{background:var(--obs-soft);color:var(--obs);border-left:2px solid var(--obs);font-weight:600;}
+.nav-link .vid-no{color:var(--text-faint);margin-right:5px;}
+
+main{flex:1;min-width:0;padding:48px 56px 120px;max-width:980px;}
+.hero{margin-bottom:44px;}
+.hero-eyebrow{font-family:'Space Mono';font-size:11.5px;color:var(--obs);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.hero-eyebrow::before{content:"";width:20px;height:1px;background:var(--obs);}
+.hero h1{font-size:32px;margin:0 0 12px;line-height:1.25;}
+.hero p{color:var(--text-dim);font-size:15.5px;max-width:680px;}
+.scope-box{margin-top:20px;border:1px solid var(--border);background:var(--bg-elev);border-radius:var(--radius);padding:16px 18px;font-size:13px;color:var(--text-dim);}
+.scope-box b{color:var(--text);}
+
+section.topic{margin-bottom:56px;scroll-margin-top:24px;}
+.topic-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;border-bottom:1px solid var(--border);padding-bottom:14px;}
+.topic-no{font-family:'Space Mono';color:var(--obs);font-size:13px;background:var(--obs-soft);padding:3px 9px;border-radius:20px;flex-shrink:0;}
+.topic-head h2{font-size:22px;margin:0;}
+.topic-sub{color:var(--text-faint);font-size:12.5px;margin:8px 0 22px;}
+
+p{color:var(--text-dim);}
+h3.subhead{font-size:16.5px;color:var(--text);margin:28px 0 10px;display:flex;align-items:center;gap:8px;}
+h3.subhead::before{content:"";width:3px;height:15px;background:var(--accent-2);border-radius:2px;}
+h4.minihead{font-size:13.5px;color:var(--text);margin:18px 0 8px;font-family:'Inter';font-weight:700;}
+ul,ol{color:var(--text-dim);padding-left:22px;}
+li{margin-bottom:6px;}
+strong{color:var(--text);}
+
+.ann-box{border:1px solid var(--code-border);background:var(--bg-elev);border-radius:var(--radius);margin:14px 0;overflow:hidden;}
+.ann-box-head{display:flex;align-items:center;gap:10px;padding:11px 16px;background:var(--obs-soft);border-bottom:1px solid var(--code-border);}
+.ann-tag{font-family:'Space Mono';font-weight:700;color:var(--obs);font-size:14px;}
+.ann-loc{margin-left:auto;font-size:10.5px;color:var(--text-faint);font-family:'Space Mono';text-transform:uppercase;letter-spacing:0.05em;}
+.ann-body{padding:12px 16px;}
+.ann-body p{margin:4px 0 8px;font-size:13.5px;}
+.ann-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0;}
+@media(max-width:760px){.ann-grid{grid-template-columns:1fr;}}
+
+.code-panel{border:1px solid var(--code-border);border-radius:var(--radius);overflow:hidden;margin:16px 0;background:var(--code-bg);}
+.code-tabs{display:flex;background:var(--bg-elev-2);border-bottom:1px solid var(--code-border);overflow-x:auto;}
+.code-tab{padding:9px 16px;font-family:'Space Mono';font-size:12px;color:var(--text-faint);cursor:pointer;border-right:1px solid var(--code-border);white-space:nowrap;user-select:none;}
+.code-tab:hover{color:var(--text-dim);}
+.code-tab.active{color:var(--obs);background:var(--code-bg);border-bottom:2px solid var(--obs);margin-bottom:-1px;}
+.code-body{position:relative;}
+.code-pane{display:none;padding:16px 18px;overflow-x:auto;}
+.code-pane.active{display:block;}
+pre{margin:0;font-size:12.8px;line-height:1.65;color:#c7d3e0;}
+html[data-theme="light"] pre{color:#333c30;}
+.kw{color:#c586c0;}
+.ann{color:var(--obs);font-weight:700;}
+.str{color:#ce9178;}
+.cm{color:var(--text-faint);font-style:italic;}
+.ty{color:#4ec9b0;}
+.cl{color:#e5c07b;}
+
+.callout{border-radius:var(--radius);padding:14px 16px;margin:16px 0;border:1px solid;font-size:13.5px;}
+.callout.info{background:var(--accent-2-soft);border-color:var(--accent-2);color:var(--text);}
+.callout.warn{background:var(--warn-soft);border-color:var(--warn);color:var(--text);}
+.callout.pitfall{background:var(--danger-soft);border-color:var(--danger);color:var(--text);}
+.callout b.lbl{display:block;font-family:'Space Mono';font-size:11px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;}
+.callout.info b.lbl{color:var(--accent-2);}
+.callout.warn b.lbl{color:var(--warn);}
+.callout.pitfall b.lbl{color:var(--danger);}
+.callout p{margin:0;color:var(--text-dim);}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left;color:var(--text-dim);}
+th{background:var(--bg-elev-2);color:var(--text);font-family:'Space Mono';font-size:11.5px;text-transform:uppercase;letter-spacing:0.04em;}
+tr:hover td{background:var(--bg-elev-2);}
+
+.diagram{border:1px solid var(--code-border);background:var(--code-bg);border-radius:var(--radius);padding:22px 18px;margin:18px 0;overflow-x:auto;}
+.dflow{display:flex;align-items:stretch;gap:10px;min-width:max-content;flex-wrap:wrap;}
+.dbox{flex-shrink:0;min-width:120px;border:1px solid var(--border);background:var(--bg-elev);border-radius:8px;padding:12px 14px;text-align:center;}
+.dbox .t{font-family:'Space Mono';font-size:12px;color:var(--text);font-weight:700;}
+.dbox .s{font-size:10.5px;color:var(--text-faint);margin-top:4px;}
+.dbox.accent{border-color:var(--obs);background:var(--obs-soft);}
+.dbox.accent .t{color:var(--obs);}
+.dbox.warn{border-color:var(--warn);background:var(--warn-soft);}
+.dbox.warn .t{color:var(--warn);}
+.dbox.dim{opacity:0.55;}
+.darrow{flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-family:'Space Mono';font-size:16px;min-width:24px;}
+.dstack{display:flex;flex-direction:column;gap:8px;}
+.dcol{display:flex;flex-direction:column;gap:8px;align-items:center;}
+.dphase-label{font-family:'Space Mono';font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;text-align:center;margin-top:8px;}
+
+.pillar-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0;}
+@media(max-width:760px){.pillar-grid{grid-template-columns:1fr;}}
+.pillar-card{border:1px solid var(--code-border);background:var(--bg-elev);border-radius:var(--radius);padding:16px;}
+.pillar-card .p-title{font-family:'Space Mono';font-weight:700;font-size:13.5px;color:var(--obs);margin-bottom:6px;}
+.pillar-card .p-tools{font-size:10.5px;color:var(--text-faint);font-family:'Space Mono';margin-bottom:8px;}
+.pillar-card p{font-size:12.5px;margin:0;}
+
+.qa-section{margin-top:26px;}
+.qa-tabs{display:flex;gap:8px;margin-bottom:14px;}
+.qa-tab-btn{font-family:'Space Mono';font-size:11.5px;padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg-elev);color:var(--text-dim);cursor:pointer;text-transform:uppercase;letter-spacing:0.04em;}
+.qa-tab-btn.common.active{background:var(--accent-2-soft);border-color:var(--accent-2);color:var(--accent-2);}
+.qa-tab-btn.faang.active{background:var(--danger-soft);border-color:var(--danger);color:var(--danger);}
+.qa-pane{display:none;}
+.qa-pane.active{display:block;}
+details.qa{border:1px solid var(--border);border-radius:8px;margin-bottom:8px;background:var(--bg-elev);overflow:hidden;}
+details.qa[open]{border-color:var(--accent-2);}
+details.qa summary{padding:12px 16px;cursor:pointer;font-weight:600;font-size:13.8px;list-style:none;display:flex;align-items:flex-start;gap:10px;color:var(--text);}
+details.qa summary::-webkit-details-marker{display:none;}
+details.qa summary::before{content:"Q";flex-shrink:0;font-family:'Space Mono';font-size:11px;color:var(--accent-2);background:var(--accent-2-soft);width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+details.qa .qa-answer{padding:0 16px 16px 46px;color:var(--text-dim);font-size:13.5px;}
+details.qa .qa-answer p{margin:0 0 8px;color:var(--text-dim);}
+details.qa .qa-answer p:last-child{margin-bottom:0;}
+
+.divider{height:1px;background:linear-gradient(90deg,var(--border),transparent);margin:44px 0;}
+.footer-note{color:var(--text-faint);font-size:12px;text-align:center;padding:30px 0 10px;}
+
+@media(max-width:900px){
+  .shell{flex-direction:column;}
+  .sidebar{position:relative;width:100%;height:auto;}
+  main{padding:32px 20px 80px;}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-badge">◈</div>
+    <div class="brand-text">Spring Boot Bible<span>Section 11 · Observability</span></div>
+  </div>
+  <button class="theme-toggle" id="themeToggle">🌙 Dark mode <span>⇄</span></button>
+
+  <div class="nav-group">
+    <div class="nav-group-title">Foundations</div>
+    <a class="nav-link" href="#observability-intro"><span class="vid-no">155</span>Intro to Observability & Monitoring</a>
+    <a class="nav-link" href="#observability-vs-monitoring"><span class="vid-no">156</span>Observability vs Monitoring</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Pillar 1 · Logging</div>
+    <a class="nav-link" href="#centralized-logging"><span class="vid-no">157</span>Centralized Logging Intro</a>
+    <a class="nav-link" href="#loki-stack-intro"><span class="vid-no">158</span>Grafana, Loki & Promtail</a>
+    <a class="nav-link" href="#promtail-note"><span class="vid-no">159</span>Important Note on Promtail</a>
+    <a class="nav-link" href="#logging-demo-theory"><span class="vid-no">160</span>Logging Demo — Theory</a>
+    <a class="nav-link" href="#logging-implementation"><span class="vid-no">161-163</span>Logging Implementation</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Pillar 2 · Metrics</div>
+    <a class="nav-link" href="#metrics-intro"><span class="vid-no">164</span>Metrics & Monitoring Overview</a>
+    <a class="nav-link" href="#micrometer-setup"><span class="vid-no">165</span>Micrometer Setup</a>
+    <a class="nav-link" href="#prometheus-setup"><span class="vid-no">166</span>Prometheus Setup</a>
+    <a class="nav-link" href="#prometheus-demo"><span class="vid-no">167</span>Prometheus Demo</a>
+    <a class="nav-link" href="#prometheus-grafana-demo"><span class="vid-no">168</span>Prometheus + Grafana Demo</a>
+    <a class="nav-link" href="#grafana-dashboards"><span class="vid-no">169</span>Grafana Dashboards</a>
+    <a class="nav-link" href="#grafana-alerts"><span class="vid-no">170-171</span>Alerts & Notifications</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Pillar 3 · Tracing</div>
+    <a class="nav-link" href="#distributed-tracing-intro"><span class="vid-no">172</span>Intro to Distributed Tracing</a>
+    <a class="nav-link" href="#opentelemetry-intro"><span class="vid-no">173</span>Intro to OpenTelemetry</a>
+    <a class="nav-link" href="#opentelemetry-impl"><span class="vid-no">174</span>Implementing OpenTelemetry</a>
+    <a class="nav-link" href="#tempo-tracing"><span class="vid-no">175-177</span>Tracing with Tempo</a>
+    <a class="nav-link" href="#loki-tempo-nav"><span class="vid-no">178</span>Loki → Tempo Navigation</a>
+    <a class="nav-link" href="#observability-conclusion"><span class="vid-no">179</span>Conclusion</a>
+  </div>
+</aside>
+
+<main>
+  <div class="hero">
+    <div class="hero-eyebrow">Section 11 · Spring Boot Bible</div>
+    <h1>Observability and Monitoring of Microservices</h1>
+    <p>Every resiliency pattern in Section 10 assumed you'd know <em>when</em> and <em>why</em> something failed — but nothing so far has actually given you that visibility. With a monolith, a debugger and one log file get you surprisingly far. With a system of independently-deployed, independently-scaled, dynamically-discovered services (Sections 8–10), a single user-facing request might touch five services across a dozen instances — and "just look at the logs" stops being a coherent strategy the moment you have to ask <em>which</em> of those instances' logs. This section builds the three pillars of observability — <strong>logs</strong>, <strong>metrics</strong>, and <strong>traces</strong> — using the Grafana ecosystem (Loki, Prometheus, Tempo) end to end, closing the loop on the correlation ID work from Section 9 into genuine, navigable distributed tracing.</p>
+    <div class="scope-box">
+      <b>How to use this document:</b> Topic 156 (Observability vs Monitoring) is one of the single most reliably-asked conceptual questions in senior backend/microservices interviews — read it closely even if the rest feels tool-heavy. The three-pillars structure below mirrors how this topic is almost always organized in system-design interviews, so getting comfortable narrating "logs tell you what happened, metrics tell you how much/how often, traces tell you where in the call chain" will serve you well beyond just this course.
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="observability-intro">
+    <div class="topic-head"><span class="topic-no">155</span><h2>Introduction to Observability and Monitoring of Microservices</h2></div>
+    <p class="topic-sub">Why "SSH into the box and grep the log file" stops working the moment you have more than one instance.</p>
+
+    <h3 class="subhead">The problem this section solves</h3>
+    <p>Every pattern built so far in this course — service discovery (Section 8), the API Gateway (Section 9), circuit breakers and retries (Section 10) — exists to keep the system running correctly <em>despite</em> failures. None of them tell you <strong>what actually happened</strong> when something goes wrong, or let you answer questions like: which specific instance handled this failing request? How long did each hop in a multi-service call chain actually take? Is this circuit breaker tripping occasionally, or constantly? Is API latency trending upward over the last week? Answering these requires dedicated infrastructure — this section's entire subject.</p>
+
+    <h3 class="subhead">The three pillars of observability</h3>
+    <div class="pillar-grid">
+      <div class="pillar-card">
+        <div class="p-title">📄 Logs</div>
+        <div class="p-tools">Grafana · Loki · Promtail</div>
+        <p>Discrete, timestamped events — "what happened, and what was the specific error/context." Best for deep-diving into one specific incident once you know roughly where to look.</p>
+      </div>
+      <div class="pillar-card">
+        <div class="p-title">📊 Metrics</div>
+        <div class="p-tools">Micrometer · Prometheus · Grafana</div>
+        <p>Aggregated numerical measurements over time — "how much, how often, how fast." Best for trends, dashboards, and alerting on thresholds.</p>
+      </div>
+      <div class="pillar-card">
+        <div class="p-title">🔗 Traces</div>
+        <div class="p-tools">OpenTelemetry · Tempo · Grafana</div>
+        <p>The full journey of one specific request across every service it touched, with per-hop timing. Best for pinpointing exactly where in a call chain time was spent or a failure occurred.</p>
+      </div>
+    </div>
+
+    <div class="callout info"><b class="lbl">Why the Grafana ecosystem specifically</b><p>This course uses Grafana as the unified visualization layer across all three pillars, backed by Loki (logs), Prometheus (metrics), and Tempo (traces) — a deliberately cohesive, open-source stack sometimes informally called "the Grafana LGTM stack" (Loki, Grafana, Tempo, Metrics/Mimir). This isn't the only valid stack (the "ELK stack" — Elasticsearch, Logstash, Kibana — is another extremely common industry choice, particularly for logs), but it's a coherent, cost-conscious, and increasingly popular one worth understanding deeply, since the underlying concepts transfer directly regardless of which specific vendor stack a given company happens to run.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q1-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q1-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q1-common">
+        <details class="qa"><summary>What are the three pillars of observability?</summary><div class="qa-answer"><p>Logs (discrete, timestamped events with contextual detail), Metrics (aggregated numerical measurements over time), and Traces (the end-to-end journey of a single request across multiple services with per-hop timing).</p></div></details>
+        <details class="qa"><summary>Why does "just SSH into the server and check the logs" stop working in a microservices system?</summary><div class="qa-answer"><p>With many dynamically-scaled instances across many services (as established in Section 8), you no longer know in advance which specific instance handled a given request, instances are ephemeral and their local logs disappear when the container is removed, and a single user-facing request may span many services — no single instance's local log file tells the whole story.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q1-faang">
+        <details class="qa"><summary>If you could only implement one of the three pillars first at a resource-constrained startup, which would you prioritize and why?</summary><div class="qa-answer"><p>Centralized logging is usually the most immediately actionable and cheapest to stand up relative to the other two, and gives the most direct visibility into "what actually broke and why" for individual incidents — it's the pillar most similar to what teams already do locally (read log output), just centralized. Metrics/dashboards become valuable once you have enough traffic and history to distinguish trends from noise, and distributed tracing's value scales specifically with the complexity of your service call graph — a system with only 2-3 services calling each other gets comparatively less incremental value from full distributed tracing than a system with a dozen services and deep call chains. That said, this is a "it depends on team maturity and system complexity" answer worth articulating with reasoning rather than asserting one pillar as universally most important — many teams in practice stand up metrics and logging roughly together, since Spring Boot Actuator/Micrometer makes basic metrics nearly free to add.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="observability-vs-monitoring">
+    <div class="topic-head"><span class="topic-no">156</span><h2>Observability vs. Monitoring</h2></div>
+    <p class="topic-sub">The single most commonly asked conceptual question in this entire section — get the precise distinction right.</p>
+
+    <h3 class="subhead">Monitoring: watching for known failure modes</h3>
+    <p><strong>Monitoring</strong> is the practice of watching a predefined set of metrics/checks and alerting when they cross known thresholds — "is CPU usage above 80%," "is the health check endpoint returning 200," "has error rate exceeded 5%." Monitoring answers questions you thought to ask <em>in advance</em>. It's built around dashboards and alerts for <strong>known unknowns</strong> — failure modes you've anticipated and explicitly instrumented for.</p>
+
+    <h3 class="subhead">Observability: the ability to ask new questions without shipping new code</h3>
+    <p><strong>Observability</strong> is a property of a system — how well you can understand its <em>internal</em> state purely from its <em>external</em> outputs (logs, metrics, traces), <strong>without needing to predict in advance exactly what question you'll need to ask</strong>. A genuinely observable system lets an engineer investigating a novel, never-seen-before incident (an <strong>unknown unknown</strong>) explore and correlate signals ad hoc — "show me every trace where this specific downstream call took over 2 seconds, filtered to only requests from this one customer, during this 10-minute window" — without having pre-built a dashboard for that exact scenario.</p>
+
+    <table>
+      <tr><th>Aspect</th><th>Monitoring</th><th>Observability</th></tr>
+      <tr><td>Question type</td><td>Pre-defined, known in advance</td><td>Ad hoc, arbitrary, discovered during investigation</td></tr>
+      <tr><td>Built for</td><td>Known unknowns — anticipated failure modes</td><td>Unknown unknowns — novel, unanticipated issues</td></tr>
+      <tr><td>Primary artifact</td><td>Dashboards, threshold-based alerts</td><td>Rich, high-cardinality, correlatable telemetry (logs/metrics/traces together)</td></tr>
+      <tr><td>Typical question</td><td>"Is the error rate above 1%?"</td><td>"Why did exactly these 12 specific customers see errors, and only when calling this specific endpoint, in this specific region?"</td></tr>
+      <tr><td>Relationship</td><td colspan="2" style="text-align:center;">Monitoring is a <em>use case built on top of</em> an observable system — you need good observability (rich telemetry) to build genuinely useful monitoring, but observability is the broader, more fundamental property</td></tr>
+    </table>
+
+    <div class="callout warn"><b class="lbl">The precise interview-ready framing</b><p>Don't describe these as two separate, competing tools or techniques — describe monitoring as <strong>a specific, narrower application built on top of</strong> a system's observability. You can have monitoring without strong observability (a handful of pre-built dashboards and alerts on a system that otherwise produces poor, low-detail telemetry — fine for known failure modes, useless the moment something novel happens). Genuine observability is the deeper investment — rich, correlated, explorable telemetry — that both good monitoring <em>and</em> effective incident investigation depend on.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q2-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q2-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q2-common">
+        <details class="qa"><summary>What's the core difference between monitoring and observability?</summary><div class="qa-answer"><p>Monitoring watches a predefined set of known metrics/checks for anticipated failure modes ("known unknowns"). Observability is a broader property of the system — how well you can understand its internal state from external outputs — that lets you investigate novel, unanticipated issues ("unknown unknowns") by asking ad hoc questions you didn't predict in advance.</p></div></details>
+        <details class="qa"><summary>Is monitoring a replacement for observability, or the other way around?</summary><div class="qa-answer"><p>Neither replaces the other — monitoring is a specific, narrower application built on top of a system's observability. Good observability (rich, correlated telemetry) is what makes both effective monitoring and ad hoc incident investigation possible.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q2-faang">
+        <details class="qa"><summary>Give a concrete example of an incident that good monitoring alone would miss but good observability would catch.</summary><div class="qa-answer"><p>A latency regression affecting only customers in one specific geographic region, only for one specific rarely-used API endpoint, only during a specific time window correlated with a batch job running on a shared database — none of these dimensions would have a pre-built dashboard or alert threshold unless someone had specifically anticipated "region × endpoint × time-of-day × shared-resource-contention" as a scenario worth monitoring in advance, which is exactly the kind of narrow, compound condition nobody thinks to pre-build a dashboard for. A genuinely observable system — with high-cardinality, correlatable telemetry (metrics tagged by region and endpoint, traces showing per-hop latency, logs correlatable by trace ID) — lets an engineer slice and filter across all these dimensions ad hoc during investigation, discovering the pattern empirically rather than having needed to predict it beforehand. This is precisely the "unknown unknown" case monitoring alone is structurally unable to catch.</p></div></details>
+        <details class="qa"><summary>How does "high cardinality" telemetry relate to observability, and why is it a double-edged sword?</summary><div class="qa-answer"><p>Cardinality refers to the number of unique combinations of label/tag values a piece of telemetry can have — e.g. tagging a metric by `user_id` gives it cardinality equal to the number of distinct users, versus tagging by `http_status_code` which only has a handful of possible values. High-cardinality telemetry (traces tagged with specific request IDs, user IDs, specific error messages) is exactly what enables the fine-grained, ad hoc slicing that makes a system genuinely observable — you can't ask "show me only requests from this one customer" if nothing was tagged with customer ID. But high cardinality is also expensive: time-series databases like Prometheus specifically struggle at scale with high-cardinality labels (each unique label combination becomes its own separately-stored time series, and cardinality explosion can blow up storage and query performance dramatically) — which is exactly why this section's tools split responsibilities the way they do: Prometheus/metrics intentionally stay lower-cardinality (aggregated counts, rates, not per-request unique IDs), while high-cardinality, per-request detail is pushed to logs (Loki) and traces (Tempo), which are architecturally designed to handle that differently. Understanding this trade-off — and why metrics, logs, and traces aren't just three redundant ways to store the same data — is a genuinely deep, interview-differentiating point.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="centralized-logging">
+    <div class="topic-head"><span class="topic-no">157</span><h2>Introduction to Centralized Logging or Log Aggregation in Microservices</h2></div>
+    <p class="topic-sub">Why logs need to leave the container they were written in.</p>
+
+    <h3 class="subhead">Why local logs aren't enough</h3>
+    <ul>
+      <li><strong>Ephemeral instances</strong> — a container's local filesystem (and any logs written to it) disappears the moment that container is removed (a crash, a redeploy, autoscaling scaling down) — exactly the ephemerality first flagged in Section 8's service discovery motivation.</li>
+      <li><strong>No single-machine view across services</strong> — with Accounts, Loans, Cards, the Gateway, Config Server, and Eureka all running as separate containers, "check the logs" means checking N different places, manually, for every investigation.</li>
+      <li><strong>No cross-service correlation without extra work</strong> — even with all the logs in hand, correlating "this specific request's journey across three services" requires the correlation ID mechanism from Section 9 — and a place to actually search across all three services' logs by that ID at once.</li>
+    </ul>
+
+    <p><strong>Log aggregation</strong> (or <strong>centralized logging</strong>) solves this by shipping every service instance's log output to one central, durable, searchable store — decoupling "where a log line was written" from "where you go to search for it."</p>
+
+    <div class="callout info"><b class="lbl">This closes the loop from Section 9 directly</b><p>Recall the `eazybank-correlation-id` global filter built at the Gateway — its entire value proposition depends on having somewhere to actually search across every service's logs by that shared ID. Without centralized logging, that correlation ID is present in each service's local log output but practically useless for cross-service investigation, since there's no single place to query "show me every log line, across every service, carrying this specific correlation ID."</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q3-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q3-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q3-common">
+        <details class="qa"><summary>Why do logs need to be centralized rather than just read from each container individually?</summary><div class="qa-answer"><p>Container instances are ephemeral — their local logs disappear when the container is removed — and with many services running as separate containers, there's no single place to search or correlate logs across all of them without shipping them somewhere central and durable first.</p></div></details>
+        <details class="qa"><summary>How does centralized logging make the correlation ID from Section 9 actually useful?</summary><div class="qa-answer"><p>The correlation ID is only valuable for cross-service investigation if there's a single place to search for it across every service's logs at once — without centralized logging, it's present in each service's local output but there's no unified way to actually query across services by that shared ID.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q3-faang">
+        <details class="qa"><summary>What are the operational trade-offs of shipping logs centrally — is there a downside to just logging everything, always?</summary><div class="qa-answer"><p>Centralized log storage and ingestion cost scales directly with log volume, and verbose logging (especially DEBUG-level logging left on in production, or logging full request/response bodies) can generate enormous volume relative to its actual investigative value — a real, recurring cost-management problem at scale. This is why production logging strategy typically involves deliberate log-level tuning (INFO/WARN in production, DEBUG reserved for troubleshooting sessions, sometimes dynamically toggleable via Actuator's `/actuator/loggers` endpoint without a redeploy), sampling strategies for very high-volume, low-value log lines, and architectural choices like Loki's label-based indexing (covered next) specifically designed to reduce the cost of storing and querying large log volumes compared to full-text-indexing approaches like Elasticsearch.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="loki-stack-intro">
+    <div class="topic-head"><span class="topic-no">158</span><h2>Introduction to Managing Logs with Grafana, Loki & Promtail</h2></div>
+    <p class="topic-sub">Three distinct components, each with one clear job.</p>
+
+    <div class="diagram">
+      <div class="dflow">
+        <div class="dstack">
+          <div class="dbox"><div class="t">Accounts</div><div class="s">writes logs to stdout</div></div>
+          <div class="dbox"><div class="t">Loans</div><div class="s">writes logs to stdout</div></div>
+        </div>
+        <div class="darrow">→</div>
+        <div class="dbox warn"><div class="t">Promtail</div><div class="s">agent — discovers & ships logs, attaches labels</div></div>
+        <div class="darrow">→</div>
+        <div class="dbox accent"><div class="t">Loki</div><div class="s">stores & indexes logs by label, not full text</div></div>
+        <div class="darrow">→</div>
+        <div class="dbox"><div class="t">Grafana</div><div class="s">query & visualize via LogQL</div></div>
+      </div>
+    </div>
+
+    <table>
+      <tr><th>Component</th><th>Role</th></tr>
+      <tr><td><strong>Promtail</strong></td><td>An agent that runs alongside your services (one per host/node, or as a sidecar), discovers log sources (files, container stdout/stderr), tails them, attaches metadata as <strong>labels</strong> (service name, container ID, environment), and ships log entries to Loki</td></tr>
+      <tr><td><strong>Loki</strong></td><td>Grafana Labs's log aggregation system — stores and indexes log streams. Critically, Loki indexes only the <strong>labels</strong>, not the full text content of every log line (more on this below) — a deliberate design choice trading full-text search flexibility for dramatically lower storage/indexing cost</td></tr>
+      <tr><td><strong>Grafana</strong></td><td>The visualization/query layer — the same tool used for metrics dashboards later in this section, here used to query Loki via <strong>LogQL</strong> (a query language deliberately similar to Prometheus's PromQL, covered in the metrics pillar) and view matching log lines</td></tr>
+    </table>
+
+    <h3 class="subhead">Why Loki indexes labels, not full text — the key architectural decision</h3>
+    <p>Traditional log aggregation systems like Elasticsearch (the "E" in the ELK stack) build a full-text search index over the entire content of every log line — powerful (search for any arbitrary substring anywhere) but expensive to store and maintain at scale. Loki instead indexes only a small set of <strong>labels</strong> (e.g. `service=accounts`, `container=accounts-ms`, `environment=prod`) — narrowing down to the relevant <em>log stream</em> is fast (label-based, like a database index), and then the actual line-by-line text search happens by scanning the (much smaller, already-narrowed) matching stream's raw content, not a global full-text index. This is explicitly modeled after how Prometheus indexes metrics (by label, not by value) — Loki is sometimes described as "Prometheus, but for logs" for exactly this reason.</p>
+
+    <div class="callout warn"><b class="lbl">The trade-off this creates</b><p>A query that filters primarily by label (`{service="accounts"} |= "error"`) is fast and cheap. A query trying to full-text-search across <em>every</em> log stream with weak/no label filtering is comparatively much slower in Loki than the equivalent would be in a full-text-indexed system like Elasticsearch — Loki's design assumes and rewards good labeling discipline (structured, consistent labels applied at ingestion) rather than relying purely on ad hoc full-text search across everything. This cost/flexibility trade-off is a genuinely common, specific interview comparison point (Loki vs ELK).</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q4-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q4-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q4-common">
+        <details class="qa"><summary>What is Promtail's job in this stack?</summary><div class="qa-answer"><p>It's an agent that discovers log sources, tails them, attaches metadata labels, and ships the resulting log entries to Loki — the component responsible for actually collecting and forwarding logs.</p></div></details>
+        <details class="qa"><summary>What's the key architectural difference between Loki and a full-text-indexed system like Elasticsearch?</summary><div class="qa-answer"><p>Loki only indexes labels (metadata like service name, environment), not the full text content of every log line — narrowing to a relevant stream is fast via the label index, then text search happens by scanning within that already-narrowed stream. Elasticsearch builds a full-text index over the entire log content, which is more powerful for arbitrary text search but far more expensive to store and maintain at scale.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q4-faang">
+        <details class="qa"><summary>Given Loki's label-based design, what labeling strategy would you recommend for a real microservices deployment, and what would you avoid?</summary><div class="qa-answer"><p>Good labels are low-cardinality, stable dimensions genuinely useful for narrowing down which stream to search — service name, environment, log level, region, instance/pod name in moderation. What to explicitly avoid: labeling by genuinely high-cardinality values like user ID, request ID, or full correlation ID — doing so would create an enormous number of distinct label combinations (Loki, like Prometheus, suffers real performance/storage problems under label cardinality explosion, directly echoing the cardinality discussion from topic 156's FAANG answer), defeating the entire cost benefit of label-based indexing. The correct pattern for high-cardinality identifiers like correlation/trace IDs is to keep them in the <em>log line's actual text content</em> (searchable via LogQL's text-filtering operators like `|=` once you've already narrowed to the right stream via labels) rather than promoting them to indexed labels — this is a genuinely important, specific operational best practice worth being able to articulate precisely.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="promtail-note">
+    <div class="topic-head"><span class="topic-no">159</span><h2>IMPORTANT NOTE ON PROMTAIL</h2></div>
+    <p class="topic-sub">A real, current fact worth knowing regardless of what this course's video says — Promtail's status has changed.</p>
+
+    <div class="callout pitfall"><b class="lbl">Promtail is in maintenance mode / being phased out</b><p>Grafana Labs has moved Promtail into a long-term support/maintenance status and is steering new deployments toward <strong>Grafana Alloy</strong> — a newer, unified telemetry collector (built on OpenTelemetry Collector foundations) intended to eventually handle logs, metrics, <em>and</em> traces collection through one agent, replacing the separate-agent-per-signal-type approach (Promtail for logs specifically). If you're setting up a new production log pipeline today rather than following this course's exact steps, checking Grafana's current documentation for whether Alloy is now the recommended ingestion agent instead of Promtail is genuinely worthwhile — this course's Promtail-based approach remains conceptually correct and a fine way to learn the underlying model, but the specific tool recommended for new production deployments has been shifting.</p></div>
+
+    <p>This doesn't change any of the underlying concepts in this section — labels, log streams, LogQL, and Loki's core architecture remain the same regardless of which specific agent ships the logs into Loki. It's exactly the kind of "the specific tool name might be dated, but the concept isn't" distinction worth flagging explicitly in an interview if it comes up, rather than presenting Promtail as the permanent, only correct answer.</p>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q5-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q5-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q5-common">
+        <details class="qa"><summary>What is Grafana Alloy, and how does it relate to Promtail?</summary><div class="qa-answer"><p>Grafana Alloy is a newer, unified telemetry collector Grafana Labs is steering new deployments toward, intended to eventually handle logs, metrics, and traces collection through one agent — Promtail (log-collection-specific) has moved into maintenance/long-term-support status as this transition happens.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q5-faang">
+        <details class="qa"><summary>Why would a vendor consolidate separate agents (Promtail for logs, other agents for metrics/traces) into one unified collector like Alloy?</summary><div class="qa-answer"><p>Operating multiple separate agents per host/node for different signal types multiplies deployment, configuration, resource-overhead, and version-compatibility management — a unified collector reduces operational surface area (one agent to deploy, configure, monitor, and upgrade instead of several), and building it on OpenTelemetry Collector foundations aligns with the broader industry move toward OpenTelemetry as a vendor-neutral standard for all three observability signal types (covered later in this section's tracing pillar) rather than each signal type having its own bespoke, vendor-specific collection tooling. This mirrors a common pattern in infrastructure tooling evolution generally — point-solution agents proliferate early in a technology's life, then consolidate into unified tooling as the ecosystem matures and standards (like OpenTelemetry) emerge to unify previously-fragmented approaches.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="logging-demo-theory">
+    <div class="topic-head"><span class="topic-no">160</span><h2>Sample Demo of Logging Using Grafana, Loki & Promtail — Theory</h2></div>
+    <p class="topic-sub">The end-to-end pipeline, before touching any configuration files.</p>
+
+    <h3 class="subhead">The pipeline, step by step</h3>
+    <ol>
+      <li>Each microservice logs normally to stdout/stderr (no special code changes needed for this part) — exactly as Spring Boot does by default.</li>
+      <li>Docker captures each container's stdout/stderr as its standard container log output (Docker's own logging driver).</li>
+      <li>Promtail, configured with access to Docker's container logs (typically via a bind mount to `/var/lib/docker/containers` or through Docker's own log discovery), tails these logs, attaches labels derived from container metadata (e.g. the container/service name), and pushes them to Loki over HTTP.</li>
+      <li>Loki receives, indexes (by label), and stores the log streams.</li>
+      <li>Grafana, configured with Loki as a data source, lets you query and visualize log streams using LogQL — filtering by label first (e.g. `{container="accounts-ms"}`), then by text content within that stream (e.g. `|= "ERROR"`), and critically, filtering across services by a shared correlation ID present in the log text.</li>
+    </ol>
+
+    <div class="callout info"><b class="lbl">Zero application code changes required for basic log shipping</b><p>Because Promtail operates at the container/log-file level, not by instrumenting application code, getting basic centralized logging working requires no changes to Accounts/Loans/Cards's own source code at all — purely infrastructure/deployment configuration. This is a meaningful contrast with the metrics and tracing pillars later in this section, both of which <em>do</em> require adding dependencies and instrumentation to the application code itself.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q6-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q6-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q6-common">
+        <details class="qa"><summary>Does setting up centralized logging with Promtail/Loki require changes to the microservices' own application code?</summary><div class="qa-answer"><p>No — Promtail operates at the container/log-file level, tailing whatever a service already writes to stdout/stderr, so basic log shipping is purely an infrastructure/deployment concern, requiring no application code changes.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q6-faang">
+        <details class="qa"><summary>Given that log shipping requires no code changes, what would push a team toward also structuring their log output (e.g. as JSON) rather than leaving it as plain text?</summary><div class="qa-answer"><p>While Loki can ingest and store plain-text log lines just fine, <strong>structured logging</strong> (emitting each log line as JSON with consistent field names — `level`, `message`, `correlationId`, `service`) makes the text-content-search half of LogQL queries (after label-based narrowing) far more precise and reliable than regex/substring matching against unstructured free text — you can filter/extract specific structured fields directly (`| json | correlationId="abc-123"`) rather than hoping a substring search doesn't also match unrelated log lines that happen to contain similar text. Structured logging is a genuinely important production practice precisely because it turns "logs" into semi-queryable, semi-structured data rather than opaque strings — a natural evolution once a team is investing seriously in observability tooling like this section covers, even though it's not strictly required to get Loki working at a basic level.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="logging-implementation">
+    <div class="topic-head"><span class="topic-no">161-163</span><h2>Implementing Logging Using Grafana, Loki & Promtail</h2></div>
+    <p class="topic-sub">The concrete Docker Compose wiring and LogQL query patterns that make the theory from the previous topic real.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="li1">docker-compose.yml (observability stack)</div>
+        <div class="code-tab" data-pane="li2">promtail-config.yml</div>
+        <div class="code-tab" data-pane="li3">Example LogQL queries</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="li1"><pre><span class="cl">services</span>:
+  <span class="cl">loki</span>:
+    <span class="cl">image</span>: <span class="str">grafana/loki:2.9.0</span>
+    <span class="cl">container_name</span>: <span class="str">loki</span>
+    <span class="cl">ports</span>:
+      - <span class="str">"3100:3100"</span>
+    <span class="cl">command</span>: <span class="str">-config.file=/etc/loki/local-config.yaml</span>
+
+  <span class="cl">promtail</span>:
+    <span class="cl">image</span>: <span class="str">grafana/promtail:2.9.0</span>
+    <span class="cl">container_name</span>: <span class="str">promtail</span>
+    <span class="cl">volumes</span>:
+      - <span class="str">/var/run/docker.sock:/var/run/docker.sock</span>
+      - <span class="str">/var/lib/docker/containers:/var/lib/docker/containers:ro</span>
+      - <span class="str">./promtail-config.yml:/etc/promtail/config.yml</span>
+    <span class="cl">command</span>: <span class="str">-config.file=/etc/promtail/config.yml</span>
+    <span class="cl">depends_on</span>:
+      - <span class="cl">loki</span>
+
+  <span class="cl">grafana</span>:
+    <span class="cl">image</span>: <span class="str">grafana/grafana:10.x.x</span>
+    <span class="cl">container_name</span>: <span class="str">grafana</span>
+    <span class="cl">ports</span>:
+      - <span class="str">"3000:3000"</span></pre></div>
+        <div class="code-pane" id="li2"><pre><span class="cl">scrape_configs</span>:
+  - <span class="cl">job_name</span>: <span class="str">docker</span>
+    <span class="cl">docker_sd_configs</span>:
+      - <span class="cl">host</span>: <span class="str">unix:///var/run/docker.sock</span>
+        <span class="cl">refresh_interval</span>: <span class="str">5s</span>
+    <span class="cl">relabel_configs</span>:
+      - <span class="cl">source_labels</span>: [<span class="str">__meta_docker_container_name</span>]
+        <span class="cl">target_label</span>: <span class="str">container</span></pre></div>
+        <div class="code-pane" id="li3"><pre><span class="cm"># narrow to one service's logs</span>
+{container=<span class="str">"accounts-ms"</span>}
+
+<span class="cm"># narrow further to error-level lines within that service</span>
+{container=<span class="str">"accounts-ms"</span>} |= <span class="str">"ERROR"</span>
+
+<span class="cm"># the payoff: find EVERY log line, across EVERY service,</span>
+<span class="cm"># for one specific request's correlation ID</span>
+{job=<span class="str">"docker"</span>} |= <span class="str">"eazybank-correlation-id=abc-123-def"</span></pre></div>
+      </div>
+    </div>
+
+    <h3 class="subhead">Key concepts made concrete</h3>
+    <div class="ann-grid">
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">docker_sd_configs</span></div><div class="ann-body"><p>Promtail's Docker service-discovery mechanism — instead of statically listing every container to watch, it discovers running containers dynamically via the Docker socket, exactly mirroring the dynamic-discovery philosophy established for services themselves back in Section 8 (nothing about container/log topology should need to be hardcoded either).</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">relabel_configs</span></div><div class="ann-body"><p>Transforms Docker's own internal metadata (like `__meta_docker_container_name`) into the clean, queryable Loki labels actually used in LogQL queries (`container`) — the mechanism that turns raw discovery data into a well-labeled log stream.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">LogQL <code>|=</code></span></div><div class="ann-body"><p>The line-filter operator — after label-based stream selection (`{container="..."}`), this searches the text content of matching lines for a substring, exactly the "narrow by label first, then search text within that narrowed stream" model discussed in topic 158.</p></div></div>
+    </div>
+
+    <div class="callout info"><b class="lbl">The genuinely payoff moment of this whole logging pillar</b><p>That last query — a single LogQL search finding every log line across every service carrying one specific correlation ID — is the concrete, working realization of exactly what topic 157 promised: the correlation ID mechanism from Section 9 finally has somewhere to be actually useful. An engineer investigating one customer's specific failed request can now reconstruct that request's complete journey across Accounts, Loans, and Cards from one unified search, instead of manually checking three separate services' local logs.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q7-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q7-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q7-common">
+        <details class="qa"><summary>What does the {container="accounts-ms"} |= "ERROR" LogQL query do?</summary><div class="qa-answer"><p>It first narrows to the log stream labeled with container `accounts-ms` (fast, label-index-based selection), then filters those lines to only ones containing the text "ERROR" (a text-content search within the already-narrowed stream).</p></div></details>
+        <details class="qa"><summary>Why does Promtail use Docker service discovery instead of a static list of containers to watch?</summary><div class="qa-answer"><p>Because containers in this system are dynamically created/destroyed (scaling, restarts, redeploys) — a static list would immediately go stale, exactly the same ephemeral-infrastructure problem service discovery (Section 8) solves for service addresses, applied here to log source discovery instead.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q7-faang">
+        <details class="qa"><summary>What would you need to add to make searching by correlation ID even more reliable than a raw text substring match?</summary><div class="qa-answer"><p>Structured logging (mentioned in the previous topic's FAANG answer) — if each service emits logs as JSON with a consistent `correlationId` field, LogQL's `| json` parser can extract that field explicitly, and querying `| json | correlationId = "abc-123-def"` is an exact, structured match rather than a substring search that could theoretically also match unrelated log content that happens to contain the same characters (a low but non-zero risk with plain substring matching, especially on shorter or less distinctive ID formats). This also opens up more powerful LogQL capabilities beyond simple filtering — aggregating log counts by extracted structured fields, for instance — none of which are available with pure unstructured text search. It's a good concrete illustration of why "make it work" (plain text logs, substring search) and "make it production-grade" (structured logs, exact field matching) are genuinely different maturity levels of the same underlying capability.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="metrics-intro">
+    <div class="topic-head"><span class="topic-no">164</span><h2>Managing Metrics & Monitoring with Actuator, Micrometer, Prometheus & Grafana</h2></div>
+    <p class="topic-sub">Moving from the logging pillar to the metrics pillar — four components, each with a distinct role.</p>
+
+    <table>
+      <tr><th>Component</th><th>Role</th></tr>
+      <tr><td><strong>Spring Boot Actuator</strong></td><td>Already used since earlier sections for health/readiness probes (Section 6) — also exposes a metrics endpoint that aggregates application-level measurements</td></tr>
+      <tr><td><strong>Micrometer</strong></td><td>A vendor-neutral metrics <strong>facade</strong> (analogous to how SLF4J is a facade over concrete logging implementations) — application code and libraries instrument against Micrometer's API, and a pluggable <strong>MeterRegistry</strong> implementation determines which actual metrics backend (Prometheus, Datadog, New Relic, CloudWatch...) the data is formatted for and sent to</td></tr>
+      <tr><td><strong>Prometheus</strong></td><td>A time-series database and monitoring system that <strong>pulls</strong> (scrapes) metrics from configured targets at a regular interval, storing them for querying via PromQL</td></tr>
+      <tr><td><strong>Grafana</strong></td><td>The same visualization layer from the logging pillar, here configured with Prometheus as a data source to build dashboards and alerts</td></tr>
+    </table>
+
+    <div class="callout info"><b class="lbl">Why Micrometer as a facade matters, specifically</b><p>Because application code (and Spring Boot's own auto-instrumentation of things like HTTP request counts and JVM stats) is written against Micrometer's vendor-neutral API rather than directly against Prometheus's specific format, switching metrics backends later (e.g. moving from Prometheus to Datadog) is, in principle, a dependency/configuration change — swap the MeterRegistry implementation — not a rewrite of instrumentation code scattered throughout the application. This is exactly the same architectural benefit Spring Cloud's `DiscoveryClient` abstraction provided for service discovery back in Section 8 (program against an abstraction, swap the implementation) — worth explicitly drawing that parallel in an interview to show pattern recognition across the course.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q8-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q8-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q8-common">
+        <details class="qa"><summary>What is Micrometer, and what design pattern does it follow?</summary><div class="qa-answer"><p>A vendor-neutral metrics facade — application code instruments against Micrometer's API, and a pluggable MeterRegistry implementation determines which actual backend the metrics are sent to. It follows the same facade pattern as SLF4J does for logging.</p></div></details>
+        <details class="qa"><summary>What's the practical benefit of instrumenting against Micrometer rather than directly against Prometheus's client library?</summary><div class="qa-answer"><p>Switching metrics backends later becomes a configuration/dependency change (swapping the MeterRegistry implementation) rather than a rewrite of instrumentation scattered throughout the application code — the same abstraction benefit as programming against an interface rather than a concrete implementation.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q8-faang">
+        <details class="qa"><summary>Is Micrometer purely a convenience/portability layer, or does it also standardize what gets measured, not just how it's sent?</summary><div class="qa-answer"><p>Both — beyond backend portability, Micrometer also establishes common conventions for <em>naming and structuring</em> metrics (e.g. `http.server.requests` as a standardized timer metric name Spring Boot auto-instruments, with consistent tags like `method`, `status`, `uri`), which means metrics from any Micrometer-instrumented Spring Boot application follow a predictable shape regardless of which specific backend is receiving them. This consistency matters a lot at organizational scale — dashboards, alerting rules, and tooling built against these standard metric names/shapes work uniformly across every service in the organization without each team needing to invent and document their own metric-naming conventions independently, which is a genuinely valuable, if less obvious, benefit beyond the more commonly-cited "backend portability" one.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="micrometer-setup">
+    <div class="topic-head"><span class="topic-no">165</span><h2>Setup of Micrometer Inside Microservices</h2></div>
+    <p class="topic-sub">One dependency, and Spring Boot Actuator's metrics become Prometheus-scrapable.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="ms1">pom.xml</div>
+        <div class="code-tab" data-pane="ms2">application.yml</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="ms1"><pre>&lt;dependency&gt;
+    &lt;groupId&gt;io.micrometer&lt;/groupId&gt;
+    &lt;artifactId&gt;micrometer-registry-prometheus&lt;/artifactId&gt;
+&lt;/dependency&gt;</pre></div>
+        <div class="code-pane" id="ms2"><pre><span class="cl">management</span>:
+  <span class="cl">endpoints</span>:
+    <span class="cl">web</span>:
+      <span class="cl">exposure</span>:
+        <span class="cl">include</span>: <span class="str">"health,info,prometheus"</span>
+  <span class="cl">endpoint</span>:
+    <span class="cl">health</span>:
+      <span class="cl">probes</span>:
+        <span class="cl">enabled</span>: <span class="kw">true</span>
+  <span class="cl">metrics</span>:
+    <span class="cl">tags</span>:
+      <span class="cl">application</span>: <span class="str">${spring.application.name}</span></pre></div>
+      </div>
+    </div>
+
+    <p>Adding `micrometer-registry-prometheus` gives Spring Boot Actuator a Prometheus-specific `MeterRegistry` implementation, which formats every collected metric (JVM memory, HTTP request counts/latencies, custom application metrics, and — critically — Resilience4j's own metrics from Section 10, since Resilience4j integrates with Micrometer directly) into the Prometheus exposition text format, exposed at <code>/actuator/prometheus</code>.</p>
+
+    <div class="ann-box">
+      <div class="ann-box-head"><span class="ann-tag">management.metrics.tags.application</span></div>
+      <div class="ann-body"><p>Tags every metric emitted by this instance with its `spring.application.name` — essential once metrics from multiple services are being scraped into the same Prometheus instance, so a query can filter/group by which service a given metric belongs to. Without this, distinguishing "Accounts's request count" from "Loans's request count" in a shared Prometheus store would be far harder.</p></div>
+    </div>
+
+    <div class="callout warn"><b class="lbl">This closes a specific loop from Section 10</b><p>Because Resilience4j is Micrometer-integrated out of the box, every circuit breaker, retry, rate limiter, and bulkhead instance from Section 10 automatically exposes its own metrics (state transitions, call outcomes, rejected-call counts) through this exact same pipeline — this is precisely the mechanism referenced back in Section 10's aspect-ordering FAANG answer about "verifying resiliency patterns empirically via metrics," now made concrete rather than left as a forward reference.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q9-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q9-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q9-common">
+        <details class="qa"><summary>What endpoint does the Prometheus MeterRegistry expose, and what format is it in?</summary><div class="qa-answer"><p>`/actuator/prometheus`, formatted in the Prometheus exposition text format — a plain-text format Prometheus's scraper knows how to parse directly.</p></div></details>
+        <details class="qa"><summary>Why tag every metric with the application name?</summary><div class="qa-answer"><p>So that once metrics from multiple services are collected into one shared Prometheus instance, queries can filter or group by which specific service a given metric belongs to — without this tag, metrics from different services with the same metric name would be indistinguishable.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q9-faang">
+        <details class="qa"><summary>Should the /actuator/prometheus endpoint be publicly reachable, given it's exposed via Actuator alongside potentially sensitive management endpoints?</summary><div class="qa-answer"><p>No — this endpoint should be restricted to Prometheus's own scraper (and internal network access generally), not exposed externally, echoing the exact same Actuator-exposure security concern raised for `/actuator/refresh` back in Section 6. Common production patterns: expose Actuator endpoints on a separate internal-only management port (`management.server.port`), restrict access via network policy/security groups so only the Prometheus scraper's network location can reach it, and/or require authentication scoped specifically to `/actuator/**` paths. Metrics data itself, while less immediately dangerous than something like `/actuator/env` (which can leak configuration/secrets), can still reveal internal architecture details, traffic patterns, and potentially business-sensitive volume information that shouldn't be casually public.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="prometheus-setup">
+    <div class="topic-head"><span class="topic-no">166</span><h2>Setup of Prometheus Inside Microservices</h2></div>
+    <p class="topic-sub">The pull-based scraping model — a deliberate, important architectural choice worth understanding deeply.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="ps1">prometheus.yml</div>
+        <div class="code-tab" data-pane="ps2">docker-compose.yml addition</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="ps1"><pre><span class="cl">global</span>:
+  <span class="cl">scrape_interval</span>: <span class="str">10s</span>
+
+<span class="cl">scrape_configs</span>:
+  - <span class="cl">job_name</span>: <span class="str">accounts</span>
+    <span class="cl">metrics_path</span>: <span class="str">/actuator/prometheus</span>
+    <span class="cl">static_configs</span>:
+      - <span class="cl">targets</span>: [<span class="str">accounts:8080</span>]
+  - <span class="cl">job_name</span>: <span class="str">loans</span>
+    <span class="cl">metrics_path</span>: <span class="str">/actuator/prometheus</span>
+    <span class="cl">static_configs</span>:
+      - <span class="cl">targets</span>: [<span class="str">loans:8090</span>]</pre></div>
+        <div class="code-pane" id="ps2"><pre><span class="cl">prometheus</span>:
+  <span class="cl">image</span>: <span class="str">prom/prometheus:latest</span>
+  <span class="cl">container_name</span>: <span class="str">prometheus</span>
+  <span class="cl">ports</span>:
+    - <span class="str">"9090:9090"</span>
+  <span class="cl">volumes</span>:
+    - <span class="str">./prometheus.yml:/etc/prometheus/prometheus.yml</span></pre></div>
+      </div>
+    </div>
+
+    <h3 class="subhead">Pull vs push — the fundamental design decision</h3>
+    <p>Prometheus uses a <strong>pull model</strong> — it actively reaches out and scrapes each configured target's metrics endpoint at a regular interval (`scrape_interval`), rather than services proactively pushing their metrics somewhere (a "push model," used by systems like StatsD). This is a deliberate, well-reasoned architectural choice.</p>
+
+    <table>
+      <tr><th>Aspect</th><th>Pull model (Prometheus)</th><th>Push model (e.g. StatsD)</th></tr>
+      <tr><td>Who initiates</td><td>The monitoring system reaches out to targets</td><td>Each service proactively sends metrics to a collector</td></tr>
+      <tr><td>Target liveness signal</td><td>A failed scrape is itself meaningful — "this target is unreachable" is directly observable</td><td>Absence of pushed data is ambiguous — is the service down, or did it just not push anything (correctly, if nothing changed)?</td></tr>
+      <tr><td>Configuration</td><td>Centralized — Prometheus's own config defines all scrape targets</td><td>Distributed — every service needs to know where to push to</td></tr>
+      <tr><td>Works well with dynamic service discovery</td><td>Yes — Prometheus supports discovering scrape targets dynamically (via Eureka/Kubernetes/Docker service discovery, mirroring this course's own discovery patterns)</td><td>Requires each service to independently know/discover the push destination</td></tr>
+      <tr><td>Firewall/network implications</td><td>Monitoring system needs network access to reach every target</td><td>Every target needs outbound network access to the collector</td></tr>
+    </table>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q10-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q10-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q10-common">
+        <details class="qa"><summary>Does Prometheus push or pull metrics?</summary><div class="qa-answer"><p>It pulls — Prometheus actively scrapes each configured target's metrics endpoint at a regular interval, rather than services proactively pushing their metrics to Prometheus.</p></div></details>
+        <details class="qa"><summary>What does scrape_interval: 10s control?</summary><div class="qa-answer"><p>How often Prometheus scrapes each configured target — every 10 seconds here, meaning each service's `/actuator/prometheus` endpoint is polled and its current metric values recorded on that cadence.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q10-faang">
+        <details class="qa"><summary>Why is a failed scrape a meaningfully useful signal in the pull model, in a way absence of data isn't in a push model?</summary><div class="qa-answer"><p>In the pull model, Prometheus knows the full, explicit list of targets it expects to be able to reach — if a scrape attempt fails (connection refused, timeout), that's an unambiguous, directly-actionable signal that the target is unreachable, which Prometheus surfaces as the target being "down" (and can itself be alerted on, e.g. "alert if any scrape target has been down for over 2 minutes"). In a push model, if a collector simply stops receiving data from a service, it's genuinely ambiguous whether the service is down, network connectivity to the collector broke, or the service is alive and correctly emitting zero new metrics because nothing changed — the absence of a push carries much less inherent information than the presence of an explicit, failed pull attempt. This is a subtle but real advantage of the pull model specifically for target-health monitoring, distinct from the metrics data itself.</p></div></details>
+        <details class="qa"><summary>How does Prometheus's pull model handle the dynamic, ephemeral instance scenario established throughout this course (Section 8's service discovery)?</summary><div class="qa-answer"><p>Static target lists (as shown in the basic example above) don't scale to a dynamically-scaling fleet — Prometheus instead supports <strong>service discovery integrations</strong> analogous to what this course has covered for application-level discovery: it can discover scrape targets dynamically via Kubernetes' API, via Eureka (directly relevant to this course's own stack), Consul, or generic DNS-based discovery, automatically adjusting its scrape target list as instances come and go, rather than requiring manual `prometheus.yml` edits every time the fleet scales. This is worth explicitly connecting back to Section 8's discovery concepts in an interview — it's the same underlying problem (dynamic instance addresses) being solved by the same underlying pattern (a discovery mechanism), just applied to "where should Prometheus scrape" instead of "where should Accounts route a Feign call."</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="prometheus-demo">
+    <div class="topic-head"><span class="topic-no">167</span><h2>Demo of Prometheus</h2></div>
+    <p class="topic-sub">The Prometheus web UI and a first taste of PromQL.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">Example PromQL queries</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="cm"># raw current value of a counter metric</span>
+http_server_requests_seconds_count{application=<span class="str">"accounts"</span>}
+
+<span class="cm"># rate of requests per second over the last 5 minutes</span>
+rate(http_server_requests_seconds_count{application=<span class="str">"accounts"</span>}[5m])
+
+<span class="cm"># error rate specifically — requests with 5xx status, as a fraction of total</span>
+sum(rate(http_server_requests_seconds_count{application=<span class="str">"accounts"</span>,status=~<span class="str">"5.."</span>}[5m]))
+/
+sum(rate(http_server_requests_seconds_count{application=<span class="str">"accounts"</span>}[5m]))
+
+<span class="cm"># circuit breaker state — from Resilience4j's own Micrometer-exported metrics</span>
+resilience4j_circuitbreaker_state{name=<span class="str">"accountsCircuitBreaker"</span>,state=<span class="str">"open"</span>}</pre></div></div>
+    </div>
+
+    <p>The Prometheus web UI at <code>:9090</code> lets you browse currently-scraped targets (confirming each service is being successfully polled), run ad hoc PromQL queries, and view basic graphs — useful for verifying the pipeline works end to end before building real dashboards in Grafana, the next topic's subject.</p>
+
+    <div class="callout info"><b class="lbl">Counters vs Gauges — a foundational metric-type distinction</b><p><code>http_server_requests_seconds_count</code> is a <strong>counter</strong> — it only ever increases (total requests since the process started), which is why you almost always wrap it in `rate()` to get a meaningful "requests per second" figure rather than reading the raw, ever-growing total directly. A <strong>gauge</strong> (like current JVM heap usage) can go up or down and is meaningful to read directly without `rate()`. Confusing these two — reading a raw counter value as if it were a current rate, or applying `rate()` to a gauge — is a very common practical PromQL mistake worth being able to explain precisely.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q11-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q11-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q11-common">
+        <details class="qa"><summary>What's the difference between a Prometheus counter and a gauge?</summary><div class="qa-answer"><p>A counter only ever increases (e.g. total request count since startup) and is typically wrapped in `rate()` to derive a meaningful per-second rate. A gauge can go up or down (e.g. current memory usage) and is meaningful to read directly at its current value.</p></div></details>
+        <details class="qa"><summary>Why would you wrap a counter metric in rate() rather than reading its raw value?</summary><div class="qa-answer"><p>The raw counter value is just an ever-growing cumulative total since the process started, which isn't directly useful for understanding current load or trends — `rate()` computes the per-second rate of increase over a specified time window, turning the raw total into a meaningful, comparable "how much is happening right now" figure.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q11-faang">
+        <details class="qa"><summary>What happens to a counter's value when the underlying service instance restarts, and how does Prometheus handle this correctly?</summary><div class="qa-answer"><p>A counter resets to zero when the process restarts (it's an in-memory value tracked since that process instance started) — naively computing a rate across a restart boundary would show a nonsensical negative or huge spurious spike if not handled correctly. Prometheus's `rate()` and `increase()` functions are specifically designed to detect counter resets (a value that drops rather than increases between consecutive scrapes) and correctly handle them by treating the drop as a reset rather than as a real negative rate, so the computed rate remains meaningful across restarts. This is exactly the kind of "why does the metric type matter, mechanically, not just semantically" detail that separates genuine PromQL familiarity from having memorized a few example queries.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="prometheus-grafana-demo">
+    <div class="topic-head"><span class="topic-no">168</span><h2>Demo of Prometheus & Grafana Integration</h2></div>
+    <p class="topic-sub">Wiring Prometheus in as a Grafana data source — the same pattern already established for Loki.</p>
+
+    <p>Adding Prometheus as a Grafana data source (Grafana's Data Sources configuration, pointing at Prometheus's URL) is essentially the same pattern as wiring up Loki in the logging pillar — Grafana becomes the single, unified visualization layer sitting on top of multiple underlying data sources (Loki for logs, Prometheus for metrics, and Tempo for traces, coming in the tracing pillar), rather than each pillar needing its own separate UI. This is precisely why this course consistently uses Grafana as the common thread across all three pillars.</p>
+
+    <div class="callout info"><b class="lbl">The architectural pattern worth naming explicitly</b><p>Grafana itself stores no telemetry data — it's purely a query/visualization layer that federates across whatever data sources are configured. This separation of concerns (storage/query engines per signal type — Loki, Prometheus, Tempo — versus one unified visualization layer on top) mirrors a broader, common pattern in observability tooling generally, and is worth being able to name and explain as a deliberate architectural choice, not just "the tools this course happens to use."</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q12-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q12-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q12-common">
+        <details class="qa"><summary>Does Grafana store metrics/log data itself?</summary><div class="qa-answer"><p>No — Grafana is purely a visualization and query layer that connects to underlying data sources (Prometheus for metrics, Loki for logs, Tempo for traces); the actual telemetry data is stored and indexed by those respective backend systems.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q12-faang">
+        <details class="qa"><summary>What's the benefit of having one unified visualization layer (Grafana) across all three observability pillars, versus a separate UI per pillar?</summary><div class="qa-answer"><p>Beyond the obvious convenience of one tool to learn and operate, a unified layer enables genuine <strong>cross-pillar correlation within a single investigation workflow</strong> — exactly what topic 178 later demonstrates concretely (jumping from a specific log line in Loki directly to its corresponding distributed trace in Tempo). If logs, metrics, and traces each lived in separate, disconnected tools, an engineer would need to manually carry context (a timestamp, a trace ID) between tools by hand, losing time and precision during exactly the high-pressure moments (active incidents) when speed matters most. A unified visualization layer with data sources that support cross-linking is a meaningfully more powerful investigative tool than the sum of three separate, siloed dashboards — a genuinely important point about why the specific tool choices in this section aren't arbitrary.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="grafana-dashboards">
+    <div class="topic-head"><span class="topic-no">169</span><h2>Demo of Grafana In-Built & Custom Dashboards</h2></div>
+    <p class="topic-sub">Pre-built dashboards for common JVM/Spring Boot metrics, and building your own for business-specific visibility.</p>
+
+    <h3 class="subhead">In-built (community) dashboards</h3>
+    <p>Grafana's dashboard marketplace includes pre-built, community-maintained dashboards for extremely common metric sources — a "JVM (Micrometer)" dashboard, for instance, visualizes heap usage, garbage collection pause times, thread counts, and HTTP request latencies out of the box, purely from the standard Micrometer/Actuator metrics every Spring Boot service already exposes with zero custom instrumentation. Importing one of these is usually the fastest way to get genuinely useful, standard visibility running.</p>
+
+    <h3 class="subhead">Custom dashboards</h3>
+    <p>Beyond generic JVM/HTTP metrics, real production systems need dashboards reflecting <strong>business-specific</strong> concerns — "accounts created per hour," "loan applications by status," "circuit breaker trip frequency by dependency" — built from either Spring Boot's auto-instrumented metrics (like the Resilience4j metrics from topic 167) or genuinely custom application metrics registered directly against Micrometer's API.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">Custom metric registration</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="ann">@Service</span>
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">AccountsServiceImpl</span> {
+
+    <span class="kw">private</span> <span class="kw">final</span> Counter accountCreationCounter;
+
+    <span class="kw">public</span> AccountsServiceImpl(MeterRegistry meterRegistry) {
+        <span class="kw">this</span>.accountCreationCounter = Counter.builder(<span class="str">"accounts.created"</span>)
+            .description(<span class="str">"Total number of accounts created"</span>)
+            .register(meterRegistry);
+    }
+
+    <span class="kw">public</span> <span class="kw">void</span> createAccount(CustomerDto customerDto) {
+        <span class="cm">// ... existing account creation logic ...</span>
+        accountCreationCounter.increment();
+    }
+}</pre></div></div>
+    </div>
+
+    <p>This is the direct, concrete illustration of Micrometer's facade role from topic 164 — application code calls `.increment()` against Micrometer's own `Counter` API, with zero awareness that Prometheus specifically is the backend receiving this data; the same instrumentation code would work unchanged if the MeterRegistry were later swapped to a different backend.</p>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q13-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q13-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q13-common">
+        <details class="qa"><summary>What's the benefit of importing an in-built JVM/Micrometer dashboard rather than building one from scratch?</summary><div class="qa-answer"><p>It provides immediate, useful visibility into standard, universally-relevant metrics (heap usage, GC pauses, HTTP latency) that every Spring Boot service already exposes with zero custom instrumentation — a fast way to get baseline observability running before investing time in business-specific custom dashboards.</p></div></details>
+        <details class="qa"><summary>How do you register a custom business metric using Micrometer?</summary><div class="qa-answer"><p>Inject a `MeterRegistry` bean and use its builder API (e.g. `Counter.builder("metric.name").register(meterRegistry)`) to create and register a named metric, then call methods like `.increment()` on it directly in application code wherever the relevant business event occurs.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q13-faang">
+        <details class="qa"><summary>What's the RED method, and how would you apply it to decide which custom metrics a service needs beyond generic JVM stats?</summary><div class="qa-answer"><p>The RED method (a widely-used framework, particularly associated with Google's SRE practices, for request-driven services) recommends tracking three things per service/endpoint: <strong>Rate</strong> (requests per second), <strong>Errors</strong> (failed requests per second, or error rate as a percentage), and <strong>Duration</strong> (distribution of request latencies, typically as percentiles — p50/p95/p99). Applied here: beyond Spring Boot's already-auto-instrumented `http.server.requests` (which actually already covers Rate/Errors/Duration for HTTP endpoints reasonably well out of the box), custom metrics become valuable for capturing <em>business-level</em> RED-style signals that HTTP-level metrics can't see — e.g. "rate of successful account creations" vs "rate of account creation attempts that failed validation" as a business-meaningful error signal, distinct from HTTP-level 4xx/5xx counts which don't distinguish "customer typo'd their email" from "our database is down." A related framework worth knowing for infrastructure/resource-oriented metrics specifically (rather than request-driven services) is the <strong>USE method</strong> — Utilization, Saturation, Errors — commonly applied to things like CPU, memory, connection pools.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="grafana-alerts">
+    <div class="topic-head"><span class="topic-no">170-171</span><h2>Create Alerts & Send Notifications Using Grafana — Two Approaches</h2></div>
+    <p class="topic-sub">Turning passive dashboards into active notifications — and the design discipline required to avoid alert fatigue.</p>
+
+    <h3 class="subhead">Approach 1: Legacy/dashboard-panel alerting</h3>
+    <p>Attaching an alert rule directly to a specific dashboard panel — when the panel's underlying query crosses a defined threshold, Grafana fires an alert. Simple and directly tied to a visible dashboard, but less flexible for managing alert rules independently of any specific dashboard's visual layout.</p>
+
+    <h3 class="subhead">Approach 2: Grafana Unified Alerting</h3>
+    <p>Grafana's modern, decoupled alerting system: <strong>alert rules</strong> (a PromQL/LogQL query plus a threshold condition) are defined independently of any dashboard, evaluated on their own schedule, and routed through a separate configuration of <strong>contact points</strong> (where notifications go — email, Slack, PagerDuty, a generic webhook) and <strong>notification policies</strong> (routing/grouping/silencing rules determining which alerts go to which contact points, and how they're batched to avoid notification spam).</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">Example alert rule (conceptual)</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="cm"># Alert: high error rate on Accounts</span>
+<span class="cm"># Query:</span>
+sum(rate(http_server_requests_seconds_count{application=<span class="str">"accounts"</span>,status=~<span class="str">"5.."</span>}[5m]))
+/
+sum(rate(http_server_requests_seconds_count{application=<span class="str">"accounts"</span>}[5m]))
+<span class="cm"># Condition: IS ABOVE 0.05 (5% error rate)</span>
+<span class="cm"># For: 5m  (must stay above threshold for 5 continuous minutes before firing)</span>
+<span class="cm"># Contact point: #accounts-team-oncall (Slack)</span></pre></div></div>
+    </div>
+
+    <div class="ann-grid">
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">For: duration</span></div><div class="ann-body"><p>Requires the condition to remain true for a sustained period before actually firing — a critical anti-flapping mechanism. Without it, a single momentary blip crossing the threshold for one evaluation cycle would fire (and likely immediately resolve) an alert, creating noisy, low-signal notifications.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">Notification policies</span></div><div class="ann-body"><p>Determine routing (which alerts go to which team's contact point, based on labels), grouping (batching related alerts into one notification rather than N separate pings), and silencing (temporarily suppressing known, already-being-worked-on alerts) — the machinery that keeps alerting genuinely actionable rather than an overwhelming stream of individually-fired pings.</p></div></div>
+    </div>
+
+    <div class="callout pitfall"><b class="lbl">Alert fatigue is a real, well-documented production failure mode — worth naming explicitly</b><p>A system that alerts on every minor, self-resolving blip trains on-call engineers to start ignoring or reflexively dismissing alerts, which means the one time a genuinely critical alert fires, it's more likely to be missed or delayed. Good alerting design deliberately alerts sparingly and only on conditions that are both <strong>actionable</strong> (something an on-call engineer can actually do something about) and <strong>significant</strong> (a sustained, real problem, not transient noise) — this is precisely why `For:` duration windows and thoughtful notification-policy grouping exist, and it's a mature, senior-level point to raise proactively in an interview discussion about alerting design rather than just describing the mechanics of how to configure an alert rule.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q14-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q14-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q14-common">
+        <details class="qa"><summary>What's the difference between a contact point and a notification policy in Grafana's unified alerting?</summary><div class="qa-answer"><p>A contact point defines <em>where</em> a notification is sent (email, Slack channel, PagerDuty, webhook). A notification policy defines the <em>routing rules</em> — which alerts (based on their labels) go to which contact points, plus grouping and silencing behavior.</p></div></details>
+        <details class="qa"><summary>What does the "For:" duration on an alert rule prevent?</summary><div class="qa-answer"><p>It prevents alerts from firing on brief, momentary threshold breaches — the condition must remain true continuously for the specified duration before the alert actually fires, avoiding noisy alerts from transient, self-resolving blips.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q14-faang">
+        <details class="qa"><summary>How would you design alerting thresholds to be resilient to normal, expected traffic variation (e.g. daily/weekly patterns) rather than false-alarming during predictable low-traffic periods?</summary><div class="qa-answer"><p>Absolute static thresholds (e.g. "alert if request rate drops below X") can false-positive during legitimately low-traffic periods (overnight, weekends) that aren't actually problems — better approaches include: using <strong>rate-of-change or ratio-based conditions</strong> rather than absolute values where possible (error rate as a percentage of current traffic, rather than absolute error count, naturally scales with traffic volume), building thresholds informed by historical baseline comparison (comparing current values against the same time last week rather than a fixed number), or adopting <strong>SLO-based alerting</strong> (alert based on error-budget burn rate relative to a defined Service Level Objective, a more sophisticated approach popularized by Google's SRE practices, which inherently accounts for acceptable variation rather than reacting to every absolute threshold crossing). The deeper principle worth articulating: good alert design should reflect genuine, actionable problems relative to expected/acceptable system behavior, not naive fixed thresholds that don't account for normal variation — a mature answer distinguishes "I know how to set a threshold" from "I understand why naive thresholds cause false alarms and what to do about it."</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="distributed-tracing-intro">
+    <div class="topic-head"><span class="topic-no">172</span><h2>Introduction to Distributed Tracing in Microservices</h2></div>
+    <p class="topic-sub">The third pillar — extending the correlation ID idea into a full, structured, per-hop timing model.</p>
+
+    <h3 class="subhead">What distributed tracing adds beyond a correlation ID</h3>
+    <p>The correlation ID from Section 9 lets you find every log line related to one request — genuinely useful, but it's still just a flat collection of text lines you have to manually read and mentally reconstruct into a timeline. <strong>Distributed tracing</strong> formalizes this into a structured, visualizable model:</p>
+    <table>
+      <tr><th>Concept</th><th>Meaning</th></tr>
+      <tr><td><strong>Trace</strong></td><td>The complete journey of one logical request across every service it touched — identified by a single, shared <strong>Trace ID</strong> (conceptually the same role the correlation ID played, but now part of a formal, standardized model)</td></tr>
+      <tr><td><strong>Span</strong></td><td>One individual unit of work within a trace — e.g. "Accounts handling the incoming HTTP request," "Accounts calling Loans via Feign," "Loans's database query" — each with its own start time, duration, and a unique <strong>Span ID</strong></td></tr>
+      <tr><td><strong>Parent-child relationships</strong></td><td>Spans are connected in a tree — the Feign call span is a child of the overall request-handling span, letting tooling reconstruct the exact causal/timing structure of a request, not just an unordered set of related log lines</td></tr>
+    </table>
+
+    <div class="diagram">
+      <div class="dcol">
+        <div class="dphase-label">One trace, multiple nested spans, real per-hop timing</div>
+        <div class="dflow">
+          <div class="dbox accent"><div class="t">Gateway span</div><div class="s">0ms → 420ms (total)</div></div>
+        </div>
+        <div class="dflow" style="margin-left:30px;">
+          <div class="dbox"><div class="t">Accounts span</div><div class="s">10ms → 400ms</div></div>
+        </div>
+        <div class="dflow" style="margin-left:60px;">
+          <div class="dbox warn"><div class="t">Loans Feign call span</div><div class="s">50ms → 380ms — the slow one</div></div>
+          <div class="dbox"><div class="t">Cards Feign call span</div><div class="s">55ms → 95ms</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout info"><b class="lbl">Why this matters specifically for the Section 10 resiliency work</b><p>A trace like the one diagrammed above makes it immediately, visually obvious that the Loans call is the bottleneck in this specific request (330ms of the total 420ms), which log lines alone would require careful manual timestamp comparison to piece together. This is exactly the kind of visibility that makes tuning Section 10's timeout values, circuit breaker thresholds, and identifying which dependency actually needs a bulkhead a matter of looking at real data rather than guessing.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q15-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q15-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q15-common">
+        <details class="qa"><summary>What's the difference between a trace and a span?</summary><div class="qa-answer"><p>A trace is the complete journey of one logical request across every service it touched, identified by a shared trace ID. A span is one individual unit of work within that trace (e.g. one specific service call or operation), with its own ID, start time, and duration — a trace is composed of many related, often parent-child-nested spans.</p></div></details>
+        <details class="qa"><summary>What does distributed tracing add beyond what a correlation ID and centralized logging already provide?</summary><div class="qa-answer"><p>A structured, visualizable model of the request's exact timing and causal structure — parent-child span relationships and precise per-hop duration — rather than a flat collection of related log lines that would need to be manually read and mentally reconstructed into a timeline.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q15-faang">
+        <details class="qa"><summary>Could you build distributed tracing purely out of correlation-ID-tagged logs, without a dedicated tracing system?</summary><div class="qa-answer"><p>In principle, partially — if every log line consistently included correlation ID, a span-like identifier, a parent-span reference, and precise timestamps, you could theoretically reconstruct a trace-like view by querying and correlating logs. In practice, this is exactly what dedicated tracing systems (Tempo, Jaeger, Zipkin) do <em>for you</em>, purpose-built and optimized for this exact structured, hierarchical, timing-precise data model — with visualization (waterfall/flame-graph views showing nested spans and their durations, precisely like the diagram above) that would be extremely painful to build from scratch on top of general-purpose log storage. This is a good illustration of why, even though traces and logs are conceptually related (both can carry a shared correlation/trace ID), they warrant genuinely separate, purpose-built systems rather than trying to force one data model to serve both purposes — echoing the cardinality/purpose distinction between the three pillars raised back in topic 156's FAANG answer.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="opentelemetry-intro">
+    <div class="topic-head"><span class="topic-no">173</span><h2>Introduction to OpenTelemetry</h2></div>
+    <p class="topic-sub">The vendor-neutral standard that replaced Spring Cloud Sleuth — and why standardization matters here specifically.</p>
+
+    <h3 class="subhead">What OpenTelemetry (OTel) is</h3>
+    <p><strong>OpenTelemetry</strong> is a CNCF (Cloud Native Computing Foundation) project providing a <strong>vendor-neutral standard</strong> — APIs, SDKs, and a common wire protocol — for generating and collecting all three observability signal types (traces, metrics, and increasingly logs) consistently, regardless of which backend ultimately receives them (Tempo, Jaeger, Zipkin, Datadog, New Relic...). It plays essentially the same "standardize the instrumentation API, let the backend be pluggable" role for tracing that Micrometer plays for metrics.</p>
+
+    <h3 class="subhead">Why not Spring Cloud Sleuth</h3>
+    <p><strong>Spring Cloud Sleuth</strong> was the original, Spring-specific distributed tracing instrumentation library — but it has been <strong>deprecated</strong> in favor of <strong>Micrometer Tracing</strong> (a tracing-specific counterpart to Micrometer's metrics facade) combined with OpenTelemetry as the underlying standard. This mirrors the exact same Hystrix→Resilience4j transition from Section 10 almost precisely: an earlier, Spring-Cloud-Netflix-era or Spring-specific tool giving way to a more modern, standards-based, actively-maintained replacement.</p>
+
+    <table>
+      <tr><th>Layer</th><th>Modern standard</th><th>Predecessor / analog</th></tr>
+      <tr><td>Metrics facade</td><td>Micrometer</td><td>(direct vendor-specific instrumentation)</td></tr>
+      <tr><td>Tracing facade</td><td>Micrometer Tracing + OpenTelemetry</td><td>Spring Cloud Sleuth (deprecated)</td></tr>
+      <tr><td>Circuit breaker/resiliency</td><td>Resilience4j</td><td>Netflix Hystrix (maintenance mode)</td></tr>
+      <tr><td>Service discovery client abstraction</td><td>Spring Cloud DiscoveryClient</td><td>(vendor-specific direct integration)</td></tr>
+    </table>
+
+    <div class="callout info"><b class="lbl">A pattern worth naming explicitly in an interview</b><p>Notice the recurring theme across this entire course: Spring's ecosystem consistently evolves toward vendor-neutral, standards-based abstractions (Micrometer, OpenTelemetry, Resilience4j, DiscoveryClient) rather than tightly-coupled, single-vendor tools — being able to name this pattern explicitly, with concrete examples spanning multiple sections, is a strong signal of genuinely understanding the ecosystem's design philosophy rather than having memorized isolated facts about individual tools.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q16-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q16-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q16-common">
+        <details class="qa"><summary>What is OpenTelemetry?</summary><div class="qa-answer"><p>A CNCF project providing a vendor-neutral standard (APIs, SDKs, wire protocol) for generating and collecting traces, metrics, and logs consistently, regardless of which specific backend ultimately receives the data.</p></div></details>
+        <details class="qa"><summary>What replaced Spring Cloud Sleuth, and why?</summary><div class="qa-answer"><p>Micrometer Tracing combined with OpenTelemetry — Sleuth has been deprecated in favor of this more modern, standards-based approach, mirroring the same transition pattern seen with Hystrix being replaced by Resilience4j.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q16-faang">
+        <details class="qa"><summary>What specific problem does OpenTelemetry's standardized wire protocol (OTLP) solve, beyond just having a common instrumentation API?</summary><div class="qa-answer"><p>Beyond standardizing how applications generate telemetry, OTLP (OpenTelemetry Protocol) standardizes how that telemetry is <em>transmitted</em> between components — meaning an OpenTelemetry-instrumented application can send data to an OpenTelemetry Collector (a separate, standard piece of infrastructure that can receive, process/transform, and forward telemetry to one or more backends), and that collector can route the same data to multiple different backends simultaneously or be swapped entirely without touching application instrumentation at all. This decouples "how the application generates telemetry" from "where that telemetry ultimately ends up and how it's processed" even more completely than an instrumentation-API-only standard would — genuinely relevant to the earlier discussion of Grafana Alloy (topic 159) being built specifically on OpenTelemetry Collector foundations, since that's precisely the kind of protocol-standardized routing/processing layer OTLP enables.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="opentelemetry-impl">
+    <div class="topic-head"><span class="topic-no">174</span><h2>Implement OpenTelemetry Changes Inside Microservices</h2></div>
+    <p class="topic-sub">The dependency and configuration additions that turn on automatic tracing instrumentation.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="oi1">pom.xml</div>
+        <div class="code-tab" data-pane="oi2">application.yml</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="oi1"><pre>&lt;dependency&gt;
+    &lt;groupId&gt;io.micrometer&lt;/groupId&gt;
+    &lt;artifactId&gt;micrometer-tracing-bridge-otel&lt;/artifactId&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;io.opentelemetry&lt;/groupId&gt;
+    &lt;artifactId&gt;opentelemetry-exporter-zipkin&lt;/artifactId&gt;
+&lt;/dependency&gt;</pre></div>
+        <div class="code-pane" id="oi2"><pre><span class="cl">management</span>:
+  <span class="cl">tracing</span>:
+    <span class="cl">sampling</span>:
+      <span class="cl">probability</span>: <span class="str">1.0</span>
+  <span class="cl">zipkin</span>:
+    <span class="cl">tracing</span>:
+      <span class="cl">endpoint</span>: <span class="str">http://tempo:9411/api/v2/spans</span>
+
+<span class="cl">logging</span>:
+  <span class="cl">pattern</span>:
+    <span class="cl">level</span>: <span class="str">"%5p [${spring.application.name},%X{traceId},%X{spanId}]"</span></pre></div>
+      </div>
+    </div>
+
+    <h3 class="subhead">What this achieves automatically, with zero manual span-creation code</h3>
+    <p>With `micrometer-tracing-bridge-otel` on the classpath, Spring Boot's auto-instrumentation automatically creates spans for incoming HTTP requests, outgoing Feign/RestTemplate/WebClient calls, and more — mirroring the same "automatic instrumentation with zero application code changes" experience Micrometer already provides for standard metrics. The `logging.pattern.level` change is what injects the current trace ID and span ID directly into every log line's <strong>MDC</strong> (Mapped Diagnostic Context) — this is the exact mechanism that makes topic 178's log-to-trace navigation possible: every log line now carries the trace ID that connects it to its full distributed trace.</p>
+
+    <h3 class="subhead">Sampling — a critical production consideration</h3>
+    <p><code>management.tracing.sampling.probability: 1.0</code> means <strong>100% of requests are traced</strong> — fine for a learning/demo environment, but genuinely expensive at real production scale (tracing overhead per request, plus storage/ingestion cost for every single trace). Production systems typically use a much lower sampling probability (e.g. 0.1 = 10%) or more sophisticated <strong>tail-based sampling</strong> strategies.</p>
+
+    <div class="callout warn"><b class="lbl">Head-based vs tail-based sampling — a genuinely important, frequently-tested distinction</b><p><strong>Head-based sampling</strong> (what `probability: 1.0` or `0.1` configures) decides whether to trace a request <em>at the very start</em>, before knowing anything about how it will turn out — simple, but means an interesting request (one that errors, or is unusually slow) has the same chance of being sampled as any boring, fast, successful one, purely by random luck. <strong>Tail-based sampling</strong> defers the sampling decision until <em>after</em> the request completes, specifically prioritizing keeping traces for requests that errored or were unusually slow — far more useful for debugging, but requires buffering all spans for a request before deciding (more complex infrastructure, typically implemented via an OpenTelemetry Collector doing this buffering/decision logic centrally, not in each individual service).</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q17-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q17-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q17-common">
+        <details class="qa"><summary>What does management.tracing.sampling.probability: 1.0 mean, and why would you lower it in production?</summary><div class="qa-answer"><p>It means 100% of requests are traced. In production at real scale, tracing every single request adds meaningful overhead and storage/ingestion cost, so teams typically sample a smaller percentage (e.g. 10%) to balance observability value against cost.</p></div></details>
+        <details class="qa"><summary>What gets injected into log lines once tracing is configured, and why does that matter?</summary><div class="qa-answer"><p>The current trace ID and span ID are injected into every log line via MDC, which is what allows navigating directly from a specific log line to its corresponding full distributed trace — the mechanism behind the Loki-to-Tempo navigation covered in topic 178.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q17-faang">
+        <details class="qa"><summary>Explain head-based versus tail-based sampling, and why tail-based is generally more valuable but harder to implement.</summary><div class="qa-answer"><p>Head-based sampling makes the trace/don't-trace decision at the very start of a request, before its outcome is known — so it samples uniformly at random regardless of whether the request turns out to be interesting (an error, unusually slow), meaning at a low sampling rate you might easily miss tracing the exact problematic requests you'd most want visibility into, purely by chance. Tail-based sampling defers the decision until after the request completes, when its actual outcome (success/failure, latency) is known, and specifically biases sampling toward keeping traces for errored or slow requests — dramatically more useful for debugging since you're far more likely to actually have a trace for the requests worth investigating. The implementation cost is real: tail-based sampling requires buffering all of a trace's spans (potentially across multiple services) until the full request completes before deciding whether to keep or discard it, which is why it's typically implemented centrally in an OpenTelemetry Collector (rather than each individual service deciding independently) — the collector aggregates spans for a trace, waits for completion, evaluates the sampling decision, and only then forwards (or discards) the complete trace to the backend.</p></div></details>
+        <details class="qa"><summary>Is there a cost/performance impact from tracing instrumentation itself, separate from the cost of storing/ingesting the resulting trace data?</summary><div class="qa-answer"><p>Yes — creating spans, propagating trace context across thread boundaries and network calls, and exporting span data all add some CPU and (briefly) memory overhead to every traced request, even before considering storage costs at the backend. This overhead is generally small per-request but is exactly why sampling matters even independent of storage cost concerns — at very high request volumes, even a small per-request tracing overhead multiplied across every single request can become a meaningful aggregate cost, which is one more reason production systems rarely run at 100% sampling even if storage cost alone weren't a concern.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="tempo-tracing">
+    <div class="topic-head"><span class="topic-no">175-177</span><h2>Implementing Tracing Using Grafana, Tempo & OpenTelemetry</h2></div>
+    <p class="topic-sub">Tempo joins Loki and Prometheus as the third backend, following the same architectural philosophy.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">docker-compose.yml addition</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="cl">tempo</span>:
+  <span class="cl">image</span>: <span class="str">grafana/tempo:latest</span>
+  <span class="cl">container_name</span>: <span class="str">tempo</span>
+  <span class="cl">command</span>: <span class="str">-config.file=/etc/tempo.yaml</span>
+  <span class="cl">volumes</span>:
+    - <span class="str">./tempo.yaml:/etc/tempo.yaml</span>
+  <span class="cl">ports</span>:
+    - <span class="str">"9411:9411"</span>   <span class="cm"># Zipkin-compatible ingest endpoint</span>
+    - <span class="str">"3200:3200"</span>   <span class="cm"># Tempo query API, used by Grafana</span></pre></div></div>
+    </div>
+
+    <h3 class="subhead">Tempo's design philosophy — the same cost-conscious pattern as Loki</h3>
+    <p><strong>Tempo</strong> is Grafana Labs's distributed tracing backend, and deliberately follows the same architectural philosophy as Loki: rather than building an expensive full index over every field of every span, Tempo stores trace data cheaply (often backed by object storage like S3) and relies on being looked up primarily <strong>by trace ID</strong> — a direct, indexed lookup — with discovery of <em>which</em> trace ID to look up typically happening via a correlated signal from metrics or logs (exactly the Loki-to-Tempo navigation in the next topic), rather than Tempo itself needing to support rich, arbitrary full-text/attribute search across all stored traces.</p>
+
+    <div class="callout info"><b class="lbl">The complete pipeline, now fully assembled</b><p>Application (Micrometer Tracing + OpenTelemetry, auto-instrumented) → exports spans via the Zipkin-compatible protocol → Tempo (ingests, stores, indexed by trace ID) → Grafana (queries Tempo, renders the waterfall/flame-graph trace visualization diagrammed back in topic 172). This is architecturally the exact same three-layer pattern as the logging pillar (app → Promtail → Loki → Grafana) and the metrics pillar (app → Prometheus scrape → Grafana) — worth explicitly recognizing that all three pillars in this course share one consistent architectural shape: instrumented application → purpose-built storage/indexing backend → unified Grafana visualization.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q18-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q18-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q18-common">
+        <details class="qa"><summary>What is Tempo, and what's its primary lookup mechanism?</summary><div class="qa-answer"><p>Grafana Labs's distributed tracing backend — it's primarily designed to be looked up by trace ID (a direct, indexed lookup), rather than supporting rich arbitrary search across all stored trace data, keeping storage and indexing costs low.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q18-faang">
+        <details class="qa"><summary>Given Tempo is primarily a trace-ID lookup store rather than a richly-searchable index, how do you actually discover which trace ID to look up in the first place, for a given investigation?</summary><div class="qa-answer"><p>This is precisely why Tempo isn't used in isolation — the discovery step happens through the <em>other</em> pillars: metrics (Prometheus/Grafana) surface aggregate signals like "error rate spiked at this time," logs (Loki, searchable by label and correlation/trace ID, since trace ID is now injected into log MDC per topic 174) let you find the specific log lines and their associated trace IDs for the problematic period, and only then do you take that specific trace ID to Tempo for the detailed, per-hop timing breakdown of that one specific request. This is a genuinely important architectural insight: the three pillars are designed to work <em>together</em> as a funnel — metrics tell you something's wrong and roughly when, logs (via label/text search) narrow down to specific problematic requests and surface their trace IDs, and traces give you the precise, detailed reconstruction of exactly what happened in one of those specific requests. No single pillar alone is sufficient; the workflow moving between them is the actual point.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="loki-tempo-nav">
+    <div class="topic-head"><span class="topic-no">178</span><h2>Navigating to Tempo from Loki Logs</h2></div>
+    <p class="topic-sub">The concrete payoff of everything built across all three pillars — one click from a log line to its full distributed trace.</p>
+
+    <p>Because trace ID is now injected into every log line's MDC (topic 174), Grafana can be configured with a <strong>derived field</strong> on the Loki data source — a regex pattern that extracts the trace ID from matching log lines and turns it into a clickable link that opens the corresponding trace directly in Tempo. An engineer investigating an issue can start in Loki (search by label and text, exactly as built in the logging pillar), find a specific concerning log line, and click straight through to the complete, visualized, per-hop-timed distributed trace for that exact request — no manual copy-pasting of IDs between tools required.</p>
+
+    <div class="diagram">
+      <div class="dflow">
+        <div class="dbox"><div class="t">Search Loki</div><div class="s">{container="accounts-ms"} |= "ERROR"</div></div>
+        <div class="darrow">→</div>
+        <div class="dbox warn"><div class="t">Find the log line</div><div class="s">carries traceId in MDC</div></div>
+        <div class="darrow">→ click derived field →</div>
+        <div class="dbox accent"><div class="t">Full trace in Tempo</div><div class="s">every span, every service, exact timing</div></div>
+      </div>
+    </div>
+
+    <div class="callout info"><b class="lbl">This is the concrete answer to "why does observability need all three pillars together"</b><p>This single workflow — log search → click → full trace — is the most concrete, demonstrable answer to why logs, metrics, and traces are described as complementary pillars rather than three redundant ways of storing the same information. Each pillar is optimized for a different part of the investigation (metrics: "is something wrong, broadly"; logs: "find the specific problematic instance/request"; traces: "see exactly what happened, step by step, with precise timing"), and the tooling connecting them (this derived-field linking) is what turns three separate systems into one coherent investigative workflow.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q19-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q19-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q19-common">
+        <details class="qa"><summary>What makes it possible to navigate directly from a Loki log line to its Tempo trace?</summary><div class="qa-answer"><p>The trace ID is injected into every log line's MDC (via the Micrometer Tracing/OpenTelemetry configuration from topic 174), and Grafana's derived-field configuration on the Loki data source recognizes and extracts that trace ID from matching log lines, turning it into a clickable link that opens the corresponding trace in Tempo.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q19-faang">
+        <details class="qa"><summary>Walk through a realistic incident investigation using all three pillars together, in the order you'd actually use them.</summary><div class="qa-answer"><p>(1) An alert fires from Grafana/Prometheus — e.g. "Accounts error rate above 5% for 5 minutes" (metrics pillar: something is wrong, and roughly when it started). (2) The on-call engineer opens Grafana, navigates to Loki, and searches `{container="accounts-ms"} |= "ERROR"` scoped to the alert's time window (logs pillar: narrowing from "something's wrong system-wide" to specific, concrete failed requests with real error messages and context). (3) One log line stands out — say, a specific Loans-related timeout — and the engineer clicks its trace ID derived field, jumping straight into Tempo (tracing pillar: seeing the complete, precise picture of that exact request — which span took how long, confirming whether it was genuinely the Loans call, a slow DB query within Loans, or something else entirely). This progressively-narrowing workflow — broad signal (metrics) → specific instance (logs) → precise root cause (traces) — is exactly the intended use of the three pillars together, and being able to narrate this concrete investigative flow, rather than just defining each pillar in isolation, is a strong signal in an observability-focused interview conversation.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="observability-conclusion">
+    <div class="topic-head"><span class="topic-no">179</span><h2>Conclusion of Observability and Monitoring</h2></div>
+    <p class="topic-sub">Tying the three pillars back to everything built across Sections 8, 9, and 10.</p>
+
+    <p>This section closes several loops deliberately left open earlier in the course: the correlation ID built at the Gateway in Section 9 finally has a real destination (centralized, searchable logs in Loki) and a formalized structure (distributed traces in Tempo). The resiliency patterns from Section 10 — circuit breaker state, retry attempts, rate limiter rejections — are no longer abstract configuration; they're directly observable, queryable metrics via Micrometer/Prometheus, and their actual effects on request timing are visible in traces. Service discovery's dynamic, ephemeral-instance model from Section 8 is exactly why centralized, off-instance telemetry was necessary in the first place, rather than optional.</p>
+
+    <div class="callout warn"><b class="lbl">The interview-ready synthesis, worth having ready</b><p>If asked to summarize "what does production-grade observability actually require" in an interview, a strong answer covers: (1) the three pillars and what each is uniquely good for, (2) the precise observability-vs-monitoring distinction from topic 156, (3) at least one concrete cost/design trade-off per pillar (Loki's label-vs-full-text trade-off, Prometheus's pull model and cardinality concerns, tracing's sampling strategy trade-offs), and (4) the workflow insight from topic 178 — that these pillars are designed to be used together, progressively narrowing from broad signal to precise root cause, not as three redundant, siloed tools.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q20-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q20-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q20-common">
+        <details class="qa"><summary>How does this section's observability work depend on the correlation ID mechanism built back in Section 9?</summary><div class="qa-answer"><p>The correlation ID gave every request a shared identifier across services, but had no central place to search until this section's centralized logging (Loki) gave it one, and the tracing pillar formalized that same identifier into a structured trace ID with proper per-hop span timing — the correlation ID work was a necessary prerequisite this section builds directly on top of.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q20-faang">
+        <details class="qa"><summary>If you were advising a team building a new microservices system from scratch, in what order would you introduce these observability capabilities, and why?</summary><div class="qa-answer"><p>A reasonable, defensible order: (1) structured logging with a correlation ID from day one — cheapest to build in early and hardest to retrofit later (retrofitting correlation ID propagation across an already-large, already-deployed set of services is real, tedious work); (2) basic metrics via Micrometer/Actuator almost immediately after, since Spring Boot gives substantial value here nearly for free with minimal setup; (3) centralized log aggregation (Loki/ELK) once you have more than a couple of services running, since that's when "check each instance's local logs individually" stops being tractable; (4) alerting, once you have enough operational history to set meaningful, non-noisy thresholds (alerting too early, before you understand your system's normal behavior, tends to produce exactly the alert-fatigue problem discussed in topic 170-171); (5) distributed tracing last among the three pillars specifically, since its value scales with the complexity and depth of your service call graph — a system with only two or three services calling each other in simple, shallow chains gets comparatively less incremental value from full distributed tracing infrastructure than a system with deep, complex, many-hop call chains, and tracing is also the most implementation-heavy of the three pillars to stand up properly (sampling strategy, collector infrastructure, instrumentation). This ordering reflects both "build the cheapest, highest-leverage capabilities first" and "some capabilities only pay off once the system has grown complex enough to need them" — a genuinely thoughtful, senior-level answer to what's ultimately a resource-prioritization question, not a purely technical one.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer-note">Spring Boot Bible · Section 11 of N · Standalone reference document · Generated for interview preparation</div>
+</main>
+</div>
+
+<script>
+const themeToggle = document.getElementById('themeToggle');
+const html = document.documentElement;
+function applyThemeLabel(){
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  themeToggle.innerHTML = isDark ? '🌙 Dark mode <span>⇄</span>' : '☀️ Light mode <span>⇄</span>';
+}
+themeToggle.addEventListener('click', () => {
+  const cur = html.getAttribute('data-theme');
+  html.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+  applyThemeLabel();
+  localStorage.setItem('sb-bible-theme', html.getAttribute('data-theme'));
+});
+(function initTheme(){
+  const saved = localStorage.getItem('sb-bible-theme');
+  if(saved){ html.setAttribute('data-theme', saved); }
+  applyThemeLabel();
+})();
+
+document.querySelectorAll('.code-panel').forEach(panel => {
+  const tabs = panel.querySelectorAll('.code-tab');
+  if(tabs.length <= 1) return;
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.getAttribute('data-pane');
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      panel.querySelectorAll('.code-pane').forEach(p => p.classList.remove('active'));
+      const pane = panel.querySelector('#' + target);
+      if(pane) pane.classList.add('active');
+    });
+  });
+});
+
+document.querySelectorAll('.qa-section').forEach(section => {
+  const btns = section.querySelectorAll('.qa-tab-btn');
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-target');
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      section.querySelectorAll('.qa-pane').forEach(p => p.classList.remove('active'));
+      document.getElementById(target).classList.add('active');
+    });
+  });
+});
+
+const navLinks = document.querySelectorAll('.nav-link');
+const topics = document.querySelectorAll('section.topic');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const id = entry.target.getAttribute('id');
+    const link = document.querySelector('.nav-link[href="#' + id + '"]');
+    if(!link) return;
+    if(entry.isIntersecting){
+      navLinks.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-15% 0px -75% 0px', threshold: 0 });
+topics.forEach(t => observer.observe(t));
+</script>
+</body>
+</html>

@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spring Boot Bible — Section 3: Microservice Boundaries & Right-Sizing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0f14;
+  --bg-elev:#111820;
+  --bg-elev-2:#161f2a;
+  --border:#233042;
+  --text:#dbe4ee;
+  --text-dim:#8a9bb0;
+  --text-faint:#5c6b7e;
+  --accent:#6DB33F;
+  --accent-soft:#6DB33F22;
+  --accent-2:#4fa3d1;
+  --accent-2-soft:#4fa3d122;
+  --warn:#e0a94f;
+  --warn-soft:#e0a94f22;
+  --danger:#e0655f;
+  --danger-soft:#e0655f22;
+  --code-bg:#0d1420;
+  --code-border:#1e2a3a;
+  --shadow: 0 8px 24px rgba(0,0,0,0.35);
+  --radius: 10px;
+  --sidebar-w: 300px;
+}
+html[data-theme="light"]{
+  --bg:#f6f4ee;
+  --bg-elev:#ffffff;
+  --bg-elev-2:#eef0e8;
+  --border:#dcdccf;
+  --text:#1c231d;
+  --text-dim:#586257;
+  --text-faint:#8b9188;
+  --accent:#3f7d1f;
+  --accent-soft:#3f7d1f1a;
+  --accent-2:#1f6f9c;
+  --accent-2-soft:#1f6f9c1a;
+  --warn:#8a5a12;
+  --warn-soft:#8a5a1218;
+  --danger:#a3352f;
+  --danger-soft:#a3352f18;
+  --code-bg:#fbfaf5;
+  --code-border:#e2e0d2;
+  --shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;line-height:1.65;font-size:15.5px;}
+::selection{background:var(--accent-soft);color:var(--accent);}
+h1,h2,h3,h4{font-family:'Space Mono',monospace;letter-spacing:-0.01em;color:var(--text);}
+code, pre, .mono{font-family:'Space Mono',monospace;}
+a{color:var(--accent-2);text-decoration:none;}
+a:hover{text-decoration:underline;}
+
+.shell{display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;border-right:1px solid var(--border);background:var(--bg-elev);position:sticky;top:0;height:100vh;overflow-y:auto;padding:22px 16px 60px;}
+.sidebar::-webkit-scrollbar{width:6px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:4px;padding:0 6px;}
+.brand-badge{width:34px;height:34px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:'Space Mono';font-weight:700;color:#0b0f14;font-size:14px;flex-shrink:0;}
+.brand-text{font-family:'Space Mono';font-weight:700;font-size:14.5px;line-height:1.2;}
+.brand-text span{display:block;font-size:10.5px;color:var(--text-faint);font-weight:400;margin-top:2px;letter-spacing:0.04em;}
+.theme-toggle{margin:14px 6px 20px;width:calc(100% - 12px);background:var(--bg-elev-2);border:1px solid var(--border);color:var(--text-dim);padding:8px 10px;border-radius:8px;font-family:'Inter';font-size:12.5px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
+.theme-toggle:hover{color:var(--text);border-color:var(--accent);}
+.nav-group{margin-bottom:6px;}
+.nav-group-title{font-size:10.5px;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-faint);padding:14px 8px 6px;font-family:'Space Mono';}
+.nav-link{display:block;padding:7px 10px;border-radius:7px;font-size:13px;color:var(--text-dim);margin-bottom:1px;border-left:2px solid transparent;}
+.nav-link:hover{background:var(--bg-elev-2);color:var(--text);text-decoration:none;}
+.nav-link.active{background:var(--accent-soft);color:var(--accent);border-left:2px solid var(--accent);font-weight:600;}
+.nav-link .vid-no{color:var(--text-faint);margin-right:5px;}
+
+main{flex:1;min-width:0;padding:48px 56px 120px;max-width:980px;}
+.hero{margin-bottom:44px;}
+.hero-eyebrow{font-family:'Space Mono';font-size:11.5px;color:var(--accent);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.hero-eyebrow::before{content:"";width:20px;height:1px;background:var(--accent);}
+.hero h1{font-size:32px;margin:0 0 12px;line-height:1.25;}
+.hero p{color:var(--text-dim);font-size:15.5px;max-width:680px;}
+.scope-box{margin-top:20px;border:1px solid var(--border);background:var(--bg-elev);border-radius:var(--radius);padding:16px 18px;font-size:13px;color:var(--text-dim);}
+.scope-box b{color:var(--text);}
+
+section.topic{margin-bottom:56px;scroll-margin-top:24px;}
+.topic-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;border-bottom:1px solid var(--border);padding-bottom:14px;}
+.topic-no{font-family:'Space Mono';color:var(--accent);font-size:13px;background:var(--accent-soft);padding:3px 9px;border-radius:20px;flex-shrink:0;}
+.topic-head h2{font-size:22px;margin:0;}
+.topic-sub{color:var(--text-faint);font-size:12.5px;margin:8px 0 22px;}
+
+p{color:var(--text-dim);}
+h3.subhead{font-size:16.5px;color:var(--text);margin:28px 0 10px;display:flex;align-items:center;gap:8px;}
+h3.subhead::before{content:"";width:3px;height:15px;background:var(--accent-2);border-radius:2px;}
+h4.minihead{font-size:13.5px;color:var(--text);margin:18px 0 8px;font-family:'Inter';font-weight:700;}
+ul,ol{color:var(--text-dim);padding-left:22px;}
+li{margin-bottom:6px;}
+strong{color:var(--text);}
+
+.ann-box{border:1px solid var(--code-border);background:var(--bg-elev);border-radius:var(--radius);margin:14px 0;overflow:hidden;}
+.ann-box-head{display:flex;align-items:center;gap:10px;padding:11px 16px;background:var(--accent-soft);border-bottom:1px solid var(--code-border);}
+.ann-tag{font-family:'Space Mono';font-weight:700;color:var(--accent);font-size:14px;}
+.ann-loc{margin-left:auto;font-size:10.5px;color:var(--text-faint);font-family:'Space Mono';text-transform:uppercase;letter-spacing:0.05em;}
+.ann-body{padding:12px 16px;}
+.ann-body p{margin:4px 0 8px;font-size:13.5px;}
+.ann-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0;}
+@media(max-width:760px){.ann-grid{grid-template-columns:1fr;}}
+
+.code-panel{border:1px solid var(--code-border);border-radius:var(--radius);overflow:hidden;margin:16px 0;background:var(--code-bg);}
+.code-tabs{display:flex;background:var(--bg-elev-2);border-bottom:1px solid var(--code-border);overflow-x:auto;}
+.code-tab{padding:9px 16px;font-family:'Space Mono';font-size:12px;color:var(--text-faint);cursor:pointer;border-right:1px solid var(--code-border);white-space:nowrap;user-select:none;}
+.code-tab:hover{color:var(--text-dim);}
+.code-tab.active{color:var(--accent);background:var(--code-bg);border-bottom:2px solid var(--accent);margin-bottom:-1px;}
+.code-body{position:relative;}
+.code-pane{display:none;padding:16px 18px;overflow-x:auto;}
+.code-pane.active{display:block;}
+pre{margin:0;font-size:12.8px;line-height:1.65;color:#c7d3e0;}
+html[data-theme="light"] pre{color:#333c30;}
+.kw{color:#c586c0;}
+.ann{color:var(--accent);font-weight:700;}
+.str{color:#ce9178;}
+.cm{color:var(--text-faint);font-style:italic;}
+.ty{color:#4ec9b0;}
+.cl{color:#e5c07b;}
+
+.callout{border-radius:var(--radius);padding:14px 16px;margin:16px 0;border:1px solid;font-size:13.5px;}
+.callout.info{background:var(--accent-2-soft);border-color:var(--accent-2);color:var(--text);}
+.callout.warn{background:var(--warn-soft);border-color:var(--warn);color:var(--text);}
+.callout.pitfall{background:var(--danger-soft);border-color:var(--danger);color:var(--text);}
+.callout b.lbl{display:block;font-family:'Space Mono';font-size:11px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;}
+.callout.info b.lbl{color:var(--accent-2);}
+.callout.warn b.lbl{color:var(--warn);}
+.callout.pitfall b.lbl{color:var(--danger);}
+.callout p{margin:0;color:var(--text-dim);}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left;color:var(--text-dim);}
+th{background:var(--bg-elev-2);color:var(--text);font-family:'Space Mono';font-size:11.5px;text-transform:uppercase;letter-spacing:0.04em;}
+tr:hover td{background:var(--bg-elev-2);}
+
+/* diagram components */
+.diagram{border:1px solid var(--code-border);background:var(--code-bg);border-radius:var(--radius);padding:22px 18px;margin:18px 0;overflow-x:auto;}
+.dflow{display:flex;align-items:stretch;gap:10px;min-width:max-content;}
+.dbox{flex-shrink:0;min-width:120px;border:1px solid var(--border);background:var(--bg-elev);border-radius:8px;padding:12px 14px;text-align:center;}
+.dbox .t{font-family:'Space Mono';font-size:12px;color:var(--text);font-weight:700;}
+.dbox .s{font-size:10.5px;color:var(--text-faint);margin-top:4px;}
+.dbox.accent{border-color:var(--accent);background:var(--accent-soft);}
+.dbox.accent .t{color:var(--accent);}
+.dbox.warn{border-color:var(--warn);background:var(--warn-soft);}
+.dbox.warn .t{color:var(--warn);}
+.dbox.dim{opacity:0.55;}
+.darrow{flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-family:'Space Mono';font-size:16px;min-width:24px;}
+.dstack{display:flex;flex-direction:column;gap:8px;}
+.dcol{display:flex;flex-direction:column;gap:8px;align-items:center;}
+.dphase-label{font-family:'Space Mono';font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;text-align:center;margin-top:8px;}
+
+.qa-section{margin-top:26px;}
+.qa-tabs{display:flex;gap:8px;margin-bottom:14px;}
+.qa-tab-btn{font-family:'Space Mono';font-size:11.5px;padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg-elev);color:var(--text-dim);cursor:pointer;text-transform:uppercase;letter-spacing:0.04em;}
+.qa-tab-btn.common.active{background:var(--accent-2-soft);border-color:var(--accent-2);color:var(--accent-2);}
+.qa-tab-btn.faang.active{background:var(--danger-soft);border-color:var(--danger);color:var(--danger);}
+.qa-pane{display:none;}
+.qa-pane.active{display:block;}
+details.qa{border:1px solid var(--border);border-radius:8px;margin-bottom:8px;background:var(--bg-elev);overflow:hidden;}
+details.qa[open]{border-color:var(--accent-2);}
+details.qa summary{padding:12px 16px;cursor:pointer;font-weight:600;font-size:13.8px;list-style:none;display:flex;align-items:flex-start;gap:10px;color:var(--text);}
+details.qa summary::-webkit-details-marker{display:none;}
+details.qa summary::before{content:"Q";flex-shrink:0;font-family:'Space Mono';font-size:11px;color:var(--accent-2);background:var(--accent-2-soft);width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+details.qa .qa-answer{padding:0 16px 16px 46px;color:var(--text-dim);font-size:13.5px;}
+details.qa .qa-answer p{margin:0 0 8px;color:var(--text-dim);}
+details.qa .qa-answer p:last-child{margin-bottom:0;}
+
+.divider{height:1px;background:linear-gradient(90deg,var(--border),transparent);margin:44px 0;}
+.footer-note{color:var(--text-faint);font-size:12px;text-align:center;padding:30px 0 10px;}
+
+@media(max-width:900px){
+  .shell{flex-direction:column;}
+  .sidebar{position:relative;width:100%;height:auto;}
+  main{padding:32px 20px 80px;}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-badge">SB</div>
+    <div class="brand-text">Spring Boot Bible<span>Section 3 · boundaries & sizing</span></div>
+  </div>
+  <button class="theme-toggle" id="themeToggle">🌙 Dark mode <span>⇄</span></button>
+
+  <div class="nav-group">
+    <div class="nav-group-title">Core Framework</div>
+    <a class="nav-link" href="#approaches"><span class="vid-no">35</span>Approaches to Boundaries & Sizing</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Worked Examples</div>
+    <a class="nav-link" href="#bank-case"><span class="vid-no">36</span>Bank App Use Case</a>
+    <a class="nav-link" href="#ecommerce-case"><span class="vid-no">37</span>E-commerce Migration Use Case</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Migration Strategy</div>
+    <a class="nav-link" href="#strangler-fig"><span class="vid-no">38</span>Strangler Fig Pattern</a>
+  </div>
+</aside>
+
+<main>
+  <div class="hero">
+    <div class="hero-eyebrow">Section 3 · Spring Boot Bible</div>
+    <h1>Rightsizing Microservices & Defining Boundaries</h1>
+    <p>This section is deliberately code-light and design-heavy — it's the thinking that has to happen <em>before</em> you write a single <code>@RestController</code>. Get boundaries wrong and no amount of Spring Boot skill saves you from a distributed monolith: tightly coupled services that must deploy together, chatty synchronous call chains, and shared databases in disguise. These notes cover the frameworks for identifying correct service boundaries, two worked case studies (a bank, and an e-commerce monolith migration), and the Strangler Fig pattern for migrating safely without a big-bang rewrite.</p>
+    <div class="scope-box">
+      <b>How to use this document:</b> Each topic below has a concept explainer, a diagram where a visual materially helps, and a two-tier Q&A (<b>Common</b> — can you explain the concept; <b>FAANG-level</b> — can you apply it under real trade-offs and defend a boundary decision in a design review).
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="approaches">
+    <div class="topic-head"><span class="topic-no">35</span><h2>Approaches to Identify Boundaries & Right-Size Microservices</h2></div>
+    <p class="topic-sub">The frameworks: Domain-Driven Design, business capability decomposition, data ownership, and team-topology sizing heuristics.</p>
+
+    <h3 class="subhead">Why boundaries are the hardest problem in microservices</h3>
+    <p>Splitting an application into services is easy; splitting it <strong>correctly</strong> is the entire game. A wrong boundary doesn't fail loudly — it fails slowly, as a service that constantly needs to call three others synchronously just to answer one request, or two services that must always be deployed together because their data is secretly entangled. This is often called a <strong>distributed monolith</strong>: all the operational cost of microservices (network calls, independent deployments, separate logging/monitoring) with none of the benefit (independent scaling, independent deployability, fault isolation), because the boundaries don't actually match where the business logic naturally separates.</p>
+
+    <h3 class="subhead">Approach 1 — Domain-Driven Design (DDD): Bounded Contexts</h3>
+    <p>DDD's central idea for service boundaries: identify <strong>bounded contexts</strong> — regions of the business where a specific domain model, vocabulary, and set of rules apply consistently. Inside a bounded context, a term like "Account" has one precise meaning; outside it, in a different context, "Account" might mean something entirely different (e.g. a "Customer Account" in a CRM context vs a "Bank Account" in a ledger context). Each bounded context becomes a strong candidate for a microservice.</p>
+
+    <table>
+      <tr><th>DDD Concept</th><th>What it means for service boundaries</th></tr>
+      <tr><td><strong>Subdomain</strong></td><td>A business area — decomposed into <em>Core</em> (the differentiator, where you invest most), <em>Supporting</em> (necessary but not differentiating), and <em>Generic</em> (commodity, often bought not built — e.g. auth, email sending)</td></tr>
+      <tr><td><strong>Bounded Context</strong></td><td>A boundary within which a domain model is internally consistent — the natural unit for a microservice</td></tr>
+      <tr><td><strong>Ubiquitous Language</strong></td><td>A shared vocabulary between developers and domain experts, scoped to one bounded context — if two teams use the same word to mean different things, that's a signal you're actually looking at two contexts</td></tr>
+      <tr><td><strong>Context Mapping</strong></td><td>Explicitly documenting how bounded contexts relate/integrate (e.g. Customer-Supplier, Anti-Corruption Layer, Shared Kernel) — becomes your inter-service API/event contract design</td></tr>
+      <tr><td><strong>Aggregate</strong></td><td>A cluster of domain objects treated as a single consistency unit (e.g. an `Order` and its `OrderLineItems`) — aggregates should never be split across two services, since that breaks transactional consistency</td></tr>
+    </table>
+
+    <div class="callout info"><b class="lbl">Practical technique: Event Storming</b><p>A collaborative workshop technique (physical or virtual sticky notes) where domain experts and engineers map out business events ("Order Placed," "Payment Captured," "Loan Approved") in chronological order, then cluster related events, commands, and entities together. Clusters of tightly related events/entities that change together and reference each other frequently are strong candidates for one bounded context/service — clusters with only sparse relationships to each other are candidates for separate services.</p></div>
+
+    <h3 class="subhead">Approach 2 — Business Capability Decomposition</h3>
+    <p>Instead of (or alongside) modeling domain language, ask: <strong>"What distinct business capabilities does this organization perform?"</strong> — capabilities like "Manage Customer Accounts," "Process Loan Applications," "Issue & Manage Cards," "Send Notifications." Each maps naturally to a service. This tends to align well with <strong>Conway's Law</strong>: "organizations design systems that mirror their own communication structure" — so business-capability boundaries often naturally match team boundaries too, which is a good sign (a service one team can own end-to-end, without needing constant cross-team coordination to ship a change).</p>
+
+    <h3 class="subhead">Approach 3 — Decompose by Data Ownership</h3>
+    <p>A powerful sanity check, independent of the above: <strong>trace which entities are read/written together, and by whom.</strong> If Service A constantly needs a live join against Service B's tables to do its job, that's a signal the boundary is wrong — either they should be one service, or the data that's needed cross-boundary should be owned by whichever service is the true "source of truth" and exposed via API/events, with the other service keeping only a local, eventually-consistent copy of what it needs (a "read model").</p>
+
+    <h3 class="subhead">Anti-patterns: too fine, too coarse</h3>
+    <div class="diagram">
+      <div class="dflow">
+        <div class="dbox warn"><div class="t">Nanoservices</div><div class="s">One service per DB table / CRUD verb. Excessive network hops, distributed transactions everywhere, huge ops overhead for tiny logic units.</div></div>
+        <div class="darrow">···</div>
+        <div class="dbox accent"><div class="t">Right-sized</div><div class="s">Maps to one bounded context / business capability. Owns its data. Deployable & scalable independently. One team can reason about it fully.</div></div>
+        <div class="darrow">···</div>
+        <div class="dbox warn"><div class="t">Mini-monolith</div><div class="s">Too many unrelated capabilities crammed into one service. Loses independent scalability/deployability — the thing microservices exist to solve.</div></div>
+      </div>
+    </div>
+
+    <h4 class="minihead">Sizing heuristics used in practice</h4>
+    <ul>
+      <li><strong>Two-pizza team rule</strong> (Amazon-popularized): a service should be ownable by a team small enough to be fed by two pizzas (~6–8 people) — if understanding or safely changing a service requires more people than that, it's probably too large.</li>
+      <li><strong>Single Responsibility at the service level</strong>: a service should have one reason to change — one business capability's rules evolving shouldn't force a redeploy of unrelated capabilities.</li>
+      <li><strong>Independent deployability test</strong>: can this service ship a change on its own, with zero coordinated deploy of any other service? If not, the boundary is leaking.</li>
+      <li><strong>Data autonomy test</strong>: does this service own a data model it doesn't need to share write-access to with anyone else? If two services need to write the same table, that's one service pretending to be two.</li>
+      <li><strong>Failure isolation test</strong>: if this service goes down, can the rest of the system degrade gracefully rather than fail completely?</li>
+    </ul>
+
+    <div class="callout pitfall"><b class="lbl">Interview trap: "smaller is always better"</b><p>A very common wrong instinct. Splitting too aggressively multiplies operational cost (N deployments, N sets of logs/dashboards/on-call surface, N network hops with associated latency and failure modes) without a corresponding benefit if those tiny services always change together anyway. The right answer to "how small should a microservice be?" is never a line-of-code or table count — it's "as small as it can be while still being independently valuable, deployable, and ownable."</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q1-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q1-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q1-common">
+        <details class="qa"><summary>What is a bounded context in DDD, and why does it matter for microservices?</summary><div class="qa-answer"><p>A bounded context is a boundary within which a specific domain model and vocabulary apply consistently — a term means exactly one thing inside it. It matters for microservices because each bounded context is a natural, low-coupling unit to turn into an independently owned service, since the model inside it is internally coherent and doesn't need to agree with how other parts of the business use the same words.</p></div></details>
+        <details class="qa"><summary>What is a distributed monolith?</summary><div class="qa-answer"><p>A system split into multiple deployable services that nonetheless remain tightly coupled — through shared databases, synchronous call chains, or services that must always be deployed together — so it has all the operational complexity of microservices without the independent scalability or deployability benefits.</p></div></details>
+        <details class="qa"><summary>Give one heuristic for deciding if a microservice is too large.</summary><div class="qa-answer"><p>The independent deployability test: if you can't ship a change to this service without coordinating a deploy of another service at the same time, the boundary is likely wrong — either the service is too entangled with another, or it's bundling more than one business capability.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q1-faang">
+        <details class="qa"><summary>Two teams disagree on where a boundary should be: Team A wants "Notifications" as its own service; Team B thinks each domain service should send its own notifications. How do you reason about this?</summary><div class="qa-answer"><p>Ask whether "sending a notification" is a <strong>generic subdomain</strong> capability (templating, delivery channel management, retry/rate-limiting logic, provider integration) that's identical regardless of which business event triggered it — if so, it's a strong candidate for a shared service, since duplicating that logic per domain service violates DRY and creates N places to fix a delivery bug. The counter-argument is coupling: if every domain service now has a synchronous, hard dependency on a Notifications service to complete its own workflow, you've created a new distributed-monolith risk. The resolution most teams converge on: domain services publish domain <strong>events</strong> ("LoanApproved," "AccountCreated") to a message broker, and a Notifications service subscribes and handles delivery — decoupling the trigger from the delivery mechanism, keeping Notifications a true "generic subdomain" service without becoming a synchronous dependency in anyone's request path.</p></div></details>
+        <details class="qa"><summary>How would you use Context Mapping to design the integration between two bounded contexts that disagree on data ownership — e.g. "Customer" exists in both a CRM context and a Billing context?</summary><div class="qa-answer"><p>DDD's context-mapping patterns give you named options rather than ad hoc decisions: a <strong>Shared Kernel</strong> (both contexts jointly own a small, tightly-versioned shared model — high coupling, only appropriate for very stable, rarely-changing concepts), <strong>Customer-Supplier</strong> (one context is upstream and its model changes drive the downstream context, with an agreed contract/versioning process), <strong>Conformist</strong> (downstream just accepts upstream's model as-is, no translation), or an <strong>Anti-Corruption Layer</strong> (downstream translates the upstream model into its own local model at the boundary, fully insulating its internal domain logic from upstream changes). For "Customer" in CRM vs Billing, an Anti-Corruption Layer is usually right — Billing needs a `BillingCustomer` view (payment terms, invoicing address) translated from CRM's much richer `Customer` model, rather than importing CRM's whole entity and coupling Billing's internal logic to CRM's schema evolution.</p></div></details>
+        <details class="qa"><summary>How do you validate a proposed set of service boundaries before committing to build them, without waiting until production reveals coupling problems?</summary><div class="qa-answer"><p>A few techniques used at scale: (1) <strong>trace real request/data-access patterns</strong> from the current system (even a monolith's query logs) to see which "modules" are actually read/written together — proposed boundaries that cut across frequently-co-accessed data are red flags; (2) run an <strong>event storming</strong> session and check whether the proposed service boundaries align with natural event clusters, or whether events constantly cross boundaries in ways that would require chatty synchronous calls; (3) sketch the <strong>sequence of calls needed for your top 5–10 critical user journeys</strong> against the proposed boundaries — if a single user action requires four synchronous cross-service calls in sequence, that's a strong signal of a wrong cut; (4) build a lightweight <strong>architecture decision record (ADR)</strong> documenting the boundary rationale and known trade-offs, so the decision is revisited deliberately (not accidentally) as the domain understanding deepens — boundaries are expected to evolve, and treating them as immutable on day one is itself a mistake.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="bank-case">
+    <div class="topic-head"><span class="topic-no">36</span><h2>Sizing & Identifying Boundaries — Bank App Use Case</h2></div>
+    <p class="topic-sub">Applying business-capability decomposition to eazybank — why Accounts / Loans / Cards, and what stays out.</p>
+
+    <h3 class="subhead">Starting point: list the business capabilities</h3>
+    <p>Rather than starting from a data model, list what the bank <em>does</em> as distinct capabilities, then check which naturally cluster:</p>
+    <ul>
+      <li>Manage customer identity & profile (KYC, contact info)</li>
+      <li>Manage savings/current accounts (open, close, balance, statements)</li>
+      <li>Manage loans (apply, approve, disburse, track repayment)</li>
+      <li>Manage cards (issue, block, set limits, track usage)</li>
+      <li>Process payments/transactions (transfers, bill pay)</li>
+      <li>Send notifications (SMS/email/push on account activity)</li>
+      <li>Authenticate & authorize users</li>
+    </ul>
+
+    <div class="diagram">
+      <div class="dflow" style="flex-wrap:wrap;">
+        <div class="dbox accent"><div class="t">Accounts MS</div><div class="s">Open/close accounts, balances, statements. Owns Customer + Account tables.</div></div>
+        <div class="dbox accent"><div class="t">Loans MS</div><div class="s">Loan lifecycle: apply → approve → disburse → repay. Owns Loans table.</div></div>
+        <div class="dbox accent"><div class="t">Cards MS</div><div class="s">Card issuance, limits, usage tracking. Owns Cards table.</div></div>
+        <div class="dbox"><div class="t">Notification MS</div><div class="s">Generic subdomain — event-driven, subscribes to domain events from all three.</div></div>
+        <div class="dbox"><div class="t">Auth/Identity</div><div class="s">Often bought (Okta/Keycloak) not built — generic subdomain.</div></div>
+      </div>
+    </div>
+
+    <h3 class="subhead">Why Accounts, Loans, and Cards are separate — not one "Customer Data" service</h3>
+    <table>
+      <tr><th>Signal checked</th><th>Finding</th></tr>
+      <tr><td>Rate of change</td><td>Loan interest/approval rules change on a completely different cadence than account opening rules — coupling them means unrelated changes force joint deploys</td></tr>
+      <tr><td>Scaling profile</td><td>Card transaction volume (swipes) vastly outpaces loan applications — bundling them means over-provisioning the whole service for one capability's peak load</td></tr>
+      <tr><td>Team ownership</td><td>Regulatory/compliance rules for lending (loans) are a specialized domain, usually a distinct team from day-to-day account servicing</td></tr>
+      <tr><td>Data cohesion</td><td>A loan's core fields (principal, interest, disbursement schedule) rarely need to join against a card's fields (credit limit, usage) in the same query/transaction</td></tr>
+    </table>
+
+    <h3 class="subhead">Why they're NOT split further (e.g. no separate "Interest Calculation" service)</h3>
+    <p>Interest calculation is tightly coupled to loan lifecycle logic — it changes together with approval/disbursement rules, is always read/written in the context of a specific loan, and has no independent scaling or ownership need. Splitting it out would just add a network hop for zero benefit — a violation of the "as small as it can be while still independently valuable" principle from the previous topic.</p>
+
+    <div class="callout warn"><b class="lbl">The shared customer problem</b><p>All three services need <em>some</em> customer data (name, mobile number) — but rather than three services querying one shared `customer` table (recreating tight coupling), each service in this course keeps its <strong>own local `Customer` entity</strong> as a lightweight, service-owned copy of just the fields it needs, keyed by a shared identifier (mobile number / customer ID). Any richer customer-identity management lives in a dedicated Customer/Identity service, and each of Accounts/Loans/Cards treats its local Customer record as a read-mostly local cache, not the source of truth.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q2-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q2-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q2-common">
+        <details class="qa"><summary>Why does eazybank split Accounts, Loans, and Cards into separate services rather than one "Banking" service?</summary><div class="qa-answer"><p>Each maps to a distinct business capability with its own rate of change, scaling profile, and often ownership team — bundling them would force unrelated changes (e.g. a card-limit rule change) to require redeploying loan logic too, and would prevent scaling card-transaction throughput independently of loan-application volume.</p></div></details>
+        <details class="qa"><summary>Why does each service keep its own local Customer entity instead of querying one shared customer table?</summary><div class="qa-answer"><p>A shared table would recreate tight coupling at the data layer — any schema change to `customer` risks breaking all three services. Instead each service keeps a lightweight local copy of just the customer fields it needs, keyed by a shared identifier, preserving each service's data-ownership autonomy.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q2-faang">
+        <details class="qa"><summary>If each service keeps its own local Customer copy, how does a customer's name change (e.g. after marriage) propagate consistently to all three services?</summary><div class="qa-answer"><p>This is a textbook case for <strong>event-driven data synchronization</strong>: a dedicated Customer/Identity service (the source of truth) publishes a `CustomerUpdated` event to a message broker whenever profile data changes; Accounts, Loans, and Cards each subscribe and update their local copy asynchronously. This trades strong consistency for eventual consistency — there's a window where different services show slightly different data — which is an explicit, acceptable trade-off for read-mostly reference data like a name, but would NOT be acceptable for, say, an account balance (which needs strong consistency within its owning service and should never be duplicated this way in the first place).</p></div></details>
+        <details class="qa"><summary>A "Customer 360" feature needs to show a unified view of a customer's accounts, loans, and cards on one screen — does this change how you'd draw the boundaries?</summary><div class="qa-answer"><p>No — needing a composite view is not evidence the boundaries are wrong; it's evidence you need a <strong>composition layer</strong> on top of correctly-separated services (an aggregator/BFF service, or an API Gateway performing fan-out calls, as covered under the Loans & Cards section of the CRUD notes). Merging the services to make one query easier would sacrifice independent scalability and deployability for all future changes, just to optimize one read-heavy feature — the wrong trade-off. The right instinct: keep the write-side boundaries (source-of-truth ownership) exactly where domain analysis puts them, and solve cross-service read needs with composition, caching, or (at larger scale) a dedicated read-optimized denormalized view maintained via events (CQRS-style).</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="ecommerce-case">
+    <div class="topic-head"><span class="topic-no">37</span><h2>Sizing & Identifying Boundaries — E-commerce Migration Use Case</h2></div>
+    <p class="topic-sub">Decomposing a legacy e-commerce monolith into services — a harder case because you're extracting boundaries from existing entangled code, not designing greenfield.</p>
+
+    <h3 class="subhead">Starting point: the legacy monolith's modules</h3>
+    <p>A typical e-commerce monolith has modules like: Product Catalog, Inventory, Cart, Checkout/Order, Payment, Shipping, User Accounts, Reviews, Search, Recommendations. Migration analysis asks, for each: <strong>is this module's data and logic actually independent enough to extract, or is it entangled with others through shared tables / shared transactions?</strong></p>
+
+    <div class="diagram">
+      <div class="dflow" style="flex-wrap:wrap;">
+        <div class="dbox accent"><div class="t">Product Catalog</div><div class="s">High read volume, low write volume. Scales independently of everything else. Extract early.</div></div>
+        <div class="dbox accent"><div class="t">Inventory</div><div class="s">Needs strong consistency on stock counts — separate from catalog metadata despite being related.</div></div>
+        <div class="dbox accent"><div class="t">Cart</div><div class="s">Ephemeral, session-like data. Different storage profile (could even use a different DB type, e.g. Redis).</div></div>
+        <div class="dbox warn"><div class="t">Checkout / Order</div><div class="s">Orchestrates across Cart, Inventory, Payment — needs Saga pattern once split, extract carefully & later.</div></div>
+        <div class="dbox"><div class="t">Payment</div><div class="s">High compliance/security surface (PCI-DSS) — strong case for isolation regardless of coupling analysis.</div></div>
+        <div class="dbox"><div class="t">Shipping</div><div class="s">Often integrates external carriers — natural external-facing boundary.</div></div>
+      </div>
+    </div>
+
+    <h3 class="subhead">Sizing signals specific to a migration (vs greenfield design)</h3>
+    <table>
+      <tr><th>Signal</th><th>What to look for in the legacy code</th></tr>
+      <tr><td><strong>Shared transaction boundaries</strong></td><td>Does checkout currently run one DB transaction spanning Order, Inventory, and Payment tables? That transaction will have to become a Saga once split — plan for it, don't discover it mid-migration.</td></tr>
+      <tr><td><strong>Table foreign keys</strong></td><td>FKs crossing proposed service boundaries are a decomposition cost signal — not a blocker, but each one becomes an API call or a data-duplication decision post-split.</td></tr>
+      <tr><td><strong>Read/write ratio divergence</strong></td><td>Catalog is read-heavy (good candidate for independent caching/scaling); Inventory is write-heavy and consistency-sensitive — different services even though related.</td></tr>
+      <tr><td><strong>Compliance/security perimeter</strong></td><td>Payment handling often gets isolated as its own service regardless of pure domain analysis, purely to shrink the PCI-DSS compliance scope to one small, audited service.</td></tr>
+      <tr><td><strong>Traffic spikiness</strong></td><td>Catalog/Cart see huge spikes during sales events; Shipping/Returns don't — decoupling lets you scale only what needs scaling.</td></tr>
+    </table>
+
+    <div class="callout warn"><b class="lbl">Migration-specific trap: extracting in the wrong order</b><p>A common mistake is extracting the <em>easiest</em> module first (often something like "Reviews," which is simple but low-value) rather than the module that most urgently needs independent scaling or deployment (often Catalog or Checkout). Prioritization should weigh both extraction difficulty <em>and</em> business value/urgency — the Strangler Fig pattern (next topic) is exactly the mechanism that lets you extract incrementally in a deliberately chosen order rather than all-at-once.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q3-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q3-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q3-common">
+        <details class="qa"><summary>Why would Product Catalog and Inventory be separate services even though they're closely related?</summary><div class="qa-answer"><p>They have very different read/write and consistency profiles — Catalog is read-heavy, mostly-static metadata that benefits from aggressive caching and independent scaling; Inventory is write-heavy and needs strong consistency on stock counts to avoid overselling. Bundling them would force Inventory's stricter consistency needs onto Catalog's high-read-scale use case, or vice versa.</p></div></details>
+        <details class="qa"><summary>Why does Payment often get isolated as its own service regardless of pure domain-coupling analysis?</summary><div class="qa-answer"><p>Mainly for compliance reasons — isolating payment handling shrinks the scope of systems that need to meet PCI-DSS requirements to one small, tightly audited service, rather than spreading sensitive payment data handling across a larger surface area.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q3-faang">
+        <details class="qa"><summary>The legacy checkout flow runs one ACID database transaction across Order, Inventory, and Payment tables. What has to change once these become separate services, and what could go wrong if the team doesn't plan for it?</summary><div class="qa-answer"><p>A single ACID transaction across three services is no longer possible — the team must redesign checkout as a <strong>Saga</strong>: a sequence of local transactions in each service, coordinated either by choreography (each service publishes an event that triggers the next step) or orchestration (a dedicated Checkout orchestrator service calls each step and manages compensating actions on failure). If the team doesn't plan for this, the naive migration outcome is either (a) reintroducing tight coupling via distributed two-phase-commit-style synchronous calls that are slow and fragile, or (b) worse, shipping the split without addressing atomicity at all, leading to real production bugs: inventory decremented but payment failed and never refunded, or payment captured but order never created. This is exactly why "extract Checkout last, after the team has practiced Sagas on lower-stakes flows" is common migration advice.</p></div></details>
+        <details class="qa"><summary>How would you decide the order in which to extract modules from the monolith, given limited engineering time?</summary><div class="qa-answer"><p>Score each candidate module on two axes and prioritize the best combination: <strong>extraction difficulty</strong> (how entangled is its data/transactions with other modules — FK count crossing the boundary, shared transaction scope, shared code paths) and <strong>business value of extracting it</strong> (does it have a distinct scaling need not met by the monolith today, does a team need to iterate on it faster than monolith release cadence allows, does it carry a compliance driver). The best early candidates are <strong>low difficulty, high value</strong> — often a read-heavy, loosely-coupled module like Catalog. High-value-but-high-difficulty modules like Checkout are usually extracted later, once the team has built Saga/event-choreography muscle on simpler extractions, and once supporting infrastructure (message broker, distributed tracing, service discovery) is already proven in production from earlier extractions.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="strangler-fig">
+    <div class="topic-head"><span class="topic-no">38</span><h2>Strangler Fig Pattern</h2></div>
+    <p class="topic-sub">The standard pattern for incrementally migrating a monolith to microservices without a risky big-bang rewrite.</p>
+
+    <h3 class="subhead">The metaphor & the problem it solves</h3>
+    <p>Named after the strangler fig vine, which grows around a host tree, gradually taking over its structure until the original tree can be removed while the fig continues standing in its place. Applied to software: instead of rewriting a monolith from scratch (a "big-bang rewrite" — notoriously high-risk, long-duration, and prone to the team shipping <em>zero</em> value until the very end, if it finishes at all), you incrementally build new microservices <strong>alongside</strong> the monolith, routing an increasing share of traffic to the new services over time, until the monolith handles nothing and can be decommissioned.</p>
+
+    <h3 class="subhead">The mechanics — a routing facade</h3>
+    <div class="diagram">
+      <div class="dcol">
+        <div class="dphase-label">Phase 1 — Before</div>
+        <div class="dflow">
+          <div class="dbox accent"><div class="t">Clients</div></div>
+          <div class="darrow">→</div>
+          <div class="dbox"><div class="t">Monolith</div><div class="s">handles 100% of traffic</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="diagram">
+      <div class="dcol">
+        <div class="dphase-label">Phase 2 — Facade introduced, first module extracted</div>
+        <div class="dflow">
+          <div class="dbox accent"><div class="t">Clients</div></div>
+          <div class="darrow">→</div>
+          <div class="dbox warn"><div class="t">Strangler Facade</div><div class="s">routing proxy / API Gateway — decides per-request where to send traffic</div></div>
+          <div class="darrow">↙↘</div>
+          <div class="dstack">
+            <div class="dbox"><div class="t">Monolith</div><div class="s">remaining modules</div></div>
+            <div class="dbox accent"><div class="t">Catalog MS</div><div class="s">newly extracted, handles catalog routes only</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="diagram">
+      <div class="dcol">
+        <div class="dphase-label">Phase 3 — Fully strangled</div>
+        <div class="dflow">
+          <div class="dbox accent"><div class="t">Clients</div></div>
+          <div class="darrow">→</div>
+          <div class="dbox warn"><div class="t">Facade / Gateway</div></div>
+          <div class="darrow">→</div>
+          <div class="dstack">
+            <div class="dbox accent"><div class="t">Catalog MS</div></div>
+            <div class="dbox accent"><div class="t">Cart MS</div></div>
+            <div class="dbox accent"><div class="t">Order MS</div></div>
+          </div>
+          <div class="dbox dim"><div class="t">Monolith</div><div class="s">decommissioned</div></div>
+        </div>
+      </div>
+    </div>
+
+    <h4 class="minihead">The facade's job, concretely</h4>
+    <ul>
+      <li>Intercepts every incoming request (typically an API Gateway or a reverse proxy layer).</li>
+      <li>Routes each request based on path/rules: requests for already-extracted capabilities go to the new microservice; everything else still goes to the monolith.</li>
+      <li>Is updated incrementally, one route at a time, as each module is extracted — never in one flip.</li>
+      <li>Can support gradual/canary traffic shifting (e.g. 5% of catalog traffic → new service, watch metrics, ramp to 100%) rather than an instant full cutover per module.</li>
+    </ul>
+
+    <h3 class="subhead">Step-by-step process for extracting one module</h3>
+    <ol>
+      <li><strong>Identify</strong> the next module to extract (using the sizing/boundary analysis from the previous two topics).</li>
+      <li><strong>Build</strong> the new microservice implementing that module's capability, initially against a copy or synced subset of the relevant data.</li>
+      <li><strong>Dual-write or sync</strong> data during a transition window if the monolith and new service must temporarily both reflect the same state (often via events/CDC — Change Data Capture — reading the monolith's DB changes and replaying them to the new service).</li>
+      <li><strong>Route</strong> a slice of traffic for that module's endpoints to the new service via the facade, initially in shadow/read-only or canary mode.</li>
+      <li><strong>Verify</strong> correctness and performance against the monolith's existing behavior (often by comparing outputs side-by-side — a "shadow traffic" or "dark launch" technique).</li>
+      <li><strong>Ramp</strong> traffic to 100% for that module once confidence is established.</li>
+      <li><strong>Remove</strong> the now-dead module code and its data ownership from the monolith.</li>
+      <li><strong>Repeat</strong> for the next module until the monolith is empty and can be retired.</li>
+    </ol>
+
+    <div class="callout info"><b class="lbl">Why this beats a big-bang rewrite</b><p>Value ships continuously (each extracted module is independently useful in production, not held back until "the rewrite is done"), risk is bounded to one module at a time (a bad extraction is easy to roll back by routing traffic back to the monolith), and the team learns and improves its extraction process module-by-module rather than betting the whole migration on getting everything right on the first attempt.</p></div>
+
+    <div class="callout pitfall"><b class="lbl">Common pitfall: the facade itself becomes a bottleneck or a second monolith</b><p>If the facade accumulates business logic (not just routing) or becomes a single point of failure/scaling bottleneck for all traffic, the migration has just relocated the coupling problem rather than solved it. The facade should stay a thin, mostly-stateless routing layer — orchestration/business logic belongs in the services themselves (or a deliberately-designed orchestrator service for genuine cross-service workflows, which is a different concern from the migration facade).</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q4-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q4-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q4-common">
+        <details class="qa"><summary>What is the Strangler Fig pattern and what problem does it solve?</summary><div class="qa-answer"><p>It's a pattern for incrementally migrating a monolith to microservices by routing traffic through a facade that gradually shifts individual capabilities to new services, one at a time, until the monolith can be retired — solving the high risk and long feedback loop of a big-bang full rewrite.</p></div></details>
+        <details class="qa"><summary>What is the role of the "facade" in this pattern?</summary><div class="qa-answer"><p>It's a routing layer (often an API Gateway or reverse proxy) sitting in front of both the monolith and the newly extracted services, deciding per-request which one should handle it — updated incrementally as more modules get extracted, until eventually all traffic routes to new services.</p></div></details>
+        <details class="qa"><summary>Why extract one module at a time instead of all at once?</summary><div class="qa-answer"><p>It bounds risk to a single module per step (easy to roll back if something's wrong), lets the team ship and validate value continuously rather than waiting for a full rewrite to finish, and lets the team learn and refine its extraction process on smaller, lower-stakes modules before tackling harder ones.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q4-faang">
+        <details class="qa"><summary>During the transition window, both the monolith and the newly extracted service might need to see consistent data for a module that's only partially migrated. How would you keep them in sync?</summary><div class="qa-answer"><p>Typical approaches: (1) <strong>Change Data Capture (CDC)</strong> — a tool (e.g. Debezium) tails the monolith's database transaction log and streams changes as events, which the new service consumes to keep its own store in sync without the monolith needing any code change; (2) <strong>dual writes</strong> — the monolith (or a shim in front of it) writes to both its own DB and calls the new service's API on every mutation, which is simpler conceptually but risks partial-failure inconsistency (write succeeds to one, fails to the other) unless paired with retries/reconciliation; (3) for read-heavy modules being extracted, sometimes the new service is stood up read-only first (serving reads from synced data) while writes still go through the monolith, delaying the harder write-path cutover until confidence is established. CDC is generally preferred for correctness (it's derived directly from the committed source of truth) over application-level dual writes.</p></div></details>
+        <details class="qa"><summary>How would you validate that the newly extracted service produces correct results before cutting real user traffic over to it?</summary><div class="qa-answer"><p><strong>Shadow traffic / dark launching</strong>: the facade sends a copy of real production requests to the new service in parallel with the monolith, but only the monolith's response is actually returned to the user — the new service's response is logged and diffed against the monolith's for discrepancies, with zero user-facing risk. Once shadow traffic shows acceptable parity (an agreed error/discrepancy threshold) over a meaningful volume and time window, you move to a real canary cutover — routing a small percentage (1–5%) of live traffic to the new service for real, closely monitoring error rates/latency/business metrics, then ramping gradually to 100% while keeping an instant rollback path (routing back to the monolith via the facade) available at every stage.</p></div></details>
+        <details class="qa"><summary>What organizational/process risks does the Strangler Fig pattern NOT solve, even though it de-risks the technical migration?</summary><div class="qa-answer"><p>It doesn't solve boundary-selection mistakes — if the sizing/DDD analysis from the earlier topics is wrong, you'll incrementally and safely migrate your way into a distributed monolith rather than a rewrite-sized one, which can be harder to detect precisely because each individual extraction "worked." It also doesn't solve <strong>migration fatigue</strong> — strangler migrations can run for years, and without clear milestones and visible value per extraction, organizational appetite/funding for the migration can erode long before the monolith is fully retired, leaving the system permanently straddling both architectures (a "strangled but never finished" monolith, which is its own maintenance burden — now you're operating two paradigms indefinitely). Successful long-running strangler migrations typically pair the pattern with strict extraction-order prioritization (highest business value first) and regular checkpoints demonstrating shipped value to keep organizational support intact.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer-note">Spring Boot Bible · Section 3 of N · Standalone reference document · Generated for interview preparation</div>
+</main>
+</div>
+
+<script>
+const themeToggle = document.getElementById('themeToggle');
+const html = document.documentElement;
+function applyThemeLabel(){
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  themeToggle.innerHTML = isDark ? '🌙 Dark mode <span>⇄</span>' : '☀️ Light mode <span>⇄</span>';
+}
+themeToggle.addEventListener('click', () => {
+  const cur = html.getAttribute('data-theme');
+  html.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+  applyThemeLabel();
+  localStorage.setItem('sb-bible-theme', html.getAttribute('data-theme'));
+});
+(function initTheme(){
+  const saved = localStorage.getItem('sb-bible-theme');
+  if(saved){ html.setAttribute('data-theme', saved); }
+  applyThemeLabel();
+})();
+
+document.querySelectorAll('.code-panel').forEach(panel => {
+  const tabs = panel.querySelectorAll('.code-tab');
+  if(tabs.length <= 1) return;
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.getAttribute('data-pane');
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      panel.querySelectorAll('.code-pane').forEach(p => p.classList.remove('active'));
+      const pane = panel.querySelector('#' + target);
+      if(pane) pane.classList.add('active');
+    });
+  });
+});
+
+document.querySelectorAll('.qa-section').forEach(section => {
+  const btns = section.querySelectorAll('.qa-tab-btn');
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-target');
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      section.querySelectorAll('.qa-pane').forEach(p => p.classList.remove('active'));
+      document.getElementById(target).classList.add('active');
+    });
+  });
+});
+
+const navLinks = document.querySelectorAll('.nav-link');
+const topics = document.querySelectorAll('section.topic');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const id = entry.target.getAttribute('id');
+    const link = document.querySelector('.nav-link[href="#' + id + '"]');
+    if(!link) return;
+    if(entry.isIntersecting){
+      navLinks.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-15% 0px -75% 0px', threshold: 0 });
+topics.forEach(t => observer.observe(t));
+</script>
+</body>
+</html>

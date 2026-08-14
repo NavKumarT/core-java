@@ -1,0 +1,1859 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spring Boot Bible — Section 1: Foundations, REST, JPA & Docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0f14;
+  --bg-elev:#111820;
+  --bg-elev-2:#161f2a;
+  --border:#233042;
+  --text:#dbe4ee;
+  --text-dim:#8a9bb0;
+  --text-faint:#5c6b7e;
+  --accent:#6DB33F;
+  --accent-soft:#6DB33F22;
+  --accent-2:#4fa3d1;
+  --accent-2-soft:#4fa3d122;
+  --warn:#e0a94f;
+  --warn-soft:#e0a94f22;
+  --danger:#e0655f;
+  --danger-soft:#e0655f22;
+  --code-bg:#0d1420;
+  --code-border:#1e2a3a;
+  --shadow: 0 8px 24px rgba(0,0,0,0.35);
+  --radius: 10px;
+  --sidebar-w: 300px;
+}
+html[data-theme="light"]{
+  --bg:#f6f4ee;
+  --bg-elev:#ffffff;
+  --bg-elev-2:#eef0e8;
+  --border:#dcdccf;
+  --text:#1c231d;
+  --text-dim:#586257;
+  --text-faint:#8b9188;
+  --accent:#3f7d1f;
+  --accent-soft:#3f7d1f1a;
+  --accent-2:#1f6f9c;
+  --accent-2-soft:#1f6f9c1a;
+  --warn:#8a5a12;
+  --warn-soft:#8a5a1218;
+  --danger:#a3352f;
+  --danger-soft:#a3352f18;
+  --code-bg:#fbfaf5;
+  --code-border:#e2e0d2;
+  --shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  line-height:1.65;
+  font-size:15.5px;
+}
+::selection{background:var(--accent-soft);color:var(--accent);}
+h1,h2,h3,h4{font-family:'Space Mono',monospace;letter-spacing:-0.01em;color:var(--text);}
+code, pre, .mono{font-family:'Space Mono',monospace;}
+a{color:var(--accent-2);text-decoration:none;}
+a:hover{text-decoration:underline;}
+
+/* ===== Layout ===== */
+.shell{display:flex;min-height:100vh;}
+.sidebar{
+  width:var(--sidebar-w);
+  flex-shrink:0;
+  border-right:1px solid var(--border);
+  background:var(--bg-elev);
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+  padding:22px 16px 60px;
+}
+.sidebar::-webkit-scrollbar{width:6px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.brand{
+  display:flex;align-items:center;gap:10px;margin-bottom:4px;padding:0 6px;
+}
+.brand-badge{
+  width:34px;height:34px;border-radius:8px;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;font-family:'Space Mono';
+  font-weight:700;color:#0b0f14;font-size:14px;flex-shrink:0;
+}
+.brand-text{font-family:'Space Mono';font-weight:700;font-size:14.5px;line-height:1.2;}
+.brand-text span{display:block;font-size:10.5px;color:var(--text-faint);font-weight:400;margin-top:2px;letter-spacing:0.04em;}
+.theme-toggle{
+  margin:14px 6px 20px;width:calc(100% - 12px);
+  background:var(--bg-elev-2);border:1px solid var(--border);color:var(--text-dim);
+  padding:8px 10px;border-radius:8px;font-family:'Inter';font-size:12.5px;cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.theme-toggle:hover{color:var(--text);border-color:var(--accent);}
+.nav-group{margin-bottom:6px;}
+.nav-group-title{
+  font-size:10.5px;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-faint);
+  padding:14px 8px 6px;font-family:'Space Mono';
+}
+.nav-link{
+  display:block;padding:7px 10px;border-radius:7px;font-size:13px;color:var(--text-dim);
+  margin-bottom:1px;border-left:2px solid transparent;
+}
+.nav-link:hover{background:var(--bg-elev-2);color:var(--text);text-decoration:none;}
+.nav-link.active{background:var(--accent-soft);color:var(--accent);border-left:2px solid var(--accent);font-weight:600;}
+.nav-link .vid-no{color:var(--text-faint);margin-right:5px;}
+
+main{flex:1;min-width:0;padding:48px 56px 120px;max-width:980px;}
+.hero{margin-bottom:44px;}
+.hero-eyebrow{
+  font-family:'Space Mono';font-size:11.5px;color:var(--accent);letter-spacing:0.1em;
+  text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;
+}
+.hero-eyebrow::before{content:"";width:20px;height:1px;background:var(--accent);}
+.hero h1{font-size:32px;margin:0 0 12px;line-height:1.25;}
+.hero p{color:var(--text-dim);font-size:15.5px;max-width:680px;}
+.scope-box{
+  margin-top:20px;border:1px solid var(--border);background:var(--bg-elev);border-radius:var(--radius);
+  padding:16px 18px;font-size:13px;color:var(--text-dim);
+}
+.scope-box b{color:var(--text);}
+
+section.topic{margin-bottom:56px;scroll-margin-top:24px;}
+.topic-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;border-bottom:1px solid var(--border);padding-bottom:14px;}
+.topic-no{font-family:'Space Mono';color:var(--accent);font-size:13px;background:var(--accent-soft);padding:3px 9px;border-radius:20px;flex-shrink:0;}
+.topic-head h2{font-size:22px;margin:0;}
+.topic-sub{color:var(--text-faint);font-size:12.5px;margin:8px 0 22px;}
+
+p{color:var(--text-dim);}
+h3.subhead{font-size:16.5px;color:var(--text);margin:28px 0 10px;display:flex;align-items:center;gap:8px;}
+h3.subhead::before{content:"";width:3px;height:15px;background:var(--accent-2);border-radius:2px;}
+h4.minihead{font-size:13.5px;color:var(--text);margin:18px 0 8px;font-family:'Inter';font-weight:700;}
+ul,ol{color:var(--text-dim);padding-left:22px;}
+li{margin-bottom:6px;}
+strong{color:var(--text);}
+
+/* ===== Annotation callouts ===== */
+.ann-box{
+  border:1px solid var(--code-border);background:var(--bg-elev);border-radius:var(--radius);
+  margin:14px 0;overflow:hidden;
+}
+.ann-box-head{
+  display:flex;align-items:center;gap:10px;padding:11px 16px;background:var(--accent-soft);
+  border-bottom:1px solid var(--code-border);
+}
+.ann-tag{font-family:'Space Mono';font-weight:700;color:var(--accent);font-size:14px;}
+.ann-loc{margin-left:auto;font-size:10.5px;color:var(--text-faint);font-family:'Space Mono';text-transform:uppercase;letter-spacing:0.05em;}
+.ann-body{padding:12px 16px;}
+.ann-body p{margin:4px 0 8px;font-size:13.5px;}
+.ann-attrs{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.attr-chip{
+  font-family:'Space Mono';font-size:11px;background:var(--bg-elev-2);border:1px solid var(--border);
+  padding:3px 8px;border-radius:6px;color:var(--text-dim);
+}
+.attr-chip b{color:var(--accent-2);}
+
+.ann-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0;}
+@media(max-width:760px){.ann-grid{grid-template-columns:1fr;}}
+
+/* ===== Code panels ===== */
+.code-panel{border:1px solid var(--code-border);border-radius:var(--radius);overflow:hidden;margin:16px 0;background:var(--code-bg);}
+.code-tabs{display:flex;background:var(--bg-elev-2);border-bottom:1px solid var(--code-border);overflow-x:auto;}
+.code-tab{
+  padding:9px 16px;font-family:'Space Mono';font-size:12px;color:var(--text-faint);cursor:pointer;
+  border-right:1px solid var(--code-border);white-space:nowrap;user-select:none;
+}
+.code-tab:hover{color:var(--text-dim);}
+.code-tab.active{color:var(--accent);background:var(--code-bg);border-bottom:2px solid var(--accent);margin-bottom:-1px;}
+.code-body{position:relative;}
+.code-pane{display:none;padding:16px 18px;overflow-x:auto;}
+.code-pane.active{display:block;}
+pre{margin:0;font-size:12.8px;line-height:1.65;color:#c7d3e0;}
+html[data-theme="light"] pre{color:#333c30;}
+.kw{color:#c586c0;}
+.ann{color:var(--accent);font-weight:700;}
+.str{color:#ce9178;}
+.cm{color:var(--text-faint);font-style:italic;}
+.ty{color:#4ec9b0;}
+.cl{color:#e5c07b;}
+
+.callout{border-radius:var(--radius);padding:14px 16px;margin:16px 0;border:1px solid;font-size:13.5px;}
+.callout.info{background:var(--accent-2-soft);border-color:var(--accent-2);color:var(--text);}
+.callout.warn{background:var(--warn-soft);border-color:var(--warn);color:var(--text);}
+.callout.pitfall{background:var(--danger-soft);border-color:var(--danger);color:var(--text);}
+.callout b.lbl{display:block;font-family:'Space Mono';font-size:11px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;}
+.callout.info b.lbl{color:var(--accent-2);}
+.callout.warn b.lbl{color:var(--warn);}
+.callout.pitfall b.lbl{color:var(--danger);}
+.callout p{margin:0;color:var(--text-dim);}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left;color:var(--text-dim);}
+th{background:var(--bg-elev-2);color:var(--text);font-family:'Space Mono';font-size:11.5px;text-transform:uppercase;letter-spacing:0.04em;}
+tr:hover td{background:var(--bg-elev-2);}
+
+/* ===== Q&A ===== */
+.qa-section{margin-top:26px;}
+.qa-tabs{display:flex;gap:8px;margin-bottom:14px;}
+.qa-tab-btn{
+  font-family:'Space Mono';font-size:11.5px;padding:7px 14px;border-radius:20px;border:1px solid var(--border);
+  background:var(--bg-elev);color:var(--text-dim);cursor:pointer;text-transform:uppercase;letter-spacing:0.04em;
+}
+.qa-tab-btn.common.active{background:var(--accent-2-soft);border-color:var(--accent-2);color:var(--accent-2);}
+.qa-tab-btn.faang.active{background:var(--danger-soft);border-color:var(--danger);color:var(--danger);}
+.qa-pane{display:none;}
+.qa-pane.active{display:block;}
+details.qa{
+  border:1px solid var(--border);border-radius:8px;margin-bottom:8px;background:var(--bg-elev);overflow:hidden;
+}
+details.qa[open]{border-color:var(--accent-2);}
+details.qa summary{
+  padding:12px 16px;cursor:pointer;font-weight:600;font-size:13.8px;list-style:none;
+  display:flex;align-items:flex-start;gap:10px;color:var(--text);
+}
+details.qa summary::-webkit-details-marker{display:none;}
+details.qa summary::before{
+  content:"Q";flex-shrink:0;font-family:'Space Mono';font-size:11px;color:var(--accent-2);
+  background:var(--accent-2-soft);width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;
+  margin-top:1px;
+}
+details.qa .qa-answer{padding:0 16px 16px 46px;color:var(--text-dim);font-size:13.5px;}
+details.qa .qa-answer p{margin:0 0 8px;color:var(--text-dim);}
+details.qa .qa-answer p:last-child{margin-bottom:0;}
+
+.divider{height:1px;background:linear-gradient(90deg,var(--border),transparent);margin:44px 0;}
+.footer-note{color:var(--text-faint);font-size:12px;text-align:center;padding:30px 0 10px;}
+.badge-row{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 18px;}
+.badge{font-family:'Space Mono';font-size:10.5px;background:var(--bg-elev-2);border:1px solid var(--border);padding:3px 9px;border-radius:20px;color:var(--text-faint);}
+
+@media(max-width:900px){
+  .shell{flex-direction:column;}
+  .sidebar{position:relative;width:100%;height:auto;}
+  main{padding:32px 20px 80px;}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-badge">SB</div>
+    <div class="brand-text">Spring Boot Bible<span>Section 1 · eazybank demo</span></div>
+  </div>
+  <button class="theme-toggle" id="themeToggle">🌙 Dark mode <span>⇄</span></button>
+
+  <div class="nav-group">
+    <div class="nav-group-title">Foundations</div>
+    <a class="nav-link" href="#microservices"><span class="vid-no">06</span>Building Microservices</a>
+    <a class="nav-link" href="#springboot-intro"><span class="vid-no">07</span>Intro to Spring Boot</a>
+    <a class="nav-link" href="#rest-intro"><span class="vid-no">09</span>REST APIs & Best Practices</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Project Setup</div>
+    <a class="nav-link" href="#create-project"><span class="vid-no">11</span>Creating the Project</a>
+    <a class="nav-link" href="#hello-world"><span class="vid-no">12</span>@RestController Hello World</a>
+    <a class="nav-link" href="#h2-yaml"><span class="vid-no">13</span>H2 DB & YAML Config</a>
+    <a class="nav-link" href="#lombok-issue"><span class="vid-no">14</span>Lombok + IntelliJ Fix</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Persistence Layer</div>
+    <a class="nav-link" href="#jpa-entities"><span class="vid-no">15</span>JPA Entities & Repositories</a>
+    <a class="nav-link" href="#dto-intro"><span class="vid-no">16</span>DTO Pattern — Intro</a>
+    <a class="nav-link" href="#dto-accounts"><span class="vid-no">17</span>DTOs in Accounts MS</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">CRUD APIs</div>
+    <a class="nav-link" href="#create-api"><span class="vid-no">18-19</span>CREATE API</a>
+    <a class="nav-link" href="#read-api"><span class="vid-no">20</span>READ API</a>
+    <a class="nav-link" href="#update-api"><span class="vid-no">21</span>UPDATE API</a>
+    <a class="nav-link" href="#delete-api"><span class="vid-no">22</span>DELETE API</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Robustness</div>
+    <a class="nav-link" href="#exception-handling"><span class="vid-no">23</span>Global Exception Handling</a>
+    <a class="nav-link" href="#validation"><span class="vid-no">24</span>Input Validation</a>
+    <a class="nav-link" href="#auditing"><span class="vid-no">25</span>Auditing Columns</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">API Documentation</div>
+    <a class="nav-link" href="#openapi-intro"><span class="vid-no">26</span>springdoc-openapi Intro</a>
+    <a class="nav-link" href="#openapi-def"><span class="vid-no">27</span>@OpenAPIDefinition</a>
+    <a class="nav-link" href="#openapi-tags"><span class="vid-no">28</span>@Tag @Operation @ApiResponse</a>
+    <a class="nav-link" href="#openapi-schema"><span class="vid-no">29-30</span>@Schema & Examples</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Wrap-up</div>
+    <a class="nav-link" href="#annotations-cheatsheet"><span class="vid-no">31</span>Annotations Cheat-sheet</a>
+    <a class="nav-link" href="#loans-cards"><span class="vid-no">32-34</span>Loans & Cards MS</a>
+  </div>
+</aside>
+
+<main>
+  <div class="hero">
+    <div class="hero-eyebrow">Section 1 · Spring Boot Bible</div>
+    <h1>Foundations, REST, Spring Data JPA & API Docs</h1>
+    <p>Deep, interview-oriented notes built around the <strong>eazybank</strong> style demo — three microservices (<strong>Accounts</strong>, <strong>Loans</strong>, <strong>Cards</strong>) each doing CRUD against an <strong>H2</strong> database using <strong>Spring Data JPA</strong>, with validation, global exception handling, auditing, and OpenAPI/Swagger documentation. Every topic below is written to "bible" depth: concept → annotation-by-annotation breakdown → working code → common interview questions → FAANG/product-company level questions.</p>
+    <div class="scope-box">
+      <b>How to use this document:</b> Each section is self-contained. Read the concept, study the annotated code panel (annotations are highlighted in <span style="color:var(--accent);font-family:'Space Mono';font-weight:700;">green</span>), then work through the Q&A — toggle between <b>Common</b> (baseline, "can this person actually build things") and <b>FAANG</b> (probing internals, trade-offs, "why not X instead") question sets.
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="microservices">
+    <div class="topic-head"><span class="topic-no">06</span><h2>How to Build Microservices</h2></div>
+    <p class="topic-sub">Conceptual foundation before touching code — what a microservice is, why it exists, and how the 3-service demo (Accounts / Loans / Cards) is structured.</p>
+
+    <p>A <strong>microservice</strong> is a small, independently deployable service that owns a single, well-defined business capability, along with its own data store, and communicates with other services over the network (typically REST/HTTP or messaging). This is the opposite of a <strong>monolith</strong>, where all capabilities (accounts, loans, cards, notifications…) live in one deployable unit sharing one database.</p>
+
+    <h3 class="subhead">Why split eazybank into Accounts / Loans / Cards?</h3>
+    <ul>
+      <li><strong>Independent deployability</strong> — a bug fix in the Cards service can ship without redeploying Accounts or Loans.</li>
+      <li><strong>Independent scalability</strong> — if Loans gets 10x traffic during a promotional campaign, only that service needs to scale out.</li>
+      <li><strong>Team autonomy</strong> — different squads can own different services, choose release cadence independently (Conway's Law in action).</li>
+      <li><strong>Fault isolation</strong> — if the Cards service crashes, Accounts and Loans can, in principle, keep serving requests (bulkheading), unlike a monolith where one bad module can bring the whole JVM down.</li>
+      <li><strong>Technology heterogeneity</strong> — each service could theoretically use a different language/DB, though in this demo all three use Spring Boot + H2 for consistency.</li>
+    </ul>
+
+    <h3 class="subhead">Building blocks of a microservices-based system</h3>
+    <table>
+      <tr><th>Building Block</th><th>Why it's needed</th></tr>
+      <tr><td>Service (Spring Boot app)</td><td>Owns one bounded context — e.g. Accounts owns customer + account data</td></tr>
+      <tr><td>Database per service</td><td>Avoids tight coupling through a shared schema; each service's data is private</td></tr>
+      <tr><td>REST APIs</td><td>Standard, stateless contract for synchronous inter-service and client communication</td></tr>
+      <tr><td>Config Server</td><td>Externalizes configuration across environments (covered in later sections)</td></tr>
+      <tr><td>Service Discovery</td><td>Services find each other dynamically instead of hardcoded URLs (Eureka — later section)</td></tr>
+      <tr><td>API Gateway</td><td>Single entry point, routing, cross-cutting concerns (later section)</td></tr>
+      <tr><td>Resilience patterns</td><td>Circuit breakers, retries, rate limiters to survive partial failures (later section)</td></tr>
+    </table>
+    <div class="callout info"><b class="lbl">Where we are</b><p>Section 1 only builds the services themselves (Accounts fully, Loans & Cards as assignments). Discovery, gateway, config server, and resilience are deliberately deferred to later sections — don't worry that they're "missing" here.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q1-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q1-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q1-common">
+        <details class="qa"><summary>What is a microservice, in one sentence?</summary><div class="qa-answer"><p>An independently deployable service that owns a single business capability and its own data, exposed via a network API (usually REST).</p></div></details>
+        <details class="qa"><summary>What's the main difference between a monolith and microservices?</summary><div class="qa-answer"><p>A monolith is one deployable unit with all modules sharing a process and typically a database; microservices split those modules into separately deployable, independently scalable units, each with its own datastore, communicating over the network.</p></div></details>
+        <details class="qa"><summary>Why does each microservice get its own database instead of sharing one?</summary><div class="qa-answer"><p>Sharing a database re-creates tight coupling at the data layer — any schema change risks breaking other services, and it removes the ability to scale or choose storage technology independently. "Database per service" keeps each service's internal data model private, accessible to others only via its API.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q1-faang">
+        <details class="qa"><summary>If each service has its own DB, how do you handle a transaction that spans Accounts and Loans (e.g. "close account and settle any linked loan")?</summary><div class="qa-answer"><p>You give up traditional ACID distributed transactions and instead reach for the <strong>Saga pattern</strong> — a sequence of local transactions, each publishing an event/command that triggers the next step, with compensating transactions to undo prior steps on failure (choreography via events, or orchestration via a coordinator service). This trades strong consistency for eventual consistency, which is an explicit, discussable trade-off interviewers want you to articulate, not just name-drop.</p></div></details>
+        <details class="qa"><summary>How would you decide service boundaries — why is it Accounts/Loans/Cards and not, say, Customer/Transaction?</summary><div class="qa-answer"><p>Boundaries should follow <strong>Domain-Driven Design bounded contexts</strong> — group by business capability and data ownership, not by technical layer. The test: can this capability change, scale, and fail independently, and does it have a cohesive internal data model that rarely needs to join with another service's data in a single query? Splitting by technical layer (e.g. a "database service" or "validation service") is a classic anti-pattern that just re-creates a distributed monolith with worse latency.</p></div></details>
+        <details class="qa"><summary>What's the cost of choosing microservices too early, before the domain is well understood?</summary><div class="qa-answer"><p>Premature decomposition freezes boundaries before you understand real coupling, so you end up with chatty inter-service calls, distributed transactions for things that should have been one transaction, and much higher operational overhead (N deployments, N sets of logs/metrics, network failure modes) for a system that didn't need the scaling or team-autonomy benefits yet. Many teams deliberately start with a "modular monolith" and extract services once boundaries and load patterns are proven.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="springboot-intro">
+    <div class="topic-head"><span class="topic-no">07</span><h2>Introduction to Spring Boot Framework</h2></div>
+    <p class="topic-sub">What problem Spring Boot solves on top of the Spring Framework, and the mechanics of auto-configuration & starters.</p>
+
+    <h3 class="subhead">Spring Framework's problem</h3>
+    <p>The core Spring Framework (IoC container, DI, Spring MVC, Spring Data, Spring Security…) is powerful but historically required <strong>heavy manual configuration</strong> — XML bean definitions or verbose <code>@Configuration</code> classes, manually wiring a <code>DispatcherServlet</code>, choosing and configuring an embedded server, aligning dozens of library versions by hand. This is exactly what Spring Boot was built to remove.</p>
+
+    <h3 class="subhead">What Spring Boot adds</h3>
+    <table>
+      <tr><th>Feature</th><th>What it means in practice</th></tr>
+      <tr><td><strong>Auto-configuration</strong></td><td>Spring Boot inspects the classpath and beans already defined, and auto-registers sensible default beans (e.g. seeing <code>H2</code> + <code>spring-boot-starter-data-jpa</code> on the classpath auto-configures a <code>DataSource</code>, <code>EntityManagerFactory</code>, <code>TransactionManager</code>)</td></tr>
+      <tr><td><strong>Starter dependencies</strong></td><td>Curated dependency bundles (e.g. <code>spring-boot-starter-web</code>) that pull in a compatible, version-aligned set of libraries so you never hand-pick versions</td></tr>
+      <tr><td><strong>Embedded servers</strong></td><td>Tomcat (default), Jetty, or Undertow bundled inside the JAR — no external app server install/deploy step; you run <code>java -jar app.jar</code></td></tr>
+      <tr><td><strong>Opinionated defaults</strong></td><td>Sensible out-of-the-box config (e.g. server port 8080, default logging pattern) that you can override in <code>application.yml</code></td></tr>
+      <tr><td><strong>Production-readiness</strong></td><td>Spring Boot Actuator exposes health checks, metrics, env info as HTTP endpoints with almost zero setup (later section)</td></tr>
+      <tr><td><strong>No code generation, no XML</strong></td><td>Everything is Java config + annotations; "convention over configuration"</td></tr>
+    </table>
+
+    <h3 class="subhead">How auto-configuration actually works (mechanics)</h3>
+    <p>The entry point annotation <code>@SpringBootApplication</code> is itself a meta-annotation combining three:</p>
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">MainApplication.java</div></div>
+      <div class="code-body">
+        <div class="code-pane active"><pre><span class="ann">@SpringBootApplication</span>
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">AccountsApplication</span> {
+    <span class="kw">public</span> <span class="kw">static</span> <span class="kw">void</span> main(String[] args) {
+        SpringApplication.run(AccountsApplication.<span class="kw">class</span>, args);
+    }
+}</pre></div>
+      </div>
+    </div>
+
+    <div class="ann-grid">
+      <div class="ann-box">
+        <div class="ann-box-head"><span class="ann-tag">@SpringBootConfiguration</span><span class="ann-loc">meta</span></div>
+        <div class="ann-body"><p>A specialization of <code>@Configuration</code> — marks this class as a source of bean definitions. Lets Spring Boot treat the main class itself as a config class.</p></div>
+      </div>
+      <div class="ann-box">
+        <div class="ann-box-head"><span class="ann-tag">@EnableAutoConfiguration</span><span class="ann-loc">meta</span></div>
+        <div class="ann-body"><p>The real engine. Triggers Spring Boot to scan <code>META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports</code> (older versions: <code>spring.factories</code>) inside every JAR on the classpath, and conditionally register the beans found there using <code>@Conditional*</code> annotations (<code>@ConditionalOnClass</code>, <code>@ConditionalOnMissingBean</code>, <code>@ConditionalOnProperty</code>, etc.), so a bean is only auto-created if its supporting library is present <em>and</em> you haven't already defined your own bean of that type.</p></div>
+      </div>
+      <div class="ann-box">
+        <div class="ann-box-head"><span class="ann-tag">@ComponentScan</span><span class="ann-loc">meta</span></div>
+        <div class="ann-body"><p>Scans the package of the annotated class and all sub-packages for <code>@Component</code>-stereotyped classes (<code>@Service</code>, <code>@Repository</code>, <code>@Controller</code>/<code>@RestController</code>) and registers them as beans. This is why the main class conventionally lives in the root package.</p></div>
+      </div>
+    </div>
+
+    <div class="callout warn"><b class="lbl">Practical implication</b><p>If you define your own <code>DataSource</code> bean, Spring Boot's <code>@ConditionalOnMissingBean</code>-guarded auto-configuration for <code>DataSource</code> silently backs off. This "auto-config only fills the gaps you leave" behavior is the single most important mental model for debugging "why isn't my custom bean being used" issues.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q2-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q2-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q2-common">
+        <details class="qa"><summary>What is Spring Boot and how is it different from the Spring Framework?</summary><div class="qa-answer"><p>Spring Framework provides the core IoC container, DI, and modules (MVC, Data, Security…) but requires manual configuration to wire them together. Spring Boot sits on top of it and auto-configures those modules based on the classpath, ships curated "starter" dependencies, embeds a server, and removes boilerplate — so you get a runnable, production-ready app with minimal setup.</p></div></details>
+        <details class="qa"><summary>What does @SpringBootApplication do?</summary><div class="qa-answer"><p>It's a convenience meta-annotation bundling <code>@SpringBootConfiguration</code> (marks the class as a config/bean source), <code>@EnableAutoConfiguration</code> (turns on classpath-driven auto-configuration), and <code>@ComponentScan</code> (scans the current package and sub-packages for Spring-managed components).</p></div></details>
+        <details class="qa"><summary>What is a Spring Boot "starter"?</summary><div class="qa-answer"><p>A starter is a single dependency (e.g. <code>spring-boot-starter-web</code>) that transitively pulls in a version-aligned set of libraries needed for a capability, so you don't manually resolve compatible versions of, say, Spring MVC, Jackson, and an embedded Tomcat.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q2-faang">
+        <details class="qa"><summary>Walk me through what happens, step by step, from `SpringApplication.run()` to the app being ready to serve traffic.</summary><div class="qa-answer"><p>Roughly: (1) Spring Boot creates an <code>ApplicationContext</code> of the appropriate type (e.g. <code>AnnotationConfigServletWebServerApplicationContext</code> for a servlet web app), (2) it loads <code>ApplicationContextInitializers</code> and fires <code>ApplicationListener</code>s for lifecycle events (<code>ApplicationStartingEvent</code>, <code>ApplicationEnvironmentPreparedEvent</code>...), (3) the <code>Environment</code> is prepared — property sources from <code>application.yml</code>, env vars, command-line args are merged with precedence rules, (4) <code>@ComponentScan</code> registers your beans and <code>@EnableAutoConfiguration</code> registers conditional auto-config beans, (5) the <code>BeanFactory</code> instantiates and wires singleton beans (respecting dependency order, <code>@PostConstruct</code> callbacks), (6) the embedded servlet container (Tomcat) is created and started as part of context refresh, and finally (7) <code>ApplicationReadyEvent</code> fires and the app accepts requests.</p></div></details>
+        <details class="qa"><summary>How does @ConditionalOnMissingBean actually let you override an auto-configured bean, and what ordering guarantee makes that safe?</summary><div class="qa-answer"><p>Auto-configuration classes are processed <em>after</em> user-defined <code>@Configuration</code> classes because Spring Boot places auto-configuration at the end of the configuration-processing order (historically via <code>@AutoConfigureAfter</code>/ordering metadata, and by deferring their import through <code>DeferredImportSelector</code>). By the time an auto-configuration class's <code>@ConditionalOnMissingBean</code> check runs, your own bean definitions are already registered in the <code>BeanFactory</code>, so the condition correctly evaluates to "bean already present" and the auto-configured default backs off.</p></div></details>
+        <details class="qa"><summary>Why does Spring Boot favor "convention over configuration" via conditional auto-config rather than dependency-injecting a fixed set of defaults?</summary><div class="qa-answer"><p>Because the same jar (spring-boot-autoconfigure) has to support radically different classpaths — an app with only <code>spring-boot-starter-web</code> shouldn't get a <code>DataSource</code> bean, but one that also has <code>spring-boot-starter-data-jpa</code> and an H2 driver should. Conditional annotations let a single autoconfiguration jar declaratively describe "under what classpath/property/bean conditions should this bean exist," which scales to hundreds of optional integrations without runtime reflection hacks or every user writing their own config.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="rest-intro">
+    <div class="topic-head"><span class="topic-no">09</span><h2>Introduction to REST APIs & Best Practices</h2></div>
+    <p class="topic-sub">REST constraints, HTTP method semantics, status codes, and API design conventions used throughout the CRUD sections.</p>
+
+    <h3 class="subhead">What REST actually means</h3>
+    <p><strong>REST</strong> (Representational State Transfer) is an architectural style (not a protocol) defined by a set of constraints: <strong>client-server</strong> separation, <strong>statelessness</strong> (every request contains all info needed; server holds no client session state), <strong>cacheability</strong>, a <strong>uniform interface</strong> (resources identified by URIs, manipulated through representations like JSON, self-descriptive messages via HTTP verbs/status codes), a <strong>layered system</strong>, and optionally <strong>HATEOAS</strong> (responses include links to related actions/resources).</p>
+
+    <h3 class="subhead">HTTP method → operation mapping</h3>
+    <table>
+      <tr><th>Method</th><th>Purpose</th><th>Idempotent?</th><th>Safe?</th><th>Typical Success Code</th></tr>
+      <tr><td><strong>GET</strong></td><td>Read a resource / collection</td><td>Yes</td><td>Yes</td><td>200 OK</td></tr>
+      <tr><td><strong>POST</strong></td><td>Create a new resource</td><td>No</td><td>No</td><td>201 Created</td></tr>
+      <tr><td><strong>PUT</strong></td><td>Full replace/update of a resource</td><td>Yes</td><td>No</td><td>200 OK</td></tr>
+      <tr><td><strong>PATCH</strong></td><td>Partial update of a resource</td><td>No (in general)</td><td>No</td><td>200 OK</td></tr>
+      <tr><td><strong>DELETE</strong></td><td>Remove a resource</td><td>Yes</td><td>No</td><td>200 OK / 204 No Content</td></tr>
+    </table>
+    <div class="callout info"><b class="lbl">Idempotent vs Safe</b><p><strong>Safe</strong> = does not change server state (GET, HEAD, OPTIONS). <strong>Idempotent</strong> = calling it N times has the same effect as calling it once (GET, PUT, DELETE — but not POST, and not PATCH in general). Every safe method is idempotent, but not every idempotent method is safe (PUT changes state but repeating it doesn't change the outcome further).</p></div>
+
+    <h3 class="subhead">REST API design best practices used in this project</h3>
+    <ul>
+      <li><strong>Nouns, not verbs, in URIs</strong>: <code>/api/create</code> is wrong; <code>POST /api/accounts</code> is right — the verb is carried by the HTTP method.</li>
+      <li><strong>Plural resource names</strong>: <code>/api/accounts</code>, not <code>/api/account</code>.</li>
+      <li><strong>Version the API</strong>: prefix with <code>/api/v1/...</code> so breaking changes can ship as <code>/api/v2/...</code> without breaking existing clients.</li>
+      <li><strong>Use query params for filtering, not new endpoints</strong>: <code>GET /api/accounts?mobileNumber=...</code> rather than a bespoke path.</li>
+      <li><strong>Return correct status codes</strong>, not always 200 — 201 for create, 400 for validation errors, 404 for not-found, 500 for unhandled server errors (this is what section 23's global exception handler enforces).</li>
+      <li><strong>Never leak internal entities</strong> directly — use DTOs (section 16) so your DB schema and your API contract can evolve independently.</li>
+      <li><strong>Stateless requests</strong> — no server-side session; auth (later, Spring Security section) is via a token on every request.</li>
+    </ul>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q3-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q3-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q3-common">
+        <details class="qa"><summary>What does REST stand for and what makes an API "RESTful"?</summary><div class="qa-answer"><p>Representational State Transfer. An API is RESTful when it follows constraints like statelessness, a uniform resource-based interface (URIs identify resources, HTTP verbs act on them), client-server separation, and cacheable responses.</p></div></details>
+        <details class="qa"><summary>Difference between PUT and PATCH?</summary><div class="qa-answer"><p>PUT replaces the entire resource with the payload provided (full update, idempotent); PATCH applies a partial modification to specific fields only.</p></div></details>
+        <details class="qa"><summary>Why use 201 instead of 200 for a successful POST?</summary><div class="qa-answer"><p>201 Created explicitly communicates that a new resource was created as a result of the request, which is more precise than the generic 200 OK and lets clients (and monitoring/logging) distinguish "created" from "read/updated successfully."</p></div></details>
+      </div>
+      <div class="qa-pane" id="q3-faang">
+        <details class="qa"><summary>Is REST actually stateless if you use JWT-based authentication — doesn't the token represent state?</summary><div class="qa-answer"><p>Statelessness in REST specifically means the <em>server</em> doesn't persist client session context between requests — every request must be self-contained. A JWT is fine because it's carried by the client on every call and the server can validate/derive identity from it without server-side session storage. It would violate statelessness only if the server kept a session store keyed by a token that the client didn't have to keep resending.</p></div></details>
+        <details class="qa"><summary>Why is PUT required to be idempotent by spec, and what breaks if your implementation doesn't honor that?</summary><div class="qa-answer"><p>Idempotency lets intermediaries (proxies, clients doing automatic retries after a timeout) safely resend a PUT without asking "did the first one actually apply?" If a PUT handler, say, appended to a list instead of replacing it, a network retry after a lost response would silently duplicate data — the client can't tell the difference between "my first request never arrived" and "it arrived but the response was lost," so idempotency is what makes retry-based fault tolerance safe at the HTTP layer.</p></div></details>
+        <details class="qa"><summary>How would you evolve a public REST API without breaking existing consumers — compare URI versioning vs header versioning vs no versioning with additive changes only?</summary><div class="qa-answer"><p><strong>URI versioning</strong> (<code>/v1/</code>, <code>/v2/</code>) is simple and cache-friendly but forces whole-resource duplication for even small breaking changes and pollutes URIs (arguably violating "URI identifies a resource, not a version of an API"). <strong>Header/content-negotiation versioning</strong> (<code>Accept: application/vnd.myapp.v2+json</code>) keeps URIs clean and resource-identity stable, but is harder to test/debug and less cache-friendly. <strong>Additive-only evolution</strong> (only ever add optional fields, never remove/rename) avoids versioning entirely but constrains you long-term and doesn't help with genuinely breaking business-logic changes. Most FAANG-scale public APIs pick URI versioning for its operational simplicity, and layer deprecation policies and contract tests on top rather than trying to avoid versioning altogether.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="create-project">
+    <div class="topic-head"><span class="topic-no">11</span><h2>Creating a Spring Boot Project</h2></div>
+    <p class="topic-sub">Spring Initializr, key starter dependencies chosen for the Accounts microservice, and Maven project structure.</p>
+
+    <h3 class="subhead">Spring Initializr</h3>
+    <p><a href="https://start.spring.io" target="_blank">start.spring.io</a> generates a ready-to-import project skeleton: you pick build tool (Maven/Gradle), language (Java), Spring Boot version, project metadata (group/artifact — e.g. <code>com.eazybytes</code> / <code>accounts</code>), packaging (Jar), Java version, and dependencies.</p>
+
+    <h4 class="minihead">Dependencies selected for the Accounts service</h4>
+    <table>
+      <tr><th>Dependency</th><th>Why it's added</th></tr>
+      <tr><td><code>spring-boot-starter-web</code></td><td>Spring MVC + embedded Tomcat + Jackson for JSON — builds REST controllers</td></tr>
+      <tr><td><code>spring-boot-starter-data-jpa</code></td><td>Spring Data JPA + Hibernate as the JPA provider — entity/repository support</td></tr>
+      <tr><td><code>H2 Database</code></td><td>In-memory relational DB, zero external setup, ideal for local dev/demo</td></tr>
+      <tr><td><code>Lombok</code></td><td>Generates getters/setters/constructors/builder via annotations — removes boilerplate</td></tr>
+      <tr><td><code>Validation</code> (<code>spring-boot-starter-validation</code>)</td><td>Bean Validation (Jakarta Validation / Hibernate Validator) — powers <code>@NotEmpty</code>, <code>@Pattern</code>, etc.</td></tr>
+      <tr><td><code>springdoc-openapi</code> (added manually later)</td><td>Auto-generates OpenAPI/Swagger docs from controllers</td></tr>
+    </table>
+
+    <h3 class="subhead">Generated project structure</h3>
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">structure</div></div>
+      <div class="code-body"><div class="code-pane active"><pre>accounts/
+├── src/main/java/com/eazybytes/accounts/
+│   ├── AccountsApplication.java   <span class="cm">// @SpringBootApplication entry point</span>
+│   ├── controller/                <span class="cm">// @RestController classes</span>
+│   ├── entity/                    <span class="cm">// @Entity JPA classes</span>
+│   ├── repository/                <span class="cm">// Spring Data JPA interfaces</span>
+│   ├── dto/                       <span class="cm">// request/response DTOs</span>
+│   ├── exception/                 <span class="cm">// custom exceptions + @RestControllerAdvice</span>
+│   └── constants/                 <span class="cm">// shared constants</span>
+├── src/main/resources/
+│   ├── application.yml            <span class="cm">// externalized config</span>
+│   └── static/, templates/
+├── src/test/java/...
+└── pom.xml                        <span class="cm">// Maven build file with parent = spring-boot-starter-parent</span></pre></div></div>
+    </div>
+
+    <div class="ann-box">
+      <div class="ann-box-head"><span class="ann-tag">spring-boot-starter-parent</span><span class="ann-loc">pom.xml</span></div>
+      <div class="ann-body"><p>Declared as <code>&lt;parent&gt;</code> in <code>pom.xml</code>. Provides a Maven "dependency management" BOM (Bill of Materials) with pre-vetted, mutually-compatible versions for every Spring Boot-related artifact, plus sensible plugin defaults (e.g. <code>spring-boot-maven-plugin</code> for building an executable "fat jar"). You typically don't specify version numbers for Spring dependencies — the parent supplies them.</p></div>
+    </div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q4-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q4-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q4-common">
+        <details class="qa"><summary>What is Spring Initializr?</summary><div class="qa-answer"><p>A web tool (start.spring.io) and IDE-integrated wizard that scaffolds a Spring Boot project — letting you pick build tool, Spring Boot version, and starter dependencies — and generates a ready-to-run skeleton project with a correctly configured <code>pom.xml</code>/<code>build.gradle</code>.</p></div></details>
+        <details class="qa"><summary>What does spring-boot-starter-parent give you in the pom.xml?</summary><div class="qa-answer"><p>Centralized, version-compatible dependency management for the whole Spring Boot ecosystem plus default plugin configuration, so individual dependencies don't need explicit version tags.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q4-faang">
+        <details class="qa"><summary>What if your company's Maven multi-module project already has its own parent POM — how do you still get Spring Boot's version management?</summary><div class="qa-answer"><p>You can't have two <code>&lt;parent&gt;</code> tags, so instead of inheriting from <code>spring-boot-starter-parent</code>, you import <code>spring-boot-dependencies</code> as a BOM inside <code>&lt;dependencyManagement&gt;</code> with <code>&lt;scope&gt;import&lt;/scope&gt;</code>. This gives you the same curated version alignment without taking over the parent slot, letting your org's own parent POM remain in control of plugin/build conventions.</p></div></details>
+        <details class="qa"><summary>Why does Spring Boot produce an executable "fat/uber jar" instead of a thin jar plus a classpath file?</summary><div class="qa-answer"><p>A fat jar bundles the application classes and all dependency jars (nested) into a single artifact with a custom <code>Launcher</code> class (<code>JarLauncher</code>) that knows how to load nested jars via a custom classloader — because the standard JVM classloader can't load classes from jars-within-a-jar directly. This trades a larger artifact size for massively simpler deployment: one file, <code>java -jar app.jar</code>, no separate dependency-resolution step needed at runtime, which matters a lot for container images and CI/CD pipelines.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="hello-world">
+    <div class="topic-head"><span class="topic-no">12</span><h2>Hello World REST API using @RestController</h2></div>
+    <p class="topic-sub">First controller, request mapping annotations, and how Spring resolves a request to a method.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">SayHelloController.java</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="ann">@RestController</span>
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">SayHelloController</span> {
+
+    <span class="ann">@RequestMapping</span>(value = <span class="str">"/say-hello"</span>, method = RequestMethod.GET)
+    <span class="kw">public</span> String sayHello() {
+        <span class="kw">return</span> <span class="str">"Hello World"</span>;
+    }
+}</pre></div></div>
+    </div>
+
+    <div class="ann-grid">
+      <div class="ann-box">
+        <div class="ann-box-head"><span class="ann-tag">@RestController</span></div>
+        <div class="ann-body"><p>Meta-annotation = <code>@Controller</code> + <code>@ResponseBody</code>. <code>@Controller</code> registers the class as a Spring MVC handler (bean, eligible for request mapping); <code>@ResponseBody</code> tells Spring to serialize the method's return value directly into the HTTP response body (via Jackson to JSON) instead of resolving it as a view name.</p></div>
+      </div>
+      <div class="ann-box">
+        <div class="ann-box-head"><span class="ann-tag">@RequestMapping</span></div>
+        <div class="ann-body"><p>Maps HTTP requests to handler methods/classes. Can specify <code>value</code> (path), <code>method</code> (HTTP verb), <code>consumes</code>/<code>produces</code> (content types). Verbose form — usually replaced by the shorthand verb-specific annotations below.</p>
+        <div class="ann-attrs">
+          <div class="attr-chip"><b>value</b> = path</div>
+          <div class="attr-chip"><b>method</b> = HTTP verb</div>
+          <div class="attr-chip"><b>produces</b> = response content-type</div>
+        </div></div>
+      </div>
+    </div>
+
+    <h4 class="minihead">Shorthand verb annotations (used from CRUD sections onward)</h4>
+    <table>
+      <tr><th>Annotation</th><th>Equivalent to</th></tr>
+      <tr><td><code>@GetMapping</code></td><td><code>@RequestMapping(method = RequestMethod.GET)</code></td></tr>
+      <tr><td><code>@PostMapping</code></td><td><code>@RequestMapping(method = RequestMethod.POST)</code></td></tr>
+      <tr><td><code>@PutMapping</code></td><td><code>@RequestMapping(method = RequestMethod.PUT)</code></td></tr>
+      <tr><td><code>@PatchMapping</code></td><td><code>@RequestMapping(method = RequestMethod.PATCH)</code></td></tr>
+      <tr><td><code>@DeleteMapping</code></td><td><code>@RequestMapping(method = RequestMethod.DELETE)</code></td></tr>
+    </table>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q5-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q5-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q5-common">
+        <details class="qa"><summary>What's the difference between @Controller and @RestController?</summary><div class="qa-answer"><p><code>@Controller</code> methods, by default, return a view name to be resolved by a view resolver (server-side rendering). <code>@RestController</code> = <code>@Controller</code> + <code>@ResponseBody</code>, so every method's return value is written directly to the HTTP response body, typically as JSON — used for building REST APIs.</p></div></details>
+        <details class="qa"><summary>What does @ResponseBody actually do?</summary><div class="qa-answer"><p>It tells Spring MVC to skip view resolution and instead pass the method's return value to an <code>HttpMessageConverter</code> (Jackson's converter, in most Spring Boot apps) which serializes it — typically to JSON — and writes it straight into the response body.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q5-faang">
+        <details class="qa"><summary>How does Spring MVC route an incoming HTTP request to the correct @RestController method internally?</summary><div class="qa-answer"><p>The embedded Tomcat forwards the request to Spring's front controller, <code>DispatcherServlet</code>. It consults a <code>HandlerMapping</code> (specifically <code>RequestMappingHandlerMapping</code>) which, at startup, built a registry of URL-pattern-to-method mappings by scanning all <code>@RequestMapping</code>-derived annotations. The matched method is wrapped as a <code>HandlerMethod</code> and invoked through a <code>HandlerAdapter</code>, which resolves method arguments (via <code>HandlerMethodArgumentResolver</code>s for things like <code>@PathVariable</code>, <code>@RequestBody</code>) and passes the return value to an appropriate <code>HttpMessageConverter</code> for serialization.</p></div></details>
+        <details class="qa"><summary>If two controller methods could match the same URL, how does Spring decide which one wins?</summary><div class="qa-answer"><p>Spring uses a specificity-based comparator (<code>PatternComparator</code> / <code>RequestMappingInfo</code> comparison) — more specific patterns win over wildcard ones (e.g. <code>/accounts/123</code> literal beats <code>/accounts/{id}</code> beats <code>/accounts/**</code>), and mappings that also constrain by HTTP method, content-type (<code>consumes</code>), or <code>Accept</code> header (<code>produces</code>) are preferred over less-constrained ones. Genuinely ambiguous mappings (same path, method, and no differentiating consumes/produces) throw an <code>IllegalStateException</code> at startup rather than silently picking one.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="h2-yaml">
+    <div class="topic-head"><span class="topic-no">13</span><h2>Configuring H2 Database & YAML Properties</h2></div>
+    <p class="topic-sub">Embedded in-memory DB setup, YAML config structure, and the properties that control JPA/Hibernate behavior.</p>
+
+    <h3 class="subhead">Why H2 for local dev</h3>
+    <p><strong>H2</strong> is a lightweight, pure-Java relational database that can run fully in-memory — no install, no external process, data resets on every restart. It ships with a browser-based console (<code>/h2-console</code>) for inspecting tables during development. It's a stand-in for a real production DB (MySQL/Postgres, configured similarly later) that keeps the local dev loop fast.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">application.yml</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="cl">server</span>:
+  <span class="cl">port</span>: <span class="str">8080</span>
+
+<span class="cl">spring</span>:
+  <span class="cl">application</span>:
+    <span class="cl">name</span>: <span class="str">accounts</span>
+  <span class="cl">datasource</span>:
+    <span class="cl">url</span>: <span class="str">jdbc:h2:mem:testdb</span>
+    <span class="cl">driver-class-name</span>: <span class="str">org.h2.Driver</span>
+    <span class="cl">username</span>: <span class="str">sa</span>
+    <span class="cl">password</span>: <span class="str">""</span>
+  <span class="cl">h2</span>:
+    <span class="cl">console</span>:
+      <span class="cl">enabled</span>: <span class="kw">true</span>
+      <span class="cl">path</span>: <span class="str">/h2-console</span>
+  <span class="cl">jpa</span>:
+    <span class="cl">database-platform</span>: <span class="str">org.hibernate.dialect.H2Dialect</span>
+    <span class="cl">show-sql</span>: <span class="kw">true</span>
+    <span class="cl">hibernate</span>:
+      <span class="cl">ddl-auto</span>: <span class="str">update</span></pre></div></div>
+    </div>
+
+    <h4 class="minihead">Key property meanings</h4>
+    <table>
+      <tr><th>Property</th><th>Meaning</th></tr>
+      <tr><td><code>spring.datasource.url</code></td><td>JDBC connection string; <code>jdbc:h2:mem:testdb</code> = in-memory DB named testdb</td></tr>
+      <tr><td><code>spring.h2.console.enabled</code></td><td>Exposes a web UI to run SQL against the running DB — dev-only, never enable in prod</td></tr>
+      <tr><td><code>spring.jpa.show-sql</code></td><td>Logs every generated SQL statement to console — invaluable for debugging N+1 issues</td></tr>
+      <tr><td><code>spring.jpa.hibernate.ddl-auto</code></td><td>Controls schema generation strategy from entities: <code>none</code>, <code>validate</code>, <code>update</code>, <code>create</code>, <code>create-drop</code></td></tr>
+    </table>
+
+    <div class="callout pitfall"><b class="lbl">Interview pitfall</b><p><code>ddl-auto: update</code> is convenient for demos but <strong>never used in production</strong> — it can silently make destructive/unexpected schema changes as entities evolve. Production systems use <code>validate</code> (fail fast if entities don't match schema) combined with a migration tool like <strong>Flyway</strong> or <strong>Liquibase</strong> to apply versioned, reviewed schema changes.</p></div>
+
+    <h3 class="subhead">Why YAML over .properties</h3>
+    <p>YAML supports hierarchical nesting (no repeated prefixes like <code>spring.datasource.url</code>, <code>spring.datasource.username</code> on every line), is more readable for deeply nested config, and supports Spring Profile-specific documents in a single file using <code>---</code> separators with <code>spring.config.activate.on-profile</code>. Functionally, both are just <code>PropertySource</code>s to Spring — it's purely ergonomic, not a capability difference.</p>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q6-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q6-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q6-common">
+        <details class="qa"><summary>What is the H2 database and why is it used in dev/demos?</summary><div class="qa-answer"><p>H2 is a lightweight, embeddable, pure-Java relational database that can run entirely in-memory with zero external setup, making local development and demos fast and self-contained. It's not typically used in production.</p></div></details>
+        <details class="qa"><summary>What does spring.jpa.hibernate.ddl-auto=update do, and why is it risky?</summary><div class="qa-answer"><p>It tells Hibernate to compare entity mappings against the existing schema at startup and automatically apply additive changes (new tables/columns) to match. It's risky in production because it can make unreviewed, potentially destructive schema changes automatically — teams prefer explicit, version-controlled migrations instead.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q6-faang">
+        <details class="qa"><summary>How would you manage schema changes safely across environments in production, and why not just use ddl-auto=validate everywhere?</summary><div class="qa-answer"><p><code>ddl-auto=validate</code> is a safety net (fails fast if entity/schema drift exists) but doesn't create or evolve the schema — you pair it with a migration tool like <strong>Flyway</strong> or <strong>Liquibase</strong> that applies versioned, ordered SQL migration scripts checked into source control and run automatically on startup (or via CI/CD) before the app connects. This gives you an auditable, repeatable, rollback-capable history of schema changes across dev/staging/prod, instead of trusting Hibernate's schema inference — which can't express things like data backfills, column renames (it sees a rename as drop+add), or complex constraint changes.</p></div></details>
+        <details class="qa"><summary>What is Spring's property precedence order — if the same property is set in application.yml, an environment variable, and a command-line argument, which wins?</summary><div class="qa-answer"><p>Spring Boot resolves properties from many <code>PropertySource</code>s in a defined precedence, roughly (highest to lowest): command-line arguments → <code>SPRING_APPLICATION_JSON</code> → servlet init params → JNDI → Java System properties → OS environment variables → profile-specific <code>application-{profile}.yml</code> → base <code>application.yml</code> → <code>@PropertySource</code> annotations → default properties. So a command-line arg overrides an env var, which overrides <code>application.yml</code>. This ordering is exactly what enables the 12-factor pattern of overriding config per-environment without touching the packaged artifact.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="lombok-issue">
+    <div class="topic-head"><span class="topic-no">14</span><h2>IMPORTANT: Lombok Issue in IntelliJ IDEA</h2></div>
+    <p class="topic-sub">Why Lombok needs IDE-level support, and the two-step fix.</p>
+
+    <p><strong>Lombok</strong> works via <strong>annotation processing at compile time</strong> — it plugs into the Java compiler and injects bytecode (getters, setters, constructors, <code>equals</code>/<code>hashCode</code>, builders) that doesn't exist as visible source code. <code>javac</code> handles this natively, but IntelliJ's own incremental compiler and code-analysis engine need to know how to interpret Lombok annotations too, or the IDE will show false "cannot find symbol" errors for methods like <code>getName()</code> even though the project compiles fine on the command line.</p>
+
+    <h4 class="minihead">The fix — two parts</h4>
+    <ol>
+      <li><strong>Install the Lombok plugin</strong>: <code>Settings → Plugins → search "Lombok" → Install</code> — teaches IntelliJ's editor/inspector to understand generated methods.</li>
+      <li><strong>Enable annotation processing</strong>: <code>Settings → Build, Execution, Deployment → Compiler → Annotation Processors → check "Enable annotation processing"</code> — without this, IntelliJ's own build (separate from Maven's) won't run Lombok's processor at all.</li>
+    </ol>
+
+    <div class="callout warn"><b class="lbl">Symptom to recognize</b><p>Project builds fine via <code>mvn compile</code> on the terminal, but IntelliJ underlines every Lombok-generated getter/setter call in red. That mismatch is the signature of this exact issue — Maven's annotation processing works independently of the IDE's own compiler settings.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q7-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q7-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q7-common">
+        <details class="qa"><summary>Why does IntelliJ sometimes show errors for Lombok-generated methods even though the project compiles?</summary><div class="qa-answer"><p>Because IntelliJ's editor uses its own incremental compiler and code analyzer separate from the actual Maven/Gradle build; without the Lombok plugin and annotation processing enabled in IDE settings, it doesn't know Lombok annotations generate real methods, so it flags them as missing even though `mvn compile` succeeds.</p></div></details>
+        <details class="qa"><summary>What two settings fix Lombok support in IntelliJ?</summary><div class="qa-answer"><p>Installing the Lombok plugin, and enabling "Annotation Processing" under Build, Execution, Deployment → Compiler → Annotation Processors.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q7-faang">
+        <details class="qa"><summary>How does Lombok generate code without you ever seeing a generated .java file, unlike tools like MapStruct which produce visible generated sources?</summary><div class="qa-answer"><p>Lombok hooks into the compiler at the AST (Abstract Syntax Tree) level via the pluggable Annotation Processing API (<code>javax.annotation.processing.Processor</code>), but rather than only generating new source files (the API's typical use), it uses internal, version-specific compiler APIs to directly mutate the in-memory AST of the class being compiled during the processing round — inserting method/field nodes before bytecode generation. This is why Lombok is version-coupled to javac/IDE compiler internals and occasionally breaks on new JDK releases, unlike source-generating processors like MapStruct which just emit additional standalone `.java` files through the sanctioned Filer API.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="jpa-entities">
+    <div class="topic-head"><span class="topic-no">15</span><h2>Spring Data JPA — Entities & Repositories</h2></div>
+    <p class="topic-sub">Mapping Java classes to DB tables, and the repository abstraction that eliminates boilerplate DAO code.</p>
+
+    <h3 class="subhead">JPA vs Hibernate vs Spring Data JPA</h3>
+    <table>
+      <tr><th>Layer</th><th>What it is</th></tr>
+      <tr><td><strong>JPA</strong></td><td>Jakarta Persistence API — a <em>specification</em> (interfaces/annotations) for ORM in Java. Not an implementation.</td></tr>
+      <tr><td><strong>Hibernate</strong></td><td>The most common <em>implementation</em> of the JPA spec — does the actual SQL generation, caching, dirty checking. Spring Boot uses Hibernate as the default JPA provider.</td></tr>
+      <tr><td><strong>Spring Data JPA</strong></td><td>A further abstraction <em>on top of</em> JPA that eliminates DAO boilerplate — you declare a repository interface and Spring generates the implementation at runtime via dynamic proxies.</td></tr>
+    </table>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="p1">Customer.java (Entity)</div>
+        <div class="code-tab" data-pane="p2">CustomerRepository.java</div>
+        <div class="code-tab" data-pane="p3">BaseEntity.java</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="p1"><pre><span class="ann">@Entity</span>
+<span class="ann">@Table</span>(name = <span class="str">"customer"</span>)
+<span class="ann">@Getter</span> <span class="ann">@Setter</span> <span class="ann">@ToString</span>
+<span class="ann">@NoArgsConstructor</span> <span class="ann">@AllArgsConstructor</span>
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">Customer</span> <span class="kw">extends</span> BaseEntity {
+
+    <span class="ann">@Id</span>
+    <span class="ann">@GeneratedValue</span>(strategy = GenerationType.IDENTITY)
+    <span class="kw">private</span> Long customerId;
+
+    <span class="kw">private</span> String name;
+    <span class="kw">private</span> String email;
+
+    <span class="ann">@Column</span>(name = <span class="str">"mobile_number"</span>)
+    <span class="kw">private</span> String mobileNumber;
+}</pre></div>
+        <div class="code-pane" id="p2"><pre><span class="ann">@Repository</span>
+<span class="kw">public</span> <span class="kw">interface</span> <span class="cl">CustomerRepository</span> <span class="kw">extends</span> JpaRepository&lt;Customer, Long&gt; {
+
+    <span class="cm">// derived query method — Spring parses the method name at startup</span>
+    <span class="cm">// and builds the SQL, no implementation needed</span>
+    Optional&lt;Customer&gt; findByMobileNumber(String mobileNumber);
+
+    <span class="kw">boolean</span> existsByMobileNumber(String mobileNumber);
+}</pre></div>
+        <div class="code-pane" id="p3"><pre><span class="ann">@MappedSuperclass</span>
+<span class="ann">@Getter</span> <span class="ann">@Setter</span> <span class="ann">@ToString</span>
+<span class="ann">@EntityListeners</span>(AuditingEntityListener.<span class="kw">class</span>)
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">BaseEntity</span> {
+
+    <span class="ann">@CreatedDate</span>
+    <span class="ann">@Column</span>(updatable = <span class="kw">false</span>)
+    <span class="kw">private</span> LocalDateTime createdAt;
+
+    <span class="ann">@CreatedBy</span>
+    <span class="ann">@Column</span>(updatable = <span class="kw">false</span>)
+    <span class="kw">private</span> String createdBy;
+
+    <span class="ann">@LastModifiedDate</span>
+    <span class="kw">private</span> LocalDateTime updatedAt;
+
+    <span class="ann">@LastModifiedBy</span>
+    <span class="kw">private</span> String updatedBy;
+}</pre></div>
+      </div>
+    </div>
+
+    <h3 class="subhead">Annotation reference — Entity mapping</h3>
+    <div class="ann-grid">
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@Entity</span></div><div class="ann-body"><p>Marks a class as a JPA-managed entity — a row in a database table. Requires a no-arg constructor and an <code>@Id</code> field.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@Table</span></div><div class="ann-body"><p>Optional; overrides the default table name (class name) — used here because "customer" is the desired lowercase table name.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@Id</span></div><div class="ann-body"><p>Marks the primary key field.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@GeneratedValue</span></div><div class="ann-body"><p>Delegates PK generation to the DB. <code>strategy = GenerationType.IDENTITY</code> uses the DB's auto-increment column.</p>
+        <div class="ann-attrs">
+          <div class="attr-chip"><b>IDENTITY</b> DB auto-increment</div>
+          <div class="attr-chip"><b>SEQUENCE</b> DB sequence object</div>
+          <div class="attr-chip"><b>AUTO</b> provider decides</div>
+        </div></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@Column</span></div><div class="ann-body"><p>Customizes column mapping — name, nullability, length, uniqueness, updatable/insertable flags. Omit entirely to use field name as column name by default.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@MappedSuperclass</span></div><div class="ann-body"><p>Marks a base class whose fields are inherited into subclass tables (not its own table) — used for shared audit columns across all entities.</p></div></div>
+    </div>
+
+    <h3 class="subhead">Spring Data repository hierarchy</h3>
+    <table>
+      <tr><th>Interface</th><th>Adds</th></tr>
+      <tr><td><code>Repository&lt;T, ID&gt;</code></td><td>Marker interface — no methods</td></tr>
+      <tr><td><code>CrudRepository&lt;T, ID&gt;</code></td><td>Basic CRUD: <code>save</code>, <code>findById</code>, <code>findAll</code>, <code>deleteById</code>, <code>count</code></td></tr>
+      <tr><td><code>PagingAndSortingRepository&lt;T, ID&gt;</code></td><td>Adds <code>findAll(Pageable)</code>, <code>findAll(Sort)</code></td></tr>
+      <tr><td><code>JpaRepository&lt;T, ID&gt;</code></td><td>Adds JPA-specific batch ops (<code>saveAll</code>, <code>flush</code>, <code>deleteAllInBatch</code>) — the one used in practice</td></tr>
+    </table>
+
+    <div class="callout info"><b class="lbl">How derived query methods work</b><p>Spring Data parses method names like <code>findByMobileNumber</code> at application startup using a naming convention parser: <code>findBy</code> + property path (<code>MobileNumber</code> → maps to the <code>mobileNumber</code> field), builds a corresponding JPQL query, and creates a proxy implementation — <strong>no SQL or implementation is written by you.</strong> You can combine conditions: <code>findByNameAndEmail</code>, add ordering: <code>findByNameOrderByCreatedAtDesc</code>, etc.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q8-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q8-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q8-common">
+        <details class="qa"><summary>What's the difference between JPA, Hibernate, and Spring Data JPA?</summary><div class="qa-answer"><p>JPA is a specification for ORM in Java. Hibernate is the concrete implementation of that spec that Spring Boot uses by default. Spring Data JPA is an additional abstraction on top of JPA that auto-generates repository implementations, removing DAO boilerplate.</p></div></details>
+        <details class="qa"><summary>What does @Entity require to work correctly?</summary><div class="qa-answer"><p>A no-argument constructor (JPA instantiates entities via reflection), a field annotated <code>@Id</code> as primary key, and non-final fields/class (Hibernate needs to generate proxies and set fields).</p></div></details>
+        <details class="qa"><summary>How does a method like findByMobileNumber(String) work without you writing a query?</summary><div class="qa-answer"><p>Spring Data JPA parses the method name against a supported keyword grammar at startup, derives the equivalent JPQL query from the property name, and generates a proxy implementation automatically — this is called a "derived query method."</p></div></details>
+      </div>
+      <div class="qa-pane" id="q8-faang">
+        <details class="qa"><summary>Explain what happens under the hood when you call jpaRepository.save() on a new entity vs an existing (already-persisted) one.</summary><div class="qa-answer"><p><code>save()</code> checks whether the entity is "new" (typically: is its <code>@Id</code> field null, or does it implement <code>Persistable</code> with <code>isNew()</code>). If new, Hibernate issues an <code>INSERT</code> (via <code>EntityManager.persist()</code>). If the ID is non-null, Hibernate calls <code>merge()</code>, which first does a <code>SELECT</code> to load the current state into the persistence context if not already managed, copies over the state of the detached entity, and then relies on Hibernate's dirty-checking to issue an <code>UPDATE</code> only for changed fields at flush time — meaning `save()` on an "existing" entity can trigger an extra read you didn't expect if the entity wasn't already attached to the current persistence context.</p></div></details>
+        <details class="qa"><summary>What is the N+1 select problem and how would you detect/fix it in this codebase?</summary><div class="qa-answer"><p>It happens when fetching a list of N parent entities with a lazily-loaded association triggers 1 query for the parents plus N additional queries — one per parent — to fetch each one's association, instead of a single join. You'd detect it via <code>spring.jpa.show-sql=true</code> or a tool like p6spy/Hibernate statistics showing repeated near-identical SELECTs. Fixes: use <code>JOIN FETCH</code> in a custom JPQL query, an <code>@EntityGraph</code> annotation on the repository method to eagerly fetch specific associations only where needed, or batch fetching (<code>hibernate.default_batch_fetch_size</code>) as a blanket mitigation — while avoiding globally switching associations to `FetchType.EAGER`, which just moves the problem to every query regardless of need.</p></div></details>
+        <details class="qa"><summary>Why does Spring Data JPA prefer interface-based repositories over you writing a DAO class — how is the implementation actually created at runtime?</summary><div class="qa-answer"><p>At context startup, Spring Data's <code>JpaRepositoryFactoryBean</code> scans for interfaces extending <code>Repository</code>/<code>JpaRepository</code> and, for each, creates a JDK dynamic proxy (or CGLIB where needed) backed by a default implementation class (<code>SimpleJpaRepository</code>) plus method interceptors that route derived-query-method calls through a query-derivation engine and any custom <code>@Query</code>-annotated methods through JPQL/native execution. This means zero hand-written implementation classes, consistent transactional behavior (each method wrapped with `@Transactional` semantics from `SimpleJpaRepository`), and a uniform extension point (custom repository fragments) — at the cost of some "magic" that's harder to step through in a debugger than a plain DAO class.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="dto-intro">
+    <div class="topic-head"><span class="topic-no">16</span><h2>Introduction to DTO (Data Transfer Object) Pattern</h2></div>
+    <p class="topic-sub">Why entities should never be exposed directly through REST controllers.</p>
+
+    <h3 class="subhead">The problem DTOs solve</h3>
+    <p>An <code>@Entity</code> class is a persistence artifact — its shape is dictated by database structure (auditing columns, lazy associations, JPA proxy internals). A REST API's request/response shape is a <strong>contract with external clients</strong>. Coupling these two means:</p>
+    <ul>
+      <li>Any schema change (renaming a column, adding an internal field) breaks API consumers.</li>
+      <li>Internal/sensitive fields (audit columns, other linked entities) can leak accidentally into JSON responses.</li>
+      <li>Serializing a lazily-loaded association outside a transaction throws <code>LazyInitializationException</code>.</li>
+      <li>Validation rules that only make sense for input (e.g. "email required on create") get muddled with persistence concerns.</li>
+    </ul>
+
+    <div class="callout info"><b class="lbl">Definition</b><p>A <strong>DTO</strong> is a plain object used purely to carry data between layers/processes — here, between the client and the controller. It has no persistence annotations and no business behavior, just fields (+ validation annotations) shaped exactly as the API contract requires.</p></div>
+
+    <h4 class="minihead">Entity ←→ DTO mapping approaches</h4>
+    <table>
+      <tr><th>Approach</th><th>Trade-off</th></tr>
+      <tr><td>Manual mapping (constructor/setters)</td><td>Simple, explicit, no extra dependency — but verbose and error-prone as fields grow</td></tr>
+      <tr><td><strong>BeanUtils.copyProperties()</strong></td><td>Used in this course — reflection-based field copy by matching names; fast to write, but silent on typos/type mismatches, and copies only same-named fields</td></tr>
+      <tr><td>MapStruct</td><td>Compile-time generated mapper (like Lombok) — type-safe, fast, no reflection at runtime, but adds a build-time dependency</td></tr>
+      <tr><td>ModelMapper</td><td>Reflection-based, more configurable than BeanUtils but slower</td></tr>
+    </table>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">Mapping example</div></div>
+      <div class="code-body"><div class="code-pane active"><pre>Customer customer = <span class="kw">new</span> Customer();
+BeanUtils.copyProperties(customerDto, customer);
+<span class="cm">// copies matching-named fields from customerDto → customer</span>
+<span class="cm">// fields with no match on the target are silently skipped</span></pre></div></div>
+    </div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q9-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q9-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q9-common">
+        <details class="qa"><summary>What is a DTO and why not just return the @Entity from the controller?</summary><div class="qa-answer"><p>A DTO is a plain data-carrier object shaped for the API contract. Returning entities directly couples your DB schema to your public API, risks leaking internal fields, and can throw LazyInitializationException when serializing associations outside a transaction — DTOs decouple persistence shape from API shape.</p></div></details>
+        <details class="qa"><summary>What does BeanUtils.copyProperties do?</summary><div class="qa-answer"><p>It uses reflection to copy field values from a source object to a target object where property names (and compatible types) match, saving you from writing manual getter/setter chains for mapping.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q9-faang">
+        <details class="qa"><summary>What are the risks of using BeanUtils.copyProperties at scale, and when would you switch to MapStruct?</summary><div class="qa-answer"><p><code>BeanUtils.copyProperties</code> is reflection-based, so it's slower under high-throughput mapping, fails silently on typo'd or type-mismatched field names (no compile-time check), and doesn't handle nested/collection mapping well. MapStruct generates plain Java mapping code at compile time (like Lombok), so mismatches are compile errors, performance is comparable to hand-written code, and nested object graphs are handled cleanly via composed mappers. Teams typically switch once mapping logic grows complex enough that silent reflection failures become a real production risk, or once profiling shows mapping overhead matters.</p></div></details>
+        <details class="qa"><summary>In a microservices system, should the DTO layer also be the versioning boundary for your public API?</summary><div class="qa-answer"><p>Yes conceptually — DTOs are exactly where you'd introduce a `v2` variant of a response shape without touching the entity or internal service logic at all, which is the whole point of decoupling persistence from contract. In practice, teams often keep one DTO set per API version (`AccountsDtoV1`, `AccountsDtoV2`) or use versioned controller packages, and the mapping layer (MapStruct/manual) becomes the place where backward compatibility logic — defaulting new fields, transforming renamed fields — actually lives, keeping that complexity out of both the entity and the client-facing version-specific model.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="dto-accounts">
+    <div class="topic-head"><span class="topic-no">17</span><h2>Creating DTOs Inside Accounts Microservice</h2></div>
+    <p class="topic-sub">Concrete DTO classes used across the Accounts CRUD APIs, and how @Schema annotations double as both validation-adjacent docs and Swagger metadata.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="d1">CustomerDto.java</div>
+        <div class="code-tab" data-pane="d2">AccountsDto.java</div>
+        <div class="code-tab" data-pane="d3">ResponseDto.java</div>
+        <div class="code-tab" data-pane="d4">ErrorResponseDto.java</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="d1"><pre><span class="ann">@Data</span>
+<span class="ann">@Schema</span>(
+    name = <span class="str">"Customer"</span>,
+    description = <span class="str">"Schema to hold Customer and Account information"</span>
+)
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">CustomerDto</span> {
+
+    <span class="ann">@NotEmpty</span>(message = <span class="str">"Name cannot be a null or empty"</span>)
+    <span class="ann">@Size</span>(min = 5, max = 30, message = <span class="str">"length must be between 5 and 30"</span>)
+    <span class="ann">@Schema</span>(description = <span class="str">"Name of the customer"</span>, example = <span class="str">"Eazy Bytes"</span>)
+    <span class="kw">private</span> String name;
+
+    <span class="ann">@NotEmpty</span> <span class="ann">@Email</span>(message = <span class="str">"Email address is not valid"</span>)
+    <span class="kw">private</span> String email;
+
+    <span class="ann">@Pattern</span>(regexp = <span class="str">"(^$|[0-9]{10})"</span>, message = <span class="str">"Mobile number must be 10 digits"</span>)
+    <span class="kw">private</span> String mobileNumber;
+
+    <span class="ann">@Valid</span>
+    <span class="kw">private</span> AccountsDto accountsDto;
+}</pre></div>
+        <div class="code-pane" id="d2"><pre><span class="ann">@Data</span>
+<span class="ann">@Schema</span>(name = <span class="str">"Accounts"</span>, description = <span class="str">"Schema to hold Account information"</span>)
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">AccountsDto</span> {
+
+    <span class="ann">@NotEmpty</span>
+    <span class="ann">@Pattern</span>(regexp = <span class="str">"(^$|[0-9]{10})"</span>)
+    <span class="kw">private</span> Long accountNumber;
+
+    <span class="ann">@NotEmpty</span>
+    <span class="kw">private</span> String accountType;
+
+    <span class="ann">@NotEmpty</span>
+    <span class="kw">private</span> String branchAddress;
+}</pre></div>
+        <div class="code-pane" id="d3"><pre><span class="ann">@Data</span> <span class="ann">@AllArgsConstructor</span>
+<span class="ann">@Schema</span>(name = <span class="str">"Response"</span>, description = <span class="str">"Standard success response"</span>)
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">ResponseDto</span> {
+
+    <span class="ann">@Schema</span>(description = <span class="str">"Status code"</span>, example = <span class="str">"201"</span>)
+    <span class="kw">private</span> String statusCode;
+
+    <span class="ann">@Schema</span>(description = <span class="str">"Status message"</span>, example = <span class="str">"Account created"</span>)
+    <span class="kw">private</span> String statusMsg;
+}</pre></div>
+        <div class="code-pane" id="d4"><pre><span class="ann">@Data</span> <span class="ann">@AllArgsConstructor</span>
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">ErrorResponseDto</span> {
+    <span class="kw">private</span> String apiPath;
+    <span class="kw">private</span> HttpStatus errorCode;
+    <span class="kw">private</span> String errorMessage;
+    <span class="kw">private</span> LocalDateTime errorTime;
+}</pre></div>
+      </div>
+    </div>
+
+    <div class="callout info"><b class="lbl">Design note</b><p><code>CustomerDto</code> nests <code>AccountsDto</code> with <code>@Valid</code> so that a single <code>POST /api/create</code> can accept customer + initial account details in one payload, and cascaded Bean Validation actually validates the nested object (without <code>@Valid</code> on the field, nested validation annotations are silently skipped).</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q10-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q10-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q10-common">
+        <details class="qa"><summary>Why does CustomerDto have a @Valid annotation on the nested AccountsDto field?</summary><div class="qa-answer"><p>Bean Validation does not cascade into nested objects automatically — without `@Valid` on the field, validation annotations inside `AccountsDto` would be silently ignored when validating a `CustomerDto` instance. `@Valid` tells the validator to recurse into that nested object too.</p></div></details>
+        <details class="qa"><summary>Why have a separate ErrorResponseDto instead of reusing ResponseDto for errors?</summary><div class="qa-answer"><p>Success and error responses carry fundamentally different information (a status code/message vs. an API path, HTTP error status, message, and timestamp for debugging) — separate DTOs keep each response shape precise and self-documenting rather than one shape with a bunch of nullable, situationally-unused fields.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q10-faang">
+        <details class="qa"><summary>Should request DTOs and response DTOs for the same resource be the same class? What breaks if you reuse one?</summary><div class="qa-answer"><p>Generally no — request and response often diverge (e.g. a create request has no ID yet, a response includes server-generated fields like `accountNumber`, `createdAt`; an update might allow only a subset of fields to change). Reusing one DTO for both forces every field to be optional/nullable to satisfy both directions, which weakens validation precision (you can't mark a field `@NotEmpty` if it's legitimately absent on create but required on response) and makes the contract ambiguous for API consumers reading generated OpenAPI docs. Splitting into `*Request`/`*Response` DTOs (or per-operation DTOs) keeps validation tight and documentation accurate at the cost of some mapping duplication.</p></div></details>
+        <details class="qa"><summary>Where should cross-field validation live — e.g. "if accountType is SAVINGS, minBalance must be non-null"?</summary><div class="qa-answer"><p>Bean Validation's built-in annotations are per-field; cross-field rules need either a custom class-level constraint annotation (implementing `ConstraintValidator` at the class level, e.g. `@ValidAccountRules` on the DTO) or, for rules that depend on business/DB state (not just the DTO's own fields), explicit checks in the service layer rather than the validation framework, since Bean Validation runs before any service logic and shouldn't reach into repositories. The rule of thumb: pure structural/data-shape rules → Bean Validation (built-in or custom constraint); anything requiring a DB lookup or business context → service-layer validation with a domain-specific exception.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="create-api">
+    <div class="topic-head"><span class="topic-no">18-19</span><h2>CREATE API Inside Accounts Microservice</h2></div>
+    <p class="topic-sub">Full POST endpoint: controller → service interface → service impl → repository, with duplicate-check business logic.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="c1">AccountsController.java</div>
+        <div class="code-tab" data-pane="c2">IAccountsService.java</div>
+        <div class="code-tab" data-pane="c3">AccountsServiceImpl.java</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="c1"><pre><span class="ann">@RestController</span>
+<span class="ann">@RequestMapping</span>(path = <span class="str">"/api"</span>, produces = MediaType.APPLICATION_JSON_VALUE)
+<span class="ann">@AllArgsConstructor</span>
+<span class="ann">@Validated</span>
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">AccountsController</span> {
+
+    <span class="kw">private</span> <span class="kw">final</span> IAccountsService iAccountsService;
+
+    <span class="ann">@PostMapping</span>(<span class="str">"/create"</span>)
+    <span class="kw">public</span> ResponseEntity&lt;ResponseDto&gt; createAccount(
+            <span class="ann">@Valid</span> <span class="ann">@RequestBody</span> CustomerDto customerDto) {
+        iAccountsService.createAccount(customerDto);
+        <span class="kw">return</span> ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(<span class="kw">new</span> ResponseDto(AccountsConstants.STATUS_201, AccountsConstants.MESSAGE_201));
+    }
+}</pre></div>
+        <div class="code-pane" id="c2"><pre><span class="kw">public</span> <span class="kw">interface</span> <span class="cl">IAccountsService</span> {
+
+    <span class="cm">// programming to an interface — controller depends on this, not the impl,</span>
+    <span class="cm">// enabling loose coupling + easy mocking in unit tests</span>
+    <span class="kw">void</span> createAccount(CustomerDto customerDto);
+}</pre></div>
+        <div class="code-pane" id="c3"><pre><span class="ann">@Service</span>
+<span class="ann">@AllArgsConstructor</span>
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">AccountsServiceImpl</span> <span class="kw">implements</span> IAccountsService {
+
+    <span class="kw">private</span> <span class="kw">final</span> CustomerRepository customerRepository;
+    <span class="kw">private</span> <span class="kw">final</span> AccountsRepository accountsRepository;
+
+    <span class="ann">@Override</span>
+    <span class="kw">public</span> <span class="kw">void</span> createAccount(CustomerDto customerDto) {
+        Customer customer = <span class="kw">new</span> Customer();
+        BeanUtils.copyProperties(customerDto, customer);
+
+        Optional&lt;Customer&gt; optionalCustomer =
+                customerRepository.findByMobileNumber(customerDto.getMobileNumber());
+        <span class="kw">if</span> (optionalCustomer.isPresent()) {
+            <span class="kw">throw</span> <span class="kw">new</span> CustomerAlreadyExistsException(
+                <span class="str">"Customer already registered with given mobileNumber "</span>
+                    + customerDto.getMobileNumber());
+        }
+
+        customer.setCreatedAt(LocalDateTime.now());
+        customer.setCreatedBy(<span class="str">"Anonymous"</span>);
+        Customer savedCustomer = customerRepository.save(customer);
+
+        accountsRepository.save(createNewAccount(savedCustomer));
+    }
+
+    <span class="kw">private</span> Accounts createNewAccount(Customer customer) {
+        Accounts newAccount = <span class="kw">new</span> Accounts();
+        newAccount.setCustomerId(customer.getCustomerId());
+        Long randomAccNumber = 1000000000L + <span class="kw">new</span> Random().nextInt(900000000);
+        newAccount.setAccountNumber(randomAccNumber);
+        newAccount.setAccountType(AccountsConstants.SAVINGS);
+        newAccount.setBranchAddress(AccountsConstants.ADDRESS);
+        newAccount.setCreatedAt(LocalDateTime.now());
+        newAccount.setCreatedBy(<span class="str">"Anonymous"</span>);
+        <span class="kw">return</span> newAccount;
+    }
+}</pre></div>
+      </div>
+    </div>
+
+    <h3 class="subhead">Annotation reference</h3>
+    <div class="ann-grid">
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@RequestBody</span></div><div class="ann-body"><p>Deserializes the incoming HTTP request body (JSON) into the annotated method parameter using an <code>HttpMessageConverter</code> (Jackson).</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@Valid</span></div><div class="ann-body"><p>Triggers Bean Validation on the annotated argument <em>before</em> the controller method body runs. On failure, throws <code>MethodArgumentNotValidException</code> — caught by the global exception handler (section 23).</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@Service</span></div><div class="ann-body"><p>Stereotype annotation marking a class as a service-layer Spring bean, picked up by <code>@ComponentScan</code>. Semantically signals business-logic layer (functionally identical to <code>@Component</code>, but improves readability and enables layer-specific AOP/exception translation).</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@AllArgsConstructor</span></div><div class="ann-body"><p>Lombok — generates a constructor with one parameter per field. Combined with <code>final</code> fields, this is how <strong>constructor injection</strong> is done without writing the constructor by hand — Spring auto-detects a single constructor and injects dependencies through it (no <code>@Autowired</code> needed since Spring 4.3+ for single-constructor classes).</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@Validated</span></div><div class="ann-box-head"></div><div class="ann-body"><p>Spring's variant of <code>javax/jakarta.validation.Valid</code>, applied at the class level here to enable validation of path variables/request params (not just <code>@RequestBody</code>) and to support validation groups.</p></div></div>
+    </div>
+
+    <div class="callout warn"><b class="lbl">Constructor injection vs field injection</b><p>Using <code>@AllArgsConstructor</code> with <code>final</code> fields (constructor injection) over <code>@Autowired</code> on fields directly is the recommended practice: it makes dependencies explicit and immutable, fails fast at startup if a bean is missing, and makes the class trivially unit-testable (just call the constructor with mocks) without needing a Spring context or reflection-based injection.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q11-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q11-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q11-common">
+        <details class="qa"><summary>What does @Valid on a @RequestBody parameter do, and what happens if validation fails?</summary><div class="qa-answer"><p>It runs Bean Validation against the deserialized object using the constraint annotations on its fields before the controller method executes. If any constraint fails, Spring throws `MethodArgumentNotValidException`, which — if you have a `@RestControllerAdvice` — is caught and turned into a structured error response instead of reaching your method body.</p></div></details>
+        <details class="qa"><summary>Why does the controller depend on an interface (IAccountsService) instead of the implementation class directly?</summary><div class="qa-answer"><p>This follows the Dependency Inversion Principle — the controller is decoupled from a specific implementation, making it easy to swap implementations or, more practically, to mock the service in controller unit tests without spinning up real business logic or a database.</p></div></details>
+        <details class="qa"><summary>Why prefer constructor injection (via @AllArgsConstructor) over field injection with @Autowired?</summary><div class="qa-answer"><p>Constructor injection allows fields to be `final` (immutable, thread-safe by construction), makes dependencies explicit in the constructor signature, fails fast at context startup if a dependency can't be satisfied, and is much easier to unit test since you can instantiate the class directly with mocks — no Spring context needed.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q11-faang">
+        <details class="qa"><summary>The createAccount method does a findByMobileNumber check then a save — is this safe under concurrent requests with the same mobile number?</summary><div class="qa-answer"><p>No — this is a classic <strong>check-then-act race condition</strong. Two concurrent requests with the same mobile number can both pass the `existsBy`/`findBy` check before either has committed a save, resulting in two customer rows for the same mobile number. The robust fix is a <strong>unique database constraint</strong> on `mobile_number` (defense at the data layer, not just application logic), catching the resulting `DataIntegrityViolationException` and translating it into the same `CustomerAlreadyExistsException` for a clean API response — application-level existence checks alone are a UX nicety (fail fast, friendly message) but not a correctness guarantee under concurrency.</p></div></details>
+        <details class="qa"><summary>This method saves a Customer and then an Accounts row as two separate repository calls — what guarantees they're atomic?</summary><div class="qa-answer"><p>By itself, nothing in this code guarantees atomicity — if the process crashes between the two `save()` calls, you'd get an orphaned customer with no account. In this codebase it's implicitly relying on the service method being wrapped by Spring's declarative transaction management: if `@Transactional` is applied at the service (class or method) level, both `save()` calls participate in a single JPA/JDBC transaction, and either both commit or both roll back on exception. Note: with `spring-boot-starter-data-jpa`, `SimpleJpaRepository`'s own methods are individually transactional by default, but that does NOT make two separate repository calls in your own service method atomic together — you need an explicit `@Transactional` on the service method itself for that.</p></div></details>
+        <details class="qa"><summary>Why return ResponseEntity<ResponseDto> instead of just ResponseDto from the controller method?</summary><div class="qa-answer"><p><code>ResponseEntity</code> gives explicit control over the full HTTP response — status code, headers, and body — rather than always defaulting to 200 OK. Returning a bare DTO forces you to rely on `@ResponseStatus` annotations or exception-driven status codes for anything other than 200, which is less flexible when the same method might need to return 201 on create, or when you want to add response headers (e.g. a `Location` header pointing to the newly created resource, which is itself a REST best practice for 201 responses).</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="read-api">
+    <div class="topic-head"><span class="topic-no">20</span><h2>READ API Inside Accounts Microservice</h2></div>
+    <p class="topic-sub">GET by query param, mapping entity → response DTO, and handling "not found."</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="r1">Controller method</div>
+        <div class="code-tab" data-pane="r2">Service impl method</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="r1"><pre><span class="ann">@GetMapping</span>(<span class="str">"/fetch"</span>)
+<span class="kw">public</span> ResponseEntity&lt;CustomerDto&gt; fetchAccountDetails(
+        <span class="ann">@RequestParam</span>
+        <span class="ann">@Pattern</span>(regexp = <span class="str">"(^$|[0-9]{10})"</span>, message = <span class="str">"Mobile number must be 10 digits"</span>)
+        String mobileNumber) {
+    CustomerDto customerDto = iAccountsService.fetchAccount(mobileNumber);
+    <span class="kw">return</span> ResponseEntity.status(HttpStatus.OK).body(customerDto);
+}</pre></div>
+        <div class="code-pane" id="r2"><pre><span class="ann">@Override</span>
+<span class="kw">public</span> CustomerDto fetchAccount(String mobileNumber) {
+    Customer customer = customerRepository.findByMobileNumber(mobileNumber)
+        .orElseThrow(() -> <span class="kw">new</span> ResourceNotFoundException(
+            <span class="str">"Customer"</span>, <span class="str">"mobileNumber"</span>, mobileNumber));
+
+    Accounts accounts = accountsRepository.findByCustomerId(customer.getCustomerId())
+        .orElseThrow(() -> <span class="kw">new</span> ResourceNotFoundException(
+            <span class="str">"Account"</span>, <span class="str">"customerId"</span>, customer.getCustomerId().toString()));
+
+    CustomerDto customerDto = <span class="kw">new</span> CustomerDto();
+    BeanUtils.copyProperties(customer, customerDto);
+    customerDto.setAccountsDto(AccountsMapper.mapToAccountsDto(accounts, <span class="kw">new</span> AccountsDto()));
+    <span class="kw">return</span> customerDto;
+}</pre></div>
+      </div>
+    </div>
+
+    <div class="ann-box">
+      <div class="ann-box-head"><span class="ann-tag">@RequestParam</span></div>
+      <div class="ann-body"><p>Binds a query string parameter (<code>?mobileNumber=...</code>) to a method argument. Required by default (throws <code>MissingServletRequestParameterException</code> if absent) unless <code>required = false</code> is set. Contrast with <code>@PathVariable</code>, which binds a URI template segment like <code>/accounts/{id}</code>.</p></div>
+    </div>
+
+    <div class="callout info"><b class="lbl">Why Optional + orElseThrow, not null checks</b><p>Spring Data JPA's <code>findBy...</code> methods return <code>Optional&lt;T&gt;</code> instead of a nullable <code>T</code> precisely to force explicit handling of the "not found" case at the call site. <code>.orElseThrow(...)</code> is the idiomatic way to convert an absent Optional straight into a meaningful domain exception, rather than risking a `NullPointerException` deeper in the code.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q12-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q12-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q12-common">
+        <details class="qa"><summary>Difference between @RequestParam and @PathVariable?</summary><div class="qa-answer"><p><code>@RequestParam</code> binds query string parameters (`?key=value`), typically used for optional filters/search criteria. `@PathVariable` binds a segment of the URI path itself (`/accounts/{id}`), typically used to identify a specific resource.</p></div></details>
+        <details class="qa"><summary>Why does the repository method return Optional<Customer> instead of Customer?</summary><div class="qa-answer"><p>To force the caller to explicitly handle the "not found" case rather than risking a NullPointerException — `Optional` makes absence part of the type signature, and `.orElseThrow()` cleanly converts that into a meaningful exception.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q12-faang">
+        <details class="qa"><summary>Should GET /api/fetch?mobileNumber=... really use a query param instead of a path variable like GET /api/customers/{mobileNumber}?</summary><div class="qa-answer"><p>REST convention favors path variables for identifying a specific resource by a stable identifier (`/customers/{mobileNumber}` reads as "the customer resource identified by this mobile number"), and query params for filtering/searching a collection (`/customers?city=...`). Using a query param here for a single-resource lookup is a minor deviation from idiomatic REST design — acceptable in a course/demo, but in a FAANG-style API review this would likely be flagged, especially since mobile number is being used as a de facto resource identifier.</p></div></details>
+        <details class="qa"><summary>The fetch flow does two separate repository lookups (customer, then account) — how would you avoid the extra round trip at scale?</summary><div class="qa-answer"><p>Options in increasing complexity: (1) a single JPQL query joining `Customer` and `Accounts` on `customerId` and projecting directly into a DTO (constructor expression or `@EntityGraph`), collapsing two round-trips into one; (2) if `Accounts` is a JPA association on `Customer` (e.g. `@OneToOne`), fetch it eagerly via `JOIN FETCH` in a custom query rather than two separate repository calls; (3) at genuinely high scale, consider a read-optimized cache (e.g. Redis) keyed by mobile number holding the pre-joined DTO, invalidated on writes — but that's usually premature for a lookup this cheap unless profiling shows it's a hot path.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="update-api">
+    <div class="topic-head"><span class="topic-no">21</span><h2>UPDATE API Inside Accounts Microservice</h2></div>
+    <p class="topic-sub">PUT semantics — full-object replace, keyed by embedded account number.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">Controller + service</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="ann">@PutMapping</span>(<span class="str">"/update"</span>)
+<span class="kw">public</span> ResponseEntity&lt;ResponseDto&gt; updateAccountDetails(
+        <span class="ann">@Valid</span> <span class="ann">@RequestBody</span> CustomerDto customerDto) {
+    <span class="kw">boolean</span> isUpdated = iAccountsService.updateAccount(customerDto);
+    <span class="kw">if</span> (isUpdated) {
+        <span class="kw">return</span> ResponseEntity.status(HttpStatus.OK)
+            .body(<span class="kw">new</span> ResponseDto(AccountsConstants.STATUS_200, AccountsConstants.MESSAGE_200));
+    } <span class="kw">else</span> {
+        <span class="kw">return</span> ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
+            .body(<span class="kw">new</span> ResponseDto(AccountsConstants.STATUS_417, AccountsConstants.MESSAGE_417_UPDATE));
+    }
+}
+
+<span class="cm">// service impl</span>
+<span class="ann">@Override</span>
+<span class="kw">public</span> <span class="kw">boolean</span> updateAccount(CustomerDto customerDto) {
+    <span class="kw">boolean</span> isUpdated = <span class="kw">false</span>;
+    AccountsDto accountsDto = customerDto.getAccountsDto();
+    <span class="kw">if</span> (accountsDto != <span class="kw">null</span>) {
+        Accounts accounts = accountsRepository.findById(accountsDto.getAccountNumber())
+            .orElseThrow(() -> <span class="kw">new</span> ResourceNotFoundException(
+                <span class="str">"Account"</span>, <span class="str">"AccountNumber"</span>, accountsDto.getAccountNumber().toString()));
+
+        AccountsMapper.mapToAccounts(accountsDto, accounts);
+        accounts = accountsRepository.save(accounts);
+
+        Long customerId = accounts.getCustomerId();
+        Customer customer = customerRepository.findById(customerId)
+            .orElseThrow(() -> <span class="kw">new</span> ResourceNotFoundException(
+                <span class="str">"Customer"</span>, <span class="str">"CustomerID"</span>, customerId.toString()));
+        BeanUtils.copyProperties(customerDto, customer);
+        customerRepository.save(customer);
+        isUpdated = <span class="kw">true</span>;
+    }
+    <span class="kw">return</span> isUpdated;
+}</pre></div></div>
+    </div>
+
+    <div class="callout warn"><b class="lbl">Why findById → save(), not a raw UPDATE</b><p>Because JPA/Hibernate needs the entity to be a <strong>managed entity</strong> (attached to the persistence context) for its automatic <strong>dirty checking</strong> to detect field changes and generate the correct <code>UPDATE</code> SQL at flush/commit time. Loading first (rather than constructing a detached entity with just the ID and calling save) also ensures optimistic locking/versioning (if used) sees the correct current state, and avoids accidentally nulling out fields not present in the incoming DTO.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q13-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q13-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q13-common">
+        <details class="qa"><summary>Why does the update flow call findById before save() instead of just calling save() with the new data directly?</summary><div class="qa-answer"><p>Loading the entity first attaches it to Hibernate's persistence context, so subsequent field changes are automatically detected via dirty checking and translated into an UPDATE statement for exactly the changed columns. Constructing a detached entity from scratch and saving it risks overwriting fields not included in the incoming payload with nulls.</p></div></details>
+        <details class="qa"><summary>Why does this endpoint return HTTP 417 on failure instead of 400 or 404?</summary><div class="qa-answer"><p>It's a design choice in this course to signal "the update could not be completed as expected" distinctly from validation errors (400) — though in stricter REST design, a more conventional choice would be 404 if the account genuinely wasn't found, since 417 (Expectation Failed) is unusual for this scenario and can confuse API consumers.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q13-faang">
+        <details class="qa"><summary>Is this update endpoint truly idempotent, per PUT's contract?</summary><div class="qa-answer"><p>Yes in effect — calling it repeatedly with the same payload results in the same final state each time (it fully overwrites the targeted fields based on account number), which satisfies PUT's idempotency contract even though the underlying implementation issues an UPDATE each time rather than literally doing nothing on repeat calls. Idempotency is about the *outcome* being the same, not about whether the server does identical work each time.</p></div></details>
+        <details class="qa"><summary>Two concurrent PUT requests update the same account with different data — what happens, and how would you prevent a lost update?</summary><div class="qa-answer"><p>Without extra protection, this is a classic <strong>lost update</strong> race: both requests load the same row, both compute an update, and whichever commits last silently overwrites the other's change with no error. The standard JPA fix is <strong>optimistic locking</strong> — add a `@Version` field to the entity; Hibernate includes it in the `WHERE` clause of the `UPDATE` and increments it on each write, so if a concurrent transaction already bumped the version, the second `UPDATE` affects zero rows and Hibernate throws `OptimisticLockException`, which the controller can translate into a 409 Conflict asking the client to retry with fresh data. Pessimistic locking (`SELECT ... FOR UPDATE` via `@Lock(LockModeType.PESSIMISTIC_WRITE)`) is the alternative when conflicts are expected to be frequent and you'd rather block than retry.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="delete-api">
+    <div class="topic-head"><span class="topic-no">22</span><h2>DELETE API Inside Accounts Microservice</h2></div>
+    <p class="topic-sub">DELETE semantics and cascading deletion of related rows.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">Controller + service</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="ann">@DeleteMapping</span>(<span class="str">"/delete"</span>)
+<span class="kw">public</span> ResponseEntity&lt;ResponseDto&gt; deleteAccountDetails(
+        <span class="ann">@RequestParam</span>
+        <span class="ann">@Pattern</span>(regexp = <span class="str">"(^$|[0-9]{10})"</span>, message = <span class="str">"Mobile number must be 10 digits"</span>)
+        String mobileNumber) {
+    <span class="kw">boolean</span> isDeleted = iAccountsService.deleteAccount(mobileNumber);
+    <span class="kw">if</span> (isDeleted) {
+        <span class="kw">return</span> ResponseEntity.status(HttpStatus.OK)
+            .body(<span class="kw">new</span> ResponseDto(AccountsConstants.STATUS_200, AccountsConstants.MESSAGE_200));
+    } <span class="kw">else</span> {
+        <span class="kw">return</span> ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
+            .body(<span class="kw">new</span> ResponseDto(AccountsConstants.STATUS_417, AccountsConstants.MESSAGE_417_DELETE));
+    }
+}
+
+<span class="cm">// service impl</span>
+<span class="ann">@Override</span>
+<span class="kw">public</span> <span class="kw">boolean</span> deleteAccount(String mobileNumber) {
+    Customer customer = customerRepository.findByMobileNumber(mobileNumber)
+        .orElseThrow(() -> <span class="kw">new</span> ResourceNotFoundException(
+            <span class="str">"Customer"</span>, <span class="str">"mobileNumber"</span>, mobileNumber));
+    accountsRepository.deleteByCustomerId(customer.getCustomerId());
+    customerRepository.deleteById(customer.getCustomerId());
+    <span class="kw">return</span> <span class="kw">true</span>;
+}</pre></div></div>
+    </div>
+
+    <div class="callout pitfall"><b class="lbl">Ordering matters</b><p>Accounts must be deleted <em>before</em> the customer if there's a foreign key from <code>accounts.customer_id → customer.customer_id</code> without cascade delete configured at the DB level — deleting the parent first would violate the FK constraint. This method-level ordering is a manual substitute for a DB-level <code>ON DELETE CASCADE</code> or a JPA-level <code>cascade = CascadeType.REMOVE</code> on a mapped relationship.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q14-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q14-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q14-common">
+        <details class="qa"><summary>Why is accountsRepository.deleteByCustomerId called before customerRepository.deleteById?</summary><div class="qa-answer"><p>Because `accounts` has a foreign key referencing `customer`, the child rows must be removed first — otherwise the delete on `customer` would violate the FK constraint (assuming no DB-level cascade delete is configured).</p></div></details>
+        <details class="qa"><summary>Should DELETE return 200, 204, or something else on success?</summary><div class="qa-answer"><p>Both 200 OK (with a confirmation body) and 204 No Content (empty body, since there's nothing meaningful left to return once a resource is gone) are acceptable REST conventions — 204 is arguably more precise since a deleted resource has no representation to send back.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q14-faang">
+        <details class="qa"><summary>This delete isn't wrapped visibly in a transaction — what happens if the process crashes between the two delete calls?</summary><div class="qa-answer"><p>Without `@Transactional` on the service method, each repository call commits independently — a crash between the two leaves accounts deleted but the customer row still present, an inconsistent state. Wrapping the method in `@Transactional` ensures both deletes are part of one atomic unit: either both succeed or, on any exception, both roll back, leaving the pre-delete state intact. This is a good example of why "looks like two calls, must need a transaction" should be a reflex when reviewing multi-step write logic.</p></div></details>
+        <details class="qa"><summary>Is hard-deleting customer/account rows a good idea for a banking-domain system?</summary><div class="qa-answer"><p>Usually not — financial systems typically favor <strong>soft deletes</strong> (an `active`/`deleted_at` flag, filtered out of normal queries via `@Where` or a query-level filter) to preserve audit trails, satisfy regulatory/compliance retention requirements, and allow account recovery. Hard deletes also complicate any historical reporting or reconciliation that needs to reference a "deleted" account. The trade-off is added query complexity (every query must exclude soft-deleted rows) and eventual data growth, which is typically an acceptable cost in regulated domains like banking.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="exception-handling">
+    <div class="topic-head"><span class="topic-no">23</span><h2>Handle All Runtime Exceptions Using Global Logic</h2></div>
+    <p class="topic-sub">Centralizing error handling with @RestControllerAdvice so controllers stay free of try/catch clutter.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="e1">GlobalExceptionHandler.java</div>
+        <div class="code-tab" data-pane="e2">ResourceNotFoundException.java</div>
+        <div class="code-tab" data-pane="e3">CustomerAlreadyExistsException.java</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="e1"><pre><span class="ann">@RestControllerAdvice</span>
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">GlobalExceptionHandler</span> <span class="kw">extends</span> ResponseEntityExceptionHandler {
+
+    <span class="ann">@ExceptionHandler</span>(ResourceNotFoundException.<span class="kw">class</span>)
+    <span class="kw">public</span> ResponseEntity&lt;ErrorResponseDto&gt; handleResourceNotFoundException(
+            ResourceNotFoundException exception, WebRequest webRequest) {
+        ErrorResponseDto errorResponseDto = <span class="kw">new</span> ErrorResponseDto(
+            webRequest.getDescription(<span class="kw">false</span>),
+            HttpStatus.NOT_FOUND,
+            exception.getMessage(),
+            LocalDateTime.now());
+        <span class="kw">return</span> <span class="kw">new</span> ResponseEntity&lt;&gt;(errorResponseDto, HttpStatus.NOT_FOUND);
+    }
+
+    <span class="ann">@ExceptionHandler</span>(CustomerAlreadyExistsException.<span class="kw">class</span>)
+    <span class="kw">public</span> ResponseEntity&lt;ErrorResponseDto&gt; handleCustomerAlreadyExistsException(
+            CustomerAlreadyExistsException exception, WebRequest webRequest) {
+        ErrorResponseDto errorResponseDto = <span class="kw">new</span> ErrorResponseDto(
+            webRequest.getDescription(<span class="kw">false</span>),
+            HttpStatus.BAD_REQUEST,
+            exception.getMessage(),
+            LocalDateTime.now());
+        <span class="kw">return</span> <span class="kw">new</span> ResponseEntity&lt;&gt;(errorResponseDto, HttpStatus.BAD_REQUEST);
+    }
+
+    <span class="cm">// catch-all fallback for anything not specifically handled above</span>
+    <span class="ann">@ExceptionHandler</span>(Exception.<span class="kw">class</span>)
+    <span class="kw">public</span> ResponseEntity&lt;ErrorResponseDto&gt; handleGlobalException(
+            Exception exception, WebRequest webRequest) {
+        ErrorResponseDto errorResponseDto = <span class="kw">new</span> ErrorResponseDto(
+            webRequest.getDescription(<span class="kw">false</span>),
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            exception.getMessage(),
+            LocalDateTime.now());
+        <span class="kw">return</span> <span class="kw">new</span> ResponseEntity&lt;&gt;(errorResponseDto, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    <span class="cm">// overridden from ResponseEntityExceptionHandler — handles @Valid failures</span>
+    <span class="ann">@Override</span>
+    <span class="kw">public</span> ResponseEntity&lt;Object&gt; handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex, HttpHeaders headers,
+            HttpStatusCode status, WebRequest request) {
+        Map&lt;String, String&gt; validationErrors = <span class="kw">new</span> HashMap&lt;&gt;();
+        ex.getBindingResult().getAllErrors().forEach(error -> {
+            String fieldName = ((FieldError) error).getField();
+            String message = error.getDefaultMessage();
+            validationErrors.put(fieldName, message);
+        });
+        <span class="kw">return</span> <span class="kw">new</span> ResponseEntity&lt;&gt;(validationErrors, HttpStatus.BAD_REQUEST);
+    }
+}</pre></div>
+        <div class="code-pane" id="e2"><pre><span class="ann">@ResponseStatus</span>(HttpStatus.NOT_FOUND)
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">ResourceNotFoundException</span> <span class="kw">extends</span> RuntimeException {
+    <span class="kw">public</span> ResourceNotFoundException(String resourceName, String fieldName, String fieldValue) {
+        <span class="kw">super</span>(String.format(<span class="str">"%s not found with the given input data %s: '%s'"</span>,
+            resourceName, fieldName, fieldValue));
+    }
+}</pre></div>
+        <div class="code-pane" id="e3"><pre><span class="kw">public</span> <span class="kw">class</span> <span class="cl">CustomerAlreadyExistsException</span> <span class="kw">extends</span> RuntimeException {
+    <span class="kw">public</span> CustomerAlreadyExistsException(String message) {
+        <span class="kw">super</span>(message);
+    }
+}</pre></div>
+      </div>
+    </div>
+
+    <h3 class="subhead">Annotation reference</h3>
+    <div class="ann-grid">
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@RestControllerAdvice</span></div><div class="ann-body"><p><code>@ControllerAdvice</code> + <code>@ResponseBody</code> — a single class that intercepts exceptions thrown from <em>any</em> <code>@RestController</code> in the application (global scope by default, narrowable via <code>basePackages</code>/<code>annotations</code> attributes), keeping error-handling logic out of individual controllers entirely.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@ExceptionHandler</span></div><div class="ann-body"><p>Declares which exception type a method handles. Spring matches the <em>most specific</em> applicable handler when an exception is thrown — a handler for a subclass wins over a handler for its superclass.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@ResponseStatus</span></div><div class="ann-body"><p>Placed directly on an exception class to declare the default HTTP status it should map to if thrown and not otherwise handled by an explicit `@ExceptionHandler` returning its own status.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">ResponseEntityExceptionHandler</span></div><div class="ann-body"><p>Spring MVC base class with pre-built handlers for common framework exceptions (`MethodArgumentNotValidException`, `HttpMessageNotReadableException`, etc.) — extend it and override specific `handleX` methods to customize just the ones you care about, inheriting sane defaults for the rest.</p></div></div>
+    </div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q15-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q15-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q15-common">
+        <details class="qa"><summary>What's the benefit of @RestControllerAdvice over try/catch in every controller method?</summary><div class="qa-answer"><p>It centralizes error-handling logic in one place, keeping controller methods focused purely on the happy path, ensures consistent error response shapes across the whole application, and avoids duplicating the same try/catch boilerplate across every endpoint.</p></div></details>
+        <details class="qa"><summary>How does Spring decide which @ExceptionHandler method to invoke when an exception is thrown?</summary><div class="qa-answer"><p>It looks for the most specific matching handler for the thrown exception's type — a handler registered for the exact exception class is preferred; if none exists, it walks up the exception's class hierarchy looking for a handler on a superclass, ultimately falling back to a generic `Exception.class` handler if present.</p></div></details>
+        <details class="qa"><summary>Why have a catch-all @ExceptionHandler(Exception.class)?</summary><div class="qa-answer"><p>To guarantee that any unanticipated exception (a bug, a null pointer, a third-party library error) still results in a clean, structured JSON error response with a 500 status rather than an unhandled exception leaking a raw stack trace or default error page to the client.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q15-faang">
+        <details class="qa"><summary>Is it safe to return exception.getMessage() directly in the API error response, as this handler does?</summary><div class="qa-answer"><p>Not universally — for domain exceptions you threw yourself with a controlled message (like `ResourceNotFoundException`), it's fine. But for the generic `Exception.class` catch-all, `exception.getMessage()` might leak internal details: SQL fragments from a `DataAccessException`, class/package names, or other implementation details useful to an attacker probing the system. Production-grade global handlers typically return a generic, safe message for unclassified exceptions ("An unexpected error occurred") while logging the real exception (with stack trace) server-side for debugging, and reserve detailed messages for exceptions you've deliberately designed to be user-facing.</p></div></details>
+        <details class="qa"><summary>How would you add a correlation/trace ID to every error response for debugging distributed requests across microservices?</summary><div class="qa-answer"><p>Generate or propagate a correlation ID (often via a `Filter`/`HandlerInterceptor` that reads an incoming `X-Correlation-Id` header or generates one if absent), store it in a thread-local context — in Spring, typically via MDC (Mapped Diagnostic Context) for logging, or a request-scoped bean — and include it both in the structured log lines for that request and in the `ErrorResponseDto` returned to the client. In a microservices chain, that same header should be forwarded on any downstream calls (e.g. via `RestTemplate`/`WebClient` interceptors or automatically through tools like Spring Cloud Sleuth/Micrometer Tracing) so a single failing request can be traced end-to-end across services in a centralized logging/tracing system.</p></div></details>
+        <details class="qa"><summary>What's the difference between using @ResponseStatus on the exception class versus handling it explicitly in @RestControllerAdvice — when would you use each?</summary><div class="qa-answer"><p><code>@ResponseStatus</code> on the exception class is declarative and terse — good for simple cases where you just need a status code and Spring's default error body is acceptable, and it works even without a global handler present. An explicit `@ExceptionHandler` in `@RestControllerAdvice` is needed when you want a custom response body shape (like this `ErrorResponseDto` with path/timestamp), need to log the exception, need conditional status codes based on exception state, or want a uniform error contract across all exception types — which is why production APIs almost always centralize through the advice class rather than relying solely on `@ResponseStatus`.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="validation">
+    <div class="topic-head"><span class="topic-no">24</span><h2>Input Data Validations</h2></div>
+    <p class="topic-sub">Bean Validation (Jakarta Validation) annotations, cascading with @Valid, and where each constraint is enforced.</p>
+
+    <h3 class="subhead">Common Bean Validation annotations used</h3>
+    <table>
+      <tr><th>Annotation</th><th>Checks</th></tr>
+      <tr><td><code>@NotNull</code></td><td>Value is not null (allows empty string/collection)</td></tr>
+      <tr><td><code>@NotEmpty</code></td><td>Not null AND not empty (string length &gt; 0 / collection size &gt; 0)</td></tr>
+      <tr><td><code>@NotBlank</code></td><td>Not null AND trimmed length &gt; 0 (rejects whitespace-only strings) — strings only</td></tr>
+      <tr><td><code>@Size(min, max)</code></td><td>String length / collection size within bounds</td></tr>
+      <tr><td><code>@Email</code></td><td>Value matches an email address pattern</td></tr>
+      <tr><td><code>@Pattern(regexp)</code></td><td>Value matches a custom regex</td></tr>
+      <tr><td><code>@Min</code> / <code>@Max</code></td><td>Numeric value bounds</td></tr>
+      <tr><td><code>@Positive</code> / <code>@Negative</code></td><td>Numeric sign constraints</td></tr>
+      <tr><td><code>@Past</code> / <code>@Future</code></td><td>Date/time must be before/after now</td></tr>
+      <tr><td><code>@Valid</code></td><td>Not a constraint itself — cascades validation into a nested object/collection</td></tr>
+    </table>
+
+    <div class="callout info"><b class="lbl">NotNull vs NotEmpty vs NotBlank — the exact interview trap</b><p><code>@NotNull</code> passes for <code>""</code>. <code>@NotEmpty</code> rejects <code>""</code> but passes for <code>"   "</code> (whitespace). <code>@NotBlank</code> rejects both <code>""</code> and <code>"   "</code> — it trims before checking. For human-entered text fields like name/email, <code>@NotBlank</code> is almost always the semantically correct choice; this course's use of <code>@NotEmpty</code> on `name` would technically still allow a whitespace-only name to pass.</p></div>
+
+    <h3 class="subhead">Where enforcement happens</h3>
+    <p>Bean Validation triggers automatically when a <code>@Valid</code>-annotated <code>@RequestBody</code> or <code>@RequestParam</code>/<code>@PathVariable</code> (with class-level <code>@Validated</code>) parameter is bound, via Spring's integration with <strong>Hibernate Validator</strong> (the reference implementation of Jakarta Bean Validation). This happens <em>before</em> the controller method body executes — invalid requests never reach your business logic.</p>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q16-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q16-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q16-common">
+        <details class="qa"><summary>What's the difference between @NotNull, @NotEmpty, and @NotBlank?</summary><div class="qa-answer"><p>`@NotNull` only rejects null. `@NotEmpty` rejects null and empty (zero-length) values. `@NotBlank` (strings only) rejects null, empty, and whitespace-only strings by trimming before the check — it's the strictest and usually the right choice for user-entered text.</p></div></details>
+        <details class="qa"><summary>What library actually implements Bean Validation annotations in a Spring Boot app?</summary><div class="qa-answer"><p>Hibernate Validator — the reference implementation of the Jakarta Bean Validation specification, pulled in transitively by `spring-boot-starter-validation`. "Hibernate" here is unrelated to Hibernate ORM; it's a separate project under the same umbrella name.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q16-faang">
+        <details class="qa"><summary>How would you validate a field only on create but not on update, using the same DTO class?</summary><div class="qa-answer"><p>Bean Validation supports <strong>validation groups</strong> — define marker interfaces like `OnCreate` and `OnUpdate`, tag each constraint with `groups = OnCreate.class` where relevant, and trigger validation for a specific group via `@Validated(OnCreate.class)` on the controller method parameter instead of a plain `@Valid`. This lets one DTO serve both operations with operation-specific required fields, though many teams find separate request DTOs per operation simpler to reason about than juggling validation groups.</p></div></details>
+        <details class="qa"><summary>How would you write a custom validation annotation, e.g. @ValidMobileNumber, instead of repeating a @Pattern regex everywhere?</summary><div class="qa-answer"><p>Define an annotation interface (`@ValidMobileNumber`) meta-annotated with `@Constraint(validatedBy = MobileNumberValidator.class)`, specifying `message`, `groups`, and `payload` attributes per the Bean Validation spec, then implement `MobileNumberValidator implements ConstraintValidator&lt;ValidMobileNumber, String&gt;` with an `isValid()` method containing the actual check (which can be richer than a single regex — e.g. also verifying a country-code-specific rule). This centralizes the validation logic and its error message in one reusable, testable place instead of duplicating a regex string (and risking it drifting) across every DTO that needs it.</p></div></details>
+        <details class="qa"><summary>Where's the line between validation you do with Bean Validation annotations vs. validation you do in the service layer?</summary><div class="qa-answer"><p>Bean Validation is for <strong>structural/self-contained</strong> checks about a single object's own fields — format, length, required-ness, ranges — that don't need to consult external state. Anything requiring a <strong>database lookup or business rule that depends on system state</strong> — "this mobile number is already registered," "this account has insufficient balance for this operation" — belongs in the service layer, both because Bean Validation validators shouldn't have repository dependencies injected into them (mixing concerns, harder to test in isolation) and because those checks often need to happen inside the same transaction as the write they're guarding against race conditions.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="auditing">
+    <div class="topic-head"><span class="topic-no">25</span><h2>Update Audit Columns Using Spring Data</h2></div>
+    <p class="topic-sub">JPA Auditing — automatically populating createdAt/createdBy/updatedAt/updatedBy without manual code in every save path.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="a1">AccountsApplication.java</div>
+        <div class="code-tab" data-pane="a2">AuditAwareImpl.java</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="a1"><pre><span class="ann">@SpringBootApplication</span>
+<span class="ann">@EnableJpaAuditing</span>(auditorAwareRef = <span class="str">"auditAwareImpl"</span>)
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">AccountsApplication</span> {
+    <span class="kw">public</span> <span class="kw">static</span> <span class="kw">void</span> main(String[] args) {
+        SpringApplication.run(AccountsApplication.<span class="kw">class</span>, args);
+    }
+}</pre></div>
+        <div class="code-pane" id="a2"><pre><span class="ann">@Component</span>(<span class="str">"auditAwareImpl"</span>)
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">AuditAwareImpl</span> <span class="kw">implements</span> AuditorAware&lt;String&gt; {
+
+    <span class="ann">@Override</span>
+    <span class="kw">public</span> Optional&lt;String&gt; getCurrentAuditor() {
+        <span class="cm">// in a real app, pull the authenticated principal from SecurityContext:</span>
+        <span class="cm">// return Optional.of(SecurityContextHolder.getContext()</span>
+        <span class="cm">//     .getAuthentication().getName());</span>
+        <span class="kw">return</span> Optional.of(<span class="str">"ACCOUNTS_MS"</span>);
+    }
+}</pre></div>
+      </div>
+    </div>
+
+    <p>Recall <code>BaseEntity</code> from section 15 — it's annotated <code>@EntityListeners(AuditingEntityListener.class)</code> and has fields tagged <code>@CreatedDate</code>, <code>@CreatedBy</code>, <code>@LastModifiedDate</code>, <code>@LastModifiedBy</code>. Together with <code>@EnableJpaAuditing</code> and an <code>AuditorAware</code> bean, Spring Data JPA automatically populates all four fields on every entity insert/update — <strong>zero manual code</strong> needed in service methods (this actually makes the manual <code>customer.setCreatedAt(LocalDateTime.now())</code> calls seen in section 18's create flow redundant once auditing is wired up correctly).</p>
+
+    <h3 class="subhead">Annotation reference</h3>
+    <div class="ann-grid">
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@EnableJpaAuditing</span></div><div class="ann-body"><p>Turns on the JPA auditing infrastructure application-wide. <code>auditorAwareRef</code> points to the bean name supplying "who is the current user" for <code>@CreatedBy</code>/<code>@LastModifiedBy</code>.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@EntityListeners</span></div><div class="ann-body"><p>Registers a JPA lifecycle listener class on an entity. <code>AuditingEntityListener</code> hooks into <code>@PrePersist</code> (before insert) and <code>@PreUpdate</code> (before update) callbacks to stamp the audit fields.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@CreatedDate / @LastModifiedDate</span></div><div class="ann-body"><p>Populated automatically with the current timestamp on insert / on every update respectively.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@CreatedBy / @LastModifiedBy</span></div><div class="ann-body"><p>Populated from whatever <code>AuditorAware.getCurrentAuditor()</code> returns — typically wired to the authenticated user once Spring Security is added.</p></div></div>
+    </div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q17-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q17-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q17-common">
+        <details class="qa"><summary>What four annotations enable automatic audit column population, and what does each track?</summary><div class="qa-answer"><p>`@CreatedDate` (insert timestamp), `@CreatedBy` (who created it), `@LastModifiedDate` (last update timestamp), `@LastModifiedBy` (who last updated it) — placed on entity fields, combined with `@EntityListeners(AuditingEntityListener.class)` on the entity/base class and `@EnableJpaAuditing` on the main application class.</p></div></details>
+        <details class="qa"><summary>What is AuditorAware used for?</summary><div class="qa-answer"><p>It's the interface Spring Data JPA calls to determine "who is the current user" for populating `@CreatedBy`/`@LastModifiedBy` — you implement `getCurrentAuditor()` to return, typically, the authenticated principal's username.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q17-faang">
+        <details class="qa"><summary>Why does @CreatedDate only fire on insert and not get overwritten on later updates?</summary><div class="qa-answer"><p>`AuditingEntityListener` only sets the `@CreatedDate`/`@CreatedBy` fields during the `@PrePersist` lifecycle callback (fired once, on the initial insert); on subsequent `@PreUpdate` callbacks it only touches `@LastModifiedDate`/`@LastModifiedBy`, leaving the creation fields untouched. This is also why those fields are typically marked `@Column(updatable = false)` as a second line of defense — even a manual/accidental attempt to set them on update won't generate an UPDATE for that column.</p></div></details>
+        <details class="qa"><summary>Once Spring Security is added, how would AuditorAware get the actual logged-in user instead of a hardcoded string?</summary><div class="qa-answer"><p><code>getCurrentAuditor()</code> would read from `SecurityContextHolder.getContext().getAuthentication()`, extracting the principal's username (or a custom claim from a JWT if using token-based auth) — with a null-safe fallback (e.g. `"SYSTEM"` or `Optional.empty()`) for contexts where no authenticated user exists yet, such as a scheduled batch job or an anonymous public endpoint, so auditing doesn't throw an NPE outside a request context.</p></div></details>
+        <details class="qa"><summary>In a microservices architecture, is JPA-level auditing (createdBy/updatedBy on each row) sufficient for a real audit trail?</summary><div class="qa-answer"><p>Usually not for compliance-grade auditing — JPA auditing only records the *current* state's last-touch metadata (who/when the row currently reflects), not a full history of what changed and what the previous values were. For a genuine audit trail (required in regulated domains like banking) you'd typically add an event-sourcing-style audit log table (or use Hibernate Envers, which snapshots every revision of every entity), or emit domain events to an append-only audit log/stream (e.g. Kafka topic consumed into a dedicated audit service) capturing before/after values for every mutating operation — JPA auditing columns are a good baseline, not a substitute for that.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="openapi-intro">
+    <div class="topic-head"><span class="topic-no">26</span><h2>Introduction to REST API Documentation Using springdoc-openapi</h2></div>
+    <p class="topic-sub">Auto-generating interactive Swagger UI documentation directly from controller code.</p>
+
+    <p><strong>OpenAPI</strong> (formerly Swagger Specification) is a language-agnostic standard for describing REST APIs — endpoints, request/response schemas, auth requirements — in a machine-readable JSON/YAML document, which tools can then render as interactive documentation, generate client SDKs from, or use for contract testing. <strong>springdoc-openapi</strong> is a library that inspects your Spring MVC controllers, DTOs, and validation annotations at runtime and generates that OpenAPI document automatically, plus serves a ready-to-use <strong>Swagger UI</strong> web page.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">pom.xml</div></div>
+      <div class="code-body"><div class="code-pane active"><pre>&lt;dependency&gt;
+    &lt;groupId&gt;org.springdoc&lt;/groupId&gt;
+    &lt;artifactId&gt;springdoc-openapi-starter-webmvc-ui&lt;/artifactId&gt;
+    &lt;version&gt;2.x.x&lt;/version&gt;
+&lt;/dependency&gt;</pre></div></div>
+    </div>
+    <p>Adding this single dependency, with zero further config, exposes:</p>
+    <ul>
+      <li><code>/v3/api-docs</code> — the raw OpenAPI JSON spec</li>
+      <li><code>/swagger-ui.html</code> — the interactive Swagger UI, listing every controller/endpoint it discovered, letting you execute requests directly from the browser</li>
+    </ul>
+    <div class="callout info"><b class="lbl">Why this matters for microservices</b><p>With N independently deployed services, hand-maintained API documentation (a wiki page, a Word doc) drifts out of sync almost immediately. Generating docs directly from the same annotations that drive validation and serialization guarantees the docs can never lie about the actual contract — if a field is `@NotEmpty` in code, Swagger shows it as required, automatically.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q18-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q18-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q18-common">
+        <details class="qa"><summary>What's the difference between OpenAPI and Swagger?</summary><div class="qa-answer"><p>OpenAPI is the current name for the specification itself (the standard for describing REST APIs); "Swagger" was the original name of the spec and is now mainly used for the associated tooling, especially Swagger UI, the interactive documentation renderer.</p></div></details>
+        <details class="qa"><summary>What does adding springdoc-openapi-starter-webmvc-ui give you out of the box?</summary><div class="qa-answer"><p>Automatic generation of the OpenAPI spec (at `/v3/api-docs`) by scanning your controllers and DTOs at runtime, plus a ready-to-browse Swagger UI page (`/swagger-ui.html`) where you can view and directly test every discovered endpoint.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q18-faang">
+        <details class="qa"><summary>Should Swagger UI be enabled in production?</summary><div class="qa-answer"><p>It depends on the API's audience — for a public or partner-facing API, exposing docs is often desirable (self-service integration), but for internal-only microservices, many teams disable Swagger UI in production (`springdoc.swagger-ui.enabled=false` per profile) or at minimum put it behind authentication/network restrictions, since a fully interactive "try it out" console against production data is a meaningful attack surface if it's ever left open unintentionally.</p></div></details>
+        <details class="qa"><summary>How would you use the generated OpenAPI spec beyond just human-readable docs?</summary><div class="qa-answer"><p>The machine-readable `/v3/api-docs` JSON can drive: (1) client SDK generation via `openapi-generator` for consuming teams/languages, (2) contract testing — validating that the actual API responses conform to the published schema, catching accidental breaking changes in CI before deployment, (3) API gateway configuration generation, and (4) mock server generation for frontend teams to develop against before the backend is fully implemented — treating the spec as a build artifact and versioned contract, not just documentation.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="openapi-def">
+    <div class="topic-head"><span class="topic-no">27</span><h2>Enhancing Documentation Using @OpenAPIDefinition</h2></div>
+    <p class="topic-sub">Adding API-level metadata — title, description, contact, license, servers.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">AccountsApplication.java</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="ann">@OpenAPIDefinition</span>(
+    info = <span class="ann">@Info</span>(
+        title = <span class="str">"Accounts microservice REST API Documentation"</span>,
+        description = <span class="str">"EazyBank Accounts microservice REST API Documentation"</span>,
+        version = <span class="str">"v1"</span>,
+        contact = <span class="ann">@Contact</span>(
+            name = <span class="str">"EazyBank"</span>,
+            email = <span class="str">"tutor@eazybytes.com"</span>,
+            url = <span class="str">"https://eazybytes.com"</span>
+        ),
+        license = <span class="ann">@License</span>(
+            name = <span class="str">"Apache 2.0"</span>,
+            url = <span class="str">"https://eazybytes.com"</span>
+        )
+    ),
+    externalDocs = <span class="ann">@ExternalDocumentation</span>(
+        description = <span class="str">"EazyBank Accounts microservice Wiki Documentation"</span>,
+        url = <span class="str">"https://eazybytes.com/wiki"</span>
+    )
+)
+<span class="ann">@SpringBootApplication</span>
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">AccountsApplication</span> { ... }</pre></div></div>
+    </div>
+
+    <div class="ann-box">
+      <div class="ann-box-head"><span class="ann-tag">@OpenAPIDefinition</span></div>
+      <div class="ann-body"><p>Class-level (typically on the main application class) container for global API metadata that appears once at the top of the generated spec/Swagger UI page — as opposed to per-endpoint annotations covered next. Nested <code>@Info</code>, <code>@Contact</code>, <code>@License</code>, <code>@ExternalDocumentation</code> annotations structure the metadata.</p></div>
+    </div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q19-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q19-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q19-common">
+        <details class="qa"><summary>What is @OpenAPIDefinition used for and where is it placed?</summary><div class="qa-answer"><p>It's a class-level annotation (usually on the main `@SpringBootApplication` class) that supplies global metadata for the generated OpenAPI document — API title, description, version, contact info, license, and external docs links — appearing once at the top of Swagger UI rather than per-endpoint.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q19-faang">
+        <details class="qa"><summary>In a multi-service system, how would you aggregate each microservice's individually-generated OpenAPI docs into one unified developer portal?</summary><div class="qa-answer"><p>Common approaches: (1) an API Gateway (or a dedicated aggregator like springdoc's multi-module support) that fetches each service's `/v3/api-docs` at a known path and merges/proxies them under one Swagger UI with a service dropdown, (2) a centralized API catalog tool (e.g. backstage.io, or a commercial API portal) that pulls each service's OpenAPI spec on a schedule or via CI publish step and indexes them together, or (3) publishing each service's spec as a versioned artifact to a shared registry during CI/CD, which downstream tooling (SDK generators, portal) consumes — the key design point being each service still independently owns and generates its own spec (staying true to microservice autonomy), and aggregation is a separate, additive concern layered on top.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="openapi-tags">
+    <div class="topic-head"><span class="topic-no">28</span><h2>Enhancing Documentation Using @Tag, @Operation, @ApiResponse</h2></div>
+    <p class="topic-sub">Per-controller and per-endpoint documentation annotations.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">AccountsController.java (annotated)</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="ann">@Tag</span>(
+    name = <span class="str">"CRUD REST APIs for Accounts in EazyBank"</span>,
+    description = <span class="str">"CRUD REST APIs to CREATE, UPDATE, FETCH & DELETE account details"</span>
+)
+<span class="ann">@RestController</span>
+<span class="ann">@RequestMapping</span>(path = <span class="str">"/api"</span>, produces = MediaType.APPLICATION_JSON_VALUE)
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">AccountsController</span> {
+
+    <span class="ann">@Operation</span>(
+        summary = <span class="str">"Create Account REST API"</span>,
+        description = <span class="str">"REST API to create new Customer & Account inside EazyBank"</span>
+    )
+    <span class="ann">@ApiResponses</span>({
+        <span class="ann">@ApiResponse</span>(responseCode = <span class="str">"201"</span>, description = <span class="str">"HTTP Status CREATED"</span>),
+        <span class="ann">@ApiResponse</span>(
+            responseCode = <span class="str">"500"</span>,
+            description = <span class="str">"HTTP Status Internal Server Error"</span>,
+            content = <span class="ann">@Content</span>(
+                schema = <span class="ann">@Schema</span>(implementation = ErrorResponseDto.<span class="kw">class</span>)
+            )
+        )
+    })
+    <span class="ann">@PostMapping</span>(<span class="str">"/create"</span>)
+    <span class="kw">public</span> ResponseEntity&lt;ResponseDto&gt; createAccount(<span class="ann">@Valid</span> <span class="ann">@RequestBody</span> CustomerDto customerDto) {
+        ...
+    }
+}</pre></div></div>
+    </div>
+
+    <div class="ann-grid">
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@Tag</span></div><div class="ann-body"><p>Groups a controller's endpoints under a named, described section in Swagger UI — the collapsible heading you see when browsing docs (e.g. all Accounts CRUD endpoints grouped together, separate from Loans/Cards).</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@Operation</span></div><div class="ann-body"><p>Per-endpoint summary/description shown in Swagger UI — the human-readable explanation of what a specific method does, beyond what's inferable from the path/HTTP verb alone.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@ApiResponse(s)</span></div><div class="ann-body"><p>Documents each possible HTTP status code an endpoint can return, with description and optionally the response body schema for that status — critical because springdoc can only auto-infer the <em>success</em> response type from the method signature; error responses need to be declared explicitly since they come from exception handlers, not the method's return type.</p></div></div>
+    </div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q20-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q20-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q20-common">
+        <details class="qa"><summary>What does @Tag do versus @Operation?</summary><div class="qa-answer"><p>`@Tag` (class-level) groups a whole controller's endpoints under a named section in Swagger UI. `@Operation` (method-level) documents a single endpoint's summary and description.</p></div></details>
+        <details class="qa"><summary>Why do you need to manually add @ApiResponse for error codes like 500, if springdoc auto-generates docs from the code?</summary><div class="qa-answer"><p>springdoc can automatically infer the success response type from the controller method's return type (e.g. `ResponseEntity&lt;ResponseDto&gt;`), but it has no way to know what error responses an endpoint might produce — those come from exception handlers elsewhere in the code, not the method signature — so they must be documented explicitly via `@ApiResponse`.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q20-faang">
+        <details class="qa"><summary>If every controller in every microservice repeats similar @ApiResponse blocks for 400/404/500, how would you avoid that duplication?</summary><div class="qa-answer"><p>Define a custom composed annotation (a meta-annotation bundling the repeated `@ApiResponses` set, e.g. `@CommonErrorResponses`) and apply that single annotation to each endpoint instead of repeating the full block — Java annotations can be stacked on custom annotations, and springdoc will still pick up the underlying `@ApiResponse` entries through the meta-annotation. Alternatively, some teams centralize this via a shared library module included across microservices, or via springdoc's `OperationCustomizer`/`GlobalOperationCustomizer` SPI hooks that programmatically inject common response documentation into every operation at spec-generation time, keeping controller code clean of repeated boilerplate.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="openapi-schema">
+    <div class="topic-head"><span class="topic-no">29-30</span><h2>Enhancing Documentation Using @Schema & Example Data</h2></div>
+    <p class="topic-sub">Documenting DTO shape at the field level, with human-friendly examples in the Swagger "Try it out" UI.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">ResponseDto with full @Schema detail</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="ann">@Schema</span>(
+    name = <span class="str">"Response"</span>,
+    description = <span class="str">"Schema to hold successful response information"</span>
+)
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">ResponseDto</span> {
+
+    <span class="ann">@Schema</span>(
+        description = <span class="str">"Status code in the response"</span>,
+        example = <span class="str">"200"</span>
+    )
+    <span class="kw">private</span> String statusCode;
+
+    <span class="ann">@Schema</span>(
+        description = <span class="str">"Status message in the response"</span>,
+        example = <span class="str">"Request processed successfully"</span>
+    )
+    <span class="kw">private</span> String statusMsg;
+}</pre></div></div>
+    </div>
+
+    <p><code>@Schema</code> can be applied at both the <strong>class level</strong> (naming/describing the whole DTO as it appears in the schema catalog of Swagger UI) and the <strong>field level</strong> (description + a realistic <code>example</code> value, which pre-fills the "Try it out" request body in Swagger UI — dramatically improving the developer experience of anyone consuming the API for the first time, since they see a working example rather than an empty/generic placeholder).</p>
+
+    <h4 class="minihead">Other useful @Schema attributes</h4>
+    <table>
+      <tr><th>Attribute</th><th>Effect</th></tr>
+      <tr><td><code>requiredMode = RequiredMode.REQUIRED</code></td><td>Marks field required in the schema (usually inferred from `@NotNull`/`@NotEmpty` automatically, but can be set explicitly)</td></tr>
+      <tr><td><code>accessMode = AccessMode.READ_ONLY</code></td><td>Field only appears in responses, never expected in requests (e.g. a server-generated ID)</td></tr>
+      <tr><td><code>hidden = true</code></td><td>Excludes the field from generated docs entirely</td></tr>
+      <tr><td><code>allowableValues = {...}</code></td><td>Restricts documented values to an explicit enum-like set</td></tr>
+    </table>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q21-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q21-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q21-common">
+        <details class="qa"><summary>What does the example attribute on @Schema do?</summary><div class="qa-answer"><p>It provides a sample value shown in the generated docs and pre-fills the "Try it out" request body in Swagger UI, so API consumers see a realistic working payload instead of an empty or generic placeholder.</p></div></details>
+        <details class="qa"><summary>Can @Schema be used at both the class and field level? What's the difference?</summary><div class="qa-answer"><p>Yes. At the class level it names and describes the DTO as a whole (how it appears in the schema catalog). At the field level it documents and provides an example for that specific property.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q21-faang">
+        <details class="qa"><summary>Does springdoc auto-infer "required" fields from Bean Validation annotations, or do you always need @Schema(requiredMode)?</summary><div class="qa-answer"><p>springdoc-openapi does inspect Bean Validation annotations like `@NotNull`/`@NotEmpty`/`@NotBlank` on a field and automatically marks the corresponding OpenAPI schema property as required — so in most cases you don't need to duplicate that with an explicit `@Schema(requiredMode = REQUIRED)`. You'd reach for the explicit attribute mainly when a field is required by API contract but for some reason isn't backed by a Bean Validation constraint (uncommon), or to override the inferred value for documentation-only purposes.</p></div></details>
+        <details class="qa"><summary>How would you keep example values in @Schema annotations from going stale as the DTO evolves, since they're just hardcoded strings?</summary><div class="qa-answer"><p>There's no built-in compile-time guarantee — hardcoded `example` strings are exactly the kind of documentation drift risk this whole approach otherwise avoids for structural fields. Mitigations: (1) contract tests that assert the documented examples themselves are valid against the DTO's own validation rules (a CI check that deserializes/validates every `@Schema(example=...)` value), (2) code review discipline treating `@Schema` changes as part of the DTO's diff, not an afterthought, and (3) for complex objects, using `examples` referencing a shared, versioned example JSON file rather than inline per-field strings, so one source of truth backs both docs and any example-based tests.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="annotations-cheatsheet">
+    <div class="topic-head"><span class="topic-no">31</span><h2>Important Annotations & Classes — Full Cheat-sheet</h2></div>
+    <p class="topic-sub">Every annotation from this section in one consolidated, exam-ready reference table.</p>
+
+    <h3 class="subhead">Core Spring Boot / Bean Wiring</h3>
+    <table>
+      <tr><th>Annotation</th><th>Purpose</th></tr>
+      <tr><td><code>@SpringBootApplication</code></td><td>Entry point meta-annotation = Configuration + AutoConfiguration + ComponentScan</td></tr>
+      <tr><td><code>@Component</code></td><td>Generic Spring-managed bean stereotype</td></tr>
+      <tr><td><code>@Service</code></td><td>Business-logic layer stereotype (specialization of @Component)</td></tr>
+      <tr><td><code>@Repository</code></td><td>Persistence layer stereotype; also enables exception translation (JDBC/JPA exceptions → Spring's DataAccessException hierarchy)</td></tr>
+      <tr><td><code>@Controller</code> / <code>@RestController</code></td><td>Web layer stereotype; RestController adds implicit @ResponseBody</td></tr>
+      <tr><td><code>@Configuration</code></td><td>Marks a class as a source of @Bean definitions</td></tr>
+      <tr><td><code>@Bean</code></td><td>Method-level — registers the returned object as a Spring bean</td></tr>
+    </table>
+
+    <h3 class="subhead">Web / REST</h3>
+    <table>
+      <tr><th>Annotation</th><th>Purpose</th></tr>
+      <tr><td><code>@RequestMapping</code></td><td>Generic HTTP mapping (path/method/produces/consumes)</td></tr>
+      <tr><td><code>@GetMapping / @PostMapping / @PutMapping / @PatchMapping / @DeleteMapping</code></td><td>Verb-specific shorthand for @RequestMapping</td></tr>
+      <tr><td><code>@RequestBody</code></td><td>Deserializes JSON request body into a Java object</td></tr>
+      <tr><td><code>@RequestParam</code></td><td>Binds a query string parameter</td></tr>
+      <tr><td><code>@PathVariable</code></td><td>Binds a URI template segment</td></tr>
+      <tr><td><code>@Valid</code> / <code>@Validated</code></td><td>Triggers Bean Validation; @Validated adds group support + works on params directly</td></tr>
+      <tr><td><code>@RestControllerAdvice</code></td><td>Global exception handling across all controllers</td></tr>
+      <tr><td><code>@ExceptionHandler</code></td><td>Maps a specific exception type to a handler method</td></tr>
+      <tr><td><code>@ResponseStatus</code></td><td>Declares default HTTP status for an exception class</td></tr>
+    </table>
+
+    <h3 class="subhead">JPA / Persistence</h3>
+    <table>
+      <tr><th>Annotation</th><th>Purpose</th></tr>
+      <tr><td><code>@Entity</code></td><td>Marks a class as a persistent, DB-mapped type</td></tr>
+      <tr><td><code>@Table</code></td><td>Customizes table name/schema</td></tr>
+      <tr><td><code>@Id</code></td><td>Primary key field</td></tr>
+      <tr><td><code>@GeneratedValue</code></td><td>PK generation strategy</td></tr>
+      <tr><td><code>@Column</code></td><td>Customizes column mapping</td></tr>
+      <tr><td><code>@MappedSuperclass</code></td><td>Shared fields inherited into subclass tables, no own table</td></tr>
+      <tr><td><code>@EntityListeners</code></td><td>Registers lifecycle callback listener (e.g. auditing)</td></tr>
+      <tr><td><code>@EnableJpaAuditing</code></td><td>App-wide toggle for automatic audit field population</td></tr>
+      <tr><td><code>@CreatedDate / @CreatedBy / @LastModifiedDate / @LastModifiedBy</code></td><td>Auto-populated audit fields</td></tr>
+    </table>
+
+    <h3 class="subhead">Validation (Bean Validation / Jakarta)</h3>
+    <table>
+      <tr><th>Annotation</th><th>Purpose</th></tr>
+      <tr><td><code>@NotNull / @NotEmpty / @NotBlank</code></td><td>Presence checks of increasing strictness</td></tr>
+      <tr><td><code>@Size</code></td><td>Length/size bounds</td></tr>
+      <tr><td><code>@Pattern</code></td><td>Regex match</td></tr>
+      <tr><td><code>@Email</code></td><td>Email format check</td></tr>
+      <tr><td><code>@Min / @Max</code></td><td>Numeric bounds</td></tr>
+    </table>
+
+    <h3 class="subhead">Lombok</h3>
+    <table>
+      <tr><th>Annotation</th><th>Generates</th></tr>
+      <tr><td><code>@Data</code></td><td>Getters, setters, toString, equals/hashCode, required-args constructor — the "give me everything" annotation</td></tr>
+      <tr><td><code>@Getter / @Setter</code></td><td>Just accessors</td></tr>
+      <tr><td><code>@NoArgsConstructor / @AllArgsConstructor</code></td><td>Constructors — required together on JPA entities (JPA needs no-args; convenience wants all-args)</td></tr>
+      <tr><td><code>@ToString</code></td><td>toString() override</td></tr>
+      <tr><td><code>@Builder</code></td><td>Fluent builder pattern (not used directly in section 1 but common alongside)</td></tr>
+    </table>
+
+    <h3 class="subhead">OpenAPI / Swagger</h3>
+    <table>
+      <tr><th>Annotation</th><th>Purpose</th></tr>
+      <tr><td><code>@OpenAPIDefinition</code></td><td>Global API metadata (title, contact, license)</td></tr>
+      <tr><td><code>@Tag</code></td><td>Groups a controller's endpoints in Swagger UI</td></tr>
+      <tr><td><code>@Operation</code></td><td>Per-endpoint summary/description</td></tr>
+      <tr><td><code>@ApiResponse(s)</code></td><td>Documents possible response status codes + schemas</td></tr>
+      <tr><td><code>@Schema</code></td><td>Documents a DTO/field — description, example, required/read-only flags</td></tr>
+    </table>
+
+    <div class="callout pitfall"><b class="lbl">Classic interview trap: @Component vs @Service vs @Repository</b><p>Functionally, all three register a bean the same way (all are meta-annotated with <code>@Component</code>). The difference is <strong>semantic clarity</strong> plus one real behavioral extra: <code>@Repository</code> additionally enables Spring's <strong>persistence exception translation</strong> — a <code>PersistenceExceptionTranslationPostProcessor</code> wraps the bean so that provider-specific exceptions (e.g. Hibernate's `ConstraintViolationException`) are translated into Spring's unified `DataAccessException` hierarchy, making exception handling provider-agnostic. `@Service` and plain `@Component` have no such special behavior — purely documentation of intent.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q22-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q22-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q22-common">
+        <details class="qa"><summary>Is there a functional difference between @Component, @Service, and @Repository?</summary><div class="qa-answer"><p>All three register a Spring bean via component scanning (Service and Repository are meta-annotated with Component). The one real behavioral difference is that `@Repository` also enables automatic translation of persistence-provider exceptions into Spring's `DataAccessException` hierarchy; otherwise the distinction is about documenting the class's architectural role.</p></div></details>
+        <details class="qa"><summary>Why do JPA entities need both @NoArgsConstructor and often @AllArgsConstructor via Lombok?</summary><div class="qa-answer"><p>JPA/Hibernate instantiates entities via reflection and requires a no-arg constructor to do so; `@AllArgsConstructor` is a separate convenience for manually constructing fully-populated instances in application code (e.g. in tests or mapping code), not something JPA itself requires.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q22-faang">
+        <details class="qa"><summary>How would you enforce, at build time rather than code review, that every JPA repository/service class uses the correct stereotype annotation across a large codebase?</summary><div class="qa-answer"><p>ArchUnit (a Java architecture-testing library) can encode rules like "classes in the `..repository..` package must be annotated `@Repository`" or "classes implementing `*ServiceImpl` must be annotated `@Service`," run as part of the normal test suite in CI — turning an architectural convention into an enforced, automatically-checked constraint rather than something that silently drifts across a large team over time. This is a common FAANG-scale practice for keeping architectural conventions consistent without relying purely on review discipline.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="loans-cards">
+    <div class="topic-head"><span class="topic-no">32-34</span><h2>Loans & Cards Microservices — Assignment & Deep Dive</h2></div>
+    <p class="topic-sub">Applying every pattern above to two more independent services, reinforcing that the structure is a repeatable template, not accounts-specific.</p>
+
+    <p>The assignment: independently build <strong>Loans</strong> and <strong>Cards</strong> microservices, each following the exact same layered structure as Accounts — own Spring Boot project, own H2 instance, own entity/repository/DTO/controller/service/exception-handler stack, own OpenAPI docs. This is the point where the CRUD + validation + auditing + docs pattern should start feeling like a <strong>template you can stamp out</strong>, not something you reason through from scratch each time.</p>
+
+    <h3 class="subhead">Loans microservice — structure</h3>
+    <table>
+      <tr><th>Layer</th><th>Class</th></tr>
+      <tr><td>Entity</td><td><code>Loans</code> — loanNumber (PK), mobileNumber, loanType, totalLoan, amountPaid, outstandingAmount, extends `BaseEntity`</td></tr>
+      <tr><td>Repository</td><td><code>LoansRepository extends JpaRepository&lt;Loans, Long&gt;</code> with `findByMobileNumber`</td></tr>
+      <tr><td>DTO</td><td><code>LoansDto</code> mirroring entity fields with validation annotations</td></tr>
+      <tr><td>Controller</td><td><code>LoansController</code> — identical CRUD endpoint shape to Accounts (`/api/create`, `/api/fetch`, `/api/update`, `/api/delete`)</td></tr>
+    </table>
+
+    <h3 class="subhead">Cards microservice — structure</h3>
+    <table>
+      <tr><th>Layer</th><th>Class</th></tr>
+      <tr><td>Entity</td><td><code>Cards</code> — cardNumber (PK), mobileNumber, cardType, totalLimit, amountUsed, availableAmount, extends `BaseEntity`</td></tr>
+      <tr><td>Repository</td><td><code>CardsRepository extends JpaRepository&lt;Cards, Long&gt;</code> with `findByMobileNumber`</td></tr>
+      <tr><td>DTO</td><td><code>CardsDto</code> mirroring entity fields</td></tr>
+      <tr><td>Controller</td><td><code>CardsController</code> — same CRUD endpoint shape again</td></tr>
+    </table>
+
+    <div class="callout info"><b class="lbl">The real lesson of this exercise</b><p>Notice that <strong>every one of the three services duplicates</strong>: the layered package structure, the global exception handler shape, the DTO/entity mapping approach, the OpenAPI annotation style, and even the audit-field mechanism. This is completely normal at this stage — but it's exactly the kind of duplication that, at real FAANG scale, gets factored into a <strong>shared internal library</strong> (a common `BaseEntity`, a common exception-handling starter, shared validation utilities) versioned and published for all services in the org to depend on. Recognizing "this should eventually become a shared library" is itself a signal of engineering maturity interviewers listen for.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q23-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q23-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q23-common">
+        <details class="qa"><summary>Why do Loans and Cards each get their own H2 database instance instead of sharing one with Accounts?</summary><div class="qa-answer"><p>Following the "database per service" microservices principle — each service should own its data privately so services stay independently deployable and their internal schemas can evolve without risk of breaking another service that happens to query the same shared tables.</p></div></details>
+        <details class="qa"><summary>What's duplicated across all three microservices in this exercise?</summary><div class="qa-answer"><p>The overall layered structure (entity/repository/DTO/controller/service), the `BaseEntity` audit-field pattern, the global exception handler shape, and the OpenAPI documentation style — each service reimplements the same architectural skeleton around different domain data.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q23-faang">
+        <details class="qa"><summary>How would you actually share the duplicated boilerplate (BaseEntity, GlobalExceptionHandler shape, common DTOs like ErrorResponseDto) across Accounts, Loans, and Cards without violating microservice independence?</summary><div class="qa-answer"><p>Extract the genuinely generic, non-domain-specific pieces (an abstract `BaseEntity`, a reusable `ErrorResponseDto`, a base exception-handling class or a set of common `@ExceptionHandler` methods, shared validation annotations) into a small internal library (a separate Maven/Gradle module, published to an internal artifact repository like Nexus/Artifactory) that each service depends on as a normal dependency. The key discipline: this shared library should contain only <strong>cross-cutting infrastructure code</strong>, never business logic or domain models — the moment a shared library starts encoding domain rules ("what counts as a valid loan"), you've silently recreated coupling between otherwise-independent services, which defeats the purpose of splitting them in the first place. Versioning the shared library independently (semantic versioning, each service pins a version) also preserves each service's ability to upgrade on its own schedule.</p></div></details>
+        <details class="qa"><summary>If a customer's data spans Accounts, Loans, and Cards, how would a single "get customer 360 view" API be built without merging the databases?</summary><div class="qa-answer"><p>This is a classic <strong>API composition</strong> problem — a higher-level service (or the API Gateway/BFF layer) calls all three microservices' fetch endpoints (potentially in parallel using `WebClient`/reactive calls or `CompletableFuture` for concurrency) and aggregates the responses into one composite DTO for the client. At larger scale, this pattern is formalized as a dedicated aggregation/composition service or a GraphQL federation layer that stitches together sub-graphs from each service, so the composition logic lives in exactly one place instead of being reimplemented by every client that needs a cross-service view — while each underlying service's database remains completely private and untouched.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer-note">Spring Boot Bible · Section 1 of N · Standalone reference document · Generated for interview preparation</div>
+</main>
+</div>
+
+<script>
+// ===== Theme toggle =====
+const themeToggle = document.getElementById('themeToggle');
+const html = document.documentElement;
+function applyThemeLabel(){
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  themeToggle.innerHTML = isDark ? '🌙 Dark mode <span>⇄</span>' : '☀️ Light mode <span>⇄</span>';
+}
+themeToggle.addEventListener('click', () => {
+  const cur = html.getAttribute('data-theme');
+  html.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+  applyThemeLabel();
+  localStorage.setItem('sb-bible-theme', html.getAttribute('data-theme'));
+});
+(function initTheme(){
+  const saved = localStorage.getItem('sb-bible-theme');
+  if(saved){ html.setAttribute('data-theme', saved); }
+  applyThemeLabel();
+})();
+
+// ===== Code tab switching =====
+document.querySelectorAll('.code-panel').forEach(panel => {
+  const tabs = panel.querySelectorAll('.code-tab');
+  if(tabs.length <= 1) return;
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.getAttribute('data-pane');
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      panel.querySelectorAll('.code-pane').forEach(p => p.classList.remove('active'));
+      const pane = panel.querySelector('#' + target);
+      if(pane) pane.classList.add('active');
+    });
+  });
+});
+
+// ===== Q&A tab switching (Common / FAANG) =====
+document.querySelectorAll('.qa-section').forEach(section => {
+  const btns = section.querySelectorAll('.qa-tab-btn');
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-target');
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      section.querySelectorAll('.qa-pane').forEach(p => p.classList.remove('active'));
+      document.getElementById(target).classList.add('active');
+    });
+  });
+});
+
+// ===== Sidebar active-link highlighting on scroll =====
+const navLinks = document.querySelectorAll('.nav-link');
+const topics = document.querySelectorAll('section.topic');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const id = entry.target.getAttribute('id');
+    const link = document.querySelector('.nav-link[href="#' + id + '"]');
+    if(!link) return;
+    if(entry.isIntersecting){
+      navLinks.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-15% 0px -75% 0px', threshold: 0 });
+topics.forEach(t => observer.observe(t));
+</script>
+</body>
+</html>

@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spring Boot Bible — Section 4: Docker, Deployment Portability & Scalability</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0f14; --bg-elev:#111820; --bg-elev-2:#161f2a; --border:#233042;
+  --text:#dbe4ee; --text-dim:#8a9bb0; --text-faint:#5c6b7e;
+  --accent:#6DB33F; --accent-soft:#6DB33F22;
+  --accent-2:#4fa3d1; --accent-2-soft:#4fa3d122;
+  --docker:#2496ED; --docker-soft:#2496ED22;
+  --warn:#e0a94f; --warn-soft:#e0a94f22;
+  --danger:#e0655f; --danger-soft:#e0655f22;
+  --code-bg:#0d1420; --code-border:#1e2a3a;
+  --shadow: 0 8px 24px rgba(0,0,0,0.35); --radius: 10px; --sidebar-w: 300px;
+}
+html[data-theme="light"]{
+  --bg:#f6f4ee; --bg-elev:#ffffff; --bg-elev-2:#eef0e8; --border:#dcdccf;
+  --text:#1c231d; --text-dim:#586257; --text-faint:#8b9188;
+  --accent:#3f7d1f; --accent-soft:#3f7d1f1a;
+  --accent-2:#1f6f9c; --accent-2-soft:#1f6f9c1a;
+  --docker:#0e63ac; --docker-soft:#0e63ac18;
+  --warn:#8a5a12; --warn-soft:#8a5a1218;
+  --danger:#a3352f; --danger-soft:#a3352f18;
+  --code-bg:#fbfaf5; --code-border:#e2e0d2;
+  --shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;line-height:1.65;font-size:15.5px;}
+::selection{background:var(--accent-soft);color:var(--accent);}
+h1,h2,h3,h4{font-family:'Space Mono',monospace;letter-spacing:-0.01em;color:var(--text);}
+code, pre, .mono{font-family:'Space Mono',monospace;}
+a{color:var(--accent-2);text-decoration:none;}
+a:hover{text-decoration:underline;}
+
+.shell{display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;border-right:1px solid var(--border);background:var(--bg-elev);position:sticky;top:0;height:100vh;overflow-y:auto;padding:22px 16px 60px;}
+.sidebar::-webkit-scrollbar{width:6px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:4px;padding:0 6px;}
+.brand-badge{width:34px;height:34px;border-radius:8px;background:var(--docker);display:flex;align-items:center;justify-content:center;font-family:'Space Mono';font-weight:700;color:#fff;font-size:13px;flex-shrink:0;}
+.brand-text{font-family:'Space Mono';font-weight:700;font-size:14.5px;line-height:1.2;}
+.brand-text span{display:block;font-size:10.5px;color:var(--text-faint);font-weight:400;margin-top:2px;letter-spacing:0.04em;}
+.theme-toggle{margin:14px 6px 20px;width:calc(100% - 12px);background:var(--bg-elev-2);border:1px solid var(--border);color:var(--text-dim);padding:8px 10px;border-radius:8px;font-family:'Inter';font-size:12.5px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
+.theme-toggle:hover{color:var(--text);border-color:var(--docker);}
+.nav-group{margin-bottom:6px;}
+.nav-group-title{font-size:10.5px;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-faint);padding:14px 8px 6px;font-family:'Space Mono';}
+.nav-link{display:block;padding:7px 10px;border-radius:7px;font-size:13px;color:var(--text-dim);margin-bottom:1px;border-left:2px solid transparent;}
+.nav-link:hover{background:var(--bg-elev-2);color:var(--text);text-decoration:none;}
+.nav-link.active{background:var(--docker-soft);color:var(--docker);border-left:2px solid var(--docker);font-weight:600;}
+.nav-link .vid-no{color:var(--text-faint);margin-right:5px;}
+
+main{flex:1;min-width:0;padding:48px 56px 120px;max-width:980px;}
+.hero{margin-bottom:44px;}
+.hero-eyebrow{font-family:'Space Mono';font-size:11.5px;color:var(--docker);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.hero-eyebrow::before{content:"";width:20px;height:1px;background:var(--docker);}
+.hero h1{font-size:32px;margin:0 0 12px;line-height:1.25;}
+.hero p{color:var(--text-dim);font-size:15.5px;max-width:680px;}
+.scope-box{margin-top:20px;border:1px solid var(--border);background:var(--bg-elev);border-radius:var(--radius);padding:16px 18px;font-size:13px;color:var(--text-dim);}
+.scope-box b{color:var(--text);}
+
+section.topic{margin-bottom:56px;scroll-margin-top:24px;}
+.topic-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;border-bottom:1px solid var(--border);padding-bottom:14px;}
+.topic-no{font-family:'Space Mono';color:var(--docker);font-size:13px;background:var(--docker-soft);padding:3px 9px;border-radius:20px;flex-shrink:0;}
+.topic-head h2{font-size:22px;margin:0;}
+.topic-sub{color:var(--text-faint);font-size:12.5px;margin:8px 0 22px;}
+
+p{color:var(--text-dim);}
+h3.subhead{font-size:16.5px;color:var(--text);margin:28px 0 10px;display:flex;align-items:center;gap:8px;}
+h3.subhead::before{content:"";width:3px;height:15px;background:var(--accent-2);border-radius:2px;}
+h4.minihead{font-size:13.5px;color:var(--text);margin:18px 0 8px;font-family:'Inter';font-weight:700;}
+ul,ol{color:var(--text-dim);padding-left:22px;}
+li{margin-bottom:6px;}
+strong{color:var(--text);}
+
+.ann-box{border:1px solid var(--code-border);background:var(--bg-elev);border-radius:var(--radius);margin:14px 0;overflow:hidden;}
+.ann-box-head{display:flex;align-items:center;gap:10px;padding:11px 16px;background:var(--docker-soft);border-bottom:1px solid var(--code-border);}
+.ann-tag{font-family:'Space Mono';font-weight:700;color:var(--docker);font-size:14px;}
+.ann-loc{margin-left:auto;font-size:10.5px;color:var(--text-faint);font-family:'Space Mono';text-transform:uppercase;letter-spacing:0.05em;}
+.ann-body{padding:12px 16px;}
+.ann-body p{margin:4px 0 8px;font-size:13.5px;}
+.ann-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0;}
+@media(max-width:760px){.ann-grid{grid-template-columns:1fr;}}
+
+.code-panel{border:1px solid var(--code-border);border-radius:var(--radius);overflow:hidden;margin:16px 0;background:var(--code-bg);}
+.code-tabs{display:flex;background:var(--bg-elev-2);border-bottom:1px solid var(--code-border);overflow-x:auto;}
+.code-tab{padding:9px 16px;font-family:'Space Mono';font-size:12px;color:var(--text-faint);cursor:pointer;border-right:1px solid var(--code-border);white-space:nowrap;user-select:none;}
+.code-tab:hover{color:var(--text-dim);}
+.code-tab.active{color:var(--docker);background:var(--code-bg);border-bottom:2px solid var(--docker);margin-bottom:-1px;}
+.code-body{position:relative;}
+.code-pane{display:none;padding:16px 18px;overflow-x:auto;}
+.code-pane.active{display:block;}
+pre{margin:0;font-size:12.8px;line-height:1.65;color:#c7d3e0;}
+html[data-theme="light"] pre{color:#333c30;}
+.kw{color:#c586c0;}
+.ann{color:var(--docker);font-weight:700;}
+.str{color:#ce9178;}
+.cm{color:var(--text-faint);font-style:italic;}
+.ty{color:#4ec9b0;}
+.cl{color:#e5c07b;}
+.flag{color:#e5c07b;}
+
+.callout{border-radius:var(--radius);padding:14px 16px;margin:16px 0;border:1px solid;font-size:13.5px;}
+.callout.info{background:var(--accent-2-soft);border-color:var(--accent-2);color:var(--text);}
+.callout.warn{background:var(--warn-soft);border-color:var(--warn);color:var(--text);}
+.callout.pitfall{background:var(--danger-soft);border-color:var(--danger);color:var(--text);}
+.callout b.lbl{display:block;font-family:'Space Mono';font-size:11px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;}
+.callout.info b.lbl{color:var(--accent-2);}
+.callout.warn b.lbl{color:var(--warn);}
+.callout.pitfall b.lbl{color:var(--danger);}
+.callout p{margin:0;color:var(--text-dim);}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left;color:var(--text-dim);}
+th{background:var(--bg-elev-2);color:var(--text);font-family:'Space Mono';font-size:11.5px;text-transform:uppercase;letter-spacing:0.04em;}
+tr:hover td{background:var(--bg-elev-2);}
+
+.diagram{border:1px solid var(--code-border);background:var(--code-bg);border-radius:var(--radius);padding:22px 18px;margin:18px 0;overflow-x:auto;}
+.dflow{display:flex;align-items:stretch;gap:10px;min-width:max-content;}
+.dbox{flex-shrink:0;min-width:120px;border:1px solid var(--border);background:var(--bg-elev);border-radius:8px;padding:12px 14px;text-align:center;}
+.dbox .t{font-family:'Space Mono';font-size:12px;color:var(--text);font-weight:700;}
+.dbox .s{font-size:10.5px;color:var(--text-faint);margin-top:4px;}
+.dbox.accent{border-color:var(--docker);background:var(--docker-soft);}
+.dbox.accent .t{color:var(--docker);}
+.dbox.warn{border-color:var(--warn);background:var(--warn-soft);}
+.dbox.warn .t{color:var(--warn);}
+.dbox.dim{opacity:0.55;}
+.darrow{flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-family:'Space Mono';font-size:16px;min-width:24px;}
+.dstack{display:flex;flex-direction:column;gap:8px;}
+.dcol{display:flex;flex-direction:column;gap:8px;align-items:center;}
+.dphase-label{font-family:'Space Mono';font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;text-align:center;margin-top:8px;}
+
+.stack-diagram{border:1px solid var(--code-border);background:var(--code-bg);border-radius:var(--radius);padding:18px;margin:18px 0;}
+.stack-layer{border:1px solid var(--border);border-radius:6px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;font-size:12.5px;}
+.stack-layer .l-name{font-family:'Space Mono';font-weight:700;color:var(--text);}
+.stack-layer .l-desc{color:var(--text-faint);font-size:11px;}
+.stack-layer.app{background:var(--docker-soft);border-color:var(--docker);}
+.stack-layer.shared{background:var(--accent-soft);border-color:var(--accent);}
+.stack-col{display:flex;gap:16px;}
+.stack-half{flex:1;}
+.stack-half-title{font-family:'Space Mono';font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-bottom:8px;text-align:center;}
+
+.qa-section{margin-top:26px;}
+.qa-tabs{display:flex;gap:8px;margin-bottom:14px;}
+.qa-tab-btn{font-family:'Space Mono';font-size:11.5px;padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg-elev);color:var(--text-dim);cursor:pointer;text-transform:uppercase;letter-spacing:0.04em;}
+.qa-tab-btn.common.active{background:var(--accent-2-soft);border-color:var(--accent-2);color:var(--accent-2);}
+.qa-tab-btn.faang.active{background:var(--danger-soft);border-color:var(--danger);color:var(--danger);}
+.qa-pane{display:none;}
+.qa-pane.active{display:block;}
+details.qa{border:1px solid var(--border);border-radius:8px;margin-bottom:8px;background:var(--bg-elev);overflow:hidden;}
+details.qa[open]{border-color:var(--accent-2);}
+details.qa summary{padding:12px 16px;cursor:pointer;font-weight:600;font-size:13.8px;list-style:none;display:flex;align-items:flex-start;gap:10px;color:var(--text);}
+details.qa summary::-webkit-details-marker{display:none;}
+details.qa summary::before{content:"Q";flex-shrink:0;font-family:'Space Mono';font-size:11px;color:var(--accent-2);background:var(--accent-2-soft);width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+details.qa .qa-answer{padding:0 16px 16px 46px;color:var(--text-dim);font-size:13.5px;}
+details.qa .qa-answer p{margin:0 0 8px;color:var(--text-dim);}
+details.qa .qa-answer p:last-child{margin-bottom:0;}
+
+.divider{height:1px;background:linear-gradient(90deg,var(--border),transparent);margin:44px 0;}
+.footer-note{color:var(--text-faint);font-size:12px;text-align:center;padding:30px 0 10px;}
+
+.cmd-table code{color:var(--docker);}
+
+@media(max-width:900px){
+  .shell{flex-direction:column;}
+  .sidebar{position:relative;width:100%;height:auto;}
+  main{padding:32px 20px 80px;}
+  .stack-col{flex-direction:column;}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-badge">🐳</div>
+    <div class="brand-text">Spring Boot Bible<span>Section 4 · Docker</span></div>
+  </div>
+  <button class="theme-toggle" id="themeToggle">🌙 Dark mode <span>⇄</span></button>
+
+  <div class="nav-group">
+    <div class="nav-group-title">Foundations</div>
+    <a class="nav-link" href="#challenges"><span class="vid-no">39</span>Deployment Challenges</a>
+    <a class="nav-link" href="#containers-vs-vms"><span class="vid-no">40</span>Containers vs VMs</a>
+    <a class="nav-link" href="#definitions"><span class="vid-no">41</span>Containers, Containerization, Docker</a>
+    <a class="nav-link" href="#architecture"><span class="vid-no">42</span>Docker Architecture</a>
+    <a class="nav-link" href="#install-hub"><span class="vid-no">43</span>Installation & Docker Hub</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Building Images: Dockerfile</div>
+    <a class="nav-link" href="#three-approaches"><span class="vid-no">44</span>Three Image-Build Approaches</a>
+    <a class="nav-link" href="#dockerfile-accounts"><span class="vid-no">45-47</span>Dockerfile for Accounts MS</a>
+    <a class="nav-link" href="#run-container"><span class="vid-no">48</span>Running as a Container</a>
+    <a class="nav-link" href="#dockerfile-challenges"><span class="vid-no">49</span>Dockerfile Challenges</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Alternative Build Tools</div>
+    <a class="nav-link" href="#buildpacks"><span class="vid-no">50</span>Buildpacks — Loans MS</a>
+    <a class="nav-link" href="#jib"><span class="vid-no">51</span>Google Jib — Cards MS</a>
+    <a class="nav-link" href="#compare-approaches"><span class="vid-no">52</span>Compare All Three</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Distribution & Orchestration</div>
+    <a class="nav-link" href="#push-hub"><span class="vid-no">53</span>Push to Docker Hub</a>
+    <a class="nav-link" href="#compose-intro"><span class="vid-no">54</span>Docker Compose Intro</a>
+    <a class="nav-link" href="#compose-run"><span class="vid-no">55-56</span>Running via Compose</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Operations</div>
+    <a class="nav-link" href="#docker-commands"><span class="vid-no">57</span>Docker Commands Deep Dive</a>
+    <a class="nav-link" href="#extensions-logs"><span class="vid-no">58</span>Extensions & Logs Explorer</a>
+  </div>
+</aside>
+
+<main>
+  <div class="hero">
+    <div class="hero-eyebrow">Section 4 · Spring Boot Bible</div>
+    <h1>Docker — Deployment Portability & Scalability</h1>
+    <p>You've built three Spring Boot microservices that run fine on your machine. The next problem is universal: <em>"it works on my machine"</em> is not a deployment strategy. This section covers Docker end-to-end — from first principles (what a container actually is, why it's not a lightweight VM) through three different ways to package the Accounts/Loans/Cards services as images, running them, pushing them to a registry, and orchestrating all three together with Docker Compose. Written assuming zero prior Docker exposure — every concept is built up before it's used.</p>
+    <div class="scope-box">
+      <b>How to use this document:</b> Read foundations (39–43) fully before touching commands — the mental model of "containers share the host kernel, images are layered, a registry is just a content-addressable store" makes every later command make sense instead of feeling like magic incantations. Each topic has concept → diagram/code → <b>Common</b>/<b>FAANG-level</b> Q&A.
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="challenges">
+    <div class="topic-head"><span class="topic-no">39</span><h2>Introduction to Challenges While Building & Deploying Microservices</h2></div>
+    <p class="topic-sub">Why "it works on my machine" breaks down once you have three services, three teams, and multiple environments.</p>
+
+    <h3 class="subhead">The problems that multiply with each new microservice</h3>
+    <ul>
+      <li><strong>Environment inconsistency</strong> — your laptop has JDK 21, staging has JDK 17, prod has JDK 21 patch 3. A subtle behavior difference (or worse, a startup failure) shows up only in one environment.</li>
+      <li><strong>Dependency conflicts</strong> — Accounts needs one version of a shared library, Loans needs another; installing both directly on a host OS creates version collisions.</li>
+      <li><strong>Manual, error-prone deployment steps</strong> — "install JDK, install this exact Maven version, set these 6 environment variables, copy the JAR, run it with these flags" — a runbook that inevitably drifts from reality and fails differently on every machine it's followed on.</li>
+      <li><strong>Scaling is manual and slow</strong> — spinning up a second instance of Accounts to handle more load means manually provisioning another machine/VM and repeating the entire setup runbook.</li>
+      <li><strong>Resource inefficiency with VMs</strong> — running each service in its own full VM (its own guest OS, kernel, drivers) wastes CPU/memory on OS overhead multiplied by N services.</li>
+      <li><strong>Portability across environments</strong> — dev laptop → CI runner → staging → production are frequently different OS versions/configurations entirely; "works in staging" doesn't guarantee "works in prod."</li>
+    </ul>
+
+    <div class="callout info"><b class="lbl">The core insight Docker provides</b><p>Package the application <em>together with</em> everything it needs to run (JRE, libraries, config, OS-level dependencies) into one immutable, portable unit — an <strong>image</strong> — that runs identically regardless of the underlying host, because the packaging captures the entire runtime environment, not just the code.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q1-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q1-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q1-common">
+        <details class="qa"><summary>What does "it works on my machine" actually mean as an engineering problem?</summary><div class="qa-answer"><p>It means the application's behavior depends on implicit environmental factors — installed JDK version, OS libraries, environment variables, file paths — that aren't captured anywhere alongside the code, so the same source code can behave differently (or fail entirely) across different machines where those implicit factors differ.</p></div></details>
+        <details class="qa"><summary>Why does manual deployment get harder as the number of microservices grows?</summary><div class="qa-answer"><p>Each service can have its own dependency versions and setup steps; manually provisioning and configuring N services across multiple environments multiplies the chance of drift and human error linearly (or worse) with N, and makes consistent, repeatable deployment nearly impossible without automation/standardization.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q1-faang">
+        <details class="qa"><summary>Before containers existed, how did teams try to solve environment consistency, and why were those approaches insufficient at scale?</summary><div class="qa-answer"><p>Common pre-container approaches: configuration management tools (Chef/Puppet/Ansible) to script consistent environment setup across servers, and full VMs per service for isolation. Config management reduces drift but is still slow to converge, requires the scripts themselves to be perfectly maintained, and doesn't guarantee bit-for-bit environment parity between dev and prod. Full VMs give strong isolation but at heavy resource cost (a full guest OS per service) and slow boot times, making rapid horizontal scaling and dense multi-service packing on one host impractical — which is precisely the gap containers were designed to close: VM-level isolation guarantees without VM-level resource overhead.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="containers-vs-vms">
+    <div class="topic-head"><span class="topic-no">40</span><h2>What Are Containers & How Are They Different From VMs?</h2></div>
+    <p class="topic-sub">The single most commonly asked Docker interview question — get this mental model exactly right.</p>
+
+    <h3 class="subhead">Virtual Machines: hardware-level virtualization</h3>
+    <p>A VM virtualizes an entire physical machine. A <strong>hypervisor</strong> (Type 1 like VMware ESXi/Hyper-V running directly on hardware, or Type 2 like VirtualBox running atop a host OS) partitions physical hardware and runs a complete, independent <strong>guest operating system</strong> — its own kernel, its own drivers, everything — inside each VM. Two VMs on one physical host are almost entirely isolated because they don't share a kernel at all.</p>
+
+    <h3 class="subhead">Containers: OS-level virtualization</h3>
+    <p>A container does <strong>not</strong> include a guest OS or its own kernel. All containers on a host <strong>share the host machine's kernel</strong>, but are isolated from each other at the process level using Linux kernel features: <strong>namespaces</strong> (isolate what a process can see — its own view of process IDs, network interfaces, mount points, hostname) and <strong>cgroups</strong> (control groups — limit and account for how much CPU/memory/disk I/O a process or group of processes can use). A container is, at its core, <strong>an isolated process (or group of processes) running on the host kernel</strong> — not a separate machine at all.</p>
+
+    <div class="stack-diagram">
+      <div class="stack-col">
+        <div class="stack-half">
+          <div class="stack-half-title">Virtual Machines</div>
+          <div class="stack-layer app">App A <span class="l-desc">bins/libs</span></div>
+          <div class="stack-layer">Guest OS (Kernel) <span class="l-desc">full OS per app</span></div>
+          <div class="stack-layer app" style="margin-top:14px;">App B <span class="l-desc">bins/libs</span></div>
+          <div class="stack-layer">Guest OS (Kernel) <span class="l-desc">full OS per app</span></div>
+          <div class="stack-layer shared" style="margin-top:14px;">Hypervisor</div>
+          <div class="stack-layer shared">Host OS + Host Kernel</div>
+          <div class="stack-layer shared">Physical Infrastructure</div>
+        </div>
+        <div class="stack-half">
+          <div class="stack-half-title">Containers</div>
+          <div class="stack-layer app">Container A <span class="l-desc">App A + bins/libs</span></div>
+          <div class="stack-layer app">Container B <span class="l-desc">App B + bins/libs</span></div>
+          <div class="stack-layer shared" style="margin-top:14px;">Docker Engine</div>
+          <div class="stack-layer shared">Host OS + Host Kernel <span class="l-desc">shared by all containers</span></div>
+          <div class="stack-layer shared">Physical Infrastructure</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="subhead">Direct comparison</h3>
+    <table>
+      <tr><th>Aspect</th><th>Virtual Machine</th><th>Container</th></tr>
+      <tr><td>Isolation unit</td><td>Full hardware-virtualized machine</td><td>Isolated OS process (namespaces + cgroups)</td></tr>
+      <tr><td>Kernel</td><td>Own guest kernel per VM</td><td>Shares the host kernel</td></tr>
+      <tr><td>Boot time</td><td>Minutes (full OS boot)</td><td>Milliseconds to seconds (just starting a process)</td></tr>
+      <tr><td>Image/disk size</td><td>GBs (full OS image)</td><td>MBs (app + minimal libs)</td></tr>
+      <tr><td>Resource overhead</td><td>High — each VM runs a full OS</td><td>Low — only the app's own process overhead</td></tr>
+      <tr><td>Density per host</td><td>Tens of VMs</td><td>Hundreds to thousands of containers</td></tr>
+      <tr><td>Isolation strength</td><td>Very strong — separate kernels, harder to break out of</td><td>Weaker than VMs — a kernel vulnerability can theoretically affect all containers sharing it</td></tr>
+      <tr><td>OS flexibility</td><td>Guest OS can differ entirely from host (Linux VM on Windows host)</td><td>Container must be compatible with the host kernel (Linux containers need a Linux kernel — this is why Docker Desktop on Windows/Mac runs a lightweight Linux VM under the hood)</td></tr>
+    </table>
+
+    <div class="callout warn"><b class="lbl">Interview-critical nuance: Docker Desktop on Mac/Windows</b><p>Since Linux containers need a Linux kernel, and macOS/Windows don't have one, Docker Desktop on those platforms transparently runs a small Linux VM in the background and runs your containers inside <em>that</em> VM. This is why "containers are not VMs" is true architecturally on Linux hosts, but on Mac/Windows there's technically one VM in the picture — just one shared VM hosting potentially hundreds of lightweight containers, not one VM per container. This nuance is a favorite follow-up question.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q2-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q2-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q2-common">
+        <details class="qa"><summary>What is the fundamental architectural difference between a container and a VM?</summary><div class="qa-answer"><p>A VM virtualizes hardware and runs a complete guest OS with its own kernel; a container is an isolated process (or group of processes) that shares the host machine's kernel, using Linux namespaces for isolation and cgroups for resource limiting — no separate kernel or OS involved.</p></div></details>
+        <details class="qa"><summary>Why do containers start in milliseconds while VMs take minutes?</summary><div class="qa-answer"><p>Starting a container just means starting an isolated process on an already-running host kernel — no OS boot sequence involved. Starting a VM requires booting an entire separate guest operating system from scratch, which is inherently much slower.</p></div></details>
+        <details class="qa"><summary>Why are containers more resource-efficient than VMs?</summary><div class="qa-answer"><p>Because containers don't duplicate an entire guest OS per instance — they share the host kernel and only carry the overhead of their own application process and its direct dependencies, so many more containers can run densely on the same hardware compared to VMs.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q2-faang">
+        <details class="qa"><summary>What specific Linux kernel primitives make container isolation possible, and what does each one isolate?</summary><div class="qa-answer"><p><strong>Namespaces</strong> partition what a process can "see": PID namespace (its own process ID tree — container's process 1 isn't the host's process 1), Network namespace (its own network interfaces, IP, routing table), Mount namespace (its own filesystem view), UTS namespace (its own hostname), IPC namespace (isolated inter-process communication), User namespace (can map container root to an unprivileged host user). <strong>Cgroups (control groups)</strong> handle resource accounting and limiting — capping how much CPU, memory, disk I/O, and network bandwidth a process or process group can consume, and can also enforce priority/throttling. Together: namespaces answer "what can this process see," cgroups answer "how much can this process use" — this two-part mechanism is the actual technical answer to "how does Docker achieve isolation," which distinguishes a real understanding from a surface-level one.</p></div></details>
+        <details class="qa"><summary>Given that containers share the host kernel, what's the actual security implication compared to VMs, and how is it mitigated in production?</summary><div class="qa-answer"><p>Because all containers on a host share one kernel, a kernel-level vulnerability (a container escape exploit) can potentially compromise isolation across all containers on that host — a materially different threat model than VMs, where a guest kernel compromise is contained to that one VM. Mitigations used in production: running containers with minimal privileges (avoiding `--privileged` mode, dropping unnecessary Linux capabilities), using user namespaces to avoid running container processes as root on the host, applying mandatory access control profiles (AppArmor/SELinux) and seccomp syscall filtering to restrict what a container process can do even if compromised, keeping the host kernel patched, and for genuinely untrusted workloads, using stronger isolation technologies like gVisor (a user-space kernel intercepting syscalls) or Kata Containers (lightweight VMs with container-like UX) that reintroduce VM-level isolation boundaries specifically because plain container isolation isn't considered sufficient for hostile multi-tenant workloads.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="definitions">
+    <div class="topic-head"><span class="topic-no">41</span><h2>Definition of Containers, Containerization, and Docker</h2></div>
+    <p class="topic-sub">Precise definitions — the vocabulary interviewers expect you to use correctly.</p>
+
+    <table>
+      <tr><th>Term</th><th>Precise definition</th></tr>
+      <tr><td><strong>Container</strong></td><td>A lightweight, standalone, executable unit of software that packages application code together with all its runtime dependencies (libraries, system tools, settings) — implemented as an isolated process (or process group) on the host kernel via namespaces + cgroups.</td></tr>
+      <tr><td><strong>Image</strong></td><td>An immutable, read-only template/blueprint from which containers are created — a set of stacked, layered filesystem changes plus metadata (entrypoint, exposed ports, env vars). A container is a running (or stopped) <em>instance</em> of an image, with a thin writable layer on top.</td></tr>
+      <tr><td><strong>Containerization</strong></td><td>The practice/process of packaging an application and its dependencies into a container image so it can run consistently across any environment that has a compatible container runtime.</td></tr>
+      <tr><td><strong>Docker</strong></td><td>A platform/toolset (not the only one — see below) that implements containerization: builds images, runs containers, manages networking/storage for containers, and provides tooling (CLI, daemon, Compose) around the whole workflow.</td></tr>
+      <tr><td><strong>Registry</strong></td><td>A storage/distribution service for container images (Docker Hub is the default public registry; private registries include AWS ECR, Google Artifact Registry, Harbor).</td></tr>
+    </table>
+
+    <div class="callout info"><b class="lbl">Docker is an implementation, not the only standard</b><p>The container ecosystem is standardized by the <strong>Open Container Initiative (OCI)</strong>, which defines the Image Spec and Runtime Spec — meaning OCI-compliant images built by Docker can run on other OCI-compliant runtimes (containerd, CRI-O, Podman) and vice versa. Docker popularized containers and remains the most common dev-facing tool, but "Docker" and "containers" are not strictly synonymous — this distinction is a good signal of depth in interviews.</p></div>
+
+    <h3 class="subhead">Image layers — the key mental model for everything that follows</h3>
+    <p>A Docker image is built as a stack of <strong>read-only layers</strong>, each representing a filesystem diff from the layer below it (e.g. "installed a JRE," "copied the JAR file"). Layers are <strong>cached and shared</strong> across images — if two images both start from the same base layer, Docker stores that layer's data once on disk regardless of how many images reference it. When you run a container, Docker adds one thin, writable layer on top for that container's runtime changes — the underlying image layers are never modified, which is exactly why <strong>images are immutable</strong> and multiple containers can share the same image layers safely and efficiently.</p>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q3-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q3-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q3-common">
+        <details class="qa"><summary>What's the difference between a Docker image and a Docker container?</summary><div class="qa-answer"><p>An image is an immutable, read-only template — a stack of filesystem layers plus metadata — that serves as a blueprint. A container is a running (or stopped) instance created from an image, with a thin writable layer added on top for any runtime changes.</p></div></details>
+        <details class="qa"><summary>What is a container registry, and what's the most common one?</summary><div class="qa-answer"><p>A storage and distribution service for container images that lets you push images to share them and pull them down on any other machine. Docker Hub is the default, most widely used public registry; organizations also run private registries (AWS ECR, Google Artifact Registry) for internal images.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q3-faang">
+        <details class="qa"><summary>Why does Docker structure images as layers instead of one monolithic filesystem snapshot, and what performance/storage benefit does that create?</summary><div class="qa-answer"><p>Layering enables three major efficiencies: (1) <strong>build caching</strong> — if a Dockerfile instruction and its inputs haven't changed, Docker reuses the cached layer instead of rebuilding it, dramatically speeding up iterative builds; (2) <strong>storage deduplication</strong> — multiple images sharing a common base layer (e.g. the same JRE base image) store that layer's data only once on disk, not once per image; (3) <strong>efficient distribution</strong> — when pulling an image, Docker only needs to download layers not already present locally (e.g. pulling a new app version that only changed the top "copy JAR" layer reuses every cached lower layer), making incremental deploys far faster than re-transferring a whole image each time.</p></div></details>
+        <details class="qa"><summary>What does OCI-compliance actually guarantee, and why does that matter for a company choosing container tooling?</summary><div class="qa-answer"><p>OCI compliance guarantees an image built by one OCI-compliant tool (Docker, Buildpacks, Jib, Kaniko) can be run by any OCI-compliant runtime (Docker Engine, containerd, CRI-O, Podman) without modification, because both the image format (layer structure, manifest, config) and runtime behavior (how a container is started from that image) are specified independently of any single vendor's implementation. For a company, this matters because it decouples the choice of build tooling from the choice of runtime/orchestration platform — e.g. you can build images with Jib (no Docker daemon needed in CI) and run them on a Kubernetes cluster using containerd, without any compatibility risk, and you're not locked into Docker specifically as a company standard just because it popularized the ecosystem.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="architecture">
+    <div class="topic-head"><span class="topic-no">42</span><h2>Introduction to Docker Components & Its Architecture</h2></div>
+    <p class="topic-sub">Client-server architecture — the CLI, the daemon, containerd, runc, and where images live.</p>
+
+    <div class="diagram">
+      <div class="dflow" style="flex-wrap:wrap;">
+        <div class="dbox accent"><div class="t">Docker CLI (client)</div><div class="s">docker build/run/push — sends REST API commands</div></div>
+        <div class="darrow">→</div>
+        <div class="dbox warn"><div class="t">dockerd (daemon)</div><div class="s">manages images, containers, networks, volumes</div></div>
+        <div class="darrow">→</div>
+        <div class="dbox"><div class="t">containerd</div><div class="s">high-level container runtime, manages container lifecycle</div></div>
+        <div class="darrow">→</div>
+        <div class="dbox"><div class="t">runc</div><div class="s">low-level OCI runtime — actually creates the namespaced/cgrouped process</div></div>
+      </div>
+    </div>
+
+    <h3 class="subhead">Core components</h3>
+    <table>
+      <tr><th>Component</th><th>Role</th></tr>
+      <tr><td><strong>Docker Client (CLI)</strong></td><td>The <code>docker</code> command you type — sends requests to the daemon over a REST API (locally via a Unix socket, or remotely over TCP)</td></tr>
+      <tr><td><strong>Docker Daemon (dockerd)</strong></td><td>Background process that does the actual work — builds images, runs/stops containers, manages networks and volumes, listens for API requests from the client</td></tr>
+      <tr><td><strong>containerd</strong></td><td>A separate, high-level container runtime (donated by Docker to the CNCF) that dockerd delegates to for actual container lifecycle management — image transfer/storage, container execution supervision</td></tr>
+      <tr><td><strong>runc</strong></td><td>The low-level, OCI-spec-compliant runtime that does the literal work of creating a namespaced, cgrouped Linux process from an image's root filesystem — the "last mile" that actually starts a container</td></tr>
+      <tr><td><strong>Docker Registry</strong></td><td>Where images are stored/distributed (Docker Hub by default) — <code>docker pull</code>/<code>docker push</code> talk to a registry</td></tr>
+      <tr><td><strong>Docker Objects</strong></td><td>Images, Containers, Networks, Volumes — the things the daemon manages and the CLI operates on</td></tr>
+    </table>
+
+    <div class="callout info"><b class="lbl">Why the client-server split matters practically</b><p>Because the CLI just talks to the daemon over an API, the client and daemon don't have to be on the same machine — you can run <code>docker</code> commands locally against a daemon running on a remote server (setting <code>DOCKER_HOST</code>), which is exactly how tools like Docker Desktop's remote contexts and CI/CD runners often work.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q4-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q4-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q4-common">
+        <details class="qa"><summary>Is Docker a single program, or does it have separate components?</summary><div class="qa-answer"><p>It's a client-server architecture: the Docker CLI (client) sends commands to the Docker daemon (dockerd), which does the actual work of building images and running containers, delegating further down to containerd and ultimately runc for the low-level process creation.</p></div></details>
+        <details class="qa"><summary>What is dockerd?</summary><div class="qa-answer"><p>The Docker daemon — a persistent background process that listens for API requests from the Docker CLI and manages images, containers, networks, and volumes on the host.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q4-faang">
+        <details class="qa"><summary>Why did Docker split out containerd and donate it to the CNCF rather than keeping everything inside dockerd?</summary><div class="qa-answer"><p>It standardized the container runtime layer so other tools in the ecosystem (Kubernetes, in particular) could use a common, vendor-neutral runtime instead of depending on Docker's full daemon — Kubernetes's CRI (Container Runtime Interface) can talk directly to containerd without needing dockerd at all, which is why modern Kubernetes clusters commonly run containerd directly rather than "Docker inside Kubernetes." Separating concerns this way also made the runtime layer independently improvable and testable, and reduced the API surface a security-sensitive component (the low-level runtime) needs to expose.</p></div></details>
+        <details class="qa"><summary>What's the relationship between "Docker" and "Kubernetes container runtime" now that Kubernetes deprecated dockershim?</summary><div class="qa-answer"><p>Kubernetes originally supported Docker directly via a compatibility shim (dockershim) translating Kubernetes's CRI calls into Docker daemon API calls; this was deprecated and removed (Kubernetes 1.24+) in favor of talking directly to CRI-compatible runtimes like containerd or CRI-O, cutting out the Docker daemon layer entirely in cluster nodes. Critically, this does NOT mean Kubernetes stopped running "Docker images" — since images are OCI-compliant regardless of which tool built them, images built via `docker build` still run fine on a containerd-based Kubernetes node; only the specific `dockerd`-as-runtime-inside-the-cluster path was removed. This distinction (image format compatibility vs runtime tool choice) is a very common point of confusion interviewers probe for.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="install-hub">
+    <div class="topic-head"><span class="topic-no">43</span><h2>Docker Installation & Docker Hub Introduction</h2></div>
+    <p class="topic-sub">Getting Docker Desktop running locally, and what Docker Hub is for.</p>
+
+    <h3 class="subhead">Installation</h3>
+    <p><strong>Docker Desktop</strong> (Mac/Windows/Linux) bundles the Docker Engine (daemon + CLI), a lightweight Linux VM (on Mac/Windows, as covered earlier), Docker Compose, and a GUI dashboard for viewing images/containers/volumes. On native Linux servers, you'd typically install just the Docker Engine (<code>dockerd</code> + CLI) directly without Docker Desktop, since Linux already has a compatible kernel.</p>
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">verify install</div></div>
+      <div class="code-body"><div class="code-pane active"><pre>$ docker --version
+Docker version 27.x.x, build xxxxxxx
+
+$ docker run hello-world
+<span class="cm"># pulls a tiny test image and runs it — confirms daemon connectivity end-to-end</span></pre></div></div>
+    </div>
+
+    <h3 class="subhead">Docker Hub</h3>
+    <p><strong>Docker Hub</strong> is Docker's default public image registry (<a href="https://hub.docker.com" target="_blank">hub.docker.com</a>) — a place to pull official/community images (e.g. `openjdk`, `postgres`, `nginx`) and, once you sign up, push your own images to public or private repositories. Every `docker pull`/`docker push` without an explicit registry hostname implicitly targets Docker Hub.</p>
+
+    <table>
+      <tr><th>Image name component</th><th>Example</th><th>Meaning</th></tr>
+      <tr><td>Registry (implicit)</td><td><code>docker.io</code></td><td>Defaults to Docker Hub if omitted</td></tr>
+      <tr><td>Namespace/username</td><td><code>eazybytes</code></td><td>Docker Hub account/org the image belongs to</td></tr>
+      <tr><td>Repository name</td><td><code>accounts</code></td><td>The image's name</td></tr>
+      <tr><td>Tag</td><td><code>s4</code>, <code>latest</code></td><td>A version label — defaults to `latest` if omitted (a plain convention, not "always the newest")</td></tr>
+    </table>
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">full image reference</div></div>
+      <div class="code-body"><div class="code-pane active"><pre>docker.io/eazybytes/accounts:s4
+└────┬───┘ └───┬───┘ └───┬───┘ └┬┘
+ registry  namespace  repo    tag</pre></div></div>
+    </div>
+
+    <div class="callout pitfall"><b class="lbl">Interview trap: "latest" is not special</b><p><code>latest</code> is just a conventional default tag name, not a Docker mechanism guaranteeing "the most recently pushed version." If you push an image without specifying a tag, it's tagged `latest` — but nothing stops you from pushing an older build and tagging <em>that</em> `latest` too. Production systems avoid relying on `latest` entirely and pin explicit, immutable version tags (or even better, image digests) for reproducible deployments.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q5-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q5-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q5-common">
+        <details class="qa"><summary>What is Docker Hub?</summary><div class="qa-answer"><p>Docker's default public image registry — a place to pull existing images (official ones like `openjdk`, or community/private ones) and push your own built images so they can be pulled from any other machine.</p></div></details>
+        <details class="qa"><summary>What does the "latest" tag actually mean?</summary><div class="qa-answer"><p>It's just a conventional tag name used as the default when no tag is specified — it does not automatically track the most recently built or pushed image. Any image can be tagged `latest` regardless of when it was built.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q5-faang">
+        <details class="qa"><summary>Why do production deployment pipelines avoid deploying the "latest" tag?</summary><div class="qa-answer"><p>Because `latest` is mutable and non-deterministic from the deployer's perspective — two deployments both referencing `latest` at different times can pull genuinely different images without any explicit version change being visible in deployment configuration, making rollbacks and audits unreliable ("which exact image is running in prod right now?" becomes unanswerable from the tag alone). Production pipelines instead pin explicit immutable tags (often a git commit SHA or semantic version) or, for maximum reproducibility, pin by <strong>image digest</strong> (a content-addressable SHA256 hash of the image manifest) — which uniquely and immutably identifies one specific image build, making deployments fully reproducible and auditable.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="three-approaches">
+    <div class="topic-head"><span class="topic-no">44</span><h2>Introduction to the Three Approaches for Docker Image Generation</h2></div>
+    <p class="topic-sub">Overview before diving into each — Dockerfile, Buildpacks, and Google Jib each get applied to a different one of the three microservices in this course.</p>
+
+    <table>
+      <tr><th>Approach</th><th>Applied to</th><th>Core idea</th></tr>
+      <tr><td><strong>Dockerfile</strong></td><td>Accounts MS</td><td>You write an explicit, step-by-step recipe (a text file) describing exactly how to assemble the image layer by layer — full control, full responsibility</td></tr>
+      <tr><td><strong>Buildpacks</strong></td><td>Loans MS</td><td>A higher-level tool inspects your project and automatically determines how to build an optimized image — no Dockerfile written at all, via <code>mvn spring-boot:build-image</code></td></tr>
+      <tr><td><strong>Google Jib</strong></td><td>Cards MS</td><td>A Maven/Gradle plugin that builds an OCI image directly from Java build output — no Dockerfile, and notably, no Docker daemon required at all</td></tr>
+    </table>
+
+    <div class="callout info"><b class="lbl">Why the course teaches all three</b><p>Each represents a different point on the control-vs-convenience spectrum, and different teams/organizations standardize on different ones depending on how much customization they need versus how much they want to offload to tooling. Understanding all three — and being able to compare their trade-offs — is a very common interview topic once Docker basics are established.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q6-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q6-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q6-common">
+        <details class="qa"><summary>Name the three approaches to generating a Docker image covered in this section.</summary><div class="qa-answer"><p>Writing a Dockerfile manually, using Cloud Native Buildpacks (via Spring Boot's `build-image` Maven/Gradle goal), and using Google Jib.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q6-faang">
+        <details class="qa"><summary>At a high level, what's the fundamental trade-off across these three approaches?</summary><div class="qa-answer"><p>It's a spectrum of control vs. automation: Dockerfile gives full manual control over every layer (and full responsibility for getting it right — base image choice, layer ordering, security patches), Buildpacks automates image construction with sensible, regularly-updated defaults (best for teams wanting to offload image best-practices to a maintained tool), and Jib goes furthest by removing the Docker daemon dependency entirely and optimizing specifically for JVM applications' layering needs (fastest iteration for Java-only teams, least flexibility for non-standard requirements). The right choice depends on how much the team wants to own image-build maintenance versus how much specialization/customization the deployment actually needs.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="dockerfile-accounts">
+    <div class="topic-head"><span class="topic-no">45-47</span><h2>Generate Docker Image of Accounts Microservice with Dockerfile</h2></div>
+    <p class="topic-sub">Every instruction explained — this is the file that gives you full manual control over the image.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">Dockerfile</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="ann">FROM</span> eclipse-temurin:21-jdk-alpine <span class="kw">AS</span> builder
+<span class="ann">WORKDIR</span> /app
+<span class="ann">COPY</span> . .
+<span class="ann">RUN</span> ./mvnw clean package -DskipTests
+
+<span class="ann">FROM</span> eclipse-temurin:21-jre-alpine
+<span class="ann">LABEL</span> maintainer=<span class="str">"eazybytes"</span>
+<span class="ann">WORKDIR</span> /app
+<span class="ann">COPY</span> --from=builder /app/target/accounts-0.0.1-SNAPSHOT.jar app.jar
+<span class="ann">ENV</span> ACTIVE_PROFILE=default
+<span class="ann">ENV</span> SPRING_PROFILES_ACTIVE=${ACTIVE_PROFILE}
+<span class="ann">EXPOSE</span> 8080
+<span class="ann">ENTRYPOINT</span> [<span class="str">"java"</span>, <span class="str">"-jar"</span>, <span class="str">"app.jar"</span>]</pre></div></div>
+    </div>
+
+    <h3 class="subhead">Instruction-by-instruction reference</h3>
+    <div class="ann-grid">
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">FROM</span></div><div class="ann-body"><p>Declares the base image every subsequent instruction builds on top of. <code>eclipse-temurin:21-jdk-alpine</code> is an official OpenJDK distribution image built on <strong>Alpine Linux</strong> — a minimal Linux distro chosen specifically to keep image size small.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">WORKDIR</span></div><div class="ann-body"><p>Sets the working directory for all subsequent instructions (COPY, RUN, ENTRYPOINT) inside the image — analogous to `cd`. Creates the directory if it doesn't exist.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">COPY</span></div><div class="ann-body"><p>Copies files from the build context (your local project directory, as sent to the daemon) into the image filesystem. <code>COPY . .</code> copies the entire project; the second usage with <code>--from=builder</code> copies specifically from an earlier build stage (multi-stage build, explained below).</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">RUN</span></div><div class="ann-body"><p>Executes a command <em>during the image build</em> (not at container runtime) and commits the resulting filesystem changes as a new layer. Here it runs the Maven build to produce the JAR.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">ENV</span></div><div class="ann-body"><p>Sets an environment variable, persisted into the image and available to the running container's process — used here to make the active Spring profile configurable without rebuilding the image.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">EXPOSE</span></div><div class="ann-body"><p><strong>Documentation only</strong> — it does not actually publish the port to the host. It signals to humans/tools which port the containerized app listens on; actual host-port exposure happens via <code>-p</code> on `docker run`.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">ENTRYPOINT</span></div><div class="ann-body"><p>The command that runs when a container starts from this image — here, launching the Spring Boot fat JAR. Written in <strong>exec form</strong> (JSON array) rather than shell form, so the JVM process becomes PID 1 directly (important for correct signal handling — see FAANG Q&A).</p></div></div>
+    </div>
+
+    <h3 class="subhead">Multi-stage build — why there are two FROM statements</h3>
+    <p>This Dockerfile has <strong>two stages</strong>: a <code>builder</code> stage (with the full JDK, source code, and Maven) that compiles the JAR, and a final stage (with only a JRE — no JDK, no source, no Maven) that copies <em>just the built artifact</em> out of the builder stage via <code>COPY --from=builder</code>. Everything from the builder stage — source code, `.m2` dependency cache, the JDK's compiler tools — is discarded and never appears in the final image.</p>
+
+    <div class="diagram">
+      <div class="dflow">
+        <div class="dcol">
+          <div class="dphase-label">Stage 1: builder</div>
+          <div class="dbox warn"><div class="t">JDK + source + Maven</div><div class="s">large — but discarded</div></div>
+        </div>
+        <div class="darrow">COPY --from=builder →</div>
+        <div class="dcol">
+          <div class="dphase-label">Stage 2: final image</div>
+          <div class="dbox accent"><div class="t">JRE + app.jar only</div><div class="s">small — this is what ships</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout info"><b class="lbl">Why this matters: image size</b><p>A full JDK + Maven + source tree could easily be 600MB+; a JRE-only final image with just the JAR can be under 200MB. Smaller images pull faster (faster deploys, faster autoscaling), have a smaller attack surface (no compiler/build tools available inside a running production container), and cost less to store/transfer across a fleet.</p></div>
+
+    <h3 class="subhead">JDK vs JRE — why the final stage only needs the JRE</h3>
+    <table>
+      <tr><th>Component</th><th>Contains</th><th>Needed for</th></tr>
+      <tr><td><strong>JDK</strong></td><td>JRE + compiler (<code>javac</code>) + dev tools</td><td>Compiling source code — only needed at build time</td></tr>
+      <tr><td><strong>JRE</strong></td><td>JVM + core libraries</td><td>Running already-compiled bytecode — all that's needed at runtime</td></tr>
+    </table>
+    <p>Since the final image only ever <em>runs</em> a pre-built JAR (compilation already happened in the builder stage), shipping a JDK in the runtime image would be pure dead weight.</p>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q7-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q7-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q7-common">
+        <details class="qa"><summary>What's the difference between RUN and ENTRYPOINT?</summary><div class="qa-answer"><p>`RUN` executes during image build time and its result is baked into the image as a layer (e.g. compiling code). `ENTRYPOINT` defines the command that executes when a container is started from the image — it runs at container runtime, not build time.</p></div></details>
+        <details class="qa"><summary>Does EXPOSE actually make the port accessible from outside the container?</summary><div class="qa-answer"><p>No — `EXPOSE` is purely documentation/metadata about which port the containerized application listens on. Actually publishing/mapping that port to the host requires the `-p` flag on `docker run` (e.g. `-p 8080:8080`).</p></div></details>
+        <details class="qa"><summary>Why does the final image use a JRE base image instead of a JDK?</summary><div class="qa-answer"><p>The final image only runs an already-compiled JAR — it never compiles source code — so it doesn't need the JDK's compiler and development tools. Using a JRE-only base keeps the final image significantly smaller.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q7-faang">
+        <details class="qa"><summary>What problem does a multi-stage build solve, and what did teams do before multi-stage builds existed?</summary><div class="qa-answer"><p>It solves the problem of needing heavy build-time tooling (JDK, Maven, potentially a `.m2` cache, source code) without shipping any of it in the final runtime image. Before multi-stage builds (introduced in Docker 17.05), teams either shipped bloated images containing the full build toolchain, or resorted to building the JAR in a completely separate step/host (CI pipeline) and writing a Dockerfile that only ever does a `COPY` of the pre-built artifact — which works but couples the Dockerfile's correctness to an external build step happening first, splitting the "how do I build this artifact" knowledge across two disconnected places (CI config and Dockerfile) instead of keeping it self-contained in one file.</p></div></details>
+        <details class="qa"><summary>Why does ENTRYPOINT use exec form (JSON array) rather than shell form ("java -jar app.jar" as a string), and why does this matter for how Docker sends signals?</summary><div class="qa-answer"><p>Shell form (<code>ENTRYPOINT java -jar app.jar</code>) runs the command wrapped inside `/bin/sh -c "..."`, making the shell process PID 1 inside the container, with your actual Java process as a <em>child</em> of that shell. Exec form (<code>ENTRYPOINT ["java", "-jar", "app.jar"]</code>) runs the Java process directly as PID 1, with no intermediate shell. This matters because Docker sends stop signals (SIGTERM, then SIGKILL after a grace period) to PID 1 when you run `docker stop`. If a shell is PID 1, it may not forward SIGTERM to the child Java process by default, meaning the JVM never gets a chance to shut down gracefully (closing DB connections, finishing in-flight requests) and instead gets hard-killed once the grace period expires — exec form ensures the JVM itself receives the signal directly and can implement a proper graceful shutdown hook.</p></div></details>
+        <details class="qa"><summary>How does Docker's build cache interact with the order of instructions in this Dockerfile, and how would you optimize this specific Dockerfile for faster rebuilds?</summary><div class="qa-answer"><p>Docker caches each layer keyed by the instruction and its inputs; if an earlier layer's cache is invalidated (its instruction or its input files changed), every subsequent layer must be rebuilt too, even if those layers' own inputs didn't change. In this Dockerfile, <code>COPY . .</code> copies the entire project (including source files that change on every commit) before running the Maven build — meaning <strong>any</strong> source change invalidates the cache for the `RUN ./mvnw clean package` layer, forcing Maven to re-download all dependencies from scratch if the local `.m2` cache isn't otherwise available in that context, which is slow. The standard optimization: copy just `pom.xml` first and run `mvn dependency:go-offline` (or equivalent) to cache dependency resolution in its own layer, THEN copy the full source and run the actual build — so dependency-layer caching survives across source-only changes, and only the (much faster) compile step reruns on every code change.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="run-container">
+    <div class="topic-head"><span class="topic-no">48</span><h2>Running Accounts Microservice as a Docker Container</h2></div>
+    <p class="topic-sub">Build the image, run it, and understand exactly what each CLI flag does.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="r1">build</div>
+        <div class="code-tab" data-pane="r2">run</div>
+        <div class="code-tab" data-pane="r3">inspect/manage</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="r1"><pre>$ docker build -t eazybytes/accounts:s4 .
+<span class="cm"># -t  tags the resulting image with a name:tag</span>
+<span class="cm"># .   build context — the directory sent to the daemon, containing the Dockerfile</span></pre></div>
+        <div class="code-pane" id="r2"><pre>$ docker run -p 8080:8080 -d --name accounts-ms eazybytes/accounts:s4
+<span class="cm"># -p 8080:8080  maps host port 8080 → container port 8080</span>
+<span class="cm"># -d            detached mode — runs in the background, returns terminal immediately</span>
+<span class="cm"># --name        assigns a human-readable name instead of a random one</span>
+
+$ curl http://localhost:8080/say-hello
+Hello World</pre></div>
+        <div class="code-pane" id="r3"><pre>$ docker ps                       <span class="cm"># list running containers</span>
+$ docker logs accounts-ms         <span class="cm"># view stdout/stderr from the container</span>
+$ docker logs -f accounts-ms      <span class="cm"># follow logs live</span>
+$ docker stop accounts-ms         <span class="cm"># graceful stop (SIGTERM, then SIGKILL after grace period)</span>
+$ docker rm accounts-ms           <span class="cm"># remove a stopped container</span></pre></div>
+      </div>
+    </div>
+
+    <h3 class="subhead">The build context — a subtlety worth understanding</h3>
+    <p>The trailing <code>.</code> in <code>docker build -t ... .</code> is the <strong>build context</strong> — the entire directory tree sent to the Docker daemon before the build even starts, which is why the daemon (not your shell) is what actually executes `COPY`/`ADD` instructions. A large build context (e.g. accidentally including `target/`, `.git/`, `node_modules/`) slows every build down even before the first instruction runs. A <code>.dockerignore</code> file (same syntax as `.gitignore`) excludes unneeded files/directories from the context.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">.dockerignore</div></div>
+      <div class="code-body"><div class="code-pane active"><pre>target/
+.git/
+.idea/
+*.log
+Dockerfile
+.dockerignore</pre></div></div>
+    </div>
+
+    <div class="callout warn"><b class="lbl">Port mapping vs EXPOSE — don't confuse them</b><p><code>EXPOSE</code> in the Dockerfile is documentation. The <code>-p 8080:8080</code> flag on `docker run` is what actually creates the network mapping. You can run a container without `-p` at all — it'll work fine for container-to-container communication on a shared Docker network, but won't be reachable from your host machine's browser/curl.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q8-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q8-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q8-common">
+        <details class="qa"><summary>What does the -p flag do in docker run?</summary><div class="qa-answer"><p>It maps a port on the host machine to a port inside the container (`hostPort:containerPort`), making the containerized service reachable from outside the container via the host's network interface.</p></div></details>
+        <details class="qa"><summary>What's the difference between docker stop and docker rm?</summary><div class="qa-answer"><p>`docker stop` gracefully stops a running container (sends SIGTERM, then SIGKILL if it doesn't exit within a grace period) but the container still exists in a stopped state. `docker rm` permanently removes a container's metadata/writable layer — it must be stopped first (or use `-f` to force).</p></div></details>
+      </div>
+      <div class="qa-pane" id="q8-faang">
+        <details class="qa"><summary>Your docker build is slow even though you only changed one line of application code — what would you check first?</summary><div class="qa-answer"><p>First check the build context size and `.dockerignore` completeness — an unnecessarily large context (e.g. accidentally including `.git` history or a stale `target/` directory) slows down the initial context-transfer step regardless of caching. Then check Dockerfile instruction ordering: if `COPY . .` (copying all source) happens before dependency resolution, any source change invalidates the cache for every subsequent layer including the expensive dependency-download step — reordering to copy `pom.xml`/`build.gradle` and resolve dependencies first, before copying full source, isolates cache invalidation to just the compile step on typical code-only changes.</p></div></details>
+        <details class="qa"><summary>How does docker stop's SIGTERM-then-SIGKILL grace period interact with a Spring Boot app that has in-flight HTTP requests?</summary><div class="qa-answer"><p>By default `docker stop` sends SIGTERM and waits 10 seconds before sending SIGKILL. If the JVM (as PID 1, via exec-form ENTRYPOINT) properly handles SIGTERM, Spring Boot's graceful shutdown (`server.shutdown=graceful` plus a configured `spring.lifecycle.timeout-per-shutdown-phase`) stops accepting new requests but lets in-flight requests finish within that window, then exits cleanly. If the grace period is too short for genuinely long-running requests, or the ENTRYPOINT is in shell form (so SIGTERM never reaches the JVM at all), requests get hard-killed mid-flight — client-visible as connection resets. Production configurations typically extend `docker stop -t &lt;seconds&gt;` (or the equivalent orchestrator-level termination grace period in Kubernetes) to comfortably exceed the app's configured graceful shutdown timeout, and always ensure exec-form ENTRYPOINT so the signal actually reaches the application.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="dockerfile-challenges">
+    <div class="topic-head"><span class="topic-no">49</span><h2>Challenges with the Dockerfile Approach</h2></div>
+    <p class="topic-sub">Why an entire ecosystem of alternative image-build tools exists, despite Dockerfile being the most flexible option.</p>
+
+    <ul>
+      <li><strong>Requires Docker/container expertise from every developer</strong> — writing a correct, secure, cache-efficient Dockerfile requires understanding layering, multi-stage builds, base image selection, and security hardening — knowledge not every application developer has or should need.</li>
+      <li><strong>Base image maintenance is a manual, ongoing burden</strong> — someone has to track CVEs in the chosen base image and bump versions; a Dockerfile pinned to an old base image silently accumulates unpatched vulnerabilities.</li>
+      <li><strong>Inconsistency across teams/services</strong> — without strong conventions, every team's Dockerfile looks different, uses different base images, and repeats the same mistakes (or best practices) independently, with no shared, centrally-improvable source of truth.</li>
+      <li><strong>Optimizing image size/layers is a manual, iterative skill</strong> — getting caching and multi-stage builds right (as seen in the FAANG Q&A above) takes deliberate effort that's easy to get wrong and easy to let silently regress over time.</li>
+      <li><strong>Requires a Docker daemon to build</strong> — `docker build` needs a running Docker daemon available, which can be an extra dependency/setup burden in some CI environments.</li>
+    </ul>
+
+    <div class="callout info"><b class="lbl">The motivation for Buildpacks and Jib</b><p>Both of the next two topics exist specifically to answer: <em>"what if the image-build best-practices (layering strategy, base image selection and patching, security hardening) were owned by a well-maintained tool instead of by every individual developer writing their own Dockerfile?"</em> That's the core value proposition of both Buildpacks and Jib — trading some manual control for consistency, maintainability, and offloaded expertise.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q9-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q9-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q9-common">
+        <details class="qa"><summary>Name two practical challenges with hand-writing Dockerfiles across many microservices.</summary><div class="qa-answer"><p>Any two of: requires Docker expertise from every developer, base images need manual, ongoing security patching, teams tend to write inconsistent Dockerfiles without shared conventions, and getting layer caching/image size optimization right takes deliberate, easy-to-neglect effort.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q9-faang">
+        <details class="qa"><summary>At an organization with 200 microservices each with their own hand-written Dockerfile, what's the operational risk of a critical CVE in a commonly-used base image?</summary><div class="qa-answer"><p>The organization would need to identify every Dockerfile referencing the vulnerable base image (no central inventory unless tooling for this exists), update each one individually, rebuild and redeploy 200 services, and verify none of them regressed — a slow, error-prone, and easy-to-partially-miss process at scale. This is precisely the argument for centralizing image-build strategy: with Buildpacks or a centrally maintained base-image + build-tooling standard, a CVE fix can be applied once (patching the shared builder/base image) and picked up automatically the next time each service rebuilds, without touching 200 individual Dockerfiles — turning a coordination problem across 200 teams into a single infrastructure update.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="buildpacks">
+    <div class="topic-head"><span class="topic-no">50</span><h2>Generate Docker Image of Loans Microservice with Buildpacks</h2></div>
+    <p class="topic-sub">No Dockerfile at all — Spring Boot's built-in integration with Cloud Native Buildpacks.</p>
+
+    <h3 class="subhead">What Buildpacks are</h3>
+    <p><strong>Cloud Native Buildpacks (CNB)</strong> is a specification (originally from Heroku/Pivotal, now a CNCF project) for turning application source code into a runnable OCI image <em>without a Dockerfile</em>. A buildpack inspects your project (detects "this is a Maven/Java project"), determines the right base image, JRE version, and layering strategy, and assembles an optimized image automatically — following the same detect → build workflow Heroku pioneered for its own platform years before Docker existed.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">Maven command</div></div>
+      <div class="code-body"><div class="code-pane active"><pre>$ ./mvnw spring-boot:build-image -Dspring-boot.build-image.imageName=eazybytes/loans:s4
+
+<span class="cm"># Spring Boot's Maven plugin already includes buildpack support —</span>
+<span class="cm"># no Dockerfile, no manual FROM/COPY/RUN instructions at all</span></pre></div></div>
+    </div>
+
+    <h3 class="subhead">What happens under the hood</h3>
+    <ol>
+      <li>The Spring Boot Maven/Gradle plugin invokes the <strong>Paketo Buildpacks</strong> (the default buildpack builder Spring Boot ships with) via <strong>pack</strong> (the CNB CLI) — this does still use a Docker daemon internally to run the buildpack build process itself.</li>
+      <li>The buildpack <strong>detects</strong> the project type (JVM app, built with Maven, using a specific Java version read from `pom.xml`) and selects an appropriate, actively-maintained base image and JRE.</li>
+      <li>It <strong>builds</strong> the image using a pre-defined, already-optimized layering strategy — separating dependencies, application classes/resources, and the Spring Boot loader into <em>separate layers</em> automatically, which Dockerfile authors would otherwise have to design by hand.</li>
+      <li>The resulting image is tagged and available locally, ready to run or push, exactly like a Dockerfile-built image — because the output is still just a standard OCI image.</li>
+    </ol>
+
+    <div class="callout info"><b class="lbl">Automatic layered JARs — a specific Spring Boot + Buildpacks synergy</b><p>Spring Boot's build-image support automatically splits the fat JAR's contents into separate image layers: dependencies (which change rarely), Spring Boot loader classes (change even more rarely), snapshot dependencies, and your application's own classes/resources (which change on every commit). Because dependencies rarely change, that layer stays cached across most builds — this is functionally the exact same caching optimization discussed in the Dockerfile FAANG Q&A above, but Buildpacks configures it correctly by default, with zero manual Dockerfile tuning required.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q10-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q10-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q10-common">
+        <details class="qa"><summary>What is a Cloud Native Buildpack, in one sentence?</summary><div class="qa-answer"><p>A specification and toolset that automatically turns application source code into a runnable OCI container image without requiring a hand-written Dockerfile, by detecting the project type and applying a pre-defined, optimized build/layering strategy.</p></div></details>
+        <details class="qa"><summary>What Maven command builds a Spring Boot image using Buildpacks?</summary><div class="qa-answer"><p><code>./mvnw spring-boot:build-image</code> — built into the Spring Boot Maven plugin, no separate Dockerfile needed.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q10-faang">
+        <details class="qa"><summary>Does using Buildpacks eliminate the need for a Docker daemon entirely?</summary><div class="qa-answer"><p>No — this is a common point of confusion. Spring Boot's `build-image` goal still requires a Docker daemon to be running locally (or reachable), because the buildpack build process itself executes inside containers to perform detection and building. This is a key differentiator from Jib (covered next), which genuinely builds OCI images without any Docker daemon involvement at all — a distinction worth being precise about in an interview, since "no Dockerfile" and "no Docker daemon" are two separate claims that only Jib satisfies both of.</p></div></details>
+        <details class="qa"><summary>What's the trade-off an organization accepts by standardizing on Buildpacks over hand-written Dockerfiles?</summary><div class="qa-answer"><p>They gain consistency (every service gets the same well-maintained, security-patched base image and layering strategy with zero per-service effort), automatic base-image freshness (rebuilding periodically picks up the latest patched base images from the buildpack maintainer, addressing exactly the CVE-propagation problem discussed in the Dockerfile-challenges topic), and reduced Docker expertise required from app developers. The cost is reduced flexibility — buildpacks are opinionated and work best for "standard shape" applications; a service needing unusual OS-level dependencies, custom multi-stage logic, or non-standard runtime setup may hit friction that a hand-written Dockerfile would handle trivially, at which point some teams fall back to a Dockerfile for that specific service while keeping Buildpacks as the default for everything else.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="jib">
+    <div class="topic-head"><span class="topic-no">51</span><h2>Generate Docker Image of Cards Microservice with Google Jib</h2></div>
+    <p class="topic-sub">The only approach of the three that needs no Docker daemon at all.</p>
+
+    <h3 class="subhead">What Jib is</h3>
+    <p><strong>Jib</strong> is a Maven/Gradle plugin from Google that builds OCI-compliant container images directly from your Java build output (compiled classes + dependencies) using pure Java code — it constructs the image layers itself and pushes them straight to a registry (or the local Docker daemon's image store, if you want) <strong>without ever invoking `docker build` or requiring a Docker daemon to exist at all</strong>.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="j1">pom.xml plugin config</div>
+        <div class="code-tab" data-pane="j2">build & push command</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="j1"><pre>&lt;plugin&gt;
+    &lt;groupId&gt;com.google.cloud.tools&lt;/groupId&gt;
+    &lt;artifactId&gt;jib-maven-plugin&lt;/artifactId&gt;
+    &lt;version&gt;3.x.x&lt;/version&gt;
+    &lt;configuration&gt;
+        &lt;to&gt;
+            &lt;image&gt;eazybytes/cards:s4&lt;/image&gt;
+        &lt;/to&gt;
+    &lt;/configuration&gt;
+&lt;/plugin&gt;</pre></div>
+        <div class="code-pane" id="j2"><pre>$ ./mvnw compile jib:build
+<span class="cm"># builds AND pushes directly to the configured registry — no local Docker daemon touched</span>
+
+$ ./mvnw compile jib:dockerBuild
+<span class="cm"># alternative goal: builds and loads into your local Docker daemon's image store instead,</span>
+<span class="cm"># useful for local testing before pushing</span></pre></div>
+      </div>
+    </div>
+
+    <h3 class="subhead">How Jib achieves daemon-free image building</h3>
+    <p>Jib constructs the OCI image manifest and layer tarballs directly in Java, following the OCI Image Spec, and communicates with a container registry's HTTP API directly to push the resulting layers/manifest — it never shells out to `docker` or talks to a local Docker daemon socket at all for the `jib:build` goal. This makes it especially well-suited to CI/CD environments where installing and running a full Docker daemon might be undesirable or unavailable (e.g. some restricted CI runners).</p>
+
+    <table>
+      <tr><th>Jib benefit</th><th>Why it matters</th></tr>
+      <tr><td>No Docker daemon required</td><td>Simplifies CI pipelines — nothing to install/manage beyond the JVM build toolchain already present</td></tr>
+      <tr><td>Reproducible builds</td><td>Jib builds images deterministically from build output — same inputs reliably produce the same image, aiding cacheability and auditability</td></tr>
+      <tr><td>Fast iteration</td><td>Like Buildpacks, Jib automatically splits dependencies/resources/classes into separate layers, so incremental builds only re-push the layer(s) that actually changed</td></tr>
+      <tr><td>Java-native tuning</td><td>Deep configuration hooks specific to JVM apps (JVM flags, exposed ports, entrypoint) directly in Maven/Gradle config — no separate DSL/file to learn</td></tr>
+    </table>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q11-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q11-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q11-common">
+        <details class="qa"><summary>What makes Jib different from both Dockerfile and Buildpacks?</summary><div class="qa-answer"><p>Jib builds OCI images directly in Java, communicating with the registry's API directly — it doesn't require a Docker daemon at any point, unlike both a plain `docker build` (which obviously needs the daemon) and Buildpacks (which, despite also skipping a Dockerfile, still relies on a Docker daemon internally).</p></div></details>
+        <details class="qa"><summary>What's the difference between jib:build and jib:dockerBuild?</summary><div class="qa-answer"><p>`jib:build` builds the image and pushes it straight to a remote registry, with no Docker daemon involved at all. `jib:dockerBuild` instead builds the image and loads it into your local Docker daemon's image store (which does require a local daemon to be running), useful for testing the image locally before pushing.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q11-faang">
+        <details class="qa"><summary>Why would daemon-free image building specifically matter for a CI/CD pipeline design?</summary><div class="qa-answer"><p>Many CI environments either don't provide Docker-in-Docker access by default, or providing it introduces meaningful security concerns (a container with access to the host's Docker socket effectively has root-equivalent access to the host, since it can launch arbitrary privileged containers) and operational complexity (managing daemon availability, storage, concurrent build isolation). Jib eliminates this entire class of concern for Java projects specifically — the build pipeline only needs a JVM and network access to the target registry, which is a meaningfully smaller, safer, and simpler CI runner footprint, especially valuable at organizations running thousands of concurrent CI jobs where daemon-per-runner overhead compounds significantly.</p></div></details>
+        <details class="qa"><summary>Jib produces reproducible builds — what does "reproducible" mean precisely here, and why does it matter?</summary><div class="qa-answer"><p>It means that, given identical inputs (same source, same dependencies, same Jib configuration), Jib produces an image with an identical digest (content hash) on every build — achieved by controlling things like file timestamps in generated layers (a common source of non-determinism in naive image builds, since `COPY` in a plain Dockerfile can embed real build-time timestamps, making otherwise-identical images hash differently). This matters for build caching efficiency (registries and CI systems can dedupe identical layers/images reliably), for security auditing (you can verify a deployed image's digest matches exactly what your source at a specific commit would produce, detecting any tampering or unexpected drift), and for meaningful diffing between builds (an unexpected digest change on a "no-op" rebuild signals something unintentionally non-deterministic crept into the build).</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="compare-approaches">
+    <div class="topic-head"><span class="topic-no">52</span><h2>Compare Dockerfile, Buildpacks, and Jib Approaches</h2></div>
+    <p class="topic-sub">The consolidated comparison — a very likely direct interview question.</p>
+
+    <table>
+      <tr><th>Dimension</th><th>Dockerfile</th><th>Buildpacks</th><th>Jib</th></tr>
+      <tr><td>Requires writing a Dockerfile</td><td>Yes</td><td>No</td><td>No</td></tr>
+      <tr><td>Requires a Docker daemon to build</td><td>Yes</td><td>Yes (internally)</td><td><strong>No</strong> (for `jib:build`)</td></tr>
+      <tr><td>Control over exact layers/steps</td><td>Full manual control</td><td>Automatic, opinionated</td><td>Automatic, opinionated, Java-specific</td></tr>
+      <tr><td>Base image patching responsibility</td><td>You, manually</td><td>Buildpack maintainer, automatically on rebuild</td><td>You choose base image; Jib doesn't auto-patch it, but layering is optimized</td></tr>
+      <tr><td>Best suited for</td><td>Custom/non-standard runtime needs, non-JVM languages, teams wanting full control</td><td>Teams wanting convention-driven, low-maintenance builds across many services/languages</td><td>Java/JVM-only shops wanting daemon-free, reproducible, fast CI builds</td></tr>
+      <tr><td>Learning curve</td><td>Steepest — must understand Docker deeply</td><td>Low — mostly just works</td><td>Low — Maven/Gradle config only</td></tr>
+      <tr><td>Language/runtime scope</td><td>Any language</td><td>Multi-language (Java, Node, Python, Go...)</td><td>JVM only</td></tr>
+    </table>
+
+    <div class="callout warn"><b class="lbl">Interview framing that scores well</b><p>Don't answer "which is best" with a single winner — answer with the decision criteria: <em>"If the team needs maximum control or is polyglot with unusual runtime requirements, Dockerfile. If the org wants centrally-maintained, consistently-patched images across many services with minimal per-team effort, Buildpacks. If the team is JVM-only and wants the fastest, most CI-friendly, daemon-free path, Jib."</em> This shows you understand trade-offs rather than having memorized a "best tool" opinion.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q12-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q12-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q12-common">
+        <details class="qa"><summary>Which of the three approaches requires no Docker daemon at all?</summary><div class="qa-answer"><p>Jib (specifically the `jib:build` goal) — it builds and pushes OCI images directly via Java code talking to a registry's API, with no Docker daemon involved anywhere in the process.</p></div></details>
+        <details class="qa"><summary>Which approach gives you the most manual control over the image's contents and layering?</summary><div class="qa-answer"><p>Writing a Dockerfile by hand — every instruction and layer is explicitly authored by you, versus Buildpacks and Jib which both apply automatic, opinionated build strategies.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q12-faang">
+        <details class="qa"><summary>An org is polyglot (Java, Node.js, Python services) and wants consistent, low-maintenance image builds across all of them — which approach fits best and why?</summary><div class="qa-answer"><p>Buildpacks — it's language-agnostic by design (Paketo and other CNB implementations support Java, Node, Python, Go, and more under one unified detect/build workflow), whereas Jib is strictly JVM-only and wouldn't help for the Node/Python services at all. Dockerfile would technically work for any language but reintroduces the exact per-service maintenance burden (manual base image patching, inconsistent conventions across teams) the org is trying to avoid by asking for "consistent, low-maintenance" in the first place.</p></div></details>
+        <details class="qa"><summary>Could a team use different image-build approaches for different microservices in the same system, or does everything need to standardize on one?</summary><div class="qa-answer"><p>Yes, and it's common in practice — since the output of all three approaches is a standard OCI image, downstream tooling (registries, Kubernetes, CI deployment steps) doesn't care which build approach produced any given image. A pragmatic pattern: default to Buildpacks or Jib (whichever fits the language mix) for the majority of "standard shape" services to minimize maintenance burden, and fall back to a hand-written Dockerfile only for the specific services with genuinely unusual requirements (unusual native dependencies, non-standard runtime setup) that the higher-level tools can't cleanly express — treating Dockerfile as the flexible escape hatch rather than the default, which is the inverse of how many teams start (Dockerfile-first) before they've felt the maintenance cost at scale.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="push-hub">
+    <div class="topic-head"><span class="topic-no">53</span><h2>Pushing Docker Images From Local to Remote Docker Hub Repository</h2></div>
+    <p class="topic-sub">Authentication, tagging conventions, and the push workflow.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">push workflow</div></div>
+      <div class="code-body"><div class="code-pane active"><pre>$ docker login
+<span class="cm"># prompts for Docker Hub username/password (or token) — stores credentials locally</span>
+
+$ docker tag accounts:s4 eazybytes/accounts:s4
+<span class="cm"># re-tags a locally-built image with the full remote repository name</span>
+<span class="cm"># (needed because "eazybytes" here is your Docker Hub namespace)</span>
+
+$ docker push eazybytes/accounts:s4
+<span class="cm"># uploads image layers not already present on the registry; skips ones that are</span>
+
+$ docker pull eazybytes/accounts:s4
+<span class="cm"># on any other machine — downloads only the layers not already cached locally</span></pre></div></div>
+    </div>
+
+    <div class="callout info"><b class="lbl">Why docker tag is necessary</b><p>An image built with a local, unqualified name like <code>accounts:s4</code> has no registry/namespace information attached. <code>docker tag</code> doesn't duplicate any image data — it just creates a new reference (pointer) to the same underlying image layers under a fully-qualified name that Docker Hub will recognize as belonging to your account when you push.</p></div>
+
+    <div class="callout pitfall"><b class="lbl">Security note: never bake credentials into an image</b><p>Database passwords, API keys, and other secrets should never appear in a Dockerfile's `ENV`/`ARG` or be copied into the image filesystem — anyone who pulls the image (or inspects its layer history) can extract them, even from intermediate layers that were later "deleted" in a subsequent layer (deletion in a later layer doesn't erase the data from earlier layers still present in the image). Secrets belong in runtime injection (environment variables passed at `docker run`, orchestrator-managed secrets, or a secrets manager), never baked into the image itself.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q13-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q13-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q13-common">
+        <details class="qa"><summary>Why do you need docker tag before docker push?</summary><div class="qa-answer"><p>The image needs a fully-qualified name including your registry namespace/username for Docker to know which remote repository to push it to — `docker tag` creates that named reference pointing at the same image without duplicating any data.</p></div></details>
+        <details class="qa"><summary>Does docker push re-upload the entire image every time?</summary><div class="qa-answer"><p>No — it only uploads layers that aren't already present on the registry; unchanged layers from a previous push are skipped, making incremental pushes much faster than a full image transfer.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q13-faang">
+        <details class="qa"><summary>If a secret was accidentally baked into an early layer and then "removed" in a later RUN instruction, is it actually gone from the image?</summary><div class="qa-answer"><p>No — this is a critical, frequently-tested security point. Docker image layers are immutable and additive; a later layer that deletes a file only adds a "this file is deleted" marker on top, but the original layer containing the secret is still present in the image and can be extracted by anyone who pulls the image and inspects/exports its layer history (`docker history`, `docker save`, or simply extracting each layer's tarball). The only real fix is rebuilding the image from scratch without the secret ever being written into any layer — not just "deleting" it in a later step — and rotating the leaked secret, since any historical pull of the vulnerable image already had access to it.</p></div></details>
+        <details class="qa"><summary>How would you avoid ever needing docker login with long-lived credentials in a CI/CD pipeline?</summary><div class="qa-answer"><p>Use short-lived, scoped credentials instead of a persistent username/password: most registries support OIDC-based federated authentication for CI systems (e.g. GitHub Actions/GitLab CI exchanging a short-lived OIDC token for temporary registry push credentials tied to that specific pipeline run), or cloud-provider-specific mechanisms (AWS ECR's `get-login-password` using an IAM role assumed by the CI runner, valid only for a short window). This avoids storing a long-lived Docker Hub password/token as a CI secret that, if ever leaked, would grant standing push access indefinitely — short-lived, automatically-rotated credentials shrink that blast radius significantly.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="compose-intro">
+    <div class="topic-head"><span class="topic-no">54</span><h2>Introduction to Docker Compose</h2></div>
+    <p class="topic-sub">Running multi-container applications declaratively, instead of chaining many manual docker run commands.</p>
+
+    <h3 class="subhead">The problem Compose solves</h3>
+    <p>You now have three services (Accounts, Loans, Cards) that each need to be built, run with correct port mappings, connected to the same Docker network so they can reach each other, and started/stopped together. Doing this with individual <code>docker run</code> commands means remembering (and keeping in sync) a growing list of flags across a growing number of services. <strong>Docker Compose</strong> lets you declare the entire multi-container setup — services, networks, volumes, environment variables, dependencies between services — in one YAML file, then bring the whole stack up or down with a single command.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">docker-compose.yml</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="cl">services</span>:
+  <span class="cl">accountsdb</span>:
+    <span class="cl">image</span>: <span class="str">mysql:8</span>
+    <span class="cl">container_name</span>: <span class="str">accountsdb</span>
+    <span class="cl">ports</span>:
+      - <span class="str">"3306:3306"</span>
+    <span class="cl">environment</span>:
+      <span class="cl">MYSQL_ROOT_PASSWORD</span>: <span class="str">"root"</span>
+      <span class="cl">MYSQL_DATABASE</span>: <span class="str">"accountsdb"</span>
+    <span class="cl">healthcheck</span>:
+      <span class="cl">test</span>: [<span class="str">"CMD"</span>, <span class="str">"mysqladmin"</span>, <span class="str">"ping"</span>, <span class="str">"-h"</span>, <span class="str">"localhost"</span>]
+      <span class="cl">timeout</span>: <span class="str">20s</span>
+      <span class="cl">retries</span>: <span class="str">10</span>
+    <span class="cl">networks</span>:
+      - <span class="str">eazybank</span>
+
+  <span class="cl">accounts</span>:
+    <span class="cl">image</span>: <span class="str">eazybytes/accounts:s4</span>
+    <span class="cl">container_name</span>: <span class="str">accounts-ms</span>
+    <span class="cl">ports</span>:
+      - <span class="str">"8080:8080"</span>
+    <span class="cl">depends_on</span>:
+      <span class="cl">accountsdb</span>:
+        <span class="cl">condition</span>: <span class="str">service_healthy</span>
+    <span class="cl">environment</span>:
+      <span class="cl">SPRING_DATASOURCE_URL</span>: <span class="str">"jdbc:mysql://accountsdb:3306/accountsdb"</span>
+    <span class="cl">networks</span>:
+      - <span class="str">eazybank</span>
+
+<span class="cl">networks</span>:
+  <span class="cl">eazybank</span>:
+    <span class="cl">driver</span>: <span class="str">bridge</span></pre></div></div>
+    </div>
+
+    <h3 class="subhead">Key concepts annotated</h3>
+    <div class="ann-grid">
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">services</span></div><div class="ann-body"><p>Top-level key — each entry defines one container to run, its image, ports, environment, and relationships to other services.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">depends_on</span></div><div class="ann-body"><p>Controls startup <em>order</em> — Compose starts `accountsdb` before `accounts`. With `condition: service_healthy`, it goes further: waits for the dependency's healthcheck to actually pass, not just for its process to start (critical, since a DB container "running" doesn't mean it's ready to accept connections yet).</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">networks</span></div><div class="ann-body"><p>Services on the same custom network can reach each other <strong>by service name as a hostname</strong> — this is why `SPRING_DATASOURCE_URL` above uses `accountsdb` as the host, not `localhost` or an IP address. Compose's default bridge network provides this DNS-based service discovery automatically.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">healthcheck</span></div><div class="ann-body"><p>Defines a command Docker periodically runs inside the container to determine if it's actually healthy/ready, not just "process is running." Essential for `depends_on: condition: service_healthy` to work meaningfully.</p></div></div>
+    </div>
+
+    <div class="callout warn"><b class="lbl">Why service-name-as-hostname matters so much here</b><p>On your host machine, Accounts might reach its DB via `localhost:3306`. Inside a Compose network, each container has its own isolated network namespace — `localhost` inside the `accounts` container refers to the `accounts` container itself, NOT the `accountsdb` container. This is a very common early Docker mistake: forgetting that container-to-container communication must use the service/container name (resolved via Compose's built-in DNS), never `localhost`.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q14-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q14-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q14-common">
+        <details class="qa"><summary>What problem does Docker Compose solve?</summary><div class="qa-answer"><p>It lets you declaratively define a multi-container application — services, their images, ports, environment variables, networks, and startup dependencies — in one YAML file, and bring the whole stack up or down with a single command, instead of manually running and coordinating many individual `docker run` commands.</p></div></details>
+        <details class="qa"><summary>Why would you use "accountsdb" as the database host in the accounts service's config instead of "localhost"?</summary><div class="qa-answer"><p>Because each container has its own isolated network namespace — `localhost` inside a container refers to that container itself, not to other containers. Compose's default network provides DNS resolution by service name, so other services reach the database using its service name (`accountsdb`) as the hostname.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q14-faang">
+        <details class="qa"><summary>Why is depends_on with just a plain dependency (no healthcheck condition) often insufficient for a service that depends on a database?</summary><div class="qa-answer"><p>Plain `depends_on` only guarantees <em>start order</em> — Docker starts the dependency container before the dependent one — but a database container's process starting is not the same as the database being ready to accept connections (it may still be initializing, running startup migrations, etc.). Without a `condition: service_healthy` healthcheck-gated dependency, the dependent service (e.g. Accounts) can start and attempt its first DB connection before the database is actually ready, causing a startup failure or requiring the application itself to implement connection retry logic to paper over the race condition that Compose could have prevented outright with a proper healthcheck.</p></div></details>
+        <details class="qa"><summary>Is Docker Compose an appropriate tool for running this multi-service stack in production?</summary><div class="qa-answer"><p>Generally no for serious production workloads — Compose is excellent for local development and simple single-host deployments, but lacks production-grade capabilities like multi-host orchestration, automatic failover/rescheduling if a container or host dies, rolling updates with health-gated rollout, horizontal autoscaling based on load, and fine-grained resource scheduling across a cluster. Production microservices deployments typically move to a proper orchestrator — Kubernetes being the dominant choice — once they need those capabilities; Compose remains valuable even then as the standard tool for local dev environments that need to spin up dependent services (databases, message brokers) quickly and reproducibly.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="compose-run">
+    <div class="topic-head"><span class="topic-no">55-56</span><h2>Running All Microservice Containers Using Docker Compose</h2></div>
+    <p class="topic-sub">The core Compose CLI workflow and what happens on each command.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">compose commands</div></div>
+      <div class="code-body"><div class="code-pane active"><pre>$ docker compose up
+<span class="cm"># creates the network, starts every service in dependency order, attaches to logs</span>
+
+$ docker compose up -d
+<span class="cm"># same, but detached — runs in the background</span>
+
+$ docker compose ps
+<span class="cm"># lists containers managed by this compose project, with their status</span>
+
+$ docker compose logs -f accounts
+<span class="cm"># follow logs for just one service</span>
+
+$ docker compose down
+<span class="cm"># stops and removes all containers + the created network (but NOT named volumes, by default)</span>
+
+$ docker compose down -v
+<span class="cm"># also removes named volumes — full teardown, including persisted DB data</span>
+
+$ docker compose up -d --build
+<span class="cm"># rebuilds images from their Dockerfiles (if "build:" is configured) before starting</span></pre></div></div>
+    </div>
+
+    <div class="callout info"><b class="lbl">What actually happens on "docker compose up"</b><p>Compose reads the YAML, resolves the dependency graph from `depends_on`, creates the declared network(s) if they don't exist, pulls any images not already present locally, then starts containers in dependency order — waiting on healthchecks where configured — attaching a combined, color-coded log stream from every service to your terminal (unless `-d` is passed).</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q15-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q15-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q15-common">
+        <details class="qa"><summary>What's the difference between docker compose down and docker compose down -v?</summary><div class="qa-answer"><p>Plain `down` stops and removes containers and the created network, but preserves named volumes (so persisted data like database contents survives). `down -v` additionally removes named volumes, wiping any persisted data as well.</p></div></details>
+        <details class="qa"><summary>What order does Compose start services in?</summary><div class="qa-answer"><p>It resolves the dependency graph declared via `depends_on` and starts services in that order — dependencies before dependents — waiting on healthchecks first if `condition: service_healthy` is configured.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q15-faang">
+        <details class="qa"><summary>You run docker compose up -d and see all containers report "Up," but the Accounts service's application logs show repeated database connection failures for the first several seconds — is this a bug?</summary><div class="qa-answer"><p>Not necessarily a bug in Compose — it depends entirely on whether `depends_on` for the Accounts service is healthcheck-gated. If it's a plain `depends_on: [accountsdb]` without `condition: service_healthy`, "Up" only means the DB container's process has started, not that MySQL is actually accepting connections yet — Accounts can legitimately race ahead and fail its first few connection attempts before the DB finishes initializing. The fix is adding a proper healthcheck to the DB service and gating the dependency on `service_healthy`, as covered in the previous topic — at which point Compose itself won't start Accounts until the DB genuinely reports ready, eliminating the race entirely rather than relying on the application's own retry/backoff logic to paper over it.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="docker-commands">
+    <div class="topic-head"><span class="topic-no">57</span><h2>Deep Dive on Docker Commands</h2></div>
+    <p class="topic-sub">A consolidated, exam-ready command reference across images, containers, networks, and volumes.</p>
+
+    <h3 class="subhead">Image commands</h3>
+    <table class="cmd-table">
+      <tr><th>Command</th><th>What it does</th></tr>
+      <tr><td><code>docker build -t name:tag .</code></td><td>Build an image from a Dockerfile in the current directory</td></tr>
+      <tr><td><code>docker images</code></td><td>List locally stored images</td></tr>
+      <tr><td><code>docker pull image:tag</code></td><td>Download an image from a registry</td></tr>
+      <tr><td><code>docker push image:tag</code></td><td>Upload an image to a registry</td></tr>
+      <tr><td><code>docker rmi image:tag</code></td><td>Remove a local image (must not be used by any container)</td></tr>
+      <tr><td><code>docker history image:tag</code></td><td>Show the layer-by-layer build history of an image</td></tr>
+      <tr><td><code>docker inspect image:tag</code></td><td>Full JSON metadata about an image (env vars, entrypoint, layers, config)</td></tr>
+    </table>
+
+    <h3 class="subhead">Container commands</h3>
+    <table class="cmd-table">
+      <tr><th>Command</th><th>What it does</th></tr>
+      <tr><td><code>docker run image:tag</code></td><td>Create and start a new container from an image</td></tr>
+      <tr><td><code>docker ps</code></td><td>List running containers</td></tr>
+      <tr><td><code>docker ps -a</code></td><td>List all containers, including stopped ones</td></tr>
+      <tr><td><code>docker stop container</code></td><td>Gracefully stop a running container (SIGTERM, then SIGKILL after grace period)</td></tr>
+      <tr><td><code>docker start container</code></td><td>Start an existing stopped container (reuses its writable layer, unlike `run`)</td></tr>
+      <tr><td><code>docker restart container</code></td><td>Stop then start a container</td></tr>
+      <tr><td><code>docker rm container</code></td><td>Remove a stopped container's metadata/writable layer permanently</td></tr>
+      <tr><td><code>docker logs container</code></td><td>View stdout/stderr captured from a container</td></tr>
+      <tr><td><code>docker exec -it container sh</code></td><td>Open an interactive shell inside a running container — invaluable for debugging</td></tr>
+      <tr><td><code>docker inspect container</code></td><td>Full JSON metadata about a running/stopped container (IP, mounts, env, config)</td></tr>
+      <tr><td><code>docker stats</code></td><td>Live CPU/memory/network usage stream for running containers</td></tr>
+    </table>
+
+    <h3 class="subhead">Network & volume commands</h3>
+    <table class="cmd-table">
+      <tr><th>Command</th><th>What it does</th></tr>
+      <tr><td><code>docker network ls</code></td><td>List Docker networks</td></tr>
+      <tr><td><code>docker network create name</code></td><td>Create a custom network — containers on it can resolve each other by container/service name</td></tr>
+      <tr><td><code>docker volume ls</code></td><td>List named volumes (persistent storage outside the container's writable layer)</td></tr>
+      <tr><td><code>docker volume create name</code></td><td>Create a named volume, usable for persisting data (e.g. a DB's data directory) across container recreation</td></tr>
+      <tr><td><code>docker system prune</code></td><td>Remove all stopped containers, unused networks, dangling images, and build cache — frees disk space</td></tr>
+    </table>
+
+    <h3 class="subhead"><code>docker run</code> — the flags that come up constantly</h3>
+    <table class="cmd-table">
+      <tr><th>Flag</th><th>Meaning</th></tr>
+      <tr><td><code>-d</code></td><td>Detached — run in background</td></tr>
+      <tr><td><code>-p host:container</code></td><td>Publish a port mapping</td></tr>
+      <tr><td><code>--name</code></td><td>Assign a container name</td></tr>
+      <tr><td><code>-e KEY=VALUE</code></td><td>Set an environment variable inside the container</td></tr>
+      <tr><td><code>-v host_path:container_path</code></td><td>Mount a host directory or named volume into the container</td></tr>
+      <tr><td><code>--network name</code></td><td>Attach the container to a specific network</td></tr>
+      <tr><td><code>--rm</code></td><td>Automatically remove the container when it stops — useful for ephemeral/one-off runs</td></tr>
+      <tr><td><code>-it</code></td><td>Interactive + allocate a pseudo-TTY — needed for an interactive shell session</td></tr>
+    </table>
+
+    <div class="callout pitfall"><b class="lbl">docker run vs docker start — a classic mix-up</b><p><code>docker run</code> always creates a brand-new container from an image (a fresh writable layer, losing any prior runtime state). <code>docker start</code> resumes an existing, previously-created (but stopped) container — its writable layer and any data written to it since creation are preserved. Running `docker run` again when you meant `docker start` is a common source of "why did my data disappear?" confusion for beginners.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q16-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q16-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q16-common">
+        <details class="qa"><summary>What's the difference between docker stop and docker kill?</summary><div class="qa-answer"><p>`docker stop` sends SIGTERM first, allowing the process a grace period to shut down gracefully, then sends SIGKILL only if it hasn't exited in time. `docker kill` sends SIGKILL (or another specified signal) immediately, with no grace period — an abrupt, forceful termination.</p></div></details>
+        <details class="qa"><summary>What does docker exec -it container sh let you do?</summary><div class="qa-answer"><p>It opens an interactive shell session inside an already-running container, letting you inspect the filesystem, check running processes, or debug the environment from inside the container directly — extremely useful for troubleshooting why a container isn't behaving as expected.</p></div></details>
+        <details class="qa"><summary>What does docker system prune clean up?</summary><div class="qa-answer"><p>Stopped containers, unused (not referenced by any container) networks, dangling images (untagged, orphaned image layers), and unused build cache — freeing up disk space accumulated from repeated builds/runs.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q16-faang">
+        <details class="qa"><summary>A container keeps exiting immediately after docker run, with no obvious error in docker logs. What's your debugging approach?</summary><div class="qa-answer"><p>First check `docker ps -a` to confirm the exit code (a non-zero exit code narrows the cause considerably — e.g. exit 1 for an application error, 137 typically indicating a SIGKILL, often from the OOM killer if the container exceeded a memory limit). Check `docker logs` for stdout/stderr even for a very short-lived container. If the entrypoint process itself is crashing before producing useful output, temporarily override the entrypoint with `docker run -it --entrypoint sh image` to get an interactive shell inside the image's filesystem without running the normal startup command, letting you manually run the intended startup command and see the actual error, or inspect config files/permissions directly. Also check `docker inspect` for the configured entrypoint/cmd/env to rule out a misconfiguration (wrong working directory, missing required env var) rather than an application bug.</p></div></details>
+        <details class="qa"><summary>Why does using -v to bind-mount a host directory behave differently for local development versus production, and what's the volume-vs-bind-mount distinction?</summary><div class="qa-answer"><p>A <strong>bind mount</strong> (`-v /host/path:/container/path`) directly maps a specific host filesystem path into the container — convenient for local development (e.g. mounting your source directory so code changes are visible inside the container without rebuilding), but ties the container to that specific host's filesystem layout, which is fragile and non-portable for production deployment across different hosts/orchestrators. A <strong>named volume</strong> (`-v myvolume:/container/path`) is managed entirely by Docker itself, stored in Docker's own managed storage area, not tied to any specific host path — the portable, production-appropriate choice for persisting data (like a database's data directory) that needs to survive container recreation but doesn't need direct host-filesystem access. Production systems almost always use named volumes (or cloud-provider-managed persistent storage in an orchestrator context) rather than bind mounts, precisely because bind mounts hardcode host-specific paths that break portability.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="extensions-logs">
+    <div class="topic-head"><span class="topic-no">58</span><h2>Introduction to Docker Extensions and Logs Explorer</h2></div>
+    <p class="topic-sub">Docker Desktop's extension ecosystem and visual log inspection tooling.</p>
+
+    <h3 class="subhead">Docker Extensions</h3>
+    <p><strong>Docker Extensions</strong> let third-party (and first-party) tools plug directly into the Docker Desktop GUI, adding new panels/functionality without leaving the Docker Desktop app — examples include security scanners, Kubernetes tooling, and log analysis tools. They're installed from the Extensions Marketplace inside Docker Desktop.</p>
+
+    <h3 class="subhead">Logs Explorer</h3>
+    <p>A Docker Desktop extension/feature providing a searchable, filterable, structured view across logs from <strong>multiple containers at once</strong> — useful once you're running several services via Compose and need to correlate what happened across Accounts, Loans, and Cards around the same timestamp, rather than tailing `docker logs` on each container separately in different terminal tabs.</p>
+
+    <div class="callout info"><b class="lbl">Why this matters as your service count grows</b><p>With one container, `docker logs -f` is sufficient. With N containers running together via Compose, correlating a cross-service issue (e.g. "Accounts logged an error right after Loans returned a 500") by manually flipping between terminal tabs of raw text becomes impractical — a unified, searchable log view (whether Docker Desktop's Logs Explorer locally, or a proper centralized logging stack like ELK/Loki in production, covered in a later section) becomes necessary tooling, not a nice-to-have.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q17-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q17-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q17-common">
+        <details class="qa"><summary>What is Docker Desktop's Logs Explorer useful for?</summary><div class="qa-answer"><p>Viewing and searching logs across multiple running containers in one unified interface, instead of manually checking `docker logs` on each container individually — helpful once you're running several services together, e.g. via Docker Compose.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q17-faang">
+        <details class="qa"><summary>Docker Desktop's Logs Explorer is a local development convenience — what's the production-grade equivalent, and why can't you just rely on docker logs in production?</summary><div class="qa-answer"><p>In production, containers are typically ephemeral and scheduled across many hosts by an orchestrator (Kubernetes) — `docker logs` only shows logs for a container that's still running on the specific host you're SSH'd into, which doesn't scale once you have dozens of hosts and containers being rescheduled/replaced dynamically, and logs are lost entirely once a container is removed unless captured elsewhere first. Production systems instead ship container stdout/stderr to a centralized log aggregation pipeline — commonly the ELK/EFK stack (Elasticsearch/Fluentd or Filebeat/Kibana) or Grafana Loki — via a log-shipping agent running on each host, giving a single searchable, retained, cross-host log store, plus the ability to correlate logs with distributed tracing (trace/correlation IDs, as discussed in the Section 1 exception-handling notes) across the full request path spanning multiple services.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer-note">Spring Boot Bible · Section 4 of N · Standalone reference document · Generated for interview preparation</div>
+</main>
+</div>
+
+<script>
+const themeToggle = document.getElementById('themeToggle');
+const html = document.documentElement;
+function applyThemeLabel(){
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  themeToggle.innerHTML = isDark ? '🌙 Dark mode <span>⇄</span>' : '☀️ Light mode <span>⇄</span>';
+}
+themeToggle.addEventListener('click', () => {
+  const cur = html.getAttribute('data-theme');
+  html.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+  applyThemeLabel();
+  localStorage.setItem('sb-bible-theme', html.getAttribute('data-theme'));
+});
+(function initTheme(){
+  const saved = localStorage.getItem('sb-bible-theme');
+  if(saved){ html.setAttribute('data-theme', saved); }
+  applyThemeLabel();
+})();
+
+document.querySelectorAll('.code-panel').forEach(panel => {
+  const tabs = panel.querySelectorAll('.code-tab');
+  if(tabs.length <= 1) return;
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.getAttribute('data-pane');
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      panel.querySelectorAll('.code-pane').forEach(p => p.classList.remove('active'));
+      const pane = panel.querySelector('#' + target);
+      if(pane) pane.classList.add('active');
+    });
+  });
+});
+
+document.querySelectorAll('.qa-section').forEach(section => {
+  const btns = section.querySelectorAll('.qa-tab-btn');
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-target');
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      section.querySelectorAll('.qa-pane').forEach(p => p.classList.remove('active'));
+      document.getElementById(target).classList.add('active');
+    });
+  });
+});
+
+const navLinks = document.querySelectorAll('.nav-link');
+const topics = document.querySelectorAll('section.topic');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const id = entry.target.getAttribute('id');
+    const link = document.querySelector('.nav-link[href="#' + id + '"]');
+    if(!link) return;
+    if(entry.isIntersecting){
+      navLinks.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-15% 0px -75% 0px', threshold: 0 });
+topics.forEach(t => observer.observe(t));
+</script>
+</body>
+</html>

@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spring Boot Bible — Section 9: Gateway, Routing & Cross-Cutting Concerns</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0f14; --bg-elev:#111820; --bg-elev-2:#161f2a; --border:#233042;
+  --text:#dbe4ee; --text-dim:#8a9bb0; --text-faint:#5c6b7e;
+  --accent:#6DB33F; --accent-soft:#6DB33F22;
+  --accent-2:#4fa3d1; --accent-2-soft:#4fa3d122;
+  --gw:#f0954f; --gw-soft:#f0954f22;
+  --warn:#e0a94f; --warn-soft:#e0a94f22;
+  --danger:#e0655f; --danger-soft:#e0655f22;
+  --code-bg:#0d1420; --code-border:#1e2a3a;
+  --shadow: 0 8px 24px rgba(0,0,0,0.35); --radius: 10px; --sidebar-w: 300px;
+}
+html[data-theme="light"]{
+  --bg:#f6f4ee; --bg-elev:#ffffff; --bg-elev-2:#eef0e8; --border:#dcdccf;
+  --text:#1c231d; --text-dim:#586257; --text-faint:#8b9188;
+  --accent:#3f7d1f; --accent-soft:#3f7d1f1a;
+  --accent-2:#1f6f9c; --accent-2-soft:#1f6f9c1a;
+  --gw:#b05f1f; --gw-soft:#b05f1f18;
+  --warn:#8a5a12; --warn-soft:#8a5a1218;
+  --danger:#a3352f; --danger-soft:#a3352f18;
+  --code-bg:#fbfaf5; --code-border:#e2e0d2;
+  --shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;line-height:1.65;font-size:15.5px;}
+::selection{background:var(--gw-soft);color:var(--gw);}
+h1,h2,h3,h4{font-family:'Space Mono',monospace;letter-spacing:-0.01em;color:var(--text);}
+code, pre, .mono{font-family:'Space Mono',monospace;}
+a{color:var(--accent-2);text-decoration:none;}
+a:hover{text-decoration:underline;}
+
+.shell{display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;border-right:1px solid var(--border);background:var(--bg-elev);position:sticky;top:0;height:100vh;overflow-y:auto;padding:22px 16px 60px;}
+.sidebar::-webkit-scrollbar{width:6px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:4px;padding:0 6px;}
+.brand-badge{width:34px;height:34px;border-radius:8px;background:var(--gw);display:flex;align-items:center;justify-content:center;font-family:'Space Mono';font-weight:700;color:#0b0f14;font-size:13px;flex-shrink:0;}
+.brand-text{font-family:'Space Mono';font-weight:700;font-size:14.5px;line-height:1.2;}
+.brand-text span{display:block;font-size:10.5px;color:var(--text-faint);font-weight:400;margin-top:2px;letter-spacing:0.04em;}
+.theme-toggle{margin:14px 6px 20px;width:calc(100% - 12px);background:var(--bg-elev-2);border:1px solid var(--border);color:var(--text-dim);padding:8px 10px;border-radius:8px;font-family:'Inter';font-size:12.5px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
+.theme-toggle:hover{color:var(--text);border-color:var(--gw);}
+.nav-group{margin-bottom:6px;}
+.nav-group-title{font-size:10.5px;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-faint);padding:14px 8px 6px;font-family:'Space Mono';}
+.nav-link{display:block;padding:7px 10px;border-radius:7px;font-size:13px;color:var(--text-dim);margin-bottom:1px;border-left:2px solid transparent;}
+.nav-link:hover{background:var(--bg-elev-2);color:var(--text);text-decoration:none;}
+.nav-link.active{background:var(--gw-soft);color:var(--gw);border-left:2px solid var(--gw);font-weight:600;}
+.nav-link .vid-no{color:var(--text-faint);margin-right:5px;}
+
+main{flex:1;min-width:0;padding:48px 56px 120px;max-width:980px;}
+.hero{margin-bottom:44px;}
+.hero-eyebrow{font-family:'Space Mono';font-size:11.5px;color:var(--gw);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.hero-eyebrow::before{content:"";width:20px;height:1px;background:var(--gw);}
+.hero h1{font-size:32px;margin:0 0 12px;line-height:1.25;}
+.hero p{color:var(--text-dim);font-size:15.5px;max-width:680px;}
+.scope-box{margin-top:20px;border:1px solid var(--border);background:var(--bg-elev);border-radius:var(--radius);padding:16px 18px;font-size:13px;color:var(--text-dim);}
+.scope-box b{color:var(--text);}
+
+section.topic{margin-bottom:56px;scroll-margin-top:24px;}
+.topic-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;border-bottom:1px solid var(--border);padding-bottom:14px;}
+.topic-no{font-family:'Space Mono';color:var(--gw);font-size:13px;background:var(--gw-soft);padding:3px 9px;border-radius:20px;flex-shrink:0;}
+.topic-head h2{font-size:22px;margin:0;}
+.topic-sub{color:var(--text-faint);font-size:12.5px;margin:8px 0 22px;}
+
+p{color:var(--text-dim);}
+h3.subhead{font-size:16.5px;color:var(--text);margin:28px 0 10px;display:flex;align-items:center;gap:8px;}
+h3.subhead::before{content:"";width:3px;height:15px;background:var(--accent-2);border-radius:2px;}
+h4.minihead{font-size:13.5px;color:var(--text);margin:18px 0 8px;font-family:'Inter';font-weight:700;}
+ul,ol{color:var(--text-dim);padding-left:22px;}
+li{margin-bottom:6px;}
+strong{color:var(--text);}
+
+.ann-box{border:1px solid var(--code-border);background:var(--bg-elev);border-radius:var(--radius);margin:14px 0;overflow:hidden;}
+.ann-box-head{display:flex;align-items:center;gap:10px;padding:11px 16px;background:var(--gw-soft);border-bottom:1px solid var(--code-border);}
+.ann-tag{font-family:'Space Mono';font-weight:700;color:var(--gw);font-size:14px;}
+.ann-loc{margin-left:auto;font-size:10.5px;color:var(--text-faint);font-family:'Space Mono';text-transform:uppercase;letter-spacing:0.05em;}
+.ann-body{padding:12px 16px;}
+.ann-body p{margin:4px 0 8px;font-size:13.5px;}
+.ann-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0;}
+@media(max-width:760px){.ann-grid{grid-template-columns:1fr;}}
+
+.code-panel{border:1px solid var(--code-border);border-radius:var(--radius);overflow:hidden;margin:16px 0;background:var(--code-bg);}
+.code-tabs{display:flex;background:var(--bg-elev-2);border-bottom:1px solid var(--code-border);overflow-x:auto;}
+.code-tab{padding:9px 16px;font-family:'Space Mono';font-size:12px;color:var(--text-faint);cursor:pointer;border-right:1px solid var(--code-border);white-space:nowrap;user-select:none;}
+.code-tab:hover{color:var(--text-dim);}
+.code-tab.active{color:var(--gw);background:var(--code-bg);border-bottom:2px solid var(--gw);margin-bottom:-1px;}
+.code-body{position:relative;}
+.code-pane{display:none;padding:16px 18px;overflow-x:auto;}
+.code-pane.active{display:block;}
+pre{margin:0;font-size:12.8px;line-height:1.65;color:#c7d3e0;}
+html[data-theme="light"] pre{color:#333c30;}
+.kw{color:#c586c0;}
+.ann{color:var(--gw);font-weight:700;}
+.str{color:#ce9178;}
+.cm{color:var(--text-faint);font-style:italic;}
+.ty{color:#4ec9b0;}
+.cl{color:#e5c07b;}
+
+.callout{border-radius:var(--radius);padding:14px 16px;margin:16px 0;border:1px solid;font-size:13.5px;}
+.callout.info{background:var(--accent-2-soft);border-color:var(--accent-2);color:var(--text);}
+.callout.warn{background:var(--warn-soft);border-color:var(--warn);color:var(--text);}
+.callout.pitfall{background:var(--danger-soft);border-color:var(--danger);color:var(--text);}
+.callout b.lbl{display:block;font-family:'Space Mono';font-size:11px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;}
+.callout.info b.lbl{color:var(--accent-2);}
+.callout.warn b.lbl{color:var(--warn);}
+.callout.pitfall b.lbl{color:var(--danger);}
+.callout p{margin:0;color:var(--text-dim);}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left;color:var(--text-dim);}
+th{background:var(--bg-elev-2);color:var(--text);font-family:'Space Mono';font-size:11.5px;text-transform:uppercase;letter-spacing:0.04em;}
+tr:hover td{background:var(--bg-elev-2);}
+
+.diagram{border:1px solid var(--code-border);background:var(--code-bg);border-radius:var(--radius);padding:22px 18px;margin:18px 0;overflow-x:auto;}
+.dflow{display:flex;align-items:stretch;gap:10px;min-width:max-content;flex-wrap:wrap;}
+.dbox{flex-shrink:0;min-width:120px;border:1px solid var(--border);background:var(--bg-elev);border-radius:8px;padding:12px 14px;text-align:center;}
+.dbox .t{font-family:'Space Mono';font-size:12px;color:var(--text);font-weight:700;}
+.dbox .s{font-size:10.5px;color:var(--text-faint);margin-top:4px;}
+.dbox.accent{border-color:var(--gw);background:var(--gw-soft);}
+.dbox.accent .t{color:var(--gw);}
+.dbox.warn{border-color:var(--warn);background:var(--warn-soft);}
+.dbox.warn .t{color:var(--warn);}
+.dbox.dim{opacity:0.55;}
+.darrow{flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-family:'Space Mono';font-size:16px;min-width:24px;}
+.dstack{display:flex;flex-direction:column;gap:8px;}
+.dcol{display:flex;flex-direction:column;gap:8px;align-items:center;}
+.dphase-label{font-family:'Space Mono';font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;text-align:center;margin-top:8px;}
+
+.qa-section{margin-top:26px;}
+.qa-tabs{display:flex;gap:8px;margin-bottom:14px;}
+.qa-tab-btn{font-family:'Space Mono';font-size:11.5px;padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg-elev);color:var(--text-dim);cursor:pointer;text-transform:uppercase;letter-spacing:0.04em;}
+.qa-tab-btn.common.active{background:var(--accent-2-soft);border-color:var(--accent-2);color:var(--accent-2);}
+.qa-tab-btn.faang.active{background:var(--danger-soft);border-color:var(--danger);color:var(--danger);}
+.qa-pane{display:none;}
+.qa-pane.active{display:block;}
+details.qa{border:1px solid var(--border);border-radius:8px;margin-bottom:8px;background:var(--bg-elev);overflow:hidden;}
+details.qa[open]{border-color:var(--accent-2);}
+details.qa summary{padding:12px 16px;cursor:pointer;font-weight:600;font-size:13.8px;list-style:none;display:flex;align-items:flex-start;gap:10px;color:var(--text);}
+details.qa summary::-webkit-details-marker{display:none;}
+details.qa summary::before{content:"Q";flex-shrink:0;font-family:'Space Mono';font-size:11px;color:var(--accent-2);background:var(--accent-2-soft);width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+details.qa .qa-answer{padding:0 16px 16px 46px;color:var(--text-dim);font-size:13.5px;}
+details.qa .qa-answer p{margin:0 0 8px;color:var(--text-dim);}
+details.qa .qa-answer p:last-child{margin-bottom:0;}
+
+.divider{height:1px;background:linear-gradient(90deg,var(--border),transparent);margin:44px 0;}
+.footer-note{color:var(--text-faint);font-size:12px;text-align:center;padding:30px 0 10px;}
+
+@media(max-width:900px){
+  .shell{flex-direction:column;}
+  .sidebar{position:relative;width:100%;height:auto;}
+  main{padding:32px 20px 80px;}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-badge">⬡</div>
+    <div class="brand-text">Spring Boot Bible<span>Section 9 · Gateway</span></div>
+  </div>
+  <button class="theme-toggle" id="themeToggle">🌙 Dark mode <span>⇄</span></button>
+
+  <div class="nav-group">
+    <div class="nav-group-title">Foundations</div>
+    <a class="nav-link" href="#external-challenges"><span class="vid-no">121</span>External Communication Challenges</a>
+    <a class="nav-link" href="#why-gateway"><span class="vid-no">122</span>Why We Need an Edge Server</a>
+    <a class="nav-link" href="#scg-intro"><span class="vid-no">123</span>Intro to Spring Cloud Gateway</a>
+    <a class="nav-link" href="#scg-architecture"><span class="vid-no">124</span>SCG Internal Architecture</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Building the Gateway</div>
+    <a class="nav-link" href="#build-edge-server"><span class="vid-no">125</span>Building the Edge Server</a>
+    <a class="nav-link" href="#default-routing-demo"><span class="vid-no">126</span>Default Routing Demo</a>
+    <a class="nav-link" href="#lowercase-routes"><span class="vid-no">127</span>Lowercase Service Names</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Custom Routing & Filters</div>
+    <a class="nav-link" href="#custom-routing"><span class="vid-no">128</span>Custom Routing</a>
+    <a class="nav-link" href="#response-header-filter"><span class="vid-no">129</span>addResponseHeader Filter</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Cross-Cutting Concerns</div>
+    <a class="nav-link" href="#tracing-logging"><span class="vid-no">130-131</span>Tracing & Logging</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Architecture Patterns</div>
+    <a class="nav-link" href="#gateway-patterns"><span class="vid-no">132</span>Design Patterns Around Gateway</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Docker Integration</div>
+    <a class="nav-link" href="#docker-images-gw"><span class="vid-no">133</span>Docker Images & Push</a>
+    <a class="nav-link" href="#compose-gw"><span class="vid-no">134</span>Update Docker Compose</a>
+  </div>
+</aside>
+
+<main>
+  <div class="hero">
+    <div class="hero-eyebrow">Section 9 · Spring Boot Bible</div>
+    <h1>Gateway, Routing & Cross-Cutting Concerns</h1>
+    <p>Every microservices system eventually has to answer a question Section 8 deliberately left open: <em>if Accounts, Loans, and Cards are internal, dynamically-scaled services discovered via Eureka, what does an external client — a mobile app, a browser — actually talk to?</em> Exposing every microservice directly to the internet is the wrong answer at basically every real company. This section covers the standard fix — an API Gateway / Edge Server as the single, hardened entry point — built with Spring Cloud Gateway's reactive architecture, custom routing, and the cross-cutting concerns (correlation IDs, centralized logging, response headers) that belong at the edge rather than duplicated across every service.</p>
+    <div class="scope-box">
+      <b>How to use this document:</b> This is one of the most reliably-asked system-design topics in microservices/backend interviews at large-scale product and fintech companies — "design an API Gateway," "how would you centralize auth/rate-limiting," and "Gateway vs Service Mesh" show up constantly. Topic 132 (design patterns) and the FAANG-level Q&A throughout are written with that specifically in mind.
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="external-challenges">
+    <div class="topic-head"><span class="topic-no">121</span><h2>Challenges While Dealing with External Communication in Microservices</h2></div>
+    <p class="topic-sub">Section 8 solved east-west (internal) traffic. This topic is about the other half — north-south traffic — and why it can't be solved the same way.</p>
+
+    <h3 class="subhead">What happens if external clients call microservices directly</h3>
+    <p>Imagine a mobile app calling Accounts, Loans, and Cards directly, each at its own address, with no intermediary. Every one of the following becomes the client's problem, or gets duplicated N times across N services:</p>
+    <ul>
+      <li><strong>Client complexity explodes</strong> — the client must know and maintain N different service endpoints, and if it needs data spanning multiple services (a "customer summary" view), it must orchestrate multiple calls and merge results itself.</li>
+      <li><strong>Cross-cutting concerns duplicate across every service</strong> — authentication/authorization, rate limiting, CORS handling, SSL/TLS termination, request logging, and IP allow-listing would each need to be implemented and kept consistent inside every single microservice independently.</li>
+      <li><strong>Internal architecture leaks to the outside world</strong> — clients become coupled to internal service boundaries (which team owns what, how the system happens to be decomposed today); refactoring internal boundaries later becomes a breaking change for every external consumer.</li>
+      <li><strong>Massively larger attack surface</strong> — every microservice becomes a direct, independently-securable target on the public internet, rather than having one hardened, heavily-monitored perimeter.</li>
+      <li><strong>No central point for throttling or abuse protection</strong> — a client hammering one service has no system-wide rate-limiting checkpoint to pass through first.</li>
+      <li><strong>Inconsistent versioning and protocol exposure</strong> — different teams evolve their services' public contracts independently, with no central point enforcing a consistent external API contract or protocol translation (e.g. exposing REST externally while some internal services use gRPC).</li>
+    </ul>
+
+    <div class="callout info"><b class="lbl">The core realization</b><p>Every one of these problems shares the same shape: something that should be handled <strong>once, centrally</strong> instead gets pushed down into every individual service, or worse, pushed onto every individual client. This is precisely the gap an <strong>API Gateway / Edge Server</strong> exists to close — and it's why this topic exists as the direct motivation before any Spring Cloud Gateway code appears.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q1-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q1-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q1-common">
+        <details class="qa"><summary>What happens to cross-cutting concerns like authentication and rate limiting if external clients call microservices directly?</summary><div class="qa-answer"><p>Each concern needs to be implemented and kept consistent inside every individual microservice independently, since there's no shared, central point external traffic must pass through first — leading to duplication and drift risk across services.</p></div></details>
+        <details class="qa"><summary>Why does exposing every microservice directly to the internet increase security risk?</summary><div class="qa-answer"><p>Every service becomes an independently-reachable, independently-securable target, multiplying the attack surface, rather than concentrating external exposure and hardening effort on one well-monitored perimeter.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q1-faang">
+        <details class="qa"><summary>Beyond security, what's the architectural coupling risk of clients calling microservices directly?</summary><div class="qa-answer"><p>Clients become coupled to the system's current internal service decomposition — if a team later decides to split, merge, or rename a service (a routine internal architecture evolution), every external client integration built against the old direct endpoints breaks. A gateway acts as an <strong>anti-corruption layer</strong> for the public API surface: internal services can be restructured freely as long as the gateway's externally-facing routes and contracts stay stable, decoupling "how we organize our internal services" from "what our external API looks like" — a genuinely important architectural property at any company operating at real scale, since internal decomposition is expected to evolve continuously while external contracts need much higher stability guarantees.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="why-gateway">
+    <div class="topic-head"><span class="topic-no">122</span><h2>Why We Need an Edge Server or API Gateway Inside Microservices</h2></div>
+    <p class="topic-sub">The single-entry-point solution, and exactly which responsibilities it centralizes.</p>
+
+    <h3 class="subhead">What an API Gateway is</h3>
+    <p>An <strong>API Gateway</strong> (also called an <strong>Edge Server</strong>) is a single, dedicated service that sits between external clients and the internal microservices ecosystem, acting as the sole entry point for all north-south traffic. Every external request hits the gateway first; the gateway then routes it to the appropriate internal service (using the exact service-discovery mechanics from Section 8) and returns the response.</p>
+
+    <div class="diagram">
+      <div class="dflow">
+        <div class="dstack">
+          <div class="dbox"><div class="t">Mobile client</div></div>
+          <div class="dbox"><div class="t">Web client</div></div>
+        </div>
+        <div class="darrow">→</div>
+        <div class="dbox accent"><div class="t">API Gateway</div><div class="s">single entry point</div></div>
+        <div class="darrow">→</div>
+        <div class="dstack">
+          <div class="dbox"><div class="t">Accounts</div></div>
+          <div class="dbox"><div class="t">Loans</div></div>
+          <div class="dbox"><div class="t">Cards</div></div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="subhead">What the gateway centralizes</h3>
+    <table>
+      <tr><th>Responsibility</th><th>Why centralizing it at the gateway is better</th></tr>
+      <tr><td><strong>Authentication / Authorization</strong></td><td>Validate a token once at the edge (this course covers OAuth2/Keycloak integration in a later section) instead of every service independently re-implementing auth</td></tr>
+      <tr><td><strong>Rate limiting / throttling</strong></td><td>One checkpoint protects the entire backend from abusive or excessive traffic before it ever reaches internal services</td></tr>
+      <tr><td><strong>SSL/TLS termination</strong></td><td>HTTPS is terminated once at the gateway; internal east-west traffic can use lighter-weight protocols/plain HTTP within a trusted network boundary</td></tr>
+      <tr><td><strong>Request routing</strong></td><td>The gateway knows how to reach internal services via service discovery; external clients only need to know the gateway's address</td></tr>
+      <tr><td><strong>Centralized logging & tracing</strong></td><td>Every external request passes through one place, making it the natural point to attach a correlation ID and log request/response metadata consistently (topics 130-131)</td></tr>
+      <tr><td><strong>Response/request transformation</strong></td><td>Header injection, path rewriting, and protocol translation can happen in one place rather than duplicated per service</td></tr>
+      <tr><td><strong>Hiding internal topology</strong></td><td>External clients see only the gateway's stable contract, never internal service addresses or how the system happens to be decomposed today</td></tr>
+    </table>
+
+    <div class="callout warn"><b class="lbl">What a gateway should NOT become</b><p>A gateway is meant to handle generic, cross-cutting, infrastructure-level concerns — not business logic. If a gateway starts accumulating service-specific business rules (e.g. "if account type is SAVINGS, apply this discount logic"), it's drifting into becoming exactly the kind of tightly-coupled, hard-to-independently-deploy component microservices were meant to avoid in the first place — sometimes called a "God gateway" anti-pattern. This distinction — infrastructure concerns at the edge, business logic in services — is a very common interview follow-up.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q2-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q2-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q2-common">
+        <details class="qa"><summary>What is an API Gateway / Edge Server, in one sentence?</summary><div class="qa-answer"><p>A single, dedicated service that sits between external clients and internal microservices, serving as the sole entry point for external traffic — routing requests internally and centralizing cross-cutting concerns like auth, rate limiting, and logging.</p></div></details>
+        <details class="qa"><summary>Name three cross-cutting concerns a gateway centralizes.</summary><div class="qa-answer"><p>Any three of: authentication/authorization, rate limiting, SSL/TLS termination, centralized logging/tracing, request routing, and request/response transformation.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q2-faang">
+        <details class="qa"><summary>Why is it a mistake for a gateway to contain business logic, beyond just "separation of concerns" as a general principle?</summary><div class="qa-answer"><p>Business logic in the gateway means the gateway now has to be redeployed every time that specific business rule changes, even though the gateway is shared, high-traffic, critical infrastructure that every single request passes through — coupling a comparatively volatile concern (business rules that change often) to a component that should be comparatively stable and rarely-changing (routing and cross-cutting infrastructure). It also reintroduces exactly the kind of tight coupling and single point of ownership microservices are meant to avoid: instead of the Loans team owning loan business logic end-to-end, that logic now lives partly in a shared, centrally-owned gateway, creating a coordination bottleneck and blurring service ownership boundaries — a real anti-pattern flagged in essentially every serious API Gateway design discussion.</p></div></details>
+        <details class="qa"><summary>Doesn't putting everything through one gateway just recreate the single-point-of-failure problem Section 8 spent an entire topic (104) arguing against for east-west traffic?</summary><div class="qa-answer"><p>It's a fair tension, but the two traffic shapes genuinely differ in a way that changes the calculus: north-south traffic is lower relative volume than aggregate east-west traffic, and centralizing a *stable, well-monitored, horizontally-scalable* entry point for it is a deliberate, accepted trade-off — exactly as argued in topic 104's FAANG answer. In production, this risk is mitigated the same way any critical stateless service's SPOF risk is mitigated: running multiple gateway instances behind a cloud/hardware load balancer (the traditional LB pattern from Section 8 is actually the *right* tool here, since gateway instances are comparatively stable and don't need dynamic per-instance discovery the way internal services do), horizontal autoscaling, and multi-AZ/multi-region deployment for genuinely critical systems. The gateway being a single logical entry point doesn't mean it's a single physical instance.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="scg-intro">
+    <div class="topic-head"><span class="topic-no">123</span><h2>Introduction to Spring Cloud Gateway</h2></div>
+    <p class="topic-sub">Spring's reactive, non-blocking gateway implementation — and why it replaced Netflix Zuul in the Spring Cloud ecosystem.</p>
+
+    <h3 class="subhead">What Spring Cloud Gateway is</h3>
+    <p><strong>Spring Cloud Gateway (SCG)</strong> is Spring's own API Gateway library, built on <strong>Spring WebFlux</strong> (Spring's reactive web framework), <strong>Project Reactor</strong>, and an embedded <strong>Netty</strong> server — a fully non-blocking, asynchronous stack, deliberately different from the traditional blocking Servlet/Tomcat stack used by regular Spring MVC applications throughout this course so far.</p>
+
+    <h3 class="subhead">Why not Netflix Zuul</h3>
+    <p>Netflix Zuul (specifically Zuul 1, the version most widely adopted historically) was the earlier standard gateway in the Spring Cloud Netflix ecosystem — but it's built on the traditional blocking Servlet model (one thread per request, blocking I/O). Under high concurrency, a blocking gateway can exhaust its thread pool waiting on slow downstream calls, becoming a bottleneck exactly where the system needs the most headroom (every single external request passes through it). Spring built Spring Cloud Gateway as a reactive, non-blocking replacement specifically to solve this, and it's now the standard recommendation in the Spring Cloud ecosystem — Netflix's own Zuul 2 (an async rewrite) exists but never achieved the same level of Spring Cloud integration or community adoption.</p>
+
+    <table>
+      <tr><th>Aspect</th><th>Zuul 1</th><th>Spring Cloud Gateway</th></tr>
+      <tr><td>I/O model</td><td>Blocking (Servlet-based)</td><td>Non-blocking, reactive (WebFlux/Netty)</td></tr>
+      <tr><td>Concurrency model</td><td>Thread-per-request</td><td>Event-loop based — few threads handle many concurrent connections</td></tr>
+      <tr><td>Throughput under high load</td><td>Degrades as thread pool saturates</td><td>Scales much further before resource exhaustion, since threads aren't blocked waiting on I/O</td></tr>
+      <tr><td>Current Spring Cloud status</td><td>Legacy — still usable, but not the recommended default</td><td>Standard, actively developed recommendation</td></tr>
+    </table>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q3-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q3-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q3-common">
+        <details class="qa"><summary>What underlying technology stack is Spring Cloud Gateway built on?</summary><div class="qa-answer"><p>Spring WebFlux, Project Reactor, and an embedded Netty server — a non-blocking, reactive stack, as opposed to the traditional blocking Servlet/Tomcat model used by regular Spring MVC.</p></div></details>
+        <details class="qa"><summary>Why did Spring Cloud Gateway replace Zuul 1 as the standard recommendation?</summary><div class="qa-answer"><p>Zuul 1 is built on a blocking, thread-per-request Servlet model, which can become a throughput bottleneck under high concurrency — since every external request passes through the gateway, this matters more here than almost anywhere else in the system. Spring Cloud Gateway's non-blocking reactive model handles much higher concurrency with fewer threads.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q3-faang">
+        <details class="qa"><summary>Why does a reactive, non-blocking model specifically matter more for a gateway than for a typical backend microservice?</summary><div class="qa-answer"><p>A gateway is, structurally, an I/O-bound proxy — for every incoming request, it makes an outbound call to a downstream service and waits for that response, meaning the gateway spends most of its time waiting on network I/O rather than doing CPU-bound work. In a blocking model, each of these waits ties up an entire thread from a finite pool, so gateway throughput is capped by thread pool size divided by average downstream latency. In a reactive model, a thread isn't blocked while waiting — it's freed to handle other requests, and the event loop resumes processing that specific request once the downstream response arrives, meaning a small number of threads can service a very large number of concurrent in-flight requests. This I/O-bound, high-fan-in nature is exactly the profile reactive programming is designed for, and exactly why it matters disproportionately at the gateway layer specifically, versus, say, a CPU-bound internal service where blocking vs reactive matters much less.</p></div></details>
+        <details class="qa"><summary>Does choosing Spring Cloud Gateway mean the internal microservices behind it also need to be reactive/WebFlux-based?</summary><div class="qa-answer"><p>No — this is a common and important point of clarification. The gateway's own internal implementation being reactive is independent of what protocol/paradigm the services behind it use; Accounts, Loans, and Cards throughout this course remain traditional blocking Spring MVC applications, and the gateway proxies HTTP requests to them without requiring them to also be reactive. The reactive requirement is specifically about the gateway's own request-handling efficiency under its uniquely high-fan-in traffic pattern, not a constraint it imposes on the rest of the architecture.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="scg-architecture">
+    <div class="topic-head"><span class="topic-no">124</span><h2>Deep Dive on Spring Cloud Gateway Internal Architecture</h2></div>
+    <p class="topic-sub">Route, Predicate, and Filter — the three core concepts every gateway configuration is built from.</p>
+
+    <h3 class="subhead">The three core building blocks</h3>
+    <table>
+      <tr><th>Concept</th><th>Definition</th></tr>
+      <tr><td><strong>Route</strong></td><td>The fundamental building block — an ID, a destination URI (often a discovery-resolved <code>lb://SERVICE-NAME</code> for load-balanced routing via Eureka), a collection of predicates, and a collection of filters</td></tr>
+      <tr><td><strong>Predicate</strong></td><td>A condition (a Java 8 <code>Predicate</code>) that must be true for a request to match this route — Path, Host, Method, Header, Query param, and more, all composable together</td></tr>
+      <tr><td><strong>Filter</strong></td><td>Logic that modifies the request before it's proxied downstream, or the response before it's returned to the client — <code>GatewayFilter</code> (per-route) or <code>GlobalFilter</code> (applies to every route)</td></tr>
+    </table>
+
+    <h3 class="subhead">Request lifecycle through the gateway</h3>
+    <div class="diagram">
+      <div class="dflow">
+        <div class="dbox"><div class="t">Client request</div></div>
+        <div class="darrow">→</div>
+        <div class="dbox"><div class="t">Gateway Handler Mapping</div><div class="s">evaluates predicates, finds matching route</div></div>
+        <div class="darrow">→</div>
+        <div class="dbox warn"><div class="t">Pre-filters</div><div class="s">mutate the request (headers, correlation ID)</div></div>
+        <div class="darrow">→</div>
+        <div class="dbox accent"><div class="t">Proxy to downstream service</div></div>
+        <div class="darrow">→</div>
+        <div class="dbox warn"><div class="t">Post-filters</div><div class="s">mutate the response before returning</div></div>
+        <div class="darrow">→</div>
+        <div class="dbox"><div class="t">Client response</div></div>
+      </div>
+    </div>
+
+    <h3 class="subhead">Pre-filters vs post-filters</h3>
+    <p>A single <code>GatewayFilter</code> can act at two distinct points in the same request's lifecycle, using Reactor's composable stream model: the filter's logic <em>before</em> calling <code>chain.filter(exchange)</code> runs as a <strong>pre-filter</strong> (on the way in — e.g. adding a correlation ID header, validating auth), and logic attached via <code>.then(...)</code> after that call runs as a <strong>post-filter</strong> (on the way out — e.g. adding a response header, logging the response status). This is precisely the mechanism topics 129–131 build on.</p>
+
+    <div class="ann-grid">
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">GatewayFilter</span></div><div class="ann-body"><p>Scoped to a specific route — configured per-route, either declaratively (in YAML) or via the Java route builder DSL. Built-in filters include <code>AddRequestHeader</code>, <code>AddResponseHeader</code>, <code>StripPrefix</code>, <code>RewritePath</code>, and many more.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">GlobalFilter</span></div><div class="ann-body"><p>Applies to <em>every</em> route automatically — implemented as a Spring bean implementing the <code>GlobalFilter</code> interface. This is the mechanism used for genuinely cross-cutting concerns like correlation ID generation (topic 130), since it needs to apply uniformly regardless of which specific route handled the request.</p></div></div>
+    </div>
+
+    <div class="callout info"><b class="lbl">How this connects back to Section 8</b><p>A route's destination URI using the <code>lb://SERVICE-NAME</code> scheme (e.g. <code>lb://ACCOUNTS</code>) is exactly what tells Spring Cloud Gateway to resolve the target through the Eureka-backed, client-side-discovery-and-load-balancing machinery from Section 8 — the gateway doesn't hardcode a downstream address any more than Feign did; it discovers a healthy instance dynamically for every proxied request.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q4-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q4-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q4-common">
+        <details class="qa"><summary>What are the three core building blocks of Spring Cloud Gateway configuration?</summary><div class="qa-answer"><p>Route (the overall unit: ID, destination, predicates, filters), Predicate (the condition a request must match to use this route), and Filter (logic that modifies the request or response as it passes through).</p></div></details>
+        <details class="qa"><summary>What's the difference between GatewayFilter and GlobalFilter?</summary><div class="qa-answer"><p>`GatewayFilter` is scoped to a specific route, configured individually per-route. `GlobalFilter` applies automatically to every route in the gateway, making it the right choice for concerns that should apply uniformly regardless of which route handled a request.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q4-faang">
+        <details class="qa"><summary>How does a filter implement both pre- and post-processing logic within what looks like a single filter definition?</summary><div class="qa-answer"><p>Spring Cloud Gateway filters are built around Reactor's `Mono`/reactive-chain composition model — a filter receives the current `ServerWebExchange` and a `GatewayFilterChain`, and calls `chain.filter(exchange)` to continue processing. Any logic placed <em>before</em> that call executes as the request flows inward (pre-filter behavior — e.g. mutating headers before the proxied call is made), and any logic composed via `.then(Mono.fromRunnable(...))` or similar after that call executes once the downstream response has come back and is flowing outward (post-filter behavior). This single-method, chain-based design is what lets one filter definition cleanly express both "before" and "after" logic without needing two separate filter types.</p></div></details>
+        <details class="qa"><summary>What's the actual mechanism by which the gateway's route-matching handles a request that could match multiple routes' predicates?</summary><div class="qa-answer"><p>Spring Cloud Gateway evaluates routes in the order they're defined (or, for programmatically-built routes, the order added via the `RouteLocatorBuilder`) and uses the <em>first</em> route whose combined predicates all evaluate to true — so route ordering matters, and more specific routes generally need to be defined before more general/catch-all ones, mirroring the same "most specific match wins" principle discussed for Spring MVC's `@RequestMapping` resolution back in Section 1. This is a genuine, easy-to-hit gotcha when combining the auto-generated discovery-locator routes (topic 126) with hand-written custom routes (topic 128) in the same gateway — if ordering isn't deliberate, a broad auto-generated route can shadow a more specific custom one you actually intended to be used.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="build-edge-server">
+    <div class="topic-head"><span class="topic-no">125</span><h2>Building Edge Server Using Spring Cloud Gateway</h2></div>
+    <p class="topic-sub">The gateway is a new Spring Boot module — but with a critical dependency constraint the others didn't have.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="be1">pom.xml</div>
+        <div class="code-tab" data-pane="be2">GatewayserverApplication.java</div>
+        <div class="code-tab" data-pane="be3">application.yml</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="be1"><pre>&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-cloud-starter-gateway&lt;/artifactId&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-cloud-starter-netflix-eureka-client&lt;/artifactId&gt;
+&lt;/dependency&gt;</pre></div>
+        <div class="code-pane" id="be2"><pre><span class="ann">@SpringBootApplication</span>
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">GatewayserverApplication</span> {
+    <span class="kw">public</span> <span class="kw">static</span> <span class="kw">void</span> main(String[] args) {
+        SpringApplication.run(GatewayserverApplication.<span class="kw">class</span>, args);
+    }
+}</pre></div>
+        <div class="code-pane" id="be3"><pre><span class="cl">server</span>:
+  <span class="cl">port</span>: <span class="str">8072</span>
+
+<span class="cl">spring</span>:
+  <span class="cl">application</span>:
+    <span class="cl">name</span>: <span class="str">gatewayserver</span>
+
+<span class="cl">eureka</span>:
+  <span class="cl">instance</span>:
+    <span class="cl">prefer-ip-address</span>: <span class="kw">true</span>
+  <span class="cl">client</span>:
+    <span class="cl">service-url</span>:
+      <span class="cl">defaultZone</span>: <span class="str">http://localhost:8761/eureka/</span></pre></div>
+      </div>
+    </div>
+
+    <div class="callout pitfall"><b class="lbl">Critical constraint: never combine spring-boot-starter-web with spring-cloud-starter-gateway</b><p><code>spring-cloud-starter-gateway</code> pulls in <strong>Spring WebFlux</strong>, which requires a reactive, non-blocking servlet container model. <code>spring-boot-starter-web</code> pulls in traditional blocking Spring MVC on Tomcat. Having both on the classpath simultaneously creates an ambiguous, broken auto-configuration state — Spring Boot won't know which web stack to actually initialize. This is one of the most common early mistakes when adding a gateway module, especially if it was scaffolded by copy-pasting a `pom.xml` from one of the other (MVC-based) services.</p></div>
+
+    <p>Like every other service in this system, the Gateway is also a Eureka client — not because it needs to be <em>discovered</em> by other services in any meaningful way, but because it needs to <em>discover</em> Accounts, Loans, and Cards to route to them via the <code>lb://SERVICE-NAME</code> mechanism covered in the previous topic.</p>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q5-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q5-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q5-common">
+        <details class="qa"><summary>Why can't you have both spring-boot-starter-web and spring-cloud-starter-gateway on the same classpath?</summary><div class="qa-answer"><p>They represent two fundamentally different, mutually exclusive web stacks — traditional blocking Spring MVC (starter-web) versus reactive Spring WebFlux (required by the gateway) — and having both creates an ambiguous auto-configuration state Spring Boot can't correctly resolve.</p></div></details>
+        <details class="qa"><summary>Why does the gateway need to be a Eureka client?</summary><div class="qa-answer"><p>To discover the internal microservices (Accounts, Loans, Cards) it needs to route requests to — using the exact client-side discovery mechanics from Section 8, resolved via `lb://SERVICE-NAME` destination URIs.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q5-faang">
+        <details class="qa"><summary>Does the gateway registering itself with Eureka serve any purpose, given internal services don't call the gateway (traffic flows the other direction)?</summary><div class="qa-answer"><p>In this specific course's architecture, not a strong functional one — you're right that traffic flows client → gateway → services, not the reverse, so internal services have no real need to discover the gateway via Eureka. It's mostly a byproduct of including the Eureka client dependency (needed for the gateway's own outbound discovery) and following the consistent registration pattern established for every service in the system. In more advanced setups, gateway registration can matter for things like a monitoring/ops dashboard that wants a unified view of every registered service including infrastructure components, or if a service mesh/observability tool queries the registry to build a full system topology map — but for the pure routing use case this course focuses on, it's largely incidental rather than load-bearing.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="default-routing-demo">
+    <div class="topic-head"><span class="topic-no">126</span><h2>Demo of Edge Server with Default Routing Configs</h2></div>
+    <p class="topic-sub">Auto-generated routes, derived directly from the Eureka registry — zero manual route configuration required.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">application.yml</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="cl">spring</span>:
+  <span class="cl">cloud</span>:
+    <span class="cl">gateway</span>:
+      <span class="cl">discovery</span>:
+        <span class="cl">locator</span>:
+          <span class="cl">enabled</span>: <span class="kw">true</span></pre></div></div>
+    </div>
+
+    <p>With <code>discovery.locator.enabled: true</code>, Spring Cloud Gateway automatically creates one route per service currently registered in Eureka — no hand-written route configuration needed at all. Each auto-generated route's path is prefixed by the service's registered ID (uppercased by default, matching how Eureka displays it).</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">example resulting routes</div></div>
+      <div class="code-body"><div class="code-pane active"><pre>GET http://localhost:8072/ACCOUNTS/api/fetch?mobileNumber=1234567890
+<span class="cm"># routes to a healthy ACCOUNTS instance's /api/fetch endpoint</span>
+
+GET http://localhost:8072/LOANS/api/fetch?mobileNumber=1234567890
+<span class="cm"># routes to a healthy LOANS instance</span></pre></div></div>
+    </div>
+
+    <div class="callout warn"><b class="lbl">Why this is a demo mechanism, not a production pattern</b><p>Auto-generated routes are excellent for quickly verifying the gateway → discovery → downstream chain works end-to-end, but they offer <strong>zero control</strong> over path structure, filters, or which endpoints are actually meant to be externally exposed — every single endpoint on every registered service becomes reachable through the gateway automatically, including ones that were never intended to be public. Production systems almost always move to explicit, hand-defined routes (topic 128) specifically to control and restrict what's actually exposed externally.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q6-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q6-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q6-common">
+        <details class="qa"><summary>What does spring.cloud.gateway.discovery.locator.enabled=true do?</summary><div class="qa-answer"><p>It tells Spring Cloud Gateway to automatically generate one route per service currently registered in Eureka, with no manual route configuration needed — each route's path is prefixed by the service's registered ID.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q6-faang">
+        <details class="qa"><summary>What's the specific production risk of relying on discovery-locator auto-generated routes rather than explicit routes?</summary><div class="qa-answer"><p>Every endpoint on every registered service becomes externally reachable through the gateway with zero deliberate curation — including internal-only administrative endpoints, actuator management endpoints (unless separately secured), or endpoints genuinely never meant for external consumption. This directly undermines one of the gateway's core purposes from topic 122 (hiding internal topology and controlling exactly what's exposed) — auto-discovery routes expose the internal API surface 1:1 to the outside world rather than curating a deliberate, minimal, reviewed external contract. This is precisely why explicit route configuration (topic 128) is the production standard: it lets a team consciously decide which specific paths, on which specific services, should be reachable externally at all.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="lowercase-routes">
+    <div class="topic-head"><span class="topic-no">127</span><h2>Make Changes Inside Gateway Server to Accept Service Names with Lower Case</h2></div>
+    <p class="topic-sub">A small but real-world-relevant REST convention fix.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">application.yml</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="cl">spring</span>:
+  <span class="cl">cloud</span>:
+    <span class="cl">gateway</span>:
+      <span class="cl">discovery</span>:
+        <span class="cl">locator</span>:
+          <span class="cl">enabled</span>: <span class="kw">true</span>
+          <span class="cl">lower-case-service-id</span>: <span class="kw">true</span></pre></div></div>
+    </div>
+
+    <p>By default, the auto-generated route prefix matches Eureka's service ID casing, which is conventionally uppercase (<code>ACCOUNTS</code>). Setting <code>lower-case-service-id: true</code> makes the generated paths lowercase (<code>/accounts/api/fetch</code>) instead — aligning with standard REST URL conventions (lowercase, hyphenated paths) covered back in Section 1's REST best-practices notes, since uppercase segments in a URL path are unconventional and can look unprofessional in a public-facing API.</p>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q7-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q7-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q7-common">
+        <details class="qa"><summary>What does lower-case-service-id: true change?</summary><div class="qa-answer"><p>It makes the gateway's auto-generated discovery routes use lowercase service names in the path (e.g. `/accounts/...`) instead of the uppercase Eureka service ID convention (`/ACCOUNTS/...`), aligning with standard REST URL casing conventions.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q7-faang">
+        <details class="qa"><summary>Is this purely cosmetic, or does URL casing actually matter functionally for HTTP?</summary><div class="qa-answer"><p>It's largely a convention/professionalism concern rather than a strict functional requirement — URL paths are technically case-sensitive per the HTTP spec, so `/ACCOUNTS/...` and `/accounts/...` are different paths as far as routing is concerned, meaning this setting genuinely changes what the actual externally-callable path is, not just how it displays. The practical reasoning for preferring lowercase is almost entirely about matching REST API convention and consumer expectations (developers instinctively expect lowercase, hyphenated paths) rather than any technical HTTP requirement — but getting API path conventions right and consistent is a real, if understated, part of API design quality that shows up in code review and public API documentation standards at any company maintaining external-facing APIs.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="custom-routing">
+    <div class="topic-head"><span class="topic-no">128</span><h2>Implementing Custom Routing Using Spring Cloud Gateway</h2></div>
+    <p class="topic-sub">Explicit, hand-curated routes — the production-standard replacement for the discovery-locator demo mechanism.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">GatewayRouteConfig.java</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="ann">@Configuration</span>
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">GatewayRouteConfig</span> {
+
+    <span class="ann">@Bean</span>
+    <span class="kw">public</span> RouteLocator eazyBankRouteConfig(RouteLocatorBuilder routeLocatorBuilder) {
+        <span class="kw">return</span> routeLocatorBuilder.routes()
+            .route(p -&gt; p
+                .path(<span class="str">"/eazybank/accounts/**"</span>)
+                .filters(f -&gt; f
+                    .rewritePath(<span class="str">"/eazybank/accounts/(?&lt;segment&gt;.*)"</span>, <span class="str">"/${segment}"</span>)
+                    .addResponseHeader(<span class="str">"X-Response-Time"</span>, LocalDateTime.now().toString())
+                    .circuitBreaker(config -&gt; config.setName(<span class="str">"accountsCircuitBreaker"</span>)))
+                .uri(<span class="str">"lb://ACCOUNTS"</span>))
+            .route(p -&gt; p
+                .path(<span class="str">"/eazybank/loans/**"</span>)
+                .filters(f -&gt; f
+                    .rewritePath(<span class="str">"/eazybank/loans/(?&lt;segment&gt;.*)"</span>, <span class="str">"/${segment}"</span>))
+                .uri(<span class="str">"lb://LOANS"</span>))
+            .route(p -&gt; p
+                .path(<span class="str">"/eazybank/cards/**"</span>)
+                .filters(f -&gt; f
+                    .rewritePath(<span class="str">"/eazybank/cards/(?&lt;segment&gt;.*)"</span>, <span class="str">"/${segment}"</span>))
+                .uri(<span class="str">"lb://CARDS"</span>))
+            .build();
+    }
+}</pre></div></div>
+    </div>
+
+    <h3 class="subhead">Annotation & method reference</h3>
+    <div class="ann-grid">
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">RouteLocatorBuilder</span></div><div class="ann-body"><p>Injected builder for programmatically defining routes in Java, offering full control that YAML-based route config can express too, but which many teams find more readable/testable as code — especially once filter chains get non-trivial.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">.path(...)</span></div><div class="ann-body"><p>The route's predicate — matches incoming requests whose path fits this pattern. <code>**</code> matches any remaining path segments.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">.rewritePath(...)</span></div><div class="ann-body"><p>A built-in filter that transforms the externally-visible path (<code>/eazybank/accounts/api/fetch</code>) into the path the downstream service actually expects (<code>/api/fetch</code>) — this is exactly how the gateway can present a clean, deliberately-designed external URL structure that's fully decoupled from each service's own internal path conventions.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">.circuitBreaker(...)</span></div><div class="ann-body"><p>Wraps this route with a circuit breaker (backed by Resilience4j in modern Spring Cloud Gateway) — if the Accounts service starts failing broadly, the circuit breaker can trip and short-circuit further calls, protecting both the gateway and the struggling downstream service from cascading overload. This is a direct, practical answer to the "what happens when a downstream service is failing" question raised back in Section 8's Feign topic.</p></div></div>
+    </div>
+
+    <div class="callout info"><b class="lbl">Why explicit routes are the production standard</b><p>Explicit routing gives full, deliberate control over exactly what's exposed externally (only <code>/eazybank/accounts/**</code>-style paths, never a service's raw internal path structure), lets each route carry its own tailored filter chain (circuit breakers, custom headers, rate limiting configured per-route rather than uniformly), and — critically — decouples the external API's URL design from internal implementation details, satisfying exactly the "hide internal topology" goal from topic 122 that the discovery-locator demo mechanism explicitly fails to provide.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q8-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q8-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q8-common">
+        <details class="qa"><summary>What does the rewritePath filter do?</summary><div class="qa-answer"><p>It transforms the externally-visible request path into whatever path the downstream service actually expects — letting the gateway present a clean, custom external URL structure independent of each internal service's own path conventions.</p></div></details>
+        <details class="qa"><summary>Why is explicit routing preferred over the discovery-locator auto-generated routes from topic 126 in production?</summary><div class="qa-answer"><p>It gives deliberate control over exactly which paths are externally exposed (rather than every endpoint on every registered service becoming reachable automatically), and lets each route carry its own tailored filter chain — critical for production concerns like circuit breakers, custom headers, and rate limiting configured per-route.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q8-faang">
+        <details class="qa"><summary>What are the trade-offs between defining routes via the Java RouteLocatorBuilder DSL versus declaratively in application.yml?</summary><div class="qa-answer"><p>YAML-based route definitions are simpler to read for straightforward routes and don't require a recompile/redeploy if paired with an externalized-config mechanism (Spring Cloud Config from Section 6 could, in principle, serve gateway route definitions dynamically) — but complex conditional logic, reusable filter compositions, or programmatically-generated routes (e.g. building routes from a data-driven service catalog) are awkward or impossible to express cleanly in YAML. The Java DSL is fully type-checked at compile time (a typo'd filter name fails to compile rather than silently misbehaving at runtime), supports arbitrary Java logic for route construction, and is generally preferred once route configuration grows beyond simple path-to-service mappings — which is exactly why this course introduces the Java DSL for custom routing rather than staying with YAML-only configuration.</p></div></details>
+        <details class="qa"><summary>How would you evolve this route configuration to support versioned external APIs, e.g. /eazybank/v1/accounts/** vs /eazybank/v2/accounts/**?</summary><div class="qa-answer"><p>Add version-specific route predicates mapping to potentially different downstream targets or different filter chains — e.g. `/eazybank/v1/accounts/**` routing to the current Accounts service with today's response shape, while `/eazybank/v2/accounts/**` could route to either a newer Accounts version (if the team runs parallel versions during a migration) or the same service with an additional response-transformation filter that reshapes the v1 response into the new v2 contract. This is exactly the kind of protocol/contract-translation responsibility that belongs at the gateway layer rather than duplicated in every client, and ties directly back to the URI-versioning discussion from Section 1's REST best-practices topic — the gateway is a natural, centralized place to implement that versioning strategy without touching the underlying services' own internal APIs at all.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="response-header-filter">
+    <div class="topic-head"><span class="topic-no">129</span><h2>Demo of addResponseHeader Filter</h2></div>
+    <p class="topic-sub">A concrete, minimal filter example before moving to the more involved cross-cutting-concerns implementation.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">Adding a response header</div></div>
+      <div class="code-body"><div class="code-pane active"><pre>.filters(f -&gt; f
+    .rewritePath(<span class="str">"/eazybank/accounts/(?&lt;segment&gt;.*)"</span>, <span class="str">"/${segment}"</span>)
+    .addResponseHeader(<span class="str">"X-Response-Time"</span>, LocalDateTime.now().toString())
+)</pre></div></div>
+    </div>
+
+    <p><code>addResponseHeader</code> is one of Spring Cloud Gateway's many built-in filters (alongside `addRequestHeader`, `removeRequestHeader`, `setStatus`, and dozens more) — it injects a custom header into the response the gateway sends back to the client, after the downstream service's response has already come back. This is a deliberately simple example that demonstrates the post-filter half of a route's filter chain (see topic 124) before the section moves to the more substantial, genuinely production-relevant global filter implementation in the next two topics.</p>
+
+    <div class="callout warn"><b class="lbl">A subtle but real gotcha: this specific header value is misleading</b><p>Setting <code>X-Response-Time</code> to <code>LocalDateTime.now()</code> evaluated once when the route is <em>defined</em> (or, depending on exact placement, once per request but before the downstream call actually completes) doesn't correctly represent "how long did this request take" — a genuinely useful response-time header needs to be computed as the actual elapsed time between when the request entered the gateway and when the response was ready, typically captured via timestamps stored in the `ServerWebExchange`'s attributes at the pre-filter stage and read back at the post-filter stage. Worth understanding this distinction rather than treating the demo literally.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q9-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q9-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q9-common">
+        <details class="qa"><summary>What does the addResponseHeader filter do?</summary><div class="qa-answer"><p>It adds a custom header to the response the gateway sends back to the client, applied after the downstream service's response has been received — a post-filter operation.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q9-faang">
+        <details class="qa"><summary>How would you correctly implement a response-time header that reflects actual request latency?</summary><div class="qa-answer"><p>Capture a start timestamp in a pre-filter stage, store it in the `ServerWebExchange`'s attribute map (a per-request, request-scoped storage mechanism Spring WebFlux provides specifically for this kind of cross-filter-stage data passing), and in a post-filter stage — after `chain.filter(exchange)` completes — read that stored start time, compute the elapsed duration against the current time, and set that computed value as the response header. This is a genuinely common pattern for gateway-level latency instrumentation, and the general technique (stash something at the pre-filter stage, retrieve and use it at the post-filter stage via exchange attributes) is exactly how correlation ID propagation is implemented in the very next topic.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="tracing-logging">
+    <div class="topic-head"><span class="topic-no">130-131</span><h2>Implementing Cross-Cutting Concerns: Tracing & Logging Using Gateway</h2></div>
+    <p class="topic-sub">The gateway as the single, correct place to generate and propagate a correlation ID for every request entering the system.</p>
+
+    <h3 class="subhead">Closing the loop from Section 8</h3>
+    <p>Section 8's Feign clients threaded an <code>eazybank-correlation-id</code> header through every inter-service call — but that topic assumed the header already existed. This is where it's actually <strong>generated</strong>: a <code>GlobalFilter</code> at the gateway checks every incoming request for that header, and if it's missing (as it always will be for a genuinely new external request), generates a fresh UUID and attaches it before the request is proxied to any downstream service.</p>
+
+    <div class="diagram">
+      <div class="dflow">
+        <div class="dbox"><div class="t">External client</div><div class="s">no correlation ID header</div></div>
+        <div class="darrow">→</div>
+        <div class="dbox accent"><div class="t">Gateway GlobalFilter</div><div class="s">generates UUID if missing</div></div>
+        <div class="darrow">→</div>
+        <div class="dbox"><div class="t">Accounts</div><div class="s">receives header, logs it, forwards via Feign</div></div>
+        <div class="darrow">→</div>
+        <div class="dbox"><div class="t">Loans / Cards</div><div class="s">same correlation ID, traceable end-to-end</div></div>
+      </div>
+    </div>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="tl1">FilterUtility.java</div>
+        <div class="code-tab" data-pane="tl2">RequestTraceFilter.java</div>
+        <div class="code-tab" data-pane="tl3">GatewayserverApplication.java</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="tl1"><pre><span class="ann">@Component</span>
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">FilterUtility</span> {
+
+    <span class="kw">public</span> <span class="kw">static</span> <span class="kw">final</span> String CORRELATION_ID = <span class="str">"eazybank-correlation-id"</span>;
+
+    <span class="kw">public</span> String getCorrelationId(HttpHeaders requestHeaders) {
+        <span class="kw">if</span> (requestHeaders.get(CORRELATION_ID) != <span class="kw">null</span>) {
+            List&lt;String&gt; requestHeaderList = requestHeaders.get(CORRELATION_ID);
+            <span class="kw">return</span> requestHeaderList.stream().findFirst().get();
+        } <span class="kw">else</span> {
+            <span class="kw">return</span> <span class="kw">null</span>;
+        }
+    }
+
+    <span class="kw">public</span> ServerWebExchange setRequestHeader(
+            ServerWebExchange exchange, String name, String value) {
+        <span class="kw">return</span> exchange.mutate()
+            .request(exchange.getRequest().mutate().header(name, value).build())
+            .build();
+    }
+}</pre></div>
+        <div class="code-pane" id="tl2"><pre><span class="ann">@Component</span>
+<span class="ann">@Order</span>(1)
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">RequestTraceFilter</span> <span class="kw">implements</span> GlobalFilter {
+
+    <span class="kw">private</span> <span class="kw">static</span> <span class="kw">final</span> Logger logger =
+        LoggerFactory.getLogger(RequestTraceFilter.<span class="kw">class</span>);
+
+    <span class="ann">@Autowired</span>
+    FilterUtility filterUtility;
+
+    <span class="ann">@Override</span>
+    <span class="kw">public</span> Mono&lt;Void&gt; filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        HttpHeaders requestHeaders = exchange.getRequest().getHeaders();
+
+        <span class="kw">if</span> (isCorrelationIdPresent(requestHeaders)) {
+            logger.debug(<span class="str">"eazybank-correlation-id found: {}"</span>,
+                filterUtility.getCorrelationId(requestHeaders));
+        } <span class="kw">else</span> {
+            String correlationID = generateCorrelationId();
+            exchange = filterUtility.setRequestHeader(
+                exchange, FilterUtility.CORRELATION_ID, correlationID);
+            logger.debug(<span class="str">"eazybank-correlation-id generated: {}"</span>, correlationID);
+        }
+        <span class="kw">return</span> chain.filter(exchange);
+    }
+
+    <span class="kw">private</span> <span class="kw">boolean</span> isCorrelationIdPresent(HttpHeaders requestHeaders) {
+        <span class="kw">return</span> filterUtility.getCorrelationId(requestHeaders) != <span class="kw">null</span>;
+    }
+
+    <span class="kw">private</span> String generateCorrelationId() {
+        <span class="kw">return</span> java.util.UUID.randomUUID().toString();
+    }
+}</pre></div>
+        <div class="code-pane" id="tl3"><pre><span class="cm">// no special annotation needed beyond @SpringBootApplication —</span>
+<span class="cm">// @Component on RequestTraceFilter is enough for it to be picked up</span>
+<span class="cm">// and auto-applied to every route as a GlobalFilter</span></pre></div>
+      </div>
+    </div>
+
+    <h3 class="subhead">Annotation & concept reference</h3>
+    <div class="ann-grid">
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">GlobalFilter</span></div><div class="ann-body"><p>This interface (versus per-route `GatewayFilter`) is exactly why this filter applies uniformly to every request through every route — correlation ID generation is precisely the kind of concern that must never depend on which specific route happened to handle a request.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@Order(1)</span></div><div class="ann-body"><p>Controls this filter's position in the overall filter execution chain relative to other global filters — lower values execute earlier. Correlation ID generation typically needs to run very early, before other filters that might want to log or use that ID.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">exchange.mutate()</span></div><div class="ann-body"><p><code>ServerWebExchange</code> (and its underlying `ServerHttpRequest`) is <strong>immutable</strong> in the reactive WebFlux model — you can't directly modify request headers in place. `.mutate()` returns a builder for constructing a new, modified exchange/request, which is why the filter must reassign the local `exchange` variable to this new mutated instance before continuing the chain.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">Mono&lt;Void&gt;</span></div><div class="ann-body"><p>The reactive return type every `GlobalFilter`/`GatewayFilter` must produce — `Mono` represents an asynchronous computation that will eventually complete (with no meaningful value here, hence `Void`), consistent with the fully non-blocking, reactive nature of the whole gateway request pipeline established in topic 123.</p></div></div>
+    </div>
+
+    <div class="callout info"><b class="lbl">Centralized logging, the other half of this pair of topics</b><p>Beyond correlation ID propagation, the same `GlobalFilter` mechanism is the natural place to log every request/response passing through the gateway centrally — method, path, status code, latency — giving one consistent, complete log of all external traffic hitting the system, rather than needing to reconstruct that picture from scattered individual service logs. Combined with the correlation ID now present on every downstream log line too, an engineer investigating an issue can search logs across every service by one shared identifier and see the complete, ordered story of a single external request's full journey through the system — exactly the distributed-tracing capability flagged as a gap back in Section 1's exception-handling notes, now actually closed.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q10-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q10-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q10-common">
+        <details class="qa"><summary>Why is the gateway the right place to generate a correlation ID, rather than each individual service generating its own?</summary><div class="qa-answer"><p>The gateway is the single entry point every external request passes through first — generating the ID there guarantees exactly one ID per external request, consistently propagated to every downstream service call, rather than each service potentially generating its own inconsistent ID or requiring extra coordination to agree on one.</p></div></details>
+        <details class="qa"><summary>Why must the filter reassign the exchange variable via exchange.mutate() instead of directly setting a header on the existing request object?</summary><div class="qa-answer"><p>`ServerWebExchange` and its request are immutable in Spring WebFlux's reactive model — there's no in-place header setter to call. `.mutate()` builds a new, modified exchange instance reflecting the added header, which must be explicitly passed forward (reassigned to the local variable, then passed into `chain.filter(...)`) for the change to actually take effect on the request as it continues through the chain.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q10-faang">
+        <details class="qa"><summary>What happens if a malicious or misbehaving external client sends its own eazybank-correlation-id header — does the filter's "use existing if present" logic create any risk?</summary><div class="qa-answer"><p>Potentially yes, in a couple of ways worth understanding: (1) log injection/confusion — an attacker could deliberately set a correlation ID matching a legitimate, unrelated request's ID, muddying log analysis or making malicious traffic harder to distinguish from a genuine request in the same trace; (2) if any downstream logic naively trusts the correlation ID as more than a log-correlation convenience (e.g. using it as a cache key or idempotency key without additional validation), a client-supplied value could enable unintended cache collisions or replay-style issues. Production-grade implementations typically treat a client-supplied correlation ID as advisory at best — either always generating a fresh, server-controlled ID regardless of what the client sent (sacrificing the ability for a client to pre-correlate their own request, which is sometimes a deliberately desired feature for client-side debugging), or validating the format/uniqueness of a client-supplied ID before trusting it, and never using it for anything beyond log correlation without additional safeguards.</p></div></details>
+        <details class="qa"><summary>How would this correlation-ID pattern relate to, or be replaced by, standardized distributed tracing tools like Micrometer Tracing (Spring's Sleuth successor) or OpenTelemetry?</summary><div class="qa-answer"><p>This hand-rolled correlation ID is functionally a simplified, single-ID version of what dedicated distributed tracing frameworks provide more richly: Micrometer Tracing/OpenTelemetry generate a <strong>trace ID</strong> (identifying the whole end-to-end request journey, analogous to this correlation ID) plus a unique <strong>span ID</strong> per individual hop/operation within that trace, automatically propagated via standard headers (W3C Trace Context, or B3 headers), and automatically instrument Spring MVC, WebFlux, Feign, and RestTemplate/WebClient calls without needing hand-written filters like this one at all. These tools also integrate with visualization backends (Zipkin, Jaeger, or cloud-provider tracing services) that render the full multi-service call graph with per-hop latency breakdowns — something a plain correlation ID logged as text can't provide on its own, only enabling manual log correlation via grep/search. Many real production systems use both: a simple business-level correlation ID (sometimes customer-facing, e.g. returned to the client for support-ticket reference) alongside a full distributed tracing system for deep, automatic observability — they solve related but distinct problems.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="gateway-patterns">
+    <div class="topic-head"><span class="topic-no">132</span><h2>Design Patterns Around API Gateway</h2></div>
+    <p class="topic-sub">The system-design vocabulary interviewers expect — this topic alone maps directly onto a huge fraction of gateway-related interview questions.</p>
+
+    <h3 class="subhead">Gateway Offloading</h3>
+    <p>Move cross-cutting, infrastructure-level concerns — SSL termination, authentication, rate limiting, compression, caching — <strong>out of every individual service and onto the gateway</strong>, so backend services can focus purely on business logic. This is essentially topic 122's core argument, formalized as a named pattern.</p>
+
+    <h3 class="subhead">Gateway Aggregation (API Composition)</h3>
+    <p>The gateway (or a thin, dedicated layer just behind it) composes a single client-facing response from multiple backend calls — exactly the "customer summary spanning Accounts, Loans, Cards" scenario from Section 8's Feign topic, but potentially handled at the gateway/BFF layer instead of inside one of the domain services. Reduces the number of round-trips a client needs to make, at the cost of introducing some orchestration logic outside the pure domain services.</p>
+
+    <h3 class="subhead">Backend for Frontend (BFF)</h3>
+    <p>Instead of one single, generic gateway serving every client type identically, run <strong>separate gateway instances tailored to each client type</strong> — a mobile BFF returning a lean, mobile-optimized payload, a web BFF returning a richer response shape suited to a browser SPA, potentially a partner-API BFF with entirely different auth/rate-limiting rules for third-party integrators. Each BFF is owned by (or closely aligned with) the team building that specific client, letting client-specific response shaping evolve independently without a single shared gateway becoming a bottleneck or a compromise-for-everyone.</p>
+
+    <div class="diagram">
+      <div class="dflow">
+        <div class="dstack">
+          <div class="dbox"><div class="t">Mobile app</div></div>
+        </div>
+        <div class="darrow">→</div>
+        <div class="dbox accent"><div class="t">Mobile BFF</div></div>
+        <div class="darrow">↘</div>
+        <div class="dstack">
+          <div class="dbox"><div class="t">Web app</div></div>
+        </div>
+        <div class="darrow">→</div>
+        <div class="dbox accent"><div class="t">Web BFF</div></div>
+        <div class="darrow">↙</div>
+        <div class="dbox warn"><div class="t">Accounts / Loans / Cards</div><div class="s">shared internal services</div></div>
+      </div>
+    </div>
+
+    <h3 class="subhead">Gatekeeper</h3>
+    <p>The gateway acts as a hardened security perimeter — validating, sanitizing, and authenticating every request <em>before</em> it's allowed to reach the internal network at all, rather than trusting internal services to defend themselves individually against malformed or malicious external input.</p>
+
+    <h3 class="subhead">Consolidated pattern comparison</h3>
+    <table>
+      <tr><th>Pattern</th><th>Core idea</th><th>Primary benefit</th><th>Primary cost/trade-off</th></tr>
+      <tr><td><strong>Offloading</strong></td><td>Move infra concerns to the edge</td><td>Services stay focused on business logic; consistency across the whole system</td><td>Gateway becomes more complex/critical; risk of "God gateway" if scope creeps into business logic</td></tr>
+      <tr><td><strong>Aggregation</strong></td><td>Compose multi-service responses in one place</td><td>Fewer client round-trips; simpler clients</td><td>Introduces orchestration logic + latency coupling outside pure domain services (same parallel-call concern from Section 8's Feign FAANG answer)</td></tr>
+      <tr><td><strong>BFF</strong></td><td>Separate gateway per client type</td><td>Client-specific optimization without one-size-fits-all compromise; independent team ownership</td><td>More gateway instances to build, secure, and operate; some duplication of cross-cutting logic across BFFs unless shared carefully</td></tr>
+      <tr><td><strong>Gatekeeper</strong></td><td>Security perimeter enforced at the edge</td><td>Internal services can trust that inbound traffic already passed validation/auth</td><td>A misconfigured or bypassed gateway becomes a serious, systemic security gap</td></tr>
+    </table>
+
+    <div class="callout warn"><b class="lbl">API Gateway vs Service Mesh — the other extremely common interview question</b><p>These solve <em>different halves</em> of the traffic problem and are complementary, not competing: an <strong>API Gateway</strong> (this section) handles <strong>north-south</strong> traffic — external clients entering the system. A <strong>Service Mesh</strong> (e.g. Istio, Linkerd — typically covered in a dedicated later section, often paired with Kubernetes) handles <strong>east-west</strong> traffic between internal services via lightweight sidecar proxies attached to every service instance, providing mTLS, fine-grained traffic policies, and observability for internal calls specifically. Larger organizations frequently run both together: a gateway at the edge, a mesh internally — a very common "compare and contrast" question once a candidate has demonstrated gateway fundamentals.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q11-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q11-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q11-common">
+        <details class="qa"><summary>What is the Backend for Frontend (BFF) pattern?</summary><div class="qa-answer"><p>Running separate, client-type-specific gateway instances (e.g. one for mobile, one for web) instead of one generic gateway serving every client identically — letting each BFF shape responses and apply policies optimized for its specific client type, owned independently.</p></div></details>
+        <details class="qa"><summary>What's the difference between an API Gateway and a Service Mesh?</summary><div class="qa-answer"><p>An API Gateway handles north-south traffic — the entry point for external clients into the system. A Service Mesh handles east-west traffic — communication between internal services — typically via sidecar proxies, providing things like mutual TLS and fine-grained internal traffic policies. They address different traffic shapes and are commonly used together, not as alternatives to each other.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q11-faang">
+        <details class="qa"><summary>When would you specifically recommend adopting the BFF pattern over a single shared gateway, and what's the tipping point?</summary><div class="qa-answer"><p>BFF becomes worth the added operational cost when client-specific response shaping/optimization needs genuinely diverge — e.g. a mobile client needing a deliberately lean, low-bandwidth payload versus a web dashboard needing a much richer, more complete response, or different clients needing meaningfully different auth flows (a mobile app using OAuth2 device flow versus a web app using a standard authorization code flow) — such that a single shared gateway would otherwise need an increasing amount of conditional, client-type-branching logic to serve everyone reasonably well. The tipping point is usually when that shared-gateway conditional complexity starts to feel like it's fighting the single-responsibility principle, or when different client-facing teams want to iterate on their own gateway-level concerns independently without coordinating through one shared, centrally-owned gateway codebase — at that point, splitting into BFFs restores team autonomy at the cost of some duplicated cross-cutting infrastructure across the BFF instances (often mitigated by extracting genuinely shared logic — auth validation, rate limiting — into a shared library or a thin layer both BFFs sit behind).</p></div></details>
+        <details class="qa"><summary>In a system using both an API Gateway and a Service Mesh, where does responsibility for something like rate limiting actually live?</summary><div class="qa-answer"><p>Typically split by traffic direction and granularity: the API Gateway enforces <strong>coarse-grained, client-facing rate limiting</strong> (e.g. "this API key gets 1000 requests/minute total across the whole system") since it's the one place that sees the complete picture of an external client's overall usage. A Service Mesh can additionally enforce <strong>fine-grained, service-level traffic policies</strong> internally (e.g. "no single caller should exceed X requests/second specifically against the Loans service's `/api/create` endpoint, regardless of which upstream service or gateway route it came through"), which protects individual services from internal traffic spikes (a runaway retry loop in one service hammering another) that never even involve external client behavior at all and therefore wouldn't be visible to gateway-level rate limiting. The two layers are complementary — the gateway protects the system's edge and overall external usage budgets, the mesh protects individual internal services from each other.</p></div></details>
+        <details class="qa"><summary>How would you design rate limiting at the gateway to be both effective and fair across many API consumers — what algorithm would you pick and why?</summary><div class="qa-answer"><p>The two most common production choices are <strong>token bucket</strong> and <strong>sliding window log/counter</strong>. Token bucket (each client has a bucket refilling at a steady rate, each request consumes a token, requests are rejected/queued when the bucket is empty) is popular because it naturally allows short bursts up to the bucket capacity while still enforcing a steady average rate over time — a good fit for typical API traffic that's naturally bursty rather than perfectly uniform. A fixed window counter is simpler to implement but has a well-known edge-case flaw (a client can send double its allowed rate by timing requests around a window boundary — e.g. maxing out the end of one window and the start of the next); a sliding window (log-based or weighted-counter approximation) fixes this at some added implementation/storage cost. Spring Cloud Gateway ships a built-in `RequestRateLimiter` filter backed by Redis implementing a token-bucket-style algorithm out of the box, which is the practical default most teams reach for rather than hand-rolling rate limiting logic themselves.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="docker-images-gw">
+    <div class="topic-head"><span class="topic-no">133</span><h2>Generating and Pushing Docker Images with Spring Cloud Gateway Changes</h2></div>
+    <p class="topic-sub">The gateway becomes another containerized service, following the exact Section 4 workflow.</p>
+
+    <p>The new Gateway Server module gets its own Docker image, built and pushed to Docker Hub via whichever build approach the team standardized on (Dockerfile/Buildpacks/Jib from Section 4), tagged for this section (e.g. `:s9`). No image-build-specific changes are needed for the reactive WebFlux stack — as established back in Section 4, containerization is orthogonal to the application's internal architecture.</p>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q12-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q12-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q12-common">
+        <details class="qa"><summary>Does the gateway's use of WebFlux instead of traditional Spring MVC change how it needs to be containerized?</summary><div class="qa-answer"><p>No — the same Dockerfile/Buildpacks/Jib approaches from Section 4 work identically regardless of which web stack the application uses internally; containerization packages the JAR and its runtime dependencies, which is orthogonal to whether that JAR happens to be a reactive or blocking application.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q12-faang">
+        <details class="qa"><summary>Given the gateway's high-throughput, latency-sensitive role, does anything about its container resource allocation deserve special consideration compared to a typical backend service?</summary><div class="qa-answer"><p>Yes, worth thinking about explicitly: since every external request passes through it, the gateway often benefits from being provisioned with headroom for burst traffic and horizontal autoscaling tuned more aggressively than a typical internal service, given it's the first point of contention under a traffic spike. Its reactive, non-blocking nature (topic 123) means it can handle high concurrency with relatively modest CPU/memory footprint per instance compared to a blocking service handling similar request volume, but genuinely CPU-bound work at the gateway (heavy request/response transformation, complex filter logic) can still become a bottleneck even in a non-blocking model — reactive avoids thread-blocking on I/O waits, it doesn't make CPU-bound work free. Production capacity planning for a gateway typically treats it as a distinct tier from regular services, monitored and scaled based on its own specific traffic and latency characteristics rather than assuming it behaves like an average backend service.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="compose-gw">
+    <div class="topic-head"><span class="topic-no">134</span><h2>Updating Docker Compose File to Adapt Spring Cloud Gateway Changes</h2></div>
+    <p class="topic-sub">The gateway joins the stack — and, for the first time, changes which ports actually need to be public.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">docker-compose.yml (excerpt)</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="cl">services</span>:
+  <span class="cl">gatewayserver</span>:
+    <span class="cl">image</span>: <span class="str">eazybytes/gatewayserver:s9</span>
+    <span class="cl">container_name</span>: <span class="str">gatewayserver-ms</span>
+    <span class="cl">ports</span>:
+      - <span class="str">"8072:8072"</span>
+    <span class="cl">extends</span>:
+      <span class="cl">file</span>: <span class="str">common-config.yml</span>
+      <span class="cl">service</span>: <span class="str">microservice-base-config</span>
+    <span class="cl">depends_on</span>:
+      <span class="cl">accounts</span>:
+        <span class="cl">condition</span>: <span class="str">service_healthy</span>
+      <span class="cl">loans</span>:
+        <span class="cl">condition</span>: <span class="str">service_healthy</span>
+      <span class="cl">cards</span>:
+        <span class="cl">condition</span>: <span class="str">service_healthy</span>
+
+  <span class="cl">accounts</span>:
+    <span class="cl">image</span>: <span class="str">eazybytes/accounts:s9</span>
+    <span class="cm"># ports: — no longer publishing 8080:8080 to the host at all</span>
+    <span class="cm"># only the gateway needs to be reachable from outside Docker's network</span>
+    <span class="cl">extends</span>:
+      <span class="cl">file</span>: <span class="str">common-config.yml</span>
+      <span class="cl">service</span>: <span class="str">microservice-base-config</span></pre></div></div>
+    </div>
+
+    <div class="callout pitfall"><b class="lbl">The most important production-hygiene change in this file, easy to overlook</b><p>Notice <code>accounts</code> (and, equally, <code>loans</code>/<code>cards</code>) no longer publishes a <code>ports:</code> mapping to the host at all. This is exactly topic 121/122's argument made concrete in infrastructure: internal services should <strong>only</strong> be reachable from other containers on the shared Docker network (via service name, as established since Section 4), never directly from outside Docker entirely. Only <code>gatewayserver</code> exposes a host port — it is now the sole external entry point into the whole system, matching the architecture diagrammed back in topic 122 exactly. Leaving every service's port published, even after adding a gateway, is a real, easy-to-make mistake that quietly defeats the entire point of this section.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q13-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q13-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q13-common">
+        <details class="qa"><summary>Why should accounts, loans, and cards stop publishing their ports to the host once a gateway is in place?</summary><div class="qa-answer"><p>Because the gateway is now meant to be the sole external entry point into the system — internal services should only be reachable from other containers on the shared Docker network (via service name), not directly from outside Docker. Leaving their ports published would let external clients bypass the gateway entirely, undermining every centralized concern (auth, rate limiting, logging) it's meant to enforce.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q13-faang">
+        <details class="qa"><summary>Does removing published ports for internal services actually provide meaningful security, or is it a superficial fix, given they're still reachable within the Docker network?</summary><div class="qa-answer"><p>It's a meaningful, real layer of defense-in-depth rather than a complete security solution on its own — it eliminates the specific, easy attack vector of a client on the host machine's network (or, in a real cloud deployment, anyone who can reach the host's IP directly) hitting an internal service's port and bypassing the gateway entirely, which is a genuinely common and embarrassingly simple misconfiguration to have in production if overlooked. It does NOT, by itself, protect against a compromised container on the same Docker network calling other internal services directly (lateral movement within the network), which is precisely the gap a Service Mesh's mTLS and fine-grained internal traffic policies (mentioned in topic 132's callout) are designed to close at a deeper layer. In a real production deployment (not just Compose), this same principle scales up via network policies/security groups restricting which internal components can reach which others, with the gateway remaining the only component with an internet-facing load balancer or ingress point in front of it — port-hiding in Compose is a simplified, local-dev-scale illustration of that same production network-segmentation principle.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer-note">Spring Boot Bible · Section 9 of N · Standalone reference document · Generated for interview preparation</div>
+</main>
+</div>
+
+<script>
+const themeToggle = document.getElementById('themeToggle');
+const html = document.documentElement;
+function applyThemeLabel(){
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  themeToggle.innerHTML = isDark ? '🌙 Dark mode <span>⇄</span>' : '☀️ Light mode <span>⇄</span>';
+}
+themeToggle.addEventListener('click', () => {
+  const cur = html.getAttribute('data-theme');
+  html.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+  applyThemeLabel();
+  localStorage.setItem('sb-bible-theme', html.getAttribute('data-theme'));
+});
+(function initTheme(){
+  const saved = localStorage.getItem('sb-bible-theme');
+  if(saved){ html.setAttribute('data-theme', saved); }
+  applyThemeLabel();
+})();
+
+document.querySelectorAll('.code-panel').forEach(panel => {
+  const tabs = panel.querySelectorAll('.code-tab');
+  if(tabs.length <= 1) return;
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.getAttribute('data-pane');
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      panel.querySelectorAll('.code-pane').forEach(p => p.classList.remove('active'));
+      const pane = panel.querySelector('#' + target);
+      if(pane) pane.classList.add('active');
+    });
+  });
+});
+
+document.querySelectorAll('.qa-section').forEach(section => {
+  const btns = section.querySelectorAll('.qa-tab-btn');
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-target');
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      section.querySelectorAll('.qa-pane').forEach(p => p.classList.remove('active'));
+      document.getElementById(target).classList.add('active');
+    });
+  });
+});
+
+const navLinks = document.querySelectorAll('.nav-link');
+const topics = document.querySelectorAll('section.topic');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const id = entry.target.getAttribute('id');
+    const link = document.querySelector('.nav-link[href="#' + id + '"]');
+    if(!link) return;
+    if(entry.isIntersecting){
+      navLinks.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-15% 0px -75% 0px', threshold: 0 });
+topics.forEach(t => observer.observe(t));
+</script>
+</body>
+</html>
