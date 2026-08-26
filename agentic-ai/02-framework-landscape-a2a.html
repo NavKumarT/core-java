@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Framework Landscape &amp; A2A Interop — LangGraph ↔ Google ADK</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d10; --bg-raised:#12151a; --bg-card:#14181f;
+  --line:#242a33; --line-soft:#1b2028;
+  --ink:#e7e9ec; --ink-dim:#9aa3b0; --ink-faint:#5c6672;
+  --amber:#ff9f40; --amber-dim:#c97a2e; --lime:#c9f04c; --cyan:#5fd9c9; --violet:#b592ff; --rose:#ff7a8a;
+  --serif:'Source Serif 4', Georgia, serif;
+  --display:'Space Grotesk', sans-serif;
+  --mono:'JetBrains Mono', 'Courier New', monospace;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:radial-gradient(var(--line-soft) 1px, transparent 1px);
+  background-size:22px 22px; background-color:var(--bg);
+  color:var(--ink); font-family:var(--serif); font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+a{color:var(--amber); text-decoration:none;}
+::selection{background:var(--amber); color:#111;}
+.shell{display:grid; grid-template-columns:280px 1fr; min-height:100vh;}
+@media (max-width:920px){ .shell{grid-template-columns:1fr;} .side{display:none;} }
+.side{position:sticky; top:0; height:100vh; overflow-y:auto; border-right:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(18,21,26,.9), rgba(11,13,16,.9)); padding:28px 22px 60px;}
+.side::-webkit-scrollbar{width:6px;} .side::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.brand{font-family:var(--display); font-weight:700; font-size:15px; color:var(--ink); margin-bottom:2px;}
+.brand span{color:var(--amber);}
+.brand-sub{font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-bottom:26px;}
+.back-link{display:inline-block; font-family:var(--mono); font-size:11px; color:var(--cyan); margin-bottom:22px; border:1px solid var(--line); padding:5px 10px; border-radius:6px;}
+.nav-link{display:flex; align-items:baseline; gap:8px; font-family:var(--display); font-size:13px; color:var(--ink-dim);
+  padding:6px 8px; border-radius:6px; border-left:2px solid transparent; transition:.15s;}
+.nav-link:hover{color:var(--ink); background:var(--bg-raised);}
+.nav-link.active{color:var(--amber); border-left-color:var(--amber); background:var(--bg-raised);}
+.nav-num{font-family:var(--mono); font-size:10px; color:var(--ink-faint); min-width:18px;}
+.main{max-width:900px; padding:0 44px 140px; margin:0 auto;}
+@media (max-width:700px){ .main{padding:0 20px 100px;} }
+.hero{padding:76px 0 54px; border-bottom:1px solid var(--line);}
+.hero-eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--lime);
+  margin-bottom:18px; display:flex; align-items:center; gap:10px;}
+.hero-eyebrow::before{content:''; width:22px; height:1px; background:var(--lime); display:inline-block;}
+h1.title{font-family:var(--display); font-weight:700; font-size:clamp(30px,4.8vw,50px); line-height:1.08; letter-spacing:-.02em; color:var(--ink); max-width:16ch;}
+h1.title em{font-style:normal; color:var(--amber);}
+.hero-sub{font-family:var(--serif); font-size:18px; color:var(--ink-dim); max-width:60ch; margin-top:20px;}
+.tag-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:26px;}
+.tag{font-family:var(--mono); font-size:11px; padding:5px 11px; border-radius:20px; border:1px solid var(--line); color:var(--ink-dim); background:var(--bg-raised);}
+section.chapter{padding:60px 0; border-bottom:1px solid var(--line);}
+section.chapter:last-of-type{border-bottom:none;}
+.chapter-head{display:flex; align-items:flex-start; gap:16px; margin-bottom:8px;}
+.chapter-num{font-family:var(--mono); font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:20px; padding:3px 11px; margin-top:6px; white-space:nowrap;}
+h2.chapter-title{font-family:var(--display); font-weight:600; font-size:clamp(22px,3.2vw,30px); color:var(--ink); letter-spacing:-.01em;}
+.chapter-dek{font-family:var(--serif); font-style:italic; color:var(--ink-dim); font-size:16px; max-width:64ch; margin:14px 0 30px 0; padding-left:66px;}
+@media (max-width:700px){.chapter-dek{padding-left:0;}}
+.chapter-body{padding-left:66px;}
+@media (max-width:700px){.chapter-body{padding-left:0;}}
+.chapter-body h3{font-family:var(--display); font-weight:600; font-size:19px; color:var(--ink); margin:32px 0 12px;}
+.chapter-body h4{font-family:var(--display); font-weight:600; color:var(--cyan); margin:22px 0 10px; text-transform:uppercase; letter-spacing:.04em; font-size:12px;}
+.chapter-body p{color:var(--ink-dim); margin-bottom:14px; max-width:70ch;}
+.chapter-body ul, .chapter-body ol{color:var(--ink-dim); margin:0 0 16px 20px; max-width:68ch;}
+.chapter-body li{margin-bottom:7px;}
+.chapter-body strong{color:var(--ink); font-weight:600;}
+code.inline{font-family:var(--mono); font-size:.87em; background:var(--bg-raised); color:var(--lime); padding:1px 6px; border-radius:4px; border:1px solid var(--line);}
+.callout{border-left:3px solid var(--amber); background:var(--bg-card); padding:16px 18px; border-radius:0 8px 8px 0; margin:20px 0; max-width:68ch;}
+.callout p{margin-bottom:0; color:var(--ink-dim); font-size:14.5px;}
+.callout .callout-label{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--amber); margin-bottom:6px; display:block;}
+.callout.interview{border-left-color:var(--violet);} .callout.interview .callout-label{color:var(--violet);}
+.callout.pitfall{border-left-color:var(--rose);} .callout.pitfall .callout-label{color:var(--rose);}
+.callout.paper{border-left-color:var(--cyan);} .callout.paper .callout-label{color:var(--cyan);}
+.callout.focus{border-left-color:var(--lime); background:#151b12;} .callout.focus .callout-label{color:var(--lime);}
+.code-wrap{background:#0a0c0f; border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:18px 0 24px;}
+.code-head{display:flex; align-items:center; justify-content:space-between; padding:9px 14px; border-bottom:1px solid var(--line); background:var(--bg-raised); font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+.code-dots{display:flex; gap:5px;} .code-dots span{width:8px; height:8px; border-radius:50%; background:var(--line);}
+pre{padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:12.6px; line-height:1.7; color:#d7dbe0;}
+pre::-webkit-scrollbar{height:6px;} pre::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.tok-kw{color:var(--violet);} .tok-str{color:var(--lime);} .tok-com{color:var(--ink-faint); font-style:italic;} .tok-fn{color:var(--cyan);} .tok-num{color:var(--amber);}
+.tbl{width:100%; border-collapse:collapse; margin:18px 0 26px; font-size:13.2px; max-width:76ch;}
+.tbl th{text-align:left; font-family:var(--mono); font-size:10.2px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); padding:10px 12px; border-bottom:1px solid var(--line);}
+.tbl td{padding:11px 12px; border-bottom:1px solid var(--line-soft); color:var(--ink-dim); vertical-align:top;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl td.k{color:var(--ink); font-family:var(--mono); font-size:12.2px; white-space:nowrap;}
+.diagram{background:var(--bg-card); border:1px solid var(--line); border-radius:12px; padding:22px; margin:20px 0 26px;}
+.diagram svg{width:100%; height:auto; display:block;}
+.legend{display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; font-family:var(--mono); font-size:10.5px; color:var(--ink-faint);}
+.legend span{display:inline-flex; align-items:center; gap:6px;} .legend i{width:9px; height:9px; border-radius:2px; display:inline-block;}
+.qa{border:1px solid var(--line); border-radius:10px; margin-bottom:10px; background:var(--bg-card); overflow:hidden;}
+.qa summary{list-style:none; cursor:pointer; padding:15px 18px; display:flex; gap:12px; align-items:flex-start; font-family:var(--display); font-size:14px; color:var(--ink); font-weight:500;}
+.qa summary::-webkit-details-marker{display:none;}
+.qa summary::before{content:'+'; font-family:var(--mono); color:var(--amber); font-size:16px; line-height:1;}
+.qa[open] summary::before{content:'–';}
+.qa .qa-body{padding:0 18px 18px 40px; color:var(--ink-dim); font-size:14px; max-width:66ch;}
+.qa .qa-body p{margin-bottom:10px;}
+.qa-tag{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; background:var(--bg-raised); color:var(--ink-faint); padding:2px 8px; border-radius:20px; border:1px solid var(--line); margin-left:auto; white-space:nowrap; flex-shrink:0;}
+.glossary-grid{display:grid; grid-template-columns:1fr 1fr; gap:2px 28px;}
+@media (max-width:700px){.glossary-grid{grid-template-columns:1fr;}}
+.gterm{padding:14px 0; border-bottom:1px solid var(--line-soft);}
+.gterm dt{font-family:var(--mono); color:var(--cyan); font-size:13px; margin-bottom:4px;}
+.gterm dd{color:var(--ink-dim); font-size:13px; line-height:1.55;}
+.footer{padding:60px 0 20px; text-align:center; color:var(--ink-faint); font-family:var(--mono); font-size:12px;}
+.pattern-card{background:var(--bg-card); border:1px solid var(--line); border-radius:10px; padding:18px 20px; margin:14px 0;}
+.pattern-card .ptitle{font-family:var(--display); font-weight:600; color:var(--amber); font-size:15px; margin-bottom:6px;}
+.pattern-card p{margin-bottom:0; font-size:13.8px;}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav class="side" id="side">
+  <a class="back-link" href="#">← Topic 1: Reasoning Patterns</a>
+  <div class="brand">Framework <span>&amp; A2A</span></div>
+  <div class="brand-sub">Topic 2 of 10 — deep reference + interview prep</div>
+  <a class="nav-link" href="#overview"><span class="nav-num">00</span>2026 Framework Landscape</a>
+  <a class="nav-link" href="#decision"><span class="nav-num">01</span>Decision Framework</a>
+  <a class="nav-link" href="#mcp-vs-a2a"><span class="nav-num">02</span>MCP vs A2A</a>
+  <a class="nav-link" href="#a2a-core"><span class="nav-num">03</span>A2A Protocol Core Concepts</a>
+  <a class="nav-link" href="#a2a-lifecycle"><span class="nav-num">04</span>Task Lifecycle &amp; Wire Format</a>
+  <a class="nav-link" href="#focus-arch"><span class="nav-num">05</span>★ LangGraph ↔ ADK: Architecture</a>
+  <a class="nav-link" href="#focus-expose"><span class="nav-num">06</span>★ Exposing LangGraph via A2A</a>
+  <a class="nav-link" href="#focus-consume"><span class="nav-num">07</span>★ Consuming from ADK (RemoteA2aAgent)</a>
+  <a class="nav-link" href="#focus-reverse"><span class="nav-num">08</span>★ Reverse: ADK as Server, LangGraph as Client</a>
+  <a class="nav-link" href="#focus-state"><span class="nav-num">09</span>★ State, Context &amp; Thread Sync</a>
+  <a class="nav-link" href="#focus-security"><span class="nav-num">10</span>★ Trust Boundaries &amp; Security</a>
+  <a class="nav-link" href="#multiagent"><span class="nav-num">11</span>Multi-Agent Orchestration Patterns</a>
+  <a class="nav-link" href="#pitfalls"><span class="nav-num">12</span>Production Pitfalls</a>
+  <a class="nav-link" href="#interview"><span class="nav-num">13</span>Interview Cheat-Sheet</a>
+  <a class="nav-link" href="#glossary"><span class="nav-num">14</span>Glossary</a>
+  <a class="nav-link" href="#resources"><span class="nav-num">15</span>Resources</a>
+</nav>
+
+<main class="main">
+  <div class="hero">
+    <div class="hero-eyebrow">Deep reference · Topic 2 of 10</div>
+    <h1 class="title">Framework Landscape &amp; <em>A2A Interop</em></h1>
+    <p class="hero-sub">Which framework, and why — then the part most engineers never actually build: getting a LangGraph-based agent repo and a Google ADK-based agent repo to talk to each other in production over the Agent2Agent (A2A) protocol. Architecture, code, the state-sync gotchas, and the security posture you need to defend in an interview.</p>
+    <div class="tag-row">
+      <span class="tag">LangGraph</span><span class="tag">Google ADK</span><span class="tag">CrewAI</span>
+      <span class="tag">AutoGen / MS Agent Framework</span><span class="tag">OpenAI Agents SDK</span>
+      <span class="tag">MCP</span><span class="tag">A2A Protocol</span><span class="tag">RemoteA2aAgent</span><span class="tag">Agent Card</span>
+    </div>
+  </div>
+
+  <!-- ============ 00 OVERVIEW ============ -->
+  <section class="chapter" id="overview">
+    <div class="chapter-head"><span class="chapter-num">00</span><h2 class="chapter-title">The 2026 Framework Landscape</h2></div>
+    <p class="chapter-dek">Six frameworks dominate production agent deployments right now. Know the philosophy behind each, not just the name.</p>
+    <div class="chapter-body">
+      <p><cite index="84-1">By mid-2026, six SDKs dominate production agent deployments: LangGraph, CrewAI, OpenAI Agents SDK, Claude Agent SDK, Google ADK, and Microsoft Agent Framework — each takes a different approach to the same underlying problem: how to build agents that work reliably in production.</cite></p>
+      <table class="tbl">
+        <tr><th>Framework</th><th>Orchestration model</th><th>State / persistence</th><th>Model dependency</th></tr>
+        <tr><td class="k">LangGraph</td><td><cite index="94-1">Directed graph with conditional edges — you define exactly how control flows, where errors route, and when humans intervene</cite></td><td><cite index="94-1">Built-in checkpointing with time travel</cite></td><td><cite index="94-1">Fully model-agnostic</cite></td></tr>
+        <tr><td class="k">CrewAI</td><td><cite index="94-1">Role-based crews with process types</cite></td><td><cite index="94-1">Task outputs passed sequentially</cite></td><td><cite index="94-1">Fully model-agnostic</cite></td></tr>
+        <tr><td class="k">Google ADK 2.0</td><td><cite index="94-1">Hierarchical agent tree</cite>, <cite index="82-1">also supports graph-based workflows similar to LangGraph, with multi-language support across Python, Go, and TypeScript</cite></td><td><cite index="94-1">Session state with pluggable backends</cite></td><td><cite index="94-1">Optimized for Gemini but supports other models</cite></td></tr>
+        <tr><td class="k">OpenAI Agents SDK</td><td><cite index="94-1">Explicit handoffs between agents</cite></td><td><cite index="94-1">Context variables, ephemeral by default</cite></td><td><cite index="94-1">OpenAI models only</cite></td></tr>
+        <tr><td class="k">Claude Agent SDK</td><td>Tool-use chain with sub-agents</td><td><cite index="94-1">Via MCP servers</cite></td><td>Claude models only</td></tr>
+        <tr><td class="k">AutoGen / MS Agent Framework</td><td><cite index="94-1">Conversational GroupChat</cite> — <cite index="83-1">the multi-agent conversation champion, ideal for research and agent-to-agent debate</cite></td><td><cite index="94-1">Conversation history, in-memory by default</cite></td><td>Model-agnostic</td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">A name that will trip you up</span>
+        <p><cite index="93-1">As of April 2026, Microsoft merged AutoGen with Semantic Kernel into the Microsoft Agent Framework 1.0, which reached general availability that month — AutoGen is now in maintenance mode, receiving bug fixes but no major new feature development.</cite> If you have AutoGen in production, <cite index="82-1">LangGraph is the closest architectural fit for migration, while CrewAI is the easiest transition if your agents follow role-based patterns.</cite> Do not recommend starting a new project on AutoGen in an interview — it reads as stale knowledge.</p>
+      </div>
+      <div class="callout">
+        <span class="callout-label">Token cost is a real, cited differentiator</span>
+        <p><cite index="84-1">Benchmarks show LangGraph runs roughly 47% lower token costs than CrewAI, attributed to explicit edge transitions instead of LLM-driven task routing</cite> — CrewAI's role-based delegation asks an LLM to decide routing, which LangGraph's conditional edges do in code for free. <cite index="83-1">Conversely, AutoGen-style multi-agent conversation is reported to consume 3-5x more tokens than LangGraph for equivalent tasks</cite> because agents "talk" through several conversational turns to coordinate.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 01 DECISION FRAMEWORK ============ -->
+  <section class="chapter" id="decision">
+    <div class="chapter-head"><span class="chapter-num">01</span><h2 class="chapter-title">Decision Framework</h2></div>
+    <p class="chapter-dek">The table interviewers actually want, phrased as constraints not marketing copy.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>If...</th><th>Choose</th></tr>
+        <tr><td>You need deterministic, auditable control flow with human-approval steps and regulatory compliance</td><td>LangGraph — <cite index="98-1">positioned as the default for stateful production workflows, especially in regulated environments where auditability and deterministic control matter</cite></td></tr>
+        <tr><td>You need a working multi-agent prototype today, roles are clear, control granularity is secondary</td><td>CrewAI — <cite index="98-1">the fastest path from idea to a working multi-agent demo, 2-4 hour setup</cite></td></tr>
+        <tr><td>You're GCP-native, need multi-language support, or need A2A-first cross-framework interoperability</td><td>Google ADK — <cite index="98-1">the strongest choice for multimodal agents and GCP-native deployments, with A2A-powered interoperability across 50+ partners</cite></td></tr>
+        <tr><td>You're fully committed to one model provider and want the lowest-friction path</td><td>OpenAI Agents SDK or Claude Agent SDK — <cite index="85-1">but you're locked to that provider's models, unlike the three model-agnostic frameworks above</cite></td></tr>
+        <tr><td>You need multi-party agent debate, consensus-building, or iterative critique cycles</td><td><cite index="95-1">AutoGen/AG2 — best for agent-to-agent debate and refinement workflows, not tool execution pipelines</cite>, though check maintenance status first</td></tr>
+        <tr><td>You're a .NET/Azure shop</td><td>Microsoft Agent Framework — <cite index="92-1">the unified successor to AutoGen and Semantic Kernel, with graph-based workflows</cite></td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">The senior-level framing</span>
+        <p><cite index="90-1">There is no single best framework — your choice depends on use case, team size, and existing tech stack, and many production systems combine frameworks: you might use LangGraph for orchestration while plugging in specialist agents built on other frameworks.</cite> Naming a framework as universally "best" is a junior answer; describing the trade you're making is the senior one. And increasingly the interoperability question — "can these talk to each other at all" — matters more than which single framework wins, which is exactly what A2A solves.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 MCP vs A2A ============ -->
+  <section class="chapter" id="mcp-vs-a2a">
+    <div class="chapter-head"><span class="chapter-num">02</span><h2 class="chapter-title">MCP vs A2A — Two Different Problems</h2></div>
+    <p class="chapter-dek">The single most-tested distinction in this whole topic area. Get this exactly right.</p>
+    <div class="chapter-body">
+      <p><cite index="47-1">MCP (Model Context Protocol) connects agents to tools and data. A2A connects agents to other agents — enabling them to discover each other's capabilities, delegate tasks, and collaborate across frameworks and organizations.</cite> They are complementary layers, not competitors: <cite index="60-1">a retail store's inventory agent might use MCP to interact with its own product database, and when stock runs low, notify an internal order agent that uses A2A to communicate with an external supplier's agent.</cite></p>
+      <table class="tbl">
+        <tr><th></th><th>MCP</th><th>A2A</th></tr>
+        <tr><td class="k">Connects</td><td>Agent → tool / data source</td><td>Agent → agent</td></tr>
+        <tr><td class="k">Created by</td><td>Anthropic, 2024</td><td><cite index="60-1">Google, April 2025 — now housed by the Linux Foundation as an open-source project</cite></td></tr>
+        <tr><td class="k">What the counterpart looks like to you</td><td>A stateless function with a fixed schema</td><td><cite name="47-1">A full agent that can reason, maintain state, and handle multi-turn interactions like negotiation or clarification — it retains its full capabilities rather than being reduced to a function call</cite></td></tr>
+        <tr><td class="k">Discovery mechanism</td><td>Tool schema listing on the MCP server</td><td>Agent Card at a well-known URL</td></tr>
+        <tr><td class="k">Transport</td><td>Typically stdio or HTTP+SSE</td><td><cite index="53-1">JSON-RPC 2.0 over HTTP(S)</cite></td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"When would you wrap a service as an MCP tool vs expose it as an A2A agent?" — <cite index="47-1">If the counterpart is stateless and performs a single function, wrap it as an MCP tool. If it needs to reason, hold state across a multi-turn interaction, or make its own decisions about how to fulfill your request, expose it as an A2A agent instead</cite> — collapsing a reasoning agent into a single MCP tool call throws away everything that made it an agent.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 A2A CORE CONCEPTS ============ -->
+  <section class="chapter" id="a2a-core">
+    <div class="chapter-head"><span class="chapter-num">03</span><h2 class="chapter-title">A2A Protocol — Core Concepts</h2></div>
+    <p class="chapter-dek">Five vocabulary terms that show up in every A2A conversation, interview or production.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Term</th><th>What it is</th></tr>
+        <tr><td class="k">Agent Card</td><td><cite index="60-1">A JSON document describing what an agent does, its skills, and its endpoint</cite> — <cite index="42-1">including name, description, version, service endpoint URL, transports, and authentication requirements</cite>, published at <code class="inline">/.well-known/agent-card.json</code> (or the legacy <code class="inline">/.well-known/agent.json</code>).</td></tr>
+        <tr><td class="k">AgentSkill</td><td><cite index="49-1">Declaration of one capability the agent exposes, with a unique id, name, description, and usage examples</cite> — an agent's card can list several skills.</td></tr>
+        <tr><td class="k">A2A Server (remote agent)</td><td><cite index="42-1">Takes requests, processes tasks, and responds with status updates or results, exposing an HTTP endpoint compatible with the A2A protocol.</cite></td></tr>
+        <tr><td class="k">A2A Client (client agent)</td><td><cite index="42-1">An app, service, or other AI agent that delegates requests to remote agents, using A2A to initiate communication.</cite></td></tr>
+        <tr><td class="k">Task</td><td><cite index="76-1">A2A is task-based: client requests are treated as stateful tasks with the goal of completion, each initiating a task with a unique ID and lifecycle (submitted, working, etc.).</cite></td></tr>
+      </table>
+      <div class="diagram">
+        <svg viewBox="0 0 740 220" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="a2m" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff9f40"/></marker></defs>
+          <rect x="30" y="70" width="150" height="60" rx="8" fill="none" stroke="#5fd9c9" stroke-width="1.5"/>
+          <text x="105" y="96" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">A2A Client</text>
+          <text x="105" y="114" fill="#9aa3b0" font-family="JetBrains Mono" font-size="10" text-anchor="middle">(host / orchestrator)</text>
+          <line x1="180" y1="82" x2="280" y2="82" stroke="#ff9f40" stroke-width="1.5" marker-end="url(#a2m)"/>
+          <text x="230" y="74" fill="#9aa3b0" font-family="JetBrains Mono" font-size="9" text-anchor="middle">GET agent-card.json</text>
+          <line x1="280" y1="110" x2="180" y2="110" stroke="#5c6672" stroke-width="1.2" stroke-dasharray="3 3"/>
+          <text x="230" y="126" fill="#9aa3b0" font-family="JetBrains Mono" font-size="9" text-anchor="middle">card returned</text>
+          <rect x="280" y="70" width="170" height="60" rx="8" fill="none" stroke="#c9f04c" stroke-width="1.5"/>
+          <text x="365" y="96" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">A2A Server</text>
+          <text x="365" y="114" fill="#9aa3b0" font-family="JetBrains Mono" font-size="10" text-anchor="middle">(remote agent)</text>
+          <line x1="180" y1="150" x2="280" y2="150" stroke="#ff9f40" stroke-width="1.5" marker-end="url(#a2m)"/>
+          <text x="230" y="142" fill="#9aa3b0" font-family="JetBrains Mono" font-size="9" text-anchor="middle">message/send (JSON-RPC)</text>
+          <line x1="450" y1="90" x2="530" y2="90" stroke="#b592ff" stroke-width="1.5" marker-end="url(#a2m)"/>
+          <rect x="530" y="60" width="170" height="60" rx="8" fill="none" stroke="#ff7a8a" stroke-width="1.5"/>
+          <text x="615" y="86" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">Task</text>
+          <text x="615" y="104" fill="#9aa3b0" font-family="JetBrains Mono" font-size="10" text-anchor="middle">submitted → working → …</text>
+          <text x="365" y="190" fill="#5c6672" font-family="JetBrains Mono" font-size="10" text-anchor="middle">streamed via SSE if message/sendStream used</text>
+        </svg>
+      </div>
+      <div class="code-wrap">
+        <div class="code-head"><span>curl http://localhost:8000/.well-known/agent-card.json</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre>{
+  <span class="tok-str">"name"</span>: <span class="tok-str">"campaign_management_agent"</span>,
+  <span class="tok-str">"description"</span>: <span class="tok-str">"Agent to answer questions and search for campaign metadata."</span>,
+  <span class="tok-str">"protocolVersion"</span>: <span class="tok-str">"0.3.0"</span>,
+  <span class="tok-str">"preferredTransport"</span>: <span class="tok-str">"JSONRPC"</span>,
+  <span class="tok-str">"defaultInputModes"</span>: [<span class="tok-str">"text/plain"</span>],
+  <span class="tok-str">"defaultOutputModes"</span>: [<span class="tok-str">"text/plain"</span>],
+  <span class="tok-str">"capabilities"</span>: {},
+  <span class="tok-str">"skills"</span>: [
+    { <span class="tok-str">"id"</span>: <span class="tok-str">"search_campaigns"</span>, <span class="tok-str">"name"</span>: <span class="tok-str">"Search Campaigns"</span>, <span class="tok-str">"description"</span>: <span class="tok-str">"..."</span> }
+  ]
+}</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 04 TASK LIFECYCLE ============ -->
+  <section class="chapter" id="a2a-lifecycle">
+    <div class="chapter-head"><span class="chapter-num">04</span><h2 class="chapter-title">Task Lifecycle &amp; Wire Format</h2></div>
+    <p class="chapter-dek">Three interaction modes, one underlying transport.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Mode</th><th>How it works</th></tr>
+        <tr><td class="k">Synchronous</td><td><cite index="53-1">Single request/response over JSON-RPC — send a message, block for the task result.</cite></td></tr>
+        <tr><td class="k">Streaming</td><td><cite index="53-1">Server-Sent Events (SSE) deliver incremental updates as the remote agent works</cite> — <cite index="79-1">TaskStatusUpdateEvent and TaskArtifactUpdateEvent events stream intermediate progress, e.g. while the remote agent is calling its own tools.</cite></td></tr>
+        <tr><td class="k">Asynchronous / push</td><td><cite index="53-1">Webhook-based push notifications for long-running tasks the client doesn't want to hold a connection open for.</cite></td></tr>
+      </table>
+      <p><cite index="79-1">A typical sequence: the client requests the agent card, the server returns it; the client sends <code class="inline">message/send</code> (or <code class="inline">message/sendStream</code> for streaming); the request routes through a RequestHandler to an AgentExecutor, which invokes the actual underlying agent (LangGraph graph, ADK agent, whatever); the executor returns a response, the handler updates the Task and enqueues an event, and the server relays it back to the client.</cite></p>
+      <div class="callout">
+        <span class="callout-label">The architectural pattern underneath every framework's A2A integration</span>
+        <p><cite index="73-1">Every framework's A2A integration follows the same shape: an AgentExecutor abstract class handles request processing, a DefaultRequestHandler manages protocol-level concerns and task lifecycle, an EventQueue delivers streaming updates, a TaskStore persists state across interactions, and an A2AStarletteApplication provides the HTTP server.</cite> The separation between protocol handling and agent logic is what lets you drop <em>any</em> framework's agent behind the same A2A server shell.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 05 FOCUS: ARCHITECTURE ============ -->
+  <section class="chapter" id="focus-arch">
+    <div class="chapter-head"><span class="chapter-num">05 ★</span><h2 class="chapter-title">LangGraph ↔ Google ADK — The Architecture</h2></div>
+    <p class="chapter-dek">Your actual production setup: a LangGraph-based agent repo and a Google ADK-based agent repo, talking over A2A. Here's the shape of it end to end.</p>
+    <div class="chapter-body">
+      <p>There are two independent decisions to make, and interviewers expect you to separate them: <strong>(1) which side hosts the orchestrator/host agent</strong>, and <strong>(2) which direction the A2A calls flow.</strong> In practice both repos can be both a client and a server simultaneously — <cite index="46-1">each specialized agent operates as both client and server, with the A2A Client initiating requests while the A2A Server processes incoming tasks, enabling bidirectional communication.</cite></p>
+      <div class="diagram">
+        <svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="lgm" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff9f40"/></marker></defs>
+          <rect x="30" y="40" width="200" height="180" rx="10" fill="none" stroke="#5fd9c9" stroke-width="1.5"/>
+          <text x="130" y="65" fill="#5fd9c9" font-family="JetBrains Mono" font-size="12" text-anchor="middle">ADK Repo</text>
+          <rect x="55" y="90" width="150" height="46" rx="6" fill="none" stroke="#e7e9ec" stroke-width="1.2"/>
+          <text x="130" y="117" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Root / Host Agent</text>
+          <rect x="55" y="150" width="150" height="46" rx="6" fill="none" stroke="#9aa3b0" stroke-width="1.2" stroke-dasharray="3 3"/>
+          <text x="130" y="177" fill="#9aa3b0" font-family="JetBrains Mono" font-size="10" text-anchor="middle">RemoteA2aAgent</text>
+
+          <rect x="530" y="40" width="200" height="180" rx="10" fill="none" stroke="#c9f04c" stroke-width="1.5"/>
+          <text x="630" y="65" fill="#c9f04c" font-family="JetBrains Mono" font-size="12" text-anchor="middle">LangGraph Repo</text>
+          <rect x="555" y="90" width="150" height="46" rx="6" fill="none" stroke="#e7e9ec" stroke-width="1.2"/>
+          <text x="630" y="117" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">StateGraph agent</text>
+          <rect x="555" y="150" width="150" height="46" rx="6" fill="none" stroke="#9aa3b0" stroke-width="1.2" stroke-dasharray="3 3"/>
+          <text x="630" y="177" fill="#9aa3b0" font-family="JetBrains Mono" font-size="10" text-anchor="middle">AgentExecutor + A2A server</text>
+
+          <line x1="205" y1="173" x2="555" y2="173" stroke="#ff9f40" stroke-width="1.6" marker-end="url(#lgm)"/>
+          <text x="380" y="163" fill="#ff9f40" font-family="JetBrains Mono" font-size="10" text-anchor="middle">A2A: JSON-RPC over HTTP(S)</text>
+          <text x="380" y="228" fill="#5c6672" font-family="JetBrains Mono" font-size="10" text-anchor="middle">ADK host discovers the LangGraph agent's card, delegates a task, streams the result back</text>
+        </svg>
+      </div>
+      <p>The reference pattern most teams land on: <strong>ADK on the orchestrator/host side</strong> (it's built for hierarchical delegation and has first-class <code class="inline">RemoteA2aAgent</code> tooling for consuming remote agents as if they were sub-agents), <strong>LangGraph on the specialist side</strong> (its graph model and checkpointing shine for a complex, stateful, long-running specialist task — currency conversion, document analysis, a multi-step research flow). <cite index="66-1">This mirrors the official reference sample: a currency conversion agent built with LangGraph, exposed through A2A, using LangGraph's ReAct pattern with streaming support and checkpoint-backed conversation memory.</cite></p>
+      <div class="callout focus">
+        <span class="callout-label">Why this direction, specifically</span>
+        <p><cite index="55-1">A2A is the right tool exactly when the agent you need to talk to is a separate, standalone service, when you want to enforce a formal contract between system components, or when you're bridging different languages/frameworks across a microservices-style architecture</cite> — all three apply to a LangGraph repo and an ADK repo maintained as separate deployables, likely by different teams, with different release cadences.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 06 FOCUS: EXPOSING LANGGRAPH ============ -->
+  <section class="chapter" id="focus-expose">
+    <div class="chapter-head"><span class="chapter-num">06 ★</span><h2 class="chapter-title">Exposing a LangGraph Agent via A2A</h2></div>
+    <p class="chapter-dek">The LangGraph side becomes an A2A server by wrapping its graph in an AgentExecutor and standing up an A2AStarletteApplication.</p>
+    <div class="chapter-body">
+      <h3>Option A — the official a2a-sdk pattern (most control)</h3>
+      <div class="code-wrap">
+        <div class="code-head"><span>agent_executor.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> a2a.server.agent_execution <span class="tok-kw">import</span> AgentExecutor, RequestContext
+<span class="tok-kw">from</span> a2a.server.events <span class="tok-kw">import</span> EventQueue
+<span class="tok-kw">from</span> a2a.utils <span class="tok-kw">import</span> new_agent_text_message
+
+<span class="tok-kw">class</span> LangGraphAgentExecutor(AgentExecutor):
+    <span class="tok-kw">def</span> __init__(self, graph):
+        self.graph = graph                        <span class="tok-com"># your compiled StateGraph</span>
+
+    <span class="tok-kw">async def</span> execute(self, context: RequestContext, event_queue: EventQueue):
+        user_input = context.get_user_input()
+        thread = {<span class="tok-str">"configurable"</span>: {<span class="tok-str">"thread_id"</span>: context.context_id}}  <span class="tok-com"># map A2A contextId -> LangGraph thread</span>
+        result = <span class="tok-kw">await</span> self.graph.ainvoke(
+            {<span class="tok-str">"messages"</span>: [{<span class="tok-str">"role"</span>: <span class="tok-str">"user"</span>, <span class="tok-str">"content"</span>: user_input}]}, thread
+        )
+        text = result[<span class="tok-str">"messages"</span>][-<span class="tok-num">1</span>].content
+        <span class="tok-kw">await</span> event_queue.enqueue_event(new_agent_text_message(text))
+
+    <span class="tok-kw">async def</span> cancel(self, context, event_queue):
+        <span class="tok-kw">raise</span> Exception(<span class="tok-str">"cancel not supported"</span>)</pre>
+      </div>
+      <div class="code-wrap">
+        <div class="code-head"><span>main.py — stand up the server</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> a2a.server.apps <span class="tok-kw">import</span> A2AStarletteApplication
+<span class="tok-kw">from</span> a2a.server.request_handlers <span class="tok-kw">import</span> DefaultRequestHandler
+<span class="tok-kw">from</span> a2a.server.tasks <span class="tok-kw">import</span> InMemoryTaskStore
+<span class="tok-kw">from</span> a2a.types <span class="tok-kw">import</span> AgentCard, AgentSkill, AgentCapabilities
+
+skill = AgentSkill(
+    id=<span class="tok-str">"research"</span>, name=<span class="tok-str">"Research Agent"</span>,
+    description=<span class="tok-str">"Multi-hop research using search tools"</span>, tags=[<span class="tok-str">"research"</span>]
+)
+card = AgentCard(
+    name=<span class="tok-str">"langgraph-research-agent"</span>,
+    description=<span class="tok-str">"LangGraph ReAct agent exposed via A2A"</span>,
+    url=<span class="tok-str">"http://localhost:9999/"</span>,
+    version=<span class="tok-str">"1.0.0"</span>,
+    default_input_modes=[<span class="tok-str">"text"</span>], default_output_modes=[<span class="tok-str">"text"</span>],
+    capabilities=AgentCapabilities(streaming=<span class="tok-kw">True</span>),
+    skills=[skill],
+)
+handler = DefaultRequestHandler(
+    agent_executor=LangGraphAgentExecutor(compiled_graph),
+    task_store=InMemoryTaskStore(),
+)
+app = A2AStarletteApplication(agent_card=card, http_handler=handler)
+
+<span class="tok-kw">import</span> uvicorn
+uvicorn.run(app.build(), host=<span class="tok-str">"0.0.0.0"</span>, port=<span class="tok-num">9999</span>)</pre>
+      </div>
+      <p><cite index="66-1">The official reference sample supports multi-turn dialogue and streaming responses using this exact pattern, with checkpoint-backed memory maintaining conversation state between turns.</cite></p>
+      <h3>Option B — a thin community wrapper (fastest to stand up)</h3>
+      <div class="code-wrap">
+        <div class="code-head"><span>quick_server.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-com"># pip install langgraph-a2a-server</span>
+<span class="tok-kw">from</span> langgraph_a2a_server <span class="tok-kw">import</span> A2AServer
+<span class="tok-kw">from</span> your_langgraph_app <span class="tok-kw">import</span> your_graph
+
+server = A2AServer(
+    graph=your_graph,
+    name=<span class="tok-str">"My LangGraph Agent"</span>,
+    description=<span class="tok-str">"An intelligent agent built with LangGraph"</span>,
+    host=<span class="tok-str">"127.0.0.1"</span>, port=<span class="tok-num">9000</span>,
+)
+server.serve()</pre>
+      </div>
+      <div class="callout">
+        <span class="callout-label">Which option to actually use</span>
+        <p><cite index="62-1">langgraph-a2a-server gives you an A2A endpoint in about five lines</cite> — great for a prototype or an internal demo. For anything with SLAs, custom streaming behavior, or auth requirements, the official <code class="inline">a2a-sdk</code> AgentExecutor pattern is what production LangGraph↔ADK integrations actually use, because you control every part of the request/response mapping. <cite index="64-1">LangGraph's own team has an open, in-progress issue to add first-class declarative A2A agent-card support directly to core — <code class="inline">Pregel.with_agent_card()</code> and <code class="inline">Pregel.serve_a2a()</code> — worth checking the current release notes for, since this may already be native by the time you read this.</cite></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 07 FOCUS: CONSUMING FROM ADK ============ -->
+  <section class="chapter" id="focus-consume">
+    <div class="chapter-head"><span class="chapter-num">07 ★</span><h2 class="chapter-title">Consuming the LangGraph Agent from ADK</h2></div>
+    <p class="chapter-dek">On the ADK side, a remote LangGraph agent looks and acts exactly like a local sub-agent — that's the entire point of RemoteA2aAgent.</p>
+    <div class="chapter-body">
+      <p><cite index="55-1">RemoteA2aAgent is ADK's component for connecting to an accessible remote agent — running in a separate agent (same machine or different), you use RemoteA2aAgent, and from the root agent's perspective it can be composed alongside local sub-agents with no special-casing.</cite></p>
+      <div class="code-wrap">
+        <div class="code-head"><span>root_agent.py — ADK host consuming a LangGraph specialist</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> google.adk.agents <span class="tok-kw">import</span> Agent
+<span class="tok-kw">from</span> google.adk.agents.remote_a2a_agent <span class="tok-kw">import</span> RemoteA2aAgent
+
+research_agent = RemoteA2aAgent(
+    name=<span class="tok-str">"langgraph_research_agent"</span>,
+    description=<span class="tok-str">"Delegates multi-hop research questions to a remote LangGraph agent"</span>,
+    agent_card=<span class="tok-str">"http://langgraph-repo.internal:9999/.well-known/agent-card.json"</span>,
+)
+
+root_agent = Agent(
+    name=<span class="tok-str">"orchestrator"</span>,
+    model=<span class="tok-str">"gemini-2.5-pro"</span>,
+    instruction=<span class="tok-str">"Route research questions to langgraph_research_agent; handle everything else yourself."</span>,
+    sub_agents=[research_agent],   <span class="tok-com"># remote agent slots in exactly like a local sub-agent</span>
+)</pre>
+      </div>
+      <p>Two ways to run this in local dev, per <cite index="52-1">ADK's own quickstart guides</cite>:</p>
+      <table class="tbl">
+        <tr><th>Method</th><th>When to use</th></tr>
+        <tr><td class="k"><code class="inline">to_a2a()</code> + uvicorn</td><td><cite index="52-1">The most direct method for productionizing an agent — wraps an existing Agent instance into a Starlette app and auto-generates the Agent Card in-memory from the agent's skills, tools, and metadata.</cite></td></tr>
+        <tr><td class="k"><code class="inline">adk api_server --a2a</code></td><td><cite index="45-1">CLI-based, ideal for local development and hosting multiple agents at once — scans a directory for agents with an <code class="inline">agent.json</code> Agent Card file and serves each automatically.</cite></td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">The classic local-dev footgun</span>
+        <p><cite index="58-1">When testing locally, both agents run on localhost, so the A2A server port for the exposed agent must be different from the consuming agent's port</cite> — e.g. LangGraph server on <code class="inline">:9999</code>, ADK's own dev UI (<code class="inline">adk web</code>) on <code class="inline">:8000</code>. Mixing these up produces confusing "connection refused" errors that look like an A2A protocol bug but are just a port collision.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 08 FOCUS: REVERSE ============ -->
+  <section class="chapter" id="focus-reverse">
+    <div class="chapter-head"><span class="chapter-num">08 ★</span><h2 class="chapter-title">The Reverse Direction — ADK as Server, LangGraph as Client</h2></div>
+    <p class="chapter-dek">Just as common in practice: the ADK repo owns a specialist capability and the LangGraph repo's graph needs to call out to it mid-run.</p>
+    <div class="chapter-body">
+      <h3>Exposing the ADK agent</h3>
+      <div class="code-wrap">
+        <div class="code-head"><span>adk_agent/agent.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> google.adk.a2a.utils.agent_to_a2a <span class="tok-kw">import</span> to_a2a
+<span class="tok-kw">from</span> your_adk_app <span class="tok-kw">import</span> root_agent
+
+a2a_app = to_a2a(root_agent)          <span class="tok-com"># auto-builds the Agent Card from the agent's own metadata</span>
+<span class="tok-com"># uvicorn adk_agent.agent:a2a_app --port=8000</span>
+<span class="tok-com"># curl http://localhost:8000/.well-known/agent-card.json  <- verify it's live</span></pre>
+      </div>
+      <h3>Calling it as a tool node inside a LangGraph graph</h3>
+      <p>There's no ADK-specific client object needed on the LangGraph side — any A2A-compliant server looks the same to a client. Wrap a standard A2A client call as a LangGraph tool, and the routing/conditional-edge logic you already know handles the rest.</p>
+      <div class="code-wrap">
+        <div class="code-head"><span>a2a_tool.py — LangGraph node calling a remote ADK agent</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">import</span> httpx
+<span class="tok-kw">from</span> langchain_core.tools <span class="tok-kw">import</span> tool
+
+<span class="tok-kw">@tool</span>
+<span class="tok-kw">async def</span> call_adk_pricing_agent(question: str, context_id: str | <span class="tok-kw">None</span> = <span class="tok-kw">None</span>) -&gt; str:
+    <span class="tok-str">"""Delegate a pricing question to the remote ADK pricing agent via A2A."""</span>
+    payload = {
+        <span class="tok-str">"jsonrpc"</span>: <span class="tok-str">"2.0"</span>, <span class="tok-str">"method"</span>: <span class="tok-str">"message/send"</span>,
+        <span class="tok-str">"params"</span>: {
+            <span class="tok-str">"message"</span>: {<span class="tok-str">"role"</span>: <span class="tok-str">"user"</span>, <span class="tok-str">"parts"</span>: [{<span class="tok-str">"text"</span>: question}]},
+            <span class="tok-kw">**</span>({<span class="tok-str">"contextId"</span>: context_id} <span class="tok-kw">if</span> context_id <span class="tok-kw">else</span> {}),
+        },
+    }
+    <span class="tok-kw">async with</span> httpx.AsyncClient() <span class="tok-kw">as</span> client:
+        resp = <span class="tok-kw">await</span> client.post(<span class="tok-str">"http://adk-repo.internal:8000/"</span>, json=payload)
+        <span class="tok-kw">return</span> resp.json()[<span class="tok-str">"result"</span>][<span class="tok-str">"parts"</span>][<span class="tok-num">0</span>][<span class="tok-str">"text"</span>]</pre>
+      </div>
+      <p>Register <code class="inline">call_adk_pricing_agent</code> on your LangGraph agent exactly like any other tool via <code class="inline">bind_tools</code> — from the graph's perspective, "call the remote ADK agent" and "call the Tavily search tool" are the same shape of thing: a tool call, an observation, back to the LLM node.</p>
+    </div>
+  </section>
+
+  <!-- ============ 09 FOCUS: STATE ============ -->
+  <section class="chapter" id="focus-state">
+    <div class="chapter-head"><span class="chapter-num">09 ★</span><h2 class="chapter-title">State, Context &amp; Thread Sync — The Part That Actually Breaks</h2></div>
+    <p class="chapter-dek">Every A2A/LangGraph interop bug report you'll ever file traces back to this section.</p>
+    <div class="chapter-body">
+      <p>Both sides have their own notion of "this is one ongoing conversation" — A2A calls it <code class="inline">contextId</code>, LangGraph calls it <code class="inline">thread_id</code>. If you don't deliberately map one to the other, every turn of a multi-turn A2A conversation looks like a brand-new LangGraph thread with no memory of the last turn.</p>
+      <table class="tbl">
+        <tr><th>Concept</th><th>Owned by</th><th>Purpose</th></tr>
+        <tr><td class="k">contextId</td><td>A2A protocol</td><td><cite index="65-1">Generated by the server on the first message of a conversation and returned to the client; the client includes it on every follow-up message to associate turns with the ongoing conversation.</cite></td></tr>
+        <tr><td class="k">taskId</td><td>A2A protocol</td><td>Identifies one discrete unit of work (a single task) within a context — a context can span multiple tasks.</td></tr>
+        <tr><td class="k">thread_id</td><td>LangGraph checkpointer</td><td>Keys the persisted AgentState snapshot for one resumable run.</td></tr>
+      </table>
+      <div class="callout focus">
+        <span class="callout-label">The correct mapping pattern</span>
+        <p><cite index="65-1">Include contextId and taskId inside the message object on follow-up turns so the server can associate them with the ongoing conversation, but omit them on the first message — the server generates a contextId and returns it in the response. Set thread_id in the top-level metadata field of the JSON-RPC payload, not inside params. Generate a random thread_id before the first message; once the server returns a contextId, use it as the thread_id for all subsequent requests, keeping the A2A conversation context and any tracing (e.g. LangSmith) thread in sync. Pass the same thread_id to every agent in the chain so all traces group into one thread.</cite></p>
+      </div>
+      <div class="code-wrap">
+        <div class="code-head"><span>executor_with_context_mapping.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">async def</span> execute(self, context: RequestContext, event_queue: EventQueue):
+    <span class="tok-com"># A2A's contextId IS the LangGraph thread_id -- one deliberate mapping, everywhere</span>
+    lg_thread = {<span class="tok-str">"configurable"</span>: {<span class="tok-str">"thread_id"</span>: context.context_id}}
+    result = <span class="tok-kw">await</span> self.graph.ainvoke(
+        {<span class="tok-str">"messages"</span>: [{<span class="tok-str">"role"</span>: <span class="tok-str">"user"</span>, <span class="tok-str">"content"</span>: context.get_user_input()}]},
+        lg_thread,
+    )
+    <span class="tok-com"># the checkpointer now has full history under context_id -- next A2A turn</span>
+    <span class="tok-com"># with the same contextId resumes it exactly like a returning LangGraph thread</span></pre>
+      </div>
+      <div class="callout pitfall">
+        <span class="callout-label">If the counterpart agent isn't on LangGraph</span>
+        <p><cite index="65-1">If one of your agents is not built on LangGraph, it needs its own equivalent mapping — the A2A contextId still needs to be threaded through to whatever memory/session mechanism that framework uses.</cite> On the ADK side, this means mapping <code class="inline">contextId</code> to ADK's own <code class="inline">session_id</code> in its Session Service — the same discipline, different vocabulary.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 10 FOCUS: SECURITY ============ -->
+  <section class="chapter" id="focus-security">
+    <div class="chapter-head"><span class="chapter-num">10 ★</span><h2 class="chapter-title">Trust Boundaries &amp; Security</h2></div>
+    <p class="chapter-dek">The moment your LangGraph repo starts accepting requests from a repo your team doesn't control end-to-end, the security model changes.</p>
+    <div class="chapter-body">
+      <p><cite index="66-1">Treat any agent operating outside your direct control as a potentially untrusted entity. All data received from an external agent — including its AgentCard, messages, artifacts, and task status — should be handled with the same caution you'd apply to any other untrusted network input.</cite> This is true even between two repos on the same team, once they deploy and scale independently — a bad deploy on one side shouldn't be able to compromise the other through the A2A channel.</p>
+      <ul>
+        <li><strong>Validate the Agent Card, don't just trust it</strong> — a skill list and description are just JSON a remote party controls; don't let them silently expand what tools/permissions your host grants that agent.</li>
+        <li><strong>Authenticate every request</strong> — <cite index="53-1">A2A supports authentication requirements declared right in the Agent Card</cite>; enforce them rather than treating the internal network as an implicit trust boundary.</li>
+        <li><strong>Scope what a remote agent can trigger</strong> — a LangGraph agent receiving A2A-delegated tasks from ADK should not have more tool access than the task genuinely requires, exactly like the least-privilege principle for any other external caller.</li>
+        <li><strong>Don't blindly execute instructions embedded in returned artifacts</strong> — if the remote agent's response contains something that looks like a new instruction, that's a potential injection vector, not a command to follow.</li>
+        <li><strong>Log and trace across the boundary</strong> — thread the same trace/thread id (see previous section) into your observability stack on both sides so a cross-repo failure is debuggable as one incident, not two disconnected logs.</li>
+      </ul>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"You're exposing a LangGraph agent to be called by other teams' agents via A2A — what do you check before shipping it?" — Authentication on the Agent Card, least-privilege tool scoping for A2A-originated tasks specifically (don't give a remote caller the same tool access a trusted internal user gets), treating anything in the returned artifacts as untrusted content rather than instructions, and making sure contextId/thread_id are logged consistently so a bad interaction is traceable across both repos, not just yours.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 11 MULTI-AGENT ORCHESTRATION ============ -->
+  <section class="chapter" id="multiagent">
+    <div class="chapter-head"><span class="chapter-num">11</span><h2 class="chapter-title">Multi-Agent Orchestration Patterns over A2A</h2></div>
+    <p class="chapter-dek">Once you have two repos talking, the natural next question is how many, and who's in charge.</p>
+    <div class="chapter-body">
+      <div class="pattern-card">
+        <div class="ptitle">Supervisor / host pattern</div>
+        <p><cite index="71-1">A Supervisor agent starts up, fetches each sub-agent's agent-card.json to discover their capabilities, then assigns tasks to the appropriate sub-agent based on the user's question and returns results</cite> — this is the LangGraph-supervisor-style pattern, extended across process/repo boundaries via A2A instead of in-process function calls.</p>
+      </div>
+      <div class="pattern-card">
+        <div class="ptitle">Hierarchical agent tree (ADK's native model)</div>
+        <p>ADK's root agent composes local sub-agents and remote A2A agents in the same tree — <cite index="55-1">local sub-agents communicate in-memory with no network overhead, while remote agents communicate over A2A</cite> — letting you mix cheap in-process specialists with expensive cross-repo ones in one coherent orchestration.</p>
+      </div>
+      <div class="pattern-card">
+        <div class="ptitle">Cross-framework mesh</div>
+        <p><cite index="50-1">A production reference architecture: a Purchasing Concierge (ADK, A2A client) orchestrating a Burger agent (CrewAI) and a Pizza agent (LangGraph), each independently deployed with its own environment</cite> — proof that A2A genuinely doesn't care what built the agent on the other end, only that it speaks the protocol.</p>
+      </div>
+      <div class="callout">
+        <span class="callout-label">When NOT to reach for A2A</span>
+        <p><cite index="49-1">Because A2A typically wraps your agent in a separate process and exposes it externally, it should be used only when necessary</cite> — two agents in the same LangGraph graph, in the same process, coordinating tightly, are almost always better served as two nodes sharing one AgentState than as two A2A services paying network and serialization overhead for no isolation benefit.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 12 PITFALLS ============ -->
+  <section class="chapter" id="pitfalls">
+    <div class="chapter-head"><span class="chapter-num">12</span><h2 class="chapter-title">Production Pitfalls</h2></div>
+    <p class="chapter-dek">What actually goes wrong the first time LangGraph and ADK repos try to talk in production.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>SDK version mismatch.</strong> <cite index="52-1">ADK's A2A integration works with both a2a-sdk 0.3.x (compatibility mode) and 1.x.x, auto-detected — but hand-constructed AgentCard/Executor code written against 0.3.x types may need the v1.0 migration guide when the other side upgrades.</cite> Pin and coordinate SDK versions across the two repos explicitly; don't assume compatibility.</li>
+        <li><strong>Hostname mismatches in containerized/cloud deploys.</strong> <cite index="66-1">If you're deploying to an environment where the hostname is defined differently outside the container, use a HOST_OVERRIDE-style environment variable to set the expected hostname on the Agent Card</cite> — otherwise the card advertises an unreachable internal address.</li>
+        <li><strong>contextId/thread_id drift</strong> (covered above) — the single most common source of "the agent forgot what we were just talking about" bugs in cross-framework setups.</li>
+        <li><strong>Streaming half-implemented on one side.</strong> If the LangGraph server advertises <code class="inline">capabilities.streaming: true</code> in its Agent Card but the executor doesn't actually enqueue incremental events, ADK's streaming client will hang waiting for updates that never come — keep the advertised capabilities honest.</li>
+        <li><strong>No circuit breaker / timeout on the remote call.</strong> A LangGraph tool node calling out to a remote ADK agent needs a timeout and a fallback path — an unreachable remote agent shouldn't hang the entire graph run.</li>
+        <li><strong>Treating A2A traffic as implicitly trusted because it's "internal."</strong> See the security section — two independently-deployed repos are a real trust boundary even on the same private network.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 13 INTERVIEW ============ -->
+  <section class="chapter" id="interview">
+    <div class="chapter-head"><span class="chapter-num">13</span><h2 class="chapter-title">Interview Cheat-Sheet</h2></div>
+    <p class="chapter-dek">Framework-choice questions first, then A2A-specific questions weighted toward your actual LangGraph↔ADK experience.</p>
+    <div class="chapter-body">
+
+      <h4>Framework choice</h4>
+      <details class="qa"><summary>Why would you pick LangGraph over CrewAI for a production system, specifically?<span class="qa-tag">framework</span></summary>
+        <div class="qa-body"><p>Explicit conditional edges instead of LLM-driven routing means deterministic, auditable control flow and lower token cost — <cite index="84-1">benchmarks show roughly 47% lower token spend than CrewAI on comparable tasks</cite>. LangGraph also has built-in checkpointing with time-travel debugging, which matters for anything needing human approval steps or post-incident replay. CrewAI wins on speed to a working prototype, not on production control.</p></div>
+      </details>
+      <details class="qa"><summary>Your team has AutoGen in production. What do you tell them?<span class="qa-tag">framework</span></summary>
+        <div class="qa-body"><p>AutoGen is in maintenance mode as of 2026 — Microsoft merged it with Semantic Kernel into the Microsoft Agent Framework, which reached GA in April 2026. Existing AutoGen code keeps receiving critical fixes, but new feature work goes to Agent Framework. Plan a migration; LangGraph is the closest architectural fit, CrewAI the easiest if the agents are already role-based.</p></div>
+      </details>
+
+      <h4>MCP vs A2A</h4>
+      <details class="qa"><summary>Explain the difference between MCP and A2A in one breath.<span class="qa-tag">protocols</span></summary>
+        <div class="qa-body"><p>MCP standardizes agent-to-tool connections — the counterpart is a stateless function with a fixed schema. A2A standardizes agent-to-agent connections — the counterpart is a full agent that can reason, hold state across a multi-turn interaction, and retains its full capabilities rather than being reduced to a function call. They're complementary layers, commonly used together in the same system.</p></div>
+      </details>
+      <details class="qa"><summary>When would collapsing a remote agent into an MCP tool be the wrong call?<span class="qa-tag">protocols</span></summary>
+        <div class="qa-body"><p>When the remote side needs to negotiate, ask a clarifying question, or maintain state across several exchanges rather than answer one self-contained function call — that behavior is exactly what MCP's stateless tool model throws away and A2A's task/message model preserves.</p></div>
+      </details>
+
+      <h4>A2A protocol mechanics</h4>
+      <details class="qa"><summary>Walk through what happens from cold start when Agent A wants to delegate a task to Agent B over A2A.<span class="qa-tag">a2a</span></summary>
+        <div class="qa-body"><p>Agent A fetches Agent B's Agent Card from its well-known URL to discover its skills and endpoint. Agent A sends a message/send (or message/sendStream) JSON-RPC request, creating a Task with a unique id and an initial "submitted" status. Agent B's request handler routes it to an AgentExecutor, which invokes the actual underlying agent logic. Results are enqueued as events, the task status updates (e.g., to "working" then "completed"), and the response streams or returns synchronously back to Agent A.</p></div>
+      </details>
+      <details class="qa"><summary>What's the actual purpose of the AgentExecutor abstraction that every framework's A2A integration uses?<span class="qa-tag">a2a</span></summary>
+        <div class="qa-body"><p>It cleanly separates protocol handling (JSON-RPC parsing, task lifecycle, streaming) from agent logic (what your LangGraph graph or ADK agent actually does). That separation is exactly what lets any framework's agent sit behind the same A2A server shell — you implement execute() and cancel(), the framework-agnostic plumbing does the rest.</p></div>
+      </details>
+
+      <h4>LangGraph ↔ ADK specifically</h4>
+      <details class="qa"><summary>Design a system where an ADK orchestrator delegates research questions to a LangGraph specialist agent.<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Expose the LangGraph agent as an A2A server via the a2a-sdk AgentExecutor pattern (or to_a2a()-equivalent), publishing an Agent Card describing its research skill. On the ADK side, wrap it with RemoteA2aAgent pointed at that card's URL, and add it to the root agent's sub_agents list — from the orchestrator's perspective it's indistinguishable from a local sub-agent except for network latency. Map A2A's contextId to the LangGraph thread_id in the executor so multi-turn conversations retain memory across calls.</p></div>
+      </details>
+      <details class="qa"><summary>A multi-turn conversation with your LangGraph specialist keeps losing context on the second and later A2A calls. What's your first suspicion?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Context/thread mapping. Check whether the executor is generating a fresh LangGraph thread_id on every call instead of reusing A2A's contextId — if the client isn't passing contextId back on follow-up messages, or the server isn't mapping it consistently to thread_id, every "turn" looks like the first turn of a brand-new conversation to the checkpointer.</p></div>
+      </details>
+      <details class="qa"><summary>Should you treat the ADK repo's requests to your LangGraph agent as trusted, since it's your own company's system?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>No — independently deployed and independently released services are a real trust boundary regardless of internal network location. Authenticate requests per the Agent Card's declared requirements, scope tool access for A2A-originated tasks to least privilege, and treat content coming back in artifacts as untrusted data rather than instructions to follow.</p></div>
+      </details>
+      <details class="qa"><summary>When would you NOT use A2A between two agents on your own team?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>When they run in the same process and coordinate tightly — two nodes in one LangGraph graph sharing an AgentState is simpler, faster, and has none of A2A's network/serialization overhead. Reach for A2A specifically when the agents are independently deployed, built on different frameworks, or owned by different teams — the isolation and formal contract are the entire value proposition, and they cost something.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ 14 GLOSSARY ============ -->
+  <section class="chapter" id="glossary">
+    <div class="chapter-head"><span class="chapter-num">14</span><h2 class="chapter-title">Glossary</h2></div>
+    <p class="chapter-dek">Every term used in this document.</p>
+    <div class="chapter-body">
+      <dl class="glossary-grid">
+        <div class="gterm"><dt>Agent Card</dt><dd>JSON discovery document at /.well-known/agent-card.json describing an agent's identity, skills, and endpoint.</dd></div>
+        <div class="gterm"><dt>AgentSkill</dt><dd>One declared capability within an Agent Card, with id, name, description, examples.</dd></div>
+        <div class="gterm"><dt>A2A Server / remote agent</dt><dd>The side that receives and processes A2A task requests over HTTP.</dd></div>
+        <div class="gterm"><dt>A2A Client / host agent</dt><dd>The side that discovers and delegates tasks to a remote agent.</dd></div>
+        <div class="gterm"><dt>Task</dt><dd>One stateful unit of work with a lifecycle (submitted → working → completed/failed) tracked by a TaskStore.</dd></div>
+        <div class="gterm"><dt>contextId</dt><dd>A2A's identifier for one ongoing multi-turn conversation, generated on the first message.</dd></div>
+        <div class="gterm"><dt>taskId</dt><dd>Identifier for one discrete task within a context; a context may span multiple tasks.</dd></div>
+        <div class="gterm"><dt>AgentExecutor</dt><dd>The abstract class every framework implements to bridge A2A protocol requests into its own agent execution.</dd></div>
+        <div class="gterm"><dt>RemoteA2aAgent</dt><dd>ADK's component for treating a remote A2A agent as if it were a local sub-agent.</dd></div>
+        <div class="gterm"><dt>to_a2a()</dt><dd>ADK utility that wraps an existing Agent instance into an A2A-compliant Starlette server, auto-building its Agent Card.</dd></div>
+        <div class="gterm"><dt>JSON-RPC 2.0</dt><dd>The request/response wire format A2A is built on, transported over HTTP(S).</dd></div>
+        <div class="gterm"><dt>SSE (Server-Sent Events)</dt><dd>The streaming transport A2A uses for incremental task updates during message/sendStream.</dd></div>
+        <div class="gterm"><dt>TaskStore</dt><dd>Server-side component persisting Task state across the lifecycle of a request (often in-memory in samples, durable in production).</dd></div>
+        <div class="gterm"><dt>Hierarchical agent tree</dt><dd>ADK's native composition model, mixing in-process local sub-agents with network-bound RemoteA2aAgents.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ 15 RESOURCES ============ -->
+  <section class="chapter" id="resources">
+    <div class="chapter-head"><span class="chapter-num">15</span><h2 class="chapter-title">Resources — Go Straight to the Primary Sources</h2></div>
+    <p class="chapter-dek">Skip the blog posts once you've read this; these are the docs that stay current.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>A2A Protocol specification &amp; docs</strong> — a2a-protocol.org, and the a2aproject/A2A GitHub repo</li>
+        <li><strong>ADK's A2A guide</strong> — google.github.io/adk-docs/a2a/ (quickstart-exposing and quickstart-consuming pages specifically)</li>
+        <li><strong>Official LangGraph currency-agent A2A sample</strong> — a2aproject/a2a-samples, samples/python/agents/langgraph</li>
+        <li><strong>LangChain's own A2A endpoint docs</strong> — docs.langchain.com/langsmith/server-a2a (contextId/thread_id mapping section specifically)</li>
+        <li><strong>LangGraph core A2A support tracking issue</strong> — langchain-ai/langgraph #7398, worth checking for native support status</li>
+      </ul>
+      <div class="callout">
+        <span class="callout-label">How to actually get hands-on before an interview</span>
+        <p>Stand up the official LangGraph currency-agent A2A sample locally, then build a minimal ADK RemoteA2aAgent that calls it. Break the contextId mapping on purpose and watch memory disappear — that failure mode, seen once with your own eyes, is worth more than reading this section twice.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">Topic 2 of 10 — Framework Landscape &amp; A2A Interop. Next up: Multi-Agent Architectures (supervisor vs hierarchical vs swarm, and when specialization actually beats one generalist agent).</div>
+</main>
+</div>
+
+<script>
+const links = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('section.chapter');
+const map = new Map();
+links.forEach(l => map.set(l.getAttribute('href').slice(1), l));
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const link = map.get(entry.target.id);
+    if(!link) return;
+    if(entry.isIntersecting){
+      links.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, {rootMargin: '-15% 0px -70% 0px', threshold: 0});
+sections.forEach(s => io.observe(s));
+</script>
+</body>
+</html>

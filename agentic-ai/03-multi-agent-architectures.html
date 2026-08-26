@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multi-Agent Architectures — Exhaustive Deep Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d10; --bg-raised:#12151a; --bg-card:#14181f;
+  --line:#242a33; --line-soft:#1b2028;
+  --ink:#e7e9ec; --ink-dim:#9aa3b0; --ink-faint:#5c6672;
+  --amber:#ff9f40; --amber-dim:#c97a2e; --lime:#c9f04c; --cyan:#5fd9c9; --violet:#b592ff; --rose:#ff7a8a;
+  --serif:'Source Serif 4', Georgia, serif;
+  --display:'Space Grotesk', sans-serif;
+  --mono:'JetBrains Mono', 'Courier New', monospace;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:radial-gradient(var(--line-soft) 1px, transparent 1px);
+  background-size:22px 22px; background-color:var(--bg);
+  color:var(--ink); font-family:var(--serif); font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+a{color:var(--amber); text-decoration:none;}
+::selection{background:var(--amber); color:#111;}
+.shell{display:grid; grid-template-columns:280px 1fr; min-height:100vh;}
+@media (max-width:920px){ .shell{grid-template-columns:1fr;} .side{display:none;} }
+.side{position:sticky; top:0; height:100vh; overflow-y:auto; border-right:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(18,21,26,.9), rgba(11,13,16,.9)); padding:28px 22px 60px;}
+.side::-webkit-scrollbar{width:6px;} .side::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.brand{font-family:var(--display); font-weight:700; font-size:15px; color:var(--ink); margin-bottom:2px;}
+.brand span{color:var(--amber);}
+.brand-sub{font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-bottom:26px;}
+.back-link{display:inline-block; font-family:var(--mono); font-size:11px; color:var(--cyan); margin-bottom:22px; border:1px solid var(--line); padding:5px 10px; border-radius:6px;}
+.nav-link{display:flex; align-items:baseline; gap:8px; font-family:var(--display); font-size:12.6px; color:var(--ink-dim);
+  padding:6px 8px; border-radius:6px; border-left:2px solid transparent; transition:.15s;}
+.nav-link:hover{color:var(--ink); background:var(--bg-raised);}
+.nav-link.active{color:var(--amber); border-left-color:var(--amber); background:var(--bg-raised);}
+.nav-num{font-family:var(--mono); font-size:10px; color:var(--ink-faint); min-width:18px;}
+.main{max-width:900px; padding:0 44px 140px; margin:0 auto;}
+@media (max-width:700px){ .main{padding:0 20px 100px;} }
+.hero{padding:76px 0 54px; border-bottom:1px solid var(--line);}
+.hero-eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--lime);
+  margin-bottom:18px; display:flex; align-items:center; gap:10px;}
+.hero-eyebrow::before{content:''; width:22px; height:1px; background:var(--lime); display:inline-block;}
+h1.title{font-family:var(--display); font-weight:700; font-size:clamp(30px,4.8vw,50px); line-height:1.08; letter-spacing:-.02em; color:var(--ink); max-width:16ch;}
+h1.title em{font-style:normal; color:var(--amber);}
+.hero-sub{font-family:var(--serif); font-size:18px; color:var(--ink-dim); max-width:60ch; margin-top:20px;}
+.tag-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:26px;}
+.tag{font-family:var(--mono); font-size:11px; padding:5px 11px; border-radius:20px; border:1px solid var(--line); color:var(--ink-dim); background:var(--bg-raised);}
+section.chapter{padding:60px 0; border-bottom:1px solid var(--line);}
+section.chapter:last-of-type{border-bottom:none;}
+.chapter-head{display:flex; align-items:flex-start; gap:16px; margin-bottom:8px;}
+.chapter-num{font-family:var(--mono); font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:20px; padding:3px 11px; margin-top:6px; white-space:nowrap;}
+h2.chapter-title{font-family:var(--display); font-weight:600; font-size:clamp(22px,3.2vw,30px); color:var(--ink); letter-spacing:-.01em;}
+.chapter-dek{font-family:var(--serif); font-style:italic; color:var(--ink-dim); font-size:16px; max-width:64ch; margin:14px 0 30px 0; padding-left:66px;}
+@media (max-width:700px){.chapter-dek{padding-left:0;}}
+.chapter-body{padding-left:66px;}
+@media (max-width:700px){.chapter-body{padding-left:0;}}
+.chapter-body h3{font-family:var(--display); font-weight:600; font-size:19px; color:var(--ink); margin:32px 0 12px;}
+.chapter-body h4{font-family:var(--display); font-weight:600; color:var(--cyan); margin:22px 0 10px; text-transform:uppercase; letter-spacing:.04em; font-size:12px;}
+.chapter-body p{color:var(--ink-dim); margin-bottom:14px; max-width:70ch;}
+.chapter-body ul, .chapter-body ol{color:var(--ink-dim); margin:0 0 16px 20px; max-width:68ch;}
+.chapter-body li{margin-bottom:7px;}
+.chapter-body strong{color:var(--ink); font-weight:600;}
+code.inline{font-family:var(--mono); font-size:.87em; background:var(--bg-raised); color:var(--lime); padding:1px 6px; border-radius:4px; border:1px solid var(--line);}
+.callout{border-left:3px solid var(--amber); background:var(--bg-card); padding:16px 18px; border-radius:0 8px 8px 0; margin:20px 0; max-width:68ch;}
+.callout p{margin-bottom:0; color:var(--ink-dim); font-size:14.5px;}
+.callout .callout-label{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--amber); margin-bottom:6px; display:block;}
+.callout.interview{border-left-color:var(--violet);} .callout.interview .callout-label{color:var(--violet);}
+.callout.pitfall{border-left-color:var(--rose);} .callout.pitfall .callout-label{color:var(--rose);}
+.callout.paper{border-left-color:var(--cyan);} .callout.paper .callout-label{color:var(--cyan);}
+.callout.focus{border-left-color:var(--lime); background:#151b12;} .callout.focus .callout-label{color:var(--lime);}
+.code-wrap{background:#0a0c0f; border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:18px 0 24px;}
+.code-head{display:flex; align-items:center; justify-content:space-between; padding:9px 14px; border-bottom:1px solid var(--line); background:var(--bg-raised); font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+.code-dots{display:flex; gap:5px;} .code-dots span{width:8px; height:8px; border-radius:50%; background:var(--line);}
+pre{padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:12.6px; line-height:1.7; color:#d7dbe0;}
+pre::-webkit-scrollbar{height:6px;} pre::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.tok-kw{color:var(--violet);} .tok-str{color:var(--lime);} .tok-com{color:var(--ink-faint); font-style:italic;} .tok-fn{color:var(--cyan);} .tok-num{color:var(--amber);}
+.tbl{width:100%; border-collapse:collapse; margin:18px 0 26px; font-size:13.2px; max-width:76ch;}
+.tbl th{text-align:left; font-family:var(--mono); font-size:10.2px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); padding:10px 12px; border-bottom:1px solid var(--line);}
+.tbl td{padding:11px 12px; border-bottom:1px solid var(--line-soft); color:var(--ink-dim); vertical-align:top;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl td.k{color:var(--ink); font-family:var(--mono); font-size:12.2px; white-space:nowrap;}
+.diagram{background:var(--bg-card); border:1px solid var(--line); border-radius:12px; padding:22px; margin:20px 0 26px;}
+.diagram svg{width:100%; height:auto; display:block;}
+.legend{display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; font-family:var(--mono); font-size:10.5px; color:var(--ink-faint);}
+.legend span{display:inline-flex; align-items:center; gap:6px;} .legend i{width:9px; height:9px; border-radius:2px; display:inline-block;}
+.qa{border:1px solid var(--line); border-radius:10px; margin-bottom:10px; background:var(--bg-card); overflow:hidden;}
+.qa summary{list-style:none; cursor:pointer; padding:15px 18px; display:flex; gap:12px; align-items:flex-start; font-family:var(--display); font-size:14px; color:var(--ink); font-weight:500;}
+.qa summary::-webkit-details-marker{display:none;}
+.qa summary::before{content:'+'; font-family:var(--mono); color:var(--amber); font-size:16px; line-height:1;}
+.qa[open] summary::before{content:'–';}
+.qa .qa-body{padding:0 18px 18px 40px; color:var(--ink-dim); font-size:14px; max-width:66ch;}
+.qa .qa-body p{margin-bottom:10px;}
+.qa-tag{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; background:var(--bg-raised); color:var(--ink-faint); padding:2px 8px; border-radius:20px; border:1px solid var(--line); margin-left:auto; white-space:nowrap; flex-shrink:0;}
+.glossary-grid{display:grid; grid-template-columns:1fr 1fr; gap:2px 28px;}
+@media (max-width:700px){.glossary-grid{grid-template-columns:1fr;}}
+.gterm{padding:14px 0; border-bottom:1px solid var(--line-soft);}
+.gterm dt{font-family:var(--mono); color:var(--cyan); font-size:13px; margin-bottom:4px;}
+.gterm dd{color:var(--ink-dim); font-size:13px; line-height:1.55;}
+.footer{padding:60px 0 20px; text-align:center; color:var(--ink-faint); font-family:var(--mono); font-size:12px;}
+.pattern-card{background:var(--bg-card); border:1px solid var(--line); border-radius:10px; padding:18px 20px; margin:14px 0;}
+.pattern-card .ptitle{font-family:var(--display); font-weight:600; color:var(--amber); font-size:15px; margin-bottom:6px;}
+.pattern-card p{margin-bottom:0; font-size:13.8px;}
+.statgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:20px 0 26px;}
+@media (max-width:700px){.statgrid{grid-template-columns:1fr;}}
+.statcard{background:var(--bg-card); border:1px solid var(--line); border-radius:10px; padding:16px;}
+.statcard .num{font-family:var(--display); font-weight:700; font-size:26px; color:var(--amber);}
+.statcard .lbl{font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-top:4px;}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav class="side" id="side">
+  <a class="back-link" href="#">← Topic 2: Framework &amp; A2A</a>
+  <div class="brand">Multi-Agent <span>Architectures</span></div>
+  <div class="brand-sub">Topic 3 of 10 — exhaustive deep reference</div>
+  <a class="nav-link" href="#why"><span class="nav-num">00</span>Why Multi-Agent At All</a>
+  <a class="nav-link" href="#taxonomy"><span class="nav-num">01</span>The Full Topology Taxonomy</a>
+  <a class="nav-link" href="#anthropic"><span class="nav-num">02</span>Anthropic's Orchestrator-Worker System</a>
+  <a class="nav-link" href="#supervisor"><span class="nav-num">03</span>Supervisor Pattern, In Depth</a>
+  <a class="nav-link" href="#swarm"><span class="nav-num">04</span>Swarm / Handoff Pattern, In Depth</a>
+  <a class="nav-link" href="#network"><span class="nav-num">05</span>Network (Mesh) Pattern</a>
+  <a class="nav-link" href="#other-topologies"><span class="nav-num">06</span>Blackboard, Debate &amp; Voting</a>
+  <a class="nav-link" href="#state-sharing"><span class="nav-num">07</span>State Sharing &amp; the Telephone Game</a>
+  <a class="nav-link" href="#failure"><span class="nav-num">08</span>Failure Isolation &amp; Recursion Guards</a>
+  <a class="nav-link" href="#economics"><span class="nav-num">09</span>Token Economics — the 15x Problem</a>
+  <a class="nav-link" href="#evaluation"><span class="nav-num">10</span>Evaluating Multi-Agent Systems</a>
+  <a class="nav-link" href="#decision"><span class="nav-num">11</span>The Decision Framework</a>
+  <a class="nav-link" href="#pitfalls"><span class="nav-num">12</span>Production Pitfalls</a>
+  <a class="nav-link" href="#interview"><span class="nav-num">13</span>Interview Cheat-Sheet</a>
+  <a class="nav-link" href="#glossary"><span class="nav-num">14</span>Glossary</a>
+  <a class="nav-link" href="#resources"><span class="nav-num">15</span>Resources</a>
+</nav>
+
+<main class="main">
+  <div class="hero">
+    <div class="hero-eyebrow">Deep reference · Topic 3 of 10</div>
+    <h1 class="title">Multi-Agent <em>Architectures</em></h1>
+    <p class="hero-sub">Every topology that matters — orchestrator-worker, supervisor, swarm, network, blackboard, debate — sourced from Anthropic's own production write-up on Claude's Research system and the current LangGraph pattern literature. When specialization beats a generalist, when it doesn't, how state and failure isolation actually work, what it costs, and how to defend a topology choice under interview pressure.</p>
+    <div class="tag-row">
+      <span class="tag">Orchestrator-Worker</span><span class="tag">Supervisor</span><span class="tag">Swarm / Handoffs</span>
+      <span class="tag">Network / Mesh</span><span class="tag">Blackboard</span><span class="tag">Debate &amp; Voting</span>
+      <span class="tag">Context Isolation</span><span class="tag">Failure Recovery</span><span class="tag">Token Economics</span>
+    </div>
+  </div>
+
+  <!-- ============ 00 WHY MULTI-AGENT ============ -->
+  <section class="chapter" id="why">
+    <div class="chapter-head"><span class="chapter-num">00</span><h2 class="chapter-title">Why Multi-Agent At All — The Single-Agent Ceiling</h2></div>
+    <p class="chapter-dek">Every multi-agent system exists to escape one specific limitation of a single agent. Name the limitation before you name the topology.</p>
+    <div class="chapter-body">
+      <p><cite index="126-1">A lone ReAct agent handles small tasks fine — search the web, sum up the results, easy. Real work is rarely that small.</cite> As you keep adding tools and responsibilities to one agent, three things degrade together: the system prompt grows until <cite index="126-1">the model starts forgetting its own rules</cite>, the tool list grows until <cite index="126-1">the agent starts picking the wrong tool</cite>, and the context window fills with irrelevant history from unrelated sub-tasks. <strong>This is the single-agent ceiling</strong>, and it's the actual justification for going multi-agent — not "multi-agent sounds more sophisticated."</p>
+      <div class="statgrid">
+        <div class="statcard"><div class="num">90.2%</div><div class="lbl">multi-agent (Opus 4 lead + Sonnet 4 workers) beat single-agent Opus 4 on Anthropic's internal research eval</div></div>
+        <div class="statcard"><div class="num">~15x</div><div class="lbl">token cost of a multi-agent run vs. a standard chat interaction</div></div>
+        <div class="statcard"><div class="num">80%</div><div class="lbl">of performance variance explained by token usage alone, not architecture cleverness</div></div>
+      </div>
+      <p><cite index="120-1">A multi-agent system consists of multiple agents — LLMs autonomously using tools in a loop — working together. Anthropic's Research feature involves an agent that plans a research process based on user queries, then uses tools to create parallel agents that search for information simultaneously.</cite> <cite index="105-1">The essence of it: breadth-first research questions where the answer requires exploring many independent paths at once and the total information exceeds a single context window.</cite></p>
+      <div class="callout paper">
+        <span class="callout-label">The real reason it wins on research specifically</span>
+        <p><cite index="120-1">The essence of search is compression: distilling insights from a vast corpus. Subagents facilitate compression by operating in parallel with their own context windows, exploring different aspects of the question simultaneously before condensing the most important tokens for the lead researcher.</cite> A single agent doing this sequentially can't hold five independent research threads in one context window without them interfering with each other.</p>
+      </div>
+      <div class="callout pitfall">
+        <span class="callout-label">The honest counter-lesson</span>
+        <p><cite index="110-1">Today, multi-agent systems are often applied in situations where a single agent would perform better — Anthropic has seen teams invest months building elaborate multi-agent architectures only to discover that improved prompting on a single agent achieved equal or better results.</cite> The ceiling is real, but it's specific — verify you've actually hit it (via eval, not vibes) before reaching for multiple agents.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 01 TAXONOMY ============ -->
+  <section class="chapter" id="taxonomy">
+    <div class="chapter-head"><span class="chapter-num">01</span><h2 class="chapter-title">The Full Topology Taxonomy</h2></div>
+    <p class="chapter-dek">Seven shapes. Know all seven by name, know which two dominate production, and know exactly why the others exist.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Topology</th><th>Shape</th><th>Best for</th></tr>
+        <tr><td class="k">Pipeline / Sequential</td><td>Fixed A → B → C, no branching</td><td><cite index="136-1">Data flows sequentially, each step transforms the previous step's output (e.g. Scrape → Summarize → Translate)</cite></td></tr>
+        <tr><td class="k">Orchestrator-Worker</td><td>One lead plans, N workers execute in parallel, workers never talk to each other</td><td>Breadth-first tasks decomposable into independent sub-tasks (research, broad search)</td></tr>
+        <tr><td class="k">Supervisor</td><td>Central router agent decides which specialist acts next; specialists report back to supervisor, not to the user</td><td>Distinct task types, work you don't want exposed directly to the user</td></tr>
+        <tr><td class="k">Swarm / Handoff</td><td>Peer agents hand off control directly to each other; whoever's "active" talks to the user</td><td><cite index="131-1">Systems requiring many different agents to interact directly with the user, like customer support</cite></td></tr>
+        <tr><td class="k">Network / Mesh</td><td>Any agent can call any other agent at any time, no fixed order</td><td><cite index="126-1">Rare — the most open and the riskiest layout, the hardest to trace</cite></td></tr>
+        <tr><td class="k">Blackboard</td><td>Agents read/write to a shared workspace independently, no direct agent-to-agent messages</td><td>Loosely-coupled contributions where order genuinely doesn't matter</td></tr>
+        <tr><td class="k">Debate / Voting / Ensemble</td><td>Multiple agents independently answer, then critique each other or vote</td><td>High-stakes decisions where diverse perspectives reduce single-agent bias</td></tr>
+      </table>
+      <div class="diagram">
+        <svg viewBox="0 0 780 260" xmlns="http://www.w3.org/2000/svg">
+          <text x="90" y="26" fill="#5fd9c9" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Pipeline</text>
+          <rect x="20" y="36" width="46" height="30" rx="5" fill="none" stroke="#5fd9c9" stroke-width="1.3"/>
+          <rect x="90" y="36" width="46" height="30" rx="5" fill="none" stroke="#5fd9c9" stroke-width="1.3"/>
+          <rect x="160" y="36" width="46" height="30" rx="5" fill="none" stroke="#5fd9c9" stroke-width="1.3"/>
+          <line x1="66" y1="51" x2="90" y2="51" stroke="#5fd9c9" stroke-width="1.3"/>
+          <line x1="136" y1="51" x2="160" y2="51" stroke="#5fd9c9" stroke-width="1.3"/>
+
+          <text x="330" y="26" fill="#ff9f40" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Orchestrator-Worker</text>
+          <circle cx="330" cy="50" r="14" fill="none" stroke="#ff9f40" stroke-width="1.3"/>
+          <circle cx="270" cy="90" r="10" fill="none" stroke="#ff9f40" stroke-width="1.3"/>
+          <circle cx="330" cy="90" r="10" fill="none" stroke="#ff9f40" stroke-width="1.3"/>
+          <circle cx="390" cy="90" r="10" fill="none" stroke="#ff9f40" stroke-width="1.3"/>
+          <line x1="322" y1="60" x2="275" y2="82" stroke="#ff9f40" stroke-width="1.1"/>
+          <line x1="330" y1="64" x2="330" y2="80" stroke="#ff9f40" stroke-width="1.1"/>
+          <line x1="338" y1="60" x2="385" y2="82" stroke="#ff9f40" stroke-width="1.1"/>
+
+          <text x="580" y="26" fill="#c9f04c" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Supervisor</text>
+          <circle cx="580" cy="50" r="13" fill="none" stroke="#c9f04c" stroke-width="1.3"/>
+          <rect x="520" y="82" width="36" height="24" rx="4" fill="none" stroke="#c9f04c" stroke-width="1.2"/>
+          <rect x="562" y="82" width="36" height="24" rx="4" fill="none" stroke="#c9f04c" stroke-width="1.2"/>
+          <rect x="604" y="82" width="36" height="24" rx="4" fill="none" stroke="#c9f04c" stroke-width="1.2"/>
+          <line x1="572" y1="62" x2="538" y2="82" stroke="#c9f04c" stroke-width="1.1"/>
+          <line x1="580" y1="63" x2="580" y2="82" stroke="#c9f04c" stroke-width="1.1"/>
+          <line x1="588" y1="62" x2="622" y2="82" stroke="#c9f04c" stroke-width="1.1"/>
+
+          <text x="90" y="150" fill="#b592ff" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Swarm</text>
+          <circle cx="60" cy="185" r="12" fill="none" stroke="#b592ff" stroke-width="1.3"/>
+          <circle cx="120" cy="185" r="12" fill="none" stroke="#b592ff" stroke-width="1.3"/>
+          <circle cx="90" cy="225" r="12" fill="none" stroke="#b592ff" stroke-width="1.3"/>
+          <line x1="72" y1="185" x2="108" y2="185" stroke="#b592ff" stroke-width="1.1"/>
+          <line x1="68" y1="196" x2="82" y2="215" stroke="#b592ff" stroke-width="1.1"/>
+          <line x1="112" y1="196" x2="98" y2="215" stroke="#b592ff" stroke-width="1.1"/>
+
+          <text x="330" y="150" fill="#ff7a8a" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Network / Mesh</text>
+          <circle cx="290" cy="185" r="11" fill="none" stroke="#ff7a8a" stroke-width="1.3"/>
+          <circle cx="360" cy="185" r="11" fill="none" stroke="#ff7a8a" stroke-width="1.3"/>
+          <circle cx="290" cy="225" r="11" fill="none" stroke="#ff7a8a" stroke-width="1.3"/>
+          <circle cx="360" cy="225" r="11" fill="none" stroke="#ff7a8a" stroke-width="1.3"/>
+          <line x1="300" y1="185" x2="350" y2="185" stroke="#ff7a8a" stroke-width="1"/>
+          <line x1="290" y1="196" x2="290" y2="214" stroke="#ff7a8a" stroke-width="1"/>
+          <line x1="360" y1="196" x2="360" y2="214" stroke="#ff7a8a" stroke-width="1"/>
+          <line x1="300" y1="225" x2="350" y2="225" stroke="#ff7a8a" stroke-width="1"/>
+          <line x1="298" y1="193" x2="352" y2="217" stroke="#ff7a8a" stroke-width="1"/>
+          <line x1="352" y1="193" x2="298" y2="217" stroke="#ff7a8a" stroke-width="1"/>
+
+          <text x="580" y="150" fill="#5fd9c9" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Blackboard</text>
+          <rect x="540" y="175" width="80" height="50" rx="6" fill="none" stroke="#5fd9c9" stroke-width="1.3" stroke-dasharray="3 3"/>
+          <circle cx="520" cy="185" r="9" fill="none" stroke="#5fd9c9" stroke-width="1.2"/>
+          <circle cx="520" cy="215" r="9" fill="none" stroke="#5fd9c9" stroke-width="1.2"/>
+          <circle cx="640" cy="200" r="9" fill="none" stroke="#5fd9c9" stroke-width="1.2"/>
+          <line x1="529" y1="185" x2="540" y2="190" stroke="#5fd9c9" stroke-width="1"/>
+          <line x1="529" y1="215" x2="540" y2="210" stroke="#5fd9c9" stroke-width="1"/>
+          <line x1="620" y1="200" x2="631" y2="200" stroke="#5fd9c9" stroke-width="1"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 ANTHROPIC ORCHESTRATOR-WORKER ============ -->
+  <section class="chapter" id="anthropic">
+    <div class="chapter-head"><span class="chapter-num">02</span><h2 class="chapter-title">Anthropic's Orchestrator-Worker System, In Full</h2></div>
+    <p class="chapter-dek">Claude's Research feature is the most thoroughly documented production multi-agent system in the industry. Know it well enough to describe every stage from memory.</p>
+    <div class="chapter-body">
+      <p><cite index="102-1">Anthropic's Research system employs an orchestrator-worker pattern where a lead agent coordinates the overall process while delegating specialized tasks to subagents operating in parallel.</cite></p>
+      <div class="diagram">
+        <svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="orm" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff9f40"/></marker></defs>
+          <rect x="300" y="10" width="160" height="46" rx="8" fill="none" stroke="#5fd9c9" stroke-width="1.5"/>
+          <text x="380" y="38" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">User Query</text>
+          <line x1="380" y1="56" x2="380" y2="86" stroke="#ff9f40" stroke-width="1.5" marker-end="url(#orm)"/>
+          <rect x="270" y="86" width="220" height="56" rx="8" fill="none" stroke="#ff9f40" stroke-width="1.5"/>
+          <text x="380" y="110" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">LeadResearcher</text>
+          <text x="380" y="128" fill="#9aa3b0" font-family="JetBrains Mono" font-size="10" text-anchor="middle">plans, saves strategy to memory</text>
+          <line x1="330" y1="142" x2="150" y2="180" stroke="#ff9f40" stroke-width="1.3" marker-end="url(#orm)"/>
+          <line x1="380" y1="142" x2="380" y2="180" stroke="#ff9f40" stroke-width="1.3" marker-end="url(#orm)"/>
+          <line x1="430" y1="142" x2="610" y2="180" stroke="#ff9f40" stroke-width="1.3" marker-end="url(#orm)"/>
+          <rect x="80" y="180" width="140" height="42" rx="7" fill="none" stroke="#c9f04c" stroke-width="1.4"/>
+          <text x="150" y="205" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Subagent 1</text>
+          <rect x="310" y="180" width="140" height="42" rx="7" fill="none" stroke="#c9f04c" stroke-width="1.4"/>
+          <text x="380" y="205" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Subagent 2</text>
+          <rect x="540" y="180" width="140" height="42" rx="7" fill="none" stroke="#c9f04c" stroke-width="1.4"/>
+          <text x="610" y="205" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Subagent N</text>
+          <text x="380" y="242" fill="#5c6672" font-family="JetBrains Mono" font-size="10" text-anchor="middle">each: own context window, own tools, condenses findings, returns to Lead → CitationAgent → user</text>
+        </svg>
+      </div>
+      <h3>The stages, in order</h3>
+      <ol>
+        <li><strong>Lead Researcher analyzes and plans.</strong> <cite index="103-1">The Lead Researcher analyzes the query, decides on an overall strategy, and records the plan in memory — because large research tasks can easily exceed the model's context window, saving the plan avoids losing track when tokens run out.</cite></li>
+        <li><strong>Subagents spawn and work in parallel.</strong> <cite index="103-1">Each subagent is given a specific task — exploring a certain company, checking a particular time period, looking into a technical detail.</cite> <cite index="102-1">Each subagent independently performs web searches, evaluates tool results using interleaved thinking, and returns findings to the LeadResearcher.</cite></li>
+        <li><strong>Lead synthesizes and decides whether to continue.</strong> <cite index="102-1">The LeadResearcher synthesizes results and decides whether more research is needed — if so, it can create additional subagents or refine its strategy.</cite></li>
+        <li><strong>Citation pass.</strong> <cite index="102-1">Once sufficient information is gathered, the system exits the research loop and passes all findings to a CitationAgent, which processes the documents and research report to identify specific locations for citations, ensuring all claims are properly attributed to their sources.</cite></li>
+      </ol>
+      <h3>The isolation boundary — the single most important design decision</h3>
+      <p><cite index="105-1">The decision that matters in any multi-agent design is the isolation boundary: what does each subagent need to know about what the others are doing? Anthropic's bet for research is: almost nothing. Each subagent gets a self-contained task description, an output format, and a fresh context window. It doesn't know the other subagents exist. It cannot coordinate with them mid-task.</cite> <cite index="105-1">Orchestrator-worker constrains the topology deliberately — workers never talk to each other; every decision about what comes next lives in the orchestrator.</cite></p>
+      <h3>Hard-won prompt engineering lessons</h3>
+      <table class="tbl">
+        <tr><th>Lesson</th><th>What went wrong without it</th></tr>
+        <tr><td class="k">Teach the orchestrator to delegate explicitly</td><td><cite index="104-1">The lead agent decomposes queries into subtasks; each subagent needs an objective, output format, guidance on tools/sources, and clear task boundaries — without detailed task descriptions, agents duplicate work, leave gaps, or fail to find necessary information.</cite> <cite index="109-1">One subagent explored the 2021 automotive chip crisis while 2 others duplicated work investigating current 2025 supply chains, without an effective division of labor</cite> — from an early version that just said "research the semiconductor shortage."</td></tr>
+        <tr><td class="k">Scale effort to query complexity, explicitly, in the prompt</td><td><cite index="116-1">Anthropic's prompts embed concrete rules: 1 agent for simple fact-finding, 2 to 4 subagents for direct comparisons, and more than 10 subagents for complex research — without rules like these, the lead agent over-scales, spinning up subagents for problems a single call could answer.</cite></td></tr>
+        <tr><td class="k">Think like your agents — build simulations</td><td><cite index="104-1">Anthropic built simulations using their Console with exact prompts and tools from their production system, watching agents work step by step — this immediately revealed failure modes like continuing after sufficient results were obtained, overly verbose search queries, and selecting incorrect tools.</cite></td></tr>
+        <tr><td class="k">Persist context explicitly</td><td><cite index="109-1">Standard context windows become insufficient for conversations spanning hundreds of turns — patterns were implemented where agents summarize completed work phases and store essential information in external memory before proceeding, so a fresh subagent spawned near a context limit can retrieve the stored research plan rather than losing previous work.</cite></td></tr>
+      </table>
+      <h3>Evaluation methodology</h3>
+      <p><cite index="117-1">Evaluate agents with LLM-as-judge rubrics — factual and citation accuracy, completeness, source quality, tool efficiency — plus human testing, instead of rigid golden answers</cite>, because research is inherently open-ended and different valid research paths can reach the same correct conclusion.</p>
+      <div class="callout paper">
+        <span class="callout-label">Variance analysis — the number worth memorizing</span>
+        <p><cite index="115-1">Analysis of the BrowseComp evaluation revealed three factors explaining 95% of variance: token usage (80% of variance), tool calls (parallel execution enabling breadth-first exploration), and model choice — with upgrading to Sonnet 4 outperforming doubling the token budget on Sonnet 3.7.</cite> The architecture's win comes overwhelmingly from letting the system spend more total tokens in parallel, not from clever prompt tricks.</p>
+      </div>
+      <h3>When verification subagents are worth it</h3>
+      <p><cite index="110-1">Verification subagents remain valuable when using less capable orchestrators, when verification requires specialized tools, or when you want to enforce explicit verification checkpoints. Verification subagents succeed because they sidestep the telephone game problem — verification requires minimal context transfer by nature, so a verifier can blackbox-test a system without needing the full history of how it was built.</cite> <cite index="110-1">The main agent completes a unit of work, then spawns a verification subagent with the artifact to verify, clear success criteria, and tools to perform verification — the verifier doesn't need to understand why the artifact was built as it was, only whether it's correct.</cite></p>
+    </div>
+  </section>
+
+  <!-- ============ 03 SUPERVISOR ============ -->
+  <section class="chapter" id="supervisor">
+    <div class="chapter-head"><span class="chapter-num">03</span><h2 class="chapter-title">Supervisor Pattern, In Depth</h2></div>
+    <p class="chapter-dek">The pattern most teams should actually start with — and the one you'll be asked to defend most often.</p>
+    <div class="chapter-body">
+      <p><cite index="128-1">A supervisor agent receives all user queries, determines which specialized agent should handle the task, delegates the work, and then translates the response back to the user.</cite> <cite index="140-1">It sits between the network pattern (every agent can call every other — chaos) and the hierarchical pattern (supervisor of supervisors — overkill for most teams).</cite></p>
+      <div class="code-wrap">
+        <div class="code-head"><span>supervisor_langgraph.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> langgraph_supervisor <span class="tok-kw">import</span> create_supervisor
+<span class="tok-kw">from</span> langgraph.prebuilt <span class="tok-kw">import</span> create_react_agent
+
+research_agent = create_react_agent(model, tools=[search_tool], name=<span class="tok-str">"research_agent"</span>)
+math_agent = create_react_agent(model, tools=[calculator_tool], name=<span class="tok-str">"math_agent"</span>)
+
+workflow = create_supervisor(
+    agents=[research_agent, math_agent],
+    model=supervisor_model,
+    prompt=<span class="tok-str">"You route between a research specialist and a math specialist. Route each turn to exactly one."</span>,
+)
+app = workflow.compile()</pre>
+      </div>
+      <table class="tbl">
+        <tr><th>Strength</th><th>Weakness</th></tr>
+        <tr><td><cite index="123-1">Easier to reason about — one routing node, clear control flow, every decision visible in traces.</cite></td><td><cite index="123-1">Slower — every handoff passes through the supervisor, adding an intermediary round trip and doubling token spend on routing calls.</cite></td></tr>
+        <tr><td>Clean single point for guardrails, logging, and policy enforcement</td><td><cite index="124-1">Single point of failure — in hub-and-spoke topology, coordinator failure halts the entire system.</cite></td></tr>
+        <tr><td>Work stays hidden from the user until the supervisor is ready to respond</td><td><cite index="124-1">Context window saturation — the supervisor accumulates full message history from all sub-agent interactions; routing accuracy drops noticeably after 8-12 sub-agent round trips as historical messages crowd out current task state.</cite></td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">Mitigations for the two real weaknesses</span>
+        <p><cite index="124-1">For context saturation: CrewAI addresses this with automatic summarization (respect_context_window=True); LangGraph's subgraphs isolate graph state per agent or team so the supervisor doesn't accumulate every sub-agent's full internal reasoning.</cite> <cite index="124-1">For the serial-execution bottleneck: the supervisor's synchronous routing loop forces serial execution even when sub-tasks are logically independent — true parallel dispatch requires explicitly fanning out to multiple workers at once (the orchestrator-worker pattern) rather than routing one at a time.</cite></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 04 SWARM ============ -->
+  <section class="chapter" id="swarm">
+    <div class="chapter-head"><span class="chapter-num">04</span><h2 class="chapter-title">Swarm / Handoff Pattern, In Depth</h2></div>
+    <p class="chapter-dek">Remove the middleman. Agents hand the user directly to each other.</p>
+    <div class="chapter-body">
+      <p><cite index="123-1">The swarm eliminates the supervisor. Agents hand off directly to each other using Command objects returned from handoff tools — when an agent calls a handoff tool, Command(goto=..., graph=Command.PARENT) tells LangGraph to navigate to a different node in the parent graph. Each agent gets handoff tools for the agents it can transfer to.</cite></p>
+      <div class="code-wrap">
+        <div class="code-head"><span>swarm_langgraph.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> langgraph_swarm <span class="tok-kw">import</span> create_handoff_tool, create_swarm
+<span class="tok-kw">from</span> langgraph.prebuilt <span class="tok-kw">import</span> create_react_agent
+
+billing_agent = create_react_agent(
+    model, name=<span class="tok-str">"billing_agent"</span>,
+    tools=[refund_tool, create_handoff_tool(agent_name=<span class="tok-str">"tech_agent"</span>,
+        description=<span class="tok-str">"Transfer to tech support for non-billing issues."</span>)],
+)
+tech_agent = create_react_agent(
+    model, name=<span class="tok-str">"tech_agent"</span>,
+    tools=[diagnostics_tool, create_handoff_tool(agent_name=<span class="tok-str">"billing_agent"</span>,
+        description=<span class="tok-str">"Transfer to billing for payment/refund issues."</span>)],
+)
+swarm = create_swarm([billing_agent, tech_agent], default_active_agent=<span class="tok-str">"triage_agent"</span>).compile()</pre>
+      </div>
+      <table class="tbl">
+        <tr><th>Strength</th><th>Weakness</th></tr>
+        <tr><td><cite index="123-1">Faster — no intermediary, direct agent-to-agent handoffs, fewer LLM calls.</cite> <cite index="122-1">Measured in one production migration: roughly a 40% reduction in end-to-end response time and fewer LLM calls per query switching from supervisor to swarm.</cite></td><td>Routing decisions are distributed across every agent's own prompt instead of one place — <cite index="128-1">shared rules must be duplicated across every agent's system prompt; change one rule and you're updating it in every agent that needs it, and the risk of inconsistency grows with every agent added.</cite></td></tr>
+        <tr><td><cite index="131-1">Every agent can interact directly with the user and hand off to one another — ideal when the user benefits from staying with the active specialist across turns.</cite></td><td><cite index="133-1">Handoff chains can run long — if triage → tech → billing runs longer than roughly 3 hops, that's usually a sign of a routing problem, not genuine task complexity.</cite></td></tr>
+      </table>
+      <div class="callout focus">
+        <span class="callout-label">When production teams actually reach for swarm over supervisor</span>
+        <p><cite index="133-1">Use a swarm when the application has real specialists that need to take turns being directly responsible for the conversation: each agent has distinct tools/instructions/success criteria, the user benefits from staying with the active specialist across turns, the workflow is mostly sequential rather than parallel, the handoff topology can stay sparse and understandable, and the application can persist thread state with a checkpointer.</cite> <cite index="123-1">Practical rule of thumb: start with the supervisor — it's simpler to build and debug, and routing accuracy matters more than the latency penalty in most early deployments. Graduate to swarm only once you have data showing latency is the actual bottleneck and your agents rarely misroute.</cite></p>
+      </div>
+      <div class="callout pitfall">
+        <span class="callout-label">Non-negotiable safety net</span>
+        <p><cite index="129-1">A multi-agent system without a recursion guard is a production incident waiting to happen</cite> — cap total handoffs per conversation and alert when the cap is hit, regardless of topology.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 05 NETWORK ============ -->
+  <section class="chapter" id="network">
+    <div class="chapter-head"><span class="chapter-num">05</span><h2 class="chapter-title">Network (Mesh) Pattern</h2></div>
+    <p class="chapter-dek">Know it exists, know why almost nobody should default to it.</p>
+    <div class="chapter-body">
+      <p><cite index="126-1">In the network (or mesh) pattern, any agent can reach any other agent at any time. There is no set order and no set chain — an agent decides mid-task that it needs help and calls for it. This is the most free-form pattern, and the hardest to trace.</cite> <cite index="140-1">For a small number of specialists, network is anarchy — hierarchy or supervisor is almost always the right answer instead.</cite></p>
+      <div class="callout pitfall">
+        <span class="callout-label">Why this is a trap in interviews</span>
+        <p>Network topology sounds maximally flexible, which makes it tempting to propose as "the general solution." In practice it removes the one thing that makes multi-agent systems debuggable: a predictable, traceable path through the system. Proposing network topology without a specific reason (genuine unpredictable peer-to-peer collaboration needs, not just "more flexibility") reads as a junior mistake in a system design interview.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 06 OTHER TOPOLOGIES ============ -->
+  <section class="chapter" id="other-topologies">
+    <div class="chapter-head"><span class="chapter-num">06</span><h2 class="chapter-title">Blackboard, Debate &amp; Voting</h2></div>
+    <p class="chapter-dek">Two more named patterns worth recognizing, less common in production but real interview material.</p>
+    <div class="chapter-body">
+      <h3>Blackboard</h3>
+      <p>Agents don't message each other at all — they read from and write to a shared workspace ("the blackboard": a document, a data structure, a scratchpad) independently, and act whenever they notice something relevant has changed. This decouples agents completely: no agent needs to know which other agents exist, only what shape of data to watch for and produce. Good for loosely-coupled contributions where strict ordering doesn't matter — e.g., several specialist agents annotating the same shared document with their own type of finding.</p>
+      <h3>Debate / Voting / Ensemble</h3>
+      <p>Multiple agents (often the same model, sometimes different models) independently attempt the same task, then either critique each other's answers in a structured back-and-forth (debate) or a final answer is chosen by majority/weighted vote (ensemble). This is the multi-agent generalization of Self-Consistency (see Topic 1) — instead of sampling one model multiple times, you're sampling potentially different agents/models/prompts and using disagreement itself as a signal.</p>
+      <table class="tbl">
+        <tr><th>Use when</th><th>Skip when</th></tr>
+        <tr><td>A single agent's mistake is costly and diverse perspectives measurably reduce error (e.g. content moderation edge cases, high-stakes classification)</td><td>The task has one clearly correct approach — debate just multiplies cost for no accuracy gain</td></tr>
+        <tr><td>You have budget for N× the LLM calls of a single pass</td><td>Latency-sensitive, real-time user-facing paths</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 07 STATE SHARING ============ -->
+  <section class="chapter" id="state-sharing">
+    <div class="chapter-head"><span class="chapter-num">07</span><h2 class="chapter-title">State Sharing &amp; the Telephone Game Problem</h2></div>
+    <p class="chapter-dek">The question every multi-agent design must answer explicitly: what does each agent actually need to know about what the others are doing?</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Model</th><th>How it works</th><th>Trade-off</th></tr>
+        <tr><td class="k">Full shared state</td><td>All agents read/write the same state object (e.g. one LangGraph AgentState)</td><td>Simple, but context grows unbounded as more agents contribute — the supervisor context-saturation problem</td></tr>
+        <tr><td class="k">Isolated context, condensed handoff</td><td><cite index="105-1">Each agent gets a fresh context window and a self-contained task description; it returns only distilled findings, not its full working process</cite></td><td>Scales far better, but loses nuance — the receiving agent only sees the conclusion, not the reasoning behind it</td></tr>
+        <tr><td class="k">Explicit artifact passing</td><td>Agents exchange a defined schema/document (a plan, a code diff, a report draft) rather than raw conversation history</td><td>Forces clarity about the interface between agents; brittle if the schema doesn't capture something a downstream agent needed</td></tr>
+      </table>
+      <div class="callout paper">
+        <span class="callout-label">The "telephone game" problem, named precisely</span>
+        <p><cite index="110-1">Verification subagents succeed because they sidestep the telephone game problem — verification requires minimal context transfer by nature.</cite> The telephone game problem is what happens when information passes through several agents' summaries in sequence: each summarization step loses a little fidelity, and by the third or fourth hand-off, the original nuance is gone or subtly distorted — exactly like the children's game. The fix isn't "share more context" (that reintroduces the saturation problem) — it's designing hand-offs that need minimal context transfer in the first place, which is why verification, scoped sub-tasks, and condensed artifacts all work better than passing raw history downstream.</p>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"How do you decide how much context to pass between agents in a multi-agent system?" — Start from the isolation boundary question: does the downstream agent need to know <em>how</em> the upstream agent reached its conclusion, or just <em>what</em> the conclusion was? Verification, formatting, and narrowly-scoped execution tasks usually need only the latter — pass a condensed artifact. Tasks requiring the downstream agent to build on or challenge the upstream reasoning need more context, at the cost of window space and the telephone-game risk.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 08 FAILURE ISOLATION ============ -->
+  <section class="chapter" id="failure">
+    <div class="chapter-head"><span class="chapter-num">08</span><h2 class="chapter-title">Failure Isolation &amp; Recursion Guards</h2></div>
+    <p class="chapter-dek">More moving parts means more ways to fail. Design for it explicitly, per topology.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Supervisor single point of failure.</strong> <cite index="124-1">Coordinator failure halts the entire system in hub-and-spoke topology.</cite> Mitigate with checkpoint persistence so a crashed supervisor can resume from the last checkpoint rather than restarting the whole task.</li>
+        <li><strong>Runaway handoff loops in swarm.</strong> Two agents that keep handing off to each other (A thinks it's a billing issue, hands to tech; tech thinks it's billing, hands back) will loop forever without a cap. <cite index="129-1">Track handoff count per conversation and force a fallback (e.g., escalate to a human, or a designated tie-breaker agent) past a threshold.</cite></li>
+        <li><strong>One bad subagent poisoning the synthesis.</strong> In orchestrator-worker, a single subagent returning a confidently wrong finding can corrupt the lead's final synthesis if there's no cross-check. This is exactly the case for verification subagents or citation passes — a dedicated check step that doesn't just trust every worker's output at face value.</li>
+        <li><strong>Partial failure in parallel fan-out.</strong> If 4 of 5 parallel subagents return successfully and one times out or errors, decide up front: does the orchestrator proceed with partial results, retry just the failed one, or fail the whole task? Silently proceeding with partial results without flagging the gap is a common, hard-to-catch bug.</li>
+        <li><strong>Cascading retries.</strong> A failure at the leaf level (a tool call inside a subagent) shouldn't automatically retry the entire multi-agent run from the top — scope retries to the smallest failed unit possible.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 09 ECONOMICS ============ -->
+  <section class="chapter" id="economics">
+    <div class="chapter-head"><span class="chapter-num">09</span><h2 class="chapter-title">Token Economics — the 15x Problem</h2></div>
+    <p class="chapter-dek">The number every multi-agent design conversation eventually has to justify.</p>
+    <div class="chapter-body">
+      <p><cite index="108-1">Agents use roughly 4x more tokens than chat interactions, and multi-agent systems use about 15x more tokens than chats. For economic viability, multi-agent systems require tasks where the value of the task is high enough to pay for the increased performance.</cite></p>
+      <table class="tbl">
+        <tr><th>Task profile</th><th>Multi-agent economically justified?</th></tr>
+        <tr><td>High-value, breadth-first research where a wrong or incomplete answer is costly</td><td>Yes — the 90.2% accuracy gain typically outweighs a 15x token multiplier</td></tr>
+        <tr><td>High-volume, low-value, simple lookups</td><td>No — the multiplier dominates; a single well-prompted agent is the economically correct choice</td></tr>
+        <tr><td>Tightly interdependent tasks (e.g. coding, where each step depends closely on the last)</td><td><cite index="103-1">Generally no — multi-agent systems excel at problems that can be divided into parallel, independent strands but are less effective for tightly interdependent tasks such as coding.</cite></td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"Your PM wants a multi-agent system for every feature because it sounds more advanced. How do you push back?" — Frame it as an economics problem, not a technology preference: multi-agent systems run at roughly 15x the token cost of a normal chat interaction, and the accuracy gain (Anthropic's own eval: 90.2%) only shows up on breadth-first, high-value, parallelizable tasks. For anything narrow, sequential, or low-value, a single well-prompted agent is both cheaper and easier to debug — propose measuring against a strong single-agent baseline before committing to the multi-agent build.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 10 EVALUATION ============ -->
+  <section class="chapter" id="evaluation">
+    <div class="chapter-head"><span class="chapter-num">10</span><h2 class="chapter-title">Evaluating Multi-Agent Systems</h2></div>
+    <p class="chapter-dek">You can't tune what you don't measure — and multi-agent systems need metrics single-agent evals don't capture.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Metric</th><th>What it catches</th></tr>
+        <tr><td class="k">Routing / delegation accuracy</td><td>Did the supervisor/swarm send the task to the right specialist? (Independent of whether the specialist then did a good job.)</td></tr>
+        <tr><td class="k">Resolution completeness</td><td><cite index="129-1">Were all parts of a multi-domain request actually handled, or did routing to one specialist silently drop a sub-request that belonged to another?</cite></td></tr>
+        <tr><td class="k">Handoff / hop count</td><td>How many agent-to-agent transitions did this task take? Rising hop counts over time signal routing drift or a growing need for a tie-breaker.</td></tr>
+        <tr><td class="k">Token cost per resolved task</td><td>The economic viability check from the previous section, tracked per topology so you can compare supervisor vs swarm costs directly.</td></tr>
+        <tr><td class="k">LLM-as-judge rubric scores</td><td><cite index="117-1">For open-ended tasks without a single golden answer: factual accuracy, citation accuracy, completeness, source quality, tool efficiency</cite> — scored by a separate judge model against a rubric, not a string match.</td></tr>
+      </table>
+      <div class="callout">
+        <span class="callout-label">Practical advice from production teams</span>
+        <p><cite name="129-1">Write the routing_accuracy eval before you write the second agent</cite> — decide how you'll measure whether delegation is working correctly before you have two agents to delegate between, so you're not retrofitting evaluation onto a system that's already grown complex.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 11 DECISION FRAMEWORK ============ -->
+  <section class="chapter" id="decision">
+    <div class="chapter-head"><span class="chapter-num">11</span><h2 class="chapter-title">The Decision Framework</h2></div>
+    <p class="chapter-dek">One decision tree, from "should I even go multi-agent" down to "which topology."</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Question</th><th>If yes →</th></tr>
+        <tr><td>Does a single, well-prompted agent already clear your accuracy bar?</td><td>Stop here. <cite index="140-1">Rule of thumb: if a single agent with all the tools is hitting ≥85% on your eval and tasks are reasonably homogeneous, stay single.</cite></td></tr>
+        <tr><td>Is the task decomposable into independent parallel sub-tasks (breadth-first)?</td><td>Orchestrator-worker</td></tr>
+        <tr><td>Are there distinct task types you don't want exposed directly to the user, needing central control?</td><td>Supervisor</td></tr>
+        <tr><td>Do users benefit from staying with one active specialist across multiple turns, and is the flow mostly sequential?</td><td>Swarm / handoff</td></tr>
+        <tr><td>Do agents genuinely need unpredictable peer-to-peer collaboration with no fixed order?</td><td>Network (rare — justify carefully)</td></tr>
+        <tr><td>Are contributions loosely coupled with no strict ordering, just shared-workspace annotation?</td><td>Blackboard</td></tr>
+        <tr><td>Is this a high-stakes decision where diverse perspectives reduce error?</td><td>Debate / voting / ensemble</td></tr>
+      </table>
+      <div class="diagram">
+        <svg viewBox="0 0 740 200" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="dfm" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff9f40"/></marker></defs>
+          <rect x="20" y="80" width="150" height="46" rx="8" fill="none" stroke="#5fd9c9" stroke-width="1.5"/>
+          <text x="95" y="107" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Single agent OK?</text>
+          <line x1="170" y1="103" x2="230" y2="103" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#dfm)"/>
+          <text x="200" y="95" fill="#c9f04c" font-family="JetBrains Mono" font-size="10" text-anchor="middle">no</text>
+          <rect x="230" y="80" width="150" height="46" rx="8" fill="none" stroke="#ff9f40" stroke-width="1.5"/>
+          <text x="305" y="100" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Parallel independent</text>
+          <text x="305" y="115" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">sub-tasks?</text>
+          <line x1="380" y1="103" x2="440" y2="103" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#dfm)"/>
+          <text x="410" y="95" fill="#c9f04c" font-family="JetBrains Mono" font-size="10" text-anchor="middle">no</text>
+          <rect x="440" y="80" width="150" height="46" rx="8" fill="none" stroke="#b592ff" stroke-width="1.5"/>
+          <text x="515" y="100" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">User stays with one</text>
+          <text x="515" y="115" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">specialist?</text>
+          <line x1="590" y1="103" x2="650" y2="103" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#dfm)"/>
+          <text x="620" y="95" fill="#c9f04c" font-family="JetBrains Mono" font-size="10" text-anchor="middle">no</text>
+          <rect x="650" y="80" width="80" height="46" rx="8" fill="none" stroke="#c9f04c" stroke-width="1.5"/>
+          <text x="690" y="107" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Supervisor</text>
+          <text x="95" y="150" fill="#5fd9c9" font-family="JetBrains Mono" font-size="10" text-anchor="middle">→ stay single-agent</text>
+          <text x="305" y="150" fill="#ff9f40" font-family="JetBrains Mono" font-size="10" text-anchor="middle">→ Orchestrator-Worker</text>
+          <text x="515" y="150" fill="#b592ff" font-family="JetBrains Mono" font-size="10" text-anchor="middle">→ Swarm</text>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 12 PITFALLS ============ -->
+  <section class="chapter" id="pitfalls">
+    <div class="chapter-head"><span class="chapter-num">12</span><h2 class="chapter-title">Production Pitfalls</h2></div>
+    <p class="chapter-dek">What actually breaks the first time a multi-agent design leaves the whiteboard.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Vague delegation instructions.</strong> <cite index="109-1">"Research the semiconductor shortage" produced duplicated work across subagents — one explored a 2021 crisis while two others redundantly investigated 2025 supply chains.</cite> Every sub-task needs an objective, output format, tool guidance, and explicit boundaries.</li>
+        <li><strong>No effort-scaling rule.</strong> Without explicit guidance, orchestrators over-scale — spinning up many subagents for a problem a single call could have answered — silently multiplying cost.</li>
+        <li><strong>Context saturation in supervisor topologies.</strong> Routing accuracy measurably degrades after ~8-12 round trips as accumulated history crowds out current task state — use subgraph isolation or summarization before that point, not after you notice the degradation in production.</li>
+        <li><strong>Missing recursion/hop guards.</strong> Any topology with cyclic handoff potential (swarm especially) needs a hard cap and a designed fallback, not an assumption that agents will "figure out" not to loop.</li>
+        <li><strong>Jumping to multi-agent without a single-agent baseline.</strong> <cite index="110-1">Teams have spent months building elaborate multi-agent architectures only to discover improved prompting on a single agent achieved equal or better results</cite> — always measure the baseline first.</li>
+        <li><strong>Treating multi-agent as free.</strong> The 15x token multiplier is real and compounds with every additional agent layer — cost-model the design before building it, not after the first invoice.</li>
+        <li><strong>No verification step on high-stakes synthesis.</strong> A single subagent's confidently wrong finding can silently corrupt a final answer with no cross-check in place.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 13 INTERVIEW ============ -->
+  <section class="chapter" id="interview">
+    <div class="chapter-head"><span class="chapter-num">13</span><h2 class="chapter-title">Interview Cheat-Sheet</h2></div>
+    <p class="chapter-dek">Grouped by depth — definitions, trade-offs, and the system-design prompts you'll actually be handed.</p>
+    <div class="chapter-body">
+
+      <h4>Definitions &amp; core mechanics</h4>
+      <details class="qa"><summary>What's the difference between orchestrator-worker and supervisor?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>Orchestrator-worker fans out to multiple workers in parallel for independent sub-tasks, and workers never talk to each other or the user — everything routes through the lead. Supervisor routes one turn at a time to a single specialist based on task type; it's typically sequential rather than parallel, and is about picking the right specialist rather than decomposing one task into many parallel pieces.</p></div>
+      </details>
+      <details class="qa"><summary>What's the "isolation boundary" and why does Anthropic call it the most important design decision?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>It's the question of what one agent needs to know about what other agents are doing. Anthropic's research subagents get almost nothing — a self-contained task and a fresh context window, no awareness of siblings. Tightening or loosening this boundary is the single biggest lever over both cost (more shared context = more tokens) and coordination quality (less shared context = more risk of duplicated or conflicting work).</p></div>
+      </details>
+      <details class="qa"><summary>Explain the "telephone game problem" in multi-agent handoffs.<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>Information passed through a chain of agent summaries loses fidelity at each hop, the way a message degrades passed verbally down a line of people. The fix isn't passing more raw context (which reintroduces context saturation) — it's designing handoffs, like verification tasks, that inherently need minimal context transfer, so there's less to lose in translation.</p></div>
+      </details>
+
+      <h4>Trade-offs</h4>
+      <details class="qa"><summary>Why would you choose swarm over supervisor even though supervisor is "easier to reason about"?<span class="qa-tag">tradeoffs</span></summary>
+        <div class="qa-body"><p>Latency and cost: every supervisor handoff adds an intermediary round trip and roughly doubles token spend on routing calls specifically. One production migration reported a ~40% latency reduction switching supervisor to swarm. You'd make the switch once you have data showing latency is the actual bottleneck and misrouting is rare — not by default, since supervisor's simpler debugging and routing accuracy matter more early on.</p></div>
+      </details>
+      <details class="qa"><summary>When is a 15x token cost actually worth paying?<span class="qa-tag">tradeoffs</span></summary>
+        <div class="qa-body"><p>When the task is high-value, breadth-first, and decomposes into genuinely independent sub-tasks where a single agent's sequential search would miss things a single context window can't hold. Anthropic's own bar: the accuracy improvement (90.2% in their eval) needs to be worth the cost multiplier for the specific task — high-volume, low-value, or tightly sequential tasks (like most coding tasks) don't clear that bar.</p></div>
+      </details>
+      <details class="qa"><summary>Why do multi-agent systems perform worse on coding tasks than on research tasks?<span class="qa-tag">tradeoffs</span></summary>
+        <div class="qa-body"><p>Coding tasks are tightly interdependent — each step depends closely on the exact state left by the last (a specific function signature, a specific file's current content), which resists clean parallel decomposition and punishes information loss between agents far more than breadth-first research, where sub-tasks are genuinely independent and only need to be combined at the end.</p></div>
+      </details>
+
+      <h4>System design</h4>
+      <details class="qa"><summary>Design a customer support system that needs to route between billing, technical, and account-management specialists.<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Swarm is the natural fit: the user benefits from staying with one active specialist across the conversation rather than seeing routing overhead, the workflow is mostly sequential (rarely needs true parallel work across specialists), and each specialist has clearly distinct tools. Add a triage agent as the default active agent, cap handoff chains at ~3 hops with a fallback to human escalation, and log the active agent to the UI so users see who's responding. Track routing accuracy and resolution completeness as core evals from day one.</p></div>
+      </details>
+      <details class="qa"><summary>Design a deep-research agent that investigates a broad business question across many sources.<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Orchestrator-worker, modeled directly on Anthropic's Research system: a lead agent plans and persists its strategy to memory, spawns 2-10 subagents scaled to query complexity (explicit rules in the prompt, not left to the model's judgment), each subagent gets a self-contained task with clear boundaries and returns condensed findings only, and a dedicated citation/verification pass runs before the final synthesis reaches the user. Budget for ~15x the token cost of a single-agent chat and justify it against the value of the research.</p></div>
+      </details>
+      <details class="qa"><summary>Your multi-agent system's accuracy has plateaued and costs keep climbing. Where do you look first?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Check whether the delegation instructions are specific enough (vague task descriptions cause duplicated work, which burns tokens without improving accuracy) and whether you have an effort-scaling rule (an orchestrator without explicit scaling guidance over-spawns subagents for simple queries). Also verify against a single-agent baseline — plateaued multi-agent accuracy sometimes means the added complexity was never buying anything and better single-agent prompting would match it at a fraction of the cost.</p></div>
+      </details>
+      <details class="qa"><summary>How would you prevent one bad subagent from corrupting the final answer in an orchestrator-worker system?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Add a verification subagent as a distinct stage after synthesis but before returning to the user — give it the artifact to check, explicit success criteria, and verification tools, without needing to understand the full history of how the artifact was produced (the same "sidesteps the telephone game" property that makes verification cheap to bolt on). This is cheaper than trying to make every worker perfectly reliable, and catches errors a single confidently-wrong subagent would otherwise silently propagate.</p></div>
+      </details>
+      <details class="qa"><summary>A stakeholder wants every feature built as a multi-agent system because it "sounds more advanced." How do you respond?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Reframe it as an economics and reliability question, not a sophistication contest: multi-agent systems cost roughly 15x a single chat call in tokens, and Anthropic's own data shows teams repeatedly discovering that improved single-agent prompting matches multi-agent performance on tasks that don't genuinely need parallel decomposition. Propose measuring a strong single-agent baseline first, and reserve multi-agent architecture for tasks that demonstrably hit the single-agent ceiling — long context needs, need for real specialization, or genuine parallel independent sub-tasks.</p></div>
+      </details>
+      <details class="qa"><summary>How do you evaluate whether a supervisor is routing correctly, separately from whether the specialists themselves are doing good work?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Build a routing-accuracy eval independent of task completion — a labeled set of queries with the "correct" specialist for each, scored purely on whether the supervisor picked the right one, regardless of what that specialist then produced. This isolates routing failures from execution failures, which otherwise get conflated in an end-to-end success metric and make debugging much harder.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ 14 GLOSSARY ============ -->
+  <section class="chapter" id="glossary">
+    <div class="chapter-head"><span class="chapter-num">14</span><h2 class="chapter-title">Glossary</h2></div>
+    <p class="chapter-dek">Every term used in this document.</p>
+    <div class="chapter-body">
+      <dl class="glossary-grid">
+        <div class="gterm"><dt>Orchestrator-worker</dt><dd>One lead agent plans and delegates; workers execute independently in parallel and never communicate with each other.</dd></div>
+        <div class="gterm"><dt>Supervisor</dt><dd>A central router agent that decides which specialist acts next; specialists report back to the supervisor, not directly to the user.</dd></div>
+        <div class="gterm"><dt>Swarm / handoff</dt><dd>Peer agents transfer control (and the user-facing conversation) directly to each other via handoff tools, no central router.</dd></div>
+        <div class="gterm"><dt>Network / mesh</dt><dd>Any agent can call any other agent at any time with no fixed order — most flexible, hardest to trace.</dd></div>
+        <div class="gterm"><dt>Blackboard</dt><dd>Agents read/write a shared workspace independently, with no direct agent-to-agent messaging.</dd></div>
+        <div class="gterm"><dt>Isolation boundary</dt><dd>The deliberate limit on what one agent knows about other agents' work — Anthropic's term for the key multi-agent design decision.</dd></div>
+        <div class="gterm"><dt>Telephone game problem</dt><dd>Progressive loss of fidelity as information passes through a chain of agent summaries/handoffs.</dd></div>
+        <div class="gterm"><dt>Verification subagent</dt><dd>A dedicated agent spawned to check a completed artifact against success criteria, without needing the full history of how it was built.</dd></div>
+        <div class="gterm"><dt>Context saturation</dt><dd>Supervisor-pattern degradation as accumulated sub-agent history crowds out current task state in the context window.</dd></div>
+        <div class="gterm"><dt>Handoff / hop count</dt><dd>Number of agent-to-agent transitions in a conversation; a rising count signals routing drift.</dd></div>
+        <div class="gterm"><dt>Recursion guard</dt><dd>A hard cap on handoffs/loops with a designed fallback, preventing infinite agent-to-agent cycling.</dd></div>
+        <div class="gterm"><dt>Effort-scaling rule</dt><dd>Explicit prompt guidance mapping query complexity to number of subagents spawned, preventing over-scaling.</dd></div>
+        <div class="gterm"><dt>Routing accuracy</dt><dd>Eval metric measuring whether a supervisor/swarm delegated to the correct specialist, independent of that specialist's output quality.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ 15 RESOURCES ============ -->
+  <section class="chapter" id="resources">
+    <div class="chapter-head"><span class="chapter-num">15</span><h2 class="chapter-title">Resources</h2></div>
+    <p class="chapter-dek">Go straight to the primary sources.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Anthropic — "How we built our multi-agent research system"</strong> (anthropic.com/engineering/multi-agent-research-system) — the single most important primary source in this entire topic</li>
+        <li><strong>Anthropic — "When to use multi-agent systems (and when not to)"</strong> (claude.com/blog) — the honest counter-lesson on over-applying multi-agent architecture</li>
+        <li><strong>LangGraph supervisor &amp; swarm libraries</strong> — langgraph-supervisor-py, langgraph-swarm-py on GitHub, with runnable examples</li>
+        <li><strong>LangChain — "How and when to build multi-agent systems"</strong> — a practitioner's read of Anthropic's lessons through a context-engineering lens</li>
+      </ul>
+      <div class="callout">
+        <span class="callout-label">How to actually get interview-ready on this topic</span>
+        <p>Build the same task two ways — once as a single well-prompted agent, once as an orchestrator-worker system — and measure both on the same eval set. Having your own numbers for "multi-agent bought me X% accuracy at Y× the cost" is worth more in an interview than reciting Anthropic's 90.2%/15x figures secondhand.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">Topic 3 of 10 — Multi-Agent Architectures. Next up: Memory Systems (short-term thread state, long-term semantic memory, episodic memory, and the vector-store architectures behind them).</div>
+</main>
+</div>
+
+<script>
+const links = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('section.chapter');
+const map = new Map();
+links.forEach(l => map.set(l.getAttribute('href').slice(1), l));
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const link = map.get(entry.target.id);
+    if(!link) return;
+    if(entry.isIntersecting){
+      links.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, {rootMargin: '-15% 0px -70% 0px', threshold: 0});
+sections.forEach(s => io.observe(s));
+</script>
+</body>
+</html>

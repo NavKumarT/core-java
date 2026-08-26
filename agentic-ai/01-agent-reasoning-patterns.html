@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Reasoning Patterns Beyond ReAct — Deep Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d10; --bg-raised:#12151a; --bg-card:#14181f;
+  --line:#242a33; --line-soft:#1b2028;
+  --ink:#e7e9ec; --ink-dim:#9aa3b0; --ink-faint:#5c6672;
+  --amber:#ff9f40; --amber-dim:#c97a2e; --lime:#c9f04c; --cyan:#5fd9c9; --violet:#b592ff; --rose:#ff7a8a;
+  --serif:'Source Serif 4', Georgia, serif;
+  --display:'Space Grotesk', sans-serif;
+  --mono:'JetBrains Mono', 'Courier New', monospace;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:radial-gradient(var(--line-soft) 1px, transparent 1px);
+  background-size:22px 22px; background-color:var(--bg);
+  color:var(--ink); font-family:var(--serif); font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+a{color:var(--amber); text-decoration:none;}
+::selection{background:var(--amber); color:#111;}
+.shell{display:grid; grid-template-columns:280px 1fr; min-height:100vh;}
+@media (max-width:920px){ .shell{grid-template-columns:1fr;} .side{display:none;} }
+.side{position:sticky; top:0; height:100vh; overflow-y:auto; border-right:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(18,21,26,.9), rgba(11,13,16,.9)); padding:28px 22px 60px;}
+.side::-webkit-scrollbar{width:6px;} .side::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.brand{font-family:var(--display); font-weight:700; font-size:15px; color:var(--ink); margin-bottom:2px;}
+.brand span{color:var(--amber);}
+.brand-sub{font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-bottom:26px;}
+.back-link{display:inline-block; font-family:var(--mono); font-size:11px; color:var(--cyan); margin-bottom:22px; border:1px solid var(--line); padding:5px 10px; border-radius:6px;}
+.nav-link{display:flex; align-items:baseline; gap:8px; font-family:var(--display); font-size:13px; color:var(--ink-dim);
+  padding:6px 8px; border-radius:6px; border-left:2px solid transparent; transition:.15s;}
+.nav-link:hover{color:var(--ink); background:var(--bg-raised);}
+.nav-link.active{color:var(--amber); border-left-color:var(--amber); background:var(--bg-raised);}
+.nav-num{font-family:var(--mono); font-size:10px; color:var(--ink-faint); min-width:18px;}
+.main{max-width:900px; padding:0 44px 140px; margin:0 auto;}
+@media (max-width:700px){ .main{padding:0 20px 100px;} }
+.hero{padding:76px 0 54px; border-bottom:1px solid var(--line);}
+.hero-eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--lime);
+  margin-bottom:18px; display:flex; align-items:center; gap:10px;}
+.hero-eyebrow::before{content:''; width:22px; height:1px; background:var(--lime); display:inline-block;}
+h1.title{font-family:var(--display); font-weight:700; font-size:clamp(32px,5vw,54px); line-height:1.06; letter-spacing:-.02em; color:var(--ink); max-width:14ch;}
+h1.title em{font-style:normal; color:var(--amber);}
+.hero-sub{font-family:var(--serif); font-size:18px; color:var(--ink-dim); max-width:60ch; margin-top:20px;}
+.tag-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:26px;}
+.tag{font-family:var(--mono); font-size:11px; padding:5px 11px; border-radius:20px; border:1px solid var(--line); color:var(--ink-dim); background:var(--bg-raised);}
+section.chapter{padding:60px 0; border-bottom:1px solid var(--line);}
+section.chapter:last-of-type{border-bottom:none;}
+.chapter-head{display:flex; align-items:flex-start; gap:16px; margin-bottom:8px;}
+.chapter-num{font-family:var(--mono); font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:20px; padding:3px 11px; margin-top:6px; white-space:nowrap;}
+h2.chapter-title{font-family:var(--display); font-weight:600; font-size:clamp(22px,3.2vw,30px); color:var(--ink); letter-spacing:-.01em;}
+.chapter-dek{font-family:var(--serif); font-style:italic; color:var(--ink-dim); font-size:16px; max-width:64ch; margin:14px 0 30px 0; padding-left:66px;}
+@media (max-width:700px){.chapter-dek{padding-left:0;}}
+.chapter-body{padding-left:66px;}
+@media (max-width:700px){.chapter-body{padding-left:0;}}
+.chapter-body h3{font-family:var(--display); font-weight:600; font-size:19px; color:var(--ink); margin:32px 0 12px;}
+.chapter-body h4{font-family:var(--display); font-weight:600; color:var(--cyan); margin:22px 0 10px; text-transform:uppercase; letter-spacing:.04em; font-size:12px;}
+.chapter-body p{color:var(--ink-dim); margin-bottom:14px; max-width:70ch;}
+.chapter-body ul, .chapter-body ol{color:var(--ink-dim); margin:0 0 16px 20px; max-width:68ch;}
+.chapter-body li{margin-bottom:7px;}
+.chapter-body strong{color:var(--ink); font-weight:600;}
+code.inline{font-family:var(--mono); font-size:.87em; background:var(--bg-raised); color:var(--lime); padding:1px 6px; border-radius:4px; border:1px solid var(--line);}
+.callout{border-left:3px solid var(--amber); background:var(--bg-card); padding:16px 18px; border-radius:0 8px 8px 0; margin:20px 0; max-width:68ch;}
+.callout p{margin-bottom:0; color:var(--ink-dim); font-size:14.5px;}
+.callout .callout-label{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--amber); margin-bottom:6px; display:block;}
+.callout.interview{border-left-color:var(--violet);} .callout.interview .callout-label{color:var(--violet);}
+.callout.pitfall{border-left-color:var(--rose);} .callout.pitfall .callout-label{color:var(--rose);}
+.callout.paper{border-left-color:var(--cyan);} .callout.paper .callout-label{color:var(--cyan);}
+.code-wrap{background:#0a0c0f; border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:18px 0 24px;}
+.code-head{display:flex; align-items:center; justify-content:space-between; padding:9px 14px; border-bottom:1px solid var(--line); background:var(--bg-raised); font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+.code-dots{display:flex; gap:5px;} .code-dots span{width:8px; height:8px; border-radius:50%; background:var(--line);}
+pre{padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:12.8px; line-height:1.7; color:#d7dbe0;}
+pre::-webkit-scrollbar{height:6px;} pre::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.tok-kw{color:var(--violet);} .tok-str{color:var(--lime);} .tok-com{color:var(--ink-faint); font-style:italic;} .tok-fn{color:var(--cyan);} .tok-num{color:var(--amber);}
+.tbl{width:100%; border-collapse:collapse; margin:18px 0 26px; font-size:13.5px; max-width:74ch;}
+.tbl th{text-align:left; font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); padding:10px 12px; border-bottom:1px solid var(--line);}
+.tbl td{padding:11px 12px; border-bottom:1px solid var(--line-soft); color:var(--ink-dim); vertical-align:top;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl td.k{color:var(--ink); font-family:var(--mono); font-size:12.5px; white-space:nowrap;}
+.diagram{background:var(--bg-card); border:1px solid var(--line); border-radius:12px; padding:22px; margin:20px 0 26px;}
+.diagram svg{width:100%; height:auto; display:block;}
+.legend{display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; font-family:var(--mono); font-size:10.5px; color:var(--ink-faint);}
+.legend span{display:inline-flex; align-items:center; gap:6px;} .legend i{width:9px; height:9px; border-radius:2px; display:inline-block;}
+.qa{border:1px solid var(--line); border-radius:10px; margin-bottom:10px; background:var(--bg-card); overflow:hidden;}
+.qa summary{list-style:none; cursor:pointer; padding:15px 18px; display:flex; gap:12px; align-items:flex-start; font-family:var(--display); font-size:14px; color:var(--ink); font-weight:500;}
+.qa summary::-webkit-details-marker{display:none;}
+.qa summary::before{content:'+'; font-family:var(--mono); color:var(--amber); font-size:16px; line-height:1;}
+.qa[open] summary::before{content:'–';}
+.qa .qa-body{padding:0 18px 18px 40px; color:var(--ink-dim); font-size:14px; max-width:66ch;}
+.qa .qa-body p{margin-bottom:10px;}
+.qa-tag{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; background:var(--bg-raised); color:var(--ink-faint); padding:2px 8px; border-radius:20px; border:1px solid var(--line); margin-left:auto; white-space:nowrap; flex-shrink:0;}
+.glossary-grid{display:grid; grid-template-columns:1fr 1fr; gap:2px 28px;}
+@media (max-width:700px){.glossary-grid{grid-template-columns:1fr;}}
+.gterm{padding:14px 0; border-bottom:1px solid var(--line-soft);}
+.gterm dt{font-family:var(--mono); color:var(--cyan); font-size:13px; margin-bottom:4px;}
+.gterm dd{color:var(--ink-dim); font-size:13px; line-height:1.55;}
+.footer{padding:60px 0 20px; text-align:center; color:var(--ink-faint); font-family:var(--mono); font-size:12px;}
+.pattern-card{background:var(--bg-card); border:1px solid var(--line); border-radius:10px; padding:18px 20px; margin:14px 0;}
+.pattern-card .ptitle{font-family:var(--display); font-weight:600; color:var(--amber); font-size:15px; margin-bottom:6px;}
+.pattern-card p{margin-bottom:0; font-size:13.8px;}
+.scorebar{display:flex; align-items:center; gap:10px; margin:6px 0; font-family:var(--mono); font-size:11.5px; color:var(--ink-faint);}
+.scorebar .track{flex:1; height:6px; background:var(--line-soft); border-radius:3px; overflow:hidden;}
+.scorebar .fill{height:100%; border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav class="side" id="side">
+  <a class="back-link" href="#">← Agentic Bible (doc 0)</a>
+  <div class="brand">Reasoning <span>Patterns</span></div>
+  <div class="brand-sub">Topic 1 of 10 — deep reference + interview prep</div>
+  <a class="nav-link" href="#overview"><span class="nav-num">00</span>Landscape Map</a>
+  <a class="nav-link" href="#react-recap"><span class="nav-num">01</span>ReAct, Recapped</a>
+  <a class="nav-link" href="#cot-sc"><span class="nav-num">02</span>Self-Consistency (CoT-SC)</a>
+  <a class="nav-link" href="#self-ask"><span class="nav-num">03</span>Self-Ask</a>
+  <a class="nav-link" href="#plan-execute"><span class="nav-num">04</span>Plan-and-Execute</a>
+  <a class="nav-link" href="#rewoo"><span class="nav-num">05</span>ReWOO</a>
+  <a class="nav-link" href="#reflexion"><span class="nav-num">06</span>Reflexion</a>
+  <a class="nav-link" href="#self-refine"><span class="nav-num">07</span>Self-Refine</a>
+  <a class="nav-link" href="#tot"><span class="nav-num">08</span>Tree of Thoughts</a>
+  <a class="nav-link" href="#got"><span class="nav-num">09</span>Graph of Thoughts</a>
+  <a class="nav-link" href="#lats"><span class="nav-num">10</span>LATS</a>
+  <a class="nav-link" href="#self-discovery"><span class="nav-num">11</span>Self-Discovery &amp; STORM</a>
+  <a class="nav-link" href="#decision"><span class="nav-num">12</span>Decision Framework</a>
+  <a class="nav-link" href="#hybrids"><span class="nav-num">13</span>Production Hybrids</a>
+  <a class="nav-link" href="#interview"><span class="nav-num">14</span>Interview Cheat-Sheet</a>
+  <a class="nav-link" href="#glossary"><span class="nav-num">15</span>Glossary</a>
+  <a class="nav-link" href="#papers"><span class="nav-num">16</span>Papers to Actually Read</a>
+</nav>
+
+<main class="main">
+  <div class="hero">
+    <div class="hero-eyebrow">Deep reference · Topic 1 of 10</div>
+    <h1 class="title">Agent Reasoning Patterns <em>Beyond ReAct</em></h1>
+    <p class="hero-sub">ReAct is the pattern everyone learns first and the pattern almost every interviewer expects you to move past. This is every reasoning/control-flow pattern that matters in 2026 — what problem each one solves, exactly how it works, when it beats ReAct, when it's worse, its actual paper results, and LangGraph-style pseudocode you could defend on a whiteboard.</p>
+    <div class="tag-row">
+      <span class="tag">Self-Consistency</span><span class="tag">Self-Ask</span><span class="tag">Plan-and-Execute</span>
+      <span class="tag">ReWOO</span><span class="tag">Reflexion</span><span class="tag">Self-Refine</span>
+      <span class="tag">Tree of Thoughts</span><span class="tag">Graph of Thoughts</span><span class="tag">LATS</span>
+      <span class="tag">Self-Discovery</span><span class="tag">STORM</span>
+    </div>
+  </div>
+
+  <!-- ============ 00 OVERVIEW ============ -->
+  <section class="chapter" id="overview">
+    <div class="chapter-head"><span class="chapter-num">00</span><h2 class="chapter-title">The Landscape — One Map for Eleven Patterns</h2></div>
+    <p class="chapter-dek">Every pattern below is answering one of three questions differently: how much do you plan before acting, how many paths do you explore, and how do you learn from failure. Hold this map in your head before the details.</p>
+    <div class="chapter-body">
+      <p>Almost every "new" agent pattern you'll be asked about is a variation on three axes. Get these three axes solid and you can place any pattern — including ones invented after this document was written — without memorizing a taxonomy.</p>
+      <table class="tbl">
+        <tr><th>Axis</th><th>Question it answers</th><th>Low end</th><th>High end</th></tr>
+        <tr><td class="k">Planning horizon</td><td>How far ahead does the agent commit before acting?</td><td>One step at a time (ReAct)</td><td>Full plan up front (Plan-and-Execute, ReWOO)</td></tr>
+        <tr><td class="k">Search breadth</td><td>How many candidate paths does it consider per decision?</td><td>One path, no backtracking (ReAct, CoT)</td><td>Many paths explored &amp; compared (ToT, GoT, LATS)</td></tr>
+        <tr><td class="k">Learning loop</td><td>Does it use its own past failures to improve?</td><td>No memory of past attempts (ReAct, CoT)</td><td>Explicit critique + retry (Reflexion, Self-Refine, LATS)</td></tr>
+      </table>
+      <p>Every pattern in this doc is a specific point in that three-dimensional space, chosen to trade off <strong>token cost</strong>, <strong>latency</strong>, and <strong>accuracy</strong> differently. That trade-off — not the name of the pattern — is what interviewers actually want you to reason about.</p>
+      <div class="diagram">
+        <svg viewBox="0 0 780 300" xmlns="http://www.w3.org/2000/svg">
+          <line x1="60" y1="250" x2="740" y2="250" stroke="#242a33" stroke-width="1.5"/>
+          <line x1="60" y1="250" x2="60" y2="30" stroke="#242a33" stroke-width="1.5"/>
+          <text x="400" y="280" fill="#5c6672" font-family="JetBrains Mono" font-size="11" text-anchor="middle">— token cost / latency per task →</text>
+          <text x="30" y="140" fill="#5c6672" font-family="JetBrains Mono" font-size="11" text-anchor="middle" transform="rotate(-90 30 140)">— accuracy on hard multi-step tasks →</text>
+
+          <circle cx="120" cy="220" r="7" fill="#5fd9c9"/><text x="120" y="238" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">ReAct</text>
+          <circle cx="150" cy="150" r="7" fill="#5fd9c9"/><text x="170" y="150" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="start">CoT-SC</text>
+          <circle cx="200" cy="230" r="7" fill="#ff9f40"/><text x="200" y="200" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">ReWOO</text>
+          <circle cx="260" cy="205" r="7" fill="#ff9f40"/><text x="285" y="205" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="start">Plan-and-Execute</text>
+          <circle cx="330" cy="150" r="7" fill="#c9f04c"/><text x="355" y="150" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="start">Self-Refine</text>
+          <circle cx="420" cy="110" r="7" fill="#c9f04c"/><text x="445" y="110" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="start">Reflexion</text>
+          <circle cx="520" cy="90" r="7" fill="#b592ff"/><text x="500" y="70" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Tree of Thoughts</text>
+          <circle cx="600" cy="70" r="7" fill="#b592ff"/><text x="600" y="55" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Graph of Thoughts</text>
+          <circle cx="690" cy="45" r="7" fill="#ff7a8a"/><text x="690" y="30" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">LATS</text>
+        </svg>
+        <div class="legend">
+          <span><i style="background:#5fd9c9"></i>single-path, cheap</span>
+          <span><i style="background:#ff9f40"></i>plan-first</span>
+          <span><i style="background:#c9f04c"></i>self-critique loop</span>
+          <span><i style="background:#b592ff"></i>multi-path search</span>
+          <span><i style="background:#ff7a8a"></i>search + critique combined</span>
+        </div>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">The single most important interview instinct</span>
+        <p>Never answer "which pattern is best" — answer "best for what constraint." Every pattern here is strictly more expensive than ReAct in tokens or latency; each one is buying something specific (recoverability, parallelism, exploration, self-correction) in exchange. State the trade explicitly and you sound like someone who has shipped these, not read about them.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 01 REACT RECAP ============ -->
+  <section class="chapter" id="react-recap">
+    <div class="chapter-head"><span class="chapter-num">01</span><h2 class="chapter-title">ReAct, Recapped as the Baseline</h2></div>
+    <p class="chapter-dek">Every pattern below is defined relative to this one. Thirty seconds, then we move on.</p>
+    <div class="chapter-body">
+      <p><strong>ReAct</strong> (Yao et al., 2022) interleaves reasoning ("Thought") and acting ("Action") one step at a time: think, act, observe, think again. It's cheap, adaptive to whatever the last observation was, and has zero planning overhead. Its weakness is exactly its strength: because it only ever looks one step ahead, it can wander — take a locally-reasonable action that turns out to be globally wrong, with no mechanism to notice until much later, and no way to compare it against an alternative it never considered.</p>
+      <table class="tbl">
+        <tr><th>Property</th><th>Value</th></tr>
+        <tr><td class="k">LLM calls per task</td><td>~1 per step (no separate planning pass)</td></tr>
+        <tr><td class="k">Backtracking</td><td>None — committed to each action once taken</td></tr>
+        <tr><td class="k">Best for</td><td>Tasks where the right next step depends heavily on the last observation (open-ended search, exploratory debugging)</td></tr>
+        <tr><td class="k">Worst for</td><td>Long-horizon tasks with a definable success criterion, where a wrong early step is expensive to discover late</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 02 SELF-CONSISTENCY ============ -->
+  <section class="chapter" id="cot-sc">
+    <div class="chapter-head"><span class="chapter-num">02</span><h2 class="chapter-title">Self-Consistency (CoT-SC)</h2></div>
+    <p class="chapter-dek">Wang et al., 2022. The simplest way to trade tokens for accuracy: stop trusting a single reasoning chain.</p>
+    <div class="chapter-body">
+      <p>Standard chain-of-thought samples <em>one</em> reasoning path and takes its answer. Self-Consistency samples <strong>multiple independent reasoning paths</strong> (via temperature &gt; 0) for the same question, then takes a <strong>majority vote</strong> over the final answers — discarding the reasoning text itself. The insight: correct reasoning paths tend to agree with each other on the answer even when worded differently; wrong paths scatter more randomly. It's not really an "agent" pattern — there's no tool use or environment — but it's the ancestor of every "try N times and pick the best" pattern that follows, and it's frequently the cheapest lever for boosting a plain LLM call before you reach for anything agentic.</p>
+      <div class="code-wrap">
+        <div class="code-head"><span>self_consistency.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre>answers = []
+<span class="tok-kw">for</span> _ <span class="tok-kw">in</span> range(<span class="tok-num">5</span>):                              <span class="tok-com"># sample N independent chains</span>
+    resp = model.invoke(prompt, temperature=<span class="tok-num">0.7</span>)
+    answers.append(extract_final_answer(resp))
+
+final = majority_vote(answers)                     <span class="tok-com"># most common answer wins</span></pre>
+      </div>
+      <div class="callout">
+        <span class="callout-label">When it's worth it</span>
+        <p>Self-Consistency is cheap to bolt onto anything — arithmetic, multiple-choice, classification, any task with a clean final answer to vote over. It's a poor fit for open-ended generation (there's no clean way to "vote" over five different essays) — that's where Self-Refine and Reflexion take over instead.</p>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"How would you improve accuracy on a math word-problem agent without changing the model?" — Self-Consistency: sample k reasoning paths at temperature &gt; 0, extract each final answer, majority vote. It's model-agnostic, requires zero architecture change, and the accuracy gain is well-documented on arithmetic and commonsense reasoning benchmarks.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 SELF-ASK ============ -->
+  <section class="chapter" id="self-ask">
+    <div class="chapter-head"><span class="chapter-num">03</span><h2 class="chapter-title">Self-Ask</h2></div>
+    <p class="chapter-dek">Press et al., 2022. Decompose the question before you try to answer it — the pattern hiding inside every "agentic search" pipeline.</p>
+    <div class="chapter-body">
+      <p>Self-Ask has the model explicitly decide <strong>"are follow-up questions needed here?"</strong>, and if so, generate and answer each sub-question (optionally via a search tool) before composing the final answer. It's structurally close to ReAct but the loop is organized around <em>question decomposition</em> specifically rather than open-ended thought — which makes it easier to prompt reliably for multi-hop QA and easier to force citation of intermediate facts.</p>
+      <div class="code-wrap">
+        <div class="code-head"><span>self_ask_trace.txt</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre>Question: Who was president when the designer of the Eiffel Tower was born?
+Are follow up questions needed here: Yes.
+Follow up: Who designed the Eiffel Tower?
+Intermediate answer: Gustave Eiffel.
+Follow up: When was Gustave Eiffel born?
+Intermediate answer: 1832.
+Follow up: Who was the U.S. president in 1832?
+Intermediate answer: Andrew Jackson.
+So the final answer is: Andrew Jackson.</pre>
+      </div>
+      <p>This is exactly the "query → subquery → retrieve" shape from agentic RAG — Self-Ask is the reasoning pattern underneath it, generalized past just retrieval to any sub-question a tool can answer.</p>
+    </div>
+  </section>
+
+  <!-- ============ 04 PLAN AND EXECUTE ============ -->
+  <section class="chapter" id="plan-execute">
+    <div class="chapter-head"><span class="chapter-num">04</span><h2 class="chapter-title">Plan-and-Execute</h2></div>
+    <p class="chapter-dek">Wang et al.'s Plan-and-Solve prompting, popularized as an agent architecture by LangChain in 2023. Separate the planner from the doer.</p>
+    <div class="chapter-body">
+      <p>Instead of deciding one step at a time, a <strong>planner</strong> LLM call produces a complete, ordered, multi-step plan for the whole task up front. An <strong>executor</strong> then works through the plan step by step, invoking tools as needed for each step. After execution (or after each step, in stricter variants), a <strong>re-planner</strong> checks whether the original plan still makes sense given what's been learned — and either continues, revises the remaining plan, or declares the task done.</p>
+      <div class="diagram">
+        <svg viewBox="0 0 760 200" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="pa" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff9f40"/></marker></defs>
+          <rect x="20" y="74" width="130" height="52" rx="8" fill="none" stroke="#ff9f40" stroke-width="1.5"/>
+          <text x="85" y="105" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">Planner</text>
+          <line x1="150" y1="100" x2="210" y2="100" stroke="#ff9f40" stroke-width="1.5" marker-end="url(#pa)"/>
+          <rect x="210" y="74" width="150" height="52" rx="8" fill="none" stroke="#5fd9c9" stroke-width="1.5"/>
+          <text x="285" y="95" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">Executor</text>
+          <text x="285" y="112" fill="#9aa3b0" font-family="JetBrains Mono" font-size="10" text-anchor="middle">(step 1..n, tools)</text>
+          <line x1="360" y1="100" x2="420" y2="100" stroke="#ff9f40" stroke-width="1.5" marker-end="url(#pa)"/>
+          <polygon points="420,100 465,70 510,100 465,130" fill="none" stroke="#c9f04c" stroke-width="1.5"/>
+          <text x="465" y="104" fill="#c9f04c" font-family="JetBrains Mono" font-size="10" text-anchor="middle">plan ok?</text>
+          <line x1="510" y1="100" x2="580" y2="100" stroke="#ff7a8a" stroke-width="1.5" marker-end="url(#pa)"/>
+          <text x="620" y="104" fill="#ff7a8a" font-family="JetBrains Mono" font-size="12" text-anchor="middle">Return</text>
+          <path d="M465,70 L465,30 L150,30 L150,74" fill="none" stroke="#ff9f40" stroke-width="1.5" marker-end="url(#pa)"/>
+          <text x="300" y="24" fill="#ff9f40" font-family="JetBrains Mono" font-size="10" text-anchor="middle">no — replan remaining steps</text>
+        </svg>
+      </div>
+      <div class="code-wrap">
+        <div class="code-head"><span>plan_execute_langgraph.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">class</span> Plan(BaseModel):
+    steps: list[str]
+
+<span class="tok-kw">async def</span> plan_step(state):
+    plan = <span class="tok-kw">await</span> planner.ainvoke({<span class="tok-str">"objective"</span>: state[<span class="tok-str">"input"</span>]})
+    <span class="tok-kw">return</span> {<span class="tok-str">"plan"</span>: plan.steps}
+
+<span class="tok-kw">async def</span> execute_step(state):
+    task = state[<span class="tok-str">"plan"</span>][<span class="tok-num">0</span>]                       <span class="tok-com"># next step, could be a mini ReAct agent</span>
+    result = <span class="tok-kw">await</span> executor.ainvoke({<span class="tok-str">"input"</span>: task})
+    <span class="tok-kw">return</span> {<span class="tok-str">"past_steps"</span>: (task, result), <span class="tok-str">"plan"</span>: state[<span class="tok-str">"plan"</span>][<span class="tok-num">1</span>:]}
+
+<span class="tok-kw">async def</span> replan_step(state):
+    output = <span class="tok-kw">await</span> replanner.ainvoke(state)  <span class="tok-com"># sees past_steps + original objective</span>
+    <span class="tok-kw">if</span> isinstance(output, Response):
+        <span class="tok-kw">return</span> {<span class="tok-str">"response"</span>: output.response}     <span class="tok-com"># done</span>
+    <span class="tok-kw">return</span> {<span class="tok-str">"plan"</span>: output.steps}              <span class="tok-com"># revised remaining plan</span></pre>
+      </div>
+      <table class="tbl">
+        <tr><th>Advantage</th><th>Why it matters</th></tr>
+        <tr><td class="k">Explicit long-horizon planning</td><td><cite>Even very strong LLMs struggle to hold a long plan in their head implicitly while also executing step by step — writing it down first offloads that working memory.</cite></td></tr>
+        <tr><td class="k">Model mixing</td><td>Use an expensive, strong model only for the planner call; cheaper/smaller models can execute each already-scoped step.</td></tr>
+        <tr><td class="k">Inspectable checkpoint</td><td>The plan is a structured artifact a human can review/approve before any tool actually runs — a natural human-in-the-loop point.</td></tr>
+        <tr><td class="k">Narrower executor context</td><td>Each executor call sees one step, not the whole task — this measurably reduces hallucinated tool arguments compared to a planner that also executes.</td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">Known weaknesses</span>
+        <p>A plan made with zero information about what tools will actually return is a guess. If step 2 depends on a fact step 1 hasn't fetched yet, the plan can be wrong in ways only visible at execution time — which is exactly why the re-planner exists, and why Plan-and-Execute is strictly more complex to implement correctly than ReAct.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 05 REWOO ============ -->
+  <section class="chapter" id="rewoo">
+    <div class="chapter-head"><span class="chapter-num">05</span><h2 class="chapter-title">ReWOO — Reasoning WithOut Observation</h2></div>
+    <p class="chapter-dek">Xu et al., 2023. Plan-and-Execute's leaner, faster sibling — plan the entire tool itinerary in one shot, with variable placeholders instead of real results.</p>
+    <div class="chapter-body">
+      <p>ReAct re-invokes the LLM after <em>every single observation</em>, re-sending the whole growing transcript each time — expensive and slow. ReWOO's insight: for many tasks, you can generate the <strong>entire tool-call plan in a single LLM call</strong>, using symbolic placeholders (<code class="inline">#E1</code>, <code class="inline">#E2</code>...) for results you don't have yet, then execute every tool call — <strong>substituting placeholders as results arrive</strong> — without calling the LLM again until a final "Solver" pass synthesizes the answer.</p>
+      <table class="tbl">
+        <tr><th>Component</th><th>Job</th><th>Uses LLM?</th></tr>
+        <tr><td class="k">Planner</td><td>Emits the full plan with <code class="inline">#E</code> variable placeholders in one pass</td><td>Yes — once</td></tr>
+        <tr><td class="k">Worker</td><td>Executes each tool call, substituting resolved <code class="inline">#E</code> variables into later steps' arguments</td><td>No — pure execution</td></tr>
+        <tr><td class="k">Solver</td><td>Reads all resolved observations and produces the final answer</td><td>Yes — once</td></tr>
+      </table>
+      <div class="code-wrap">
+        <div class="code-head"><span>rewoo_plan_example.txt</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre>Plan: Find who won the 2024 Super Bowl.
+#E1 = Search[2024 Super Bowl winner]
+Plan: Find what state that team's headquarters is in, using #E1.
+#E2 = Search[headquarters state of #E1]
+Plan: Find the GDP of that state, using #E2.
+#E3 = Search[GDP of #E2]</pre>
+      </div>
+      <p>Notice: the LLM never sees the actual search results while planning — it only reasons about the <em>shape</em> of the dependency chain (this needs that). Execution then runs all three searches with real substituted values, and only the final Solver call sees the actual text. <cite index="84-1">ReWOO cuts token usage by 30–50% compared to ReAct on equivalent multi-step tasks, and reduces the number of LLM calls to as few as two — planner and solver — with tool execution running in between (and, when steps are independent, in parallel).</cite></p>
+      <div class="callout pitfall">
+        <span class="callout-label">Where it breaks</span>
+        <p><cite index="98-1">ReWOO is more efficient with fewer model invocations, but it struggles with complex, observation-requiring planning tasks</cite> — if step 2's search query genuinely depends on the <em>content</em> of step 1's result (not just its existence), a plan written before seeing that content can be wrong in ways ReWOO has no mechanism to catch mid-flight. It trades adaptability for speed.</p>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"How would you cut latency/cost on a multi-hop search agent that's currently ReAct?" — If the dependency structure between steps is predictable (you usually know you'll need "team → state → GDP" without needing to see the team name first), switch to ReWOO: one planning call, parallel tool execution via variable substitution, one solver call. If steps are only knowable after seeing prior results, stay with ReAct or use Plan-and-Execute with a re-planner.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 06 REFLEXION ============ -->
+  <section class="chapter" id="reflexion">
+    <div class="chapter-head"><span class="chapter-num">06</span><h2 class="chapter-title">Reflexion — Verbal Reinforcement Learning</h2></div>
+    <p class="chapter-dek">Shinn et al., 2023. Instead of updating weights, update a memory of what went wrong in your own words.</p>
+    <div class="chapter-body">
+      <p><cite index="62-1">Reflexion uses verbal reinforcement to help agents learn from prior failings, converting binary or scalar feedback from the environment into a textual summary that's added as additional context for the next attempt</cite> — <cite index="66-1">a paradigm shift from traditional RL's numerical reward signals to natural-language reflections, avoiding the prohibitive compute cost of gradient-based fine-tuning entirely.</cite></p>
+      <h3>The three-model architecture</h3>
+      <p><cite index="74-1">Reflexion is built from three distinct models: an Actor that generates text and actions (often a Chain-of-Thought or ReAct policy), an Evaluator that scores the Actor's output trajectory, and a Self-Reflection model that generates verbal reinforcement cues to help the Actor improve.</cite></p>
+      <div class="diagram">
+        <svg viewBox="0 0 740 230" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="rf" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff9f40"/></marker></defs>
+          <rect x="30" y="90" width="120" height="50" rx="8" fill="none" stroke="#5fd9c9" stroke-width="1.5"/>
+          <text x="90" y="120" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">Actor</text>
+          <line x1="150" y1="115" x2="220" y2="115" stroke="#ff9f40" stroke-width="1.5" marker-end="url(#rf)"/>
+          <text x="185" y="107" fill="#9aa3b0" font-family="JetBrains Mono" font-size="9" text-anchor="middle">trajectory</text>
+          <rect x="220" y="90" width="130" height="50" rx="8" fill="none" stroke="#c9f04c" stroke-width="1.5"/>
+          <text x="285" y="120" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">Evaluator</text>
+          <line x1="350" y1="115" x2="420" y2="115" stroke="#ff9f40" stroke-width="1.5" marker-end="url(#rf)"/>
+          <text x="385" y="107" fill="#9aa3b0" font-family="JetBrains Mono" font-size="9" text-anchor="middle">reward</text>
+          <rect x="420" y="90" width="160" height="50" rx="8" fill="none" stroke="#b592ff" stroke-width="1.5"/>
+          <text x="500" y="112" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">Self-Reflection</text>
+          <text x="500" y="128" fill="#9aa3b0" font-family="JetBrains Mono" font-size="10" text-anchor="middle">model</text>
+          <path d="M500,90 L500,50 L400,50" fill="none" stroke="#ff9f40" stroke-width="1.5"/>
+          <rect x="230" y="24" width="170" height="40" rx="18" fill="none" stroke="#ff7a8a" stroke-width="1.5"/>
+          <text x="315" y="49" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Episodic memory</text>
+          <path d="M230,44 L90,44 L90,90" fill="none" stroke="#ff7a8a" stroke-width="1.5" marker-end="url(#rf)"/>
+          <text x="90" y="180" fill="#5c6672" font-family="JetBrains Mono" font-size="10" text-anchor="middle">next trial's Actor call is prompted with accumulated reflections</text>
+        </svg>
+      </div>
+      <h3>The loop, step by step</h3>
+      <ol>
+        <li>Actor attempts the task, producing a full trajectory (a sequence of actions/thoughts, possibly a ReAct run).</li>
+        <li>Evaluator scores the trajectory — a hard signal when available (unit tests passing/failing, a binary success flag) or an LLM-based judge when not.</li>
+        <li>If the score is below threshold, the Self-Reflection model reads the trajectory + score and writes a short natural-language diagnosis: what went wrong, what to try differently.</li>
+        <li>That reflection is appended to an <strong>episodic memory buffer</strong>.</li>
+        <li>The Actor retries the task, now prompted with its own past reflections as extra context.</li>
+        <li>Repeat for a fixed number of trials or until the score clears the threshold.</li>
+      </ol>
+      <div class="callout paper">
+        <span class="callout-label">The headline result</span>
+        <p><cite index="70-1">Reflexion achieves a 91% pass@1 accuracy on the HumanEval coding benchmark, surpassing the previous state-of-the-art GPT-4 result of 80%</cite> — and the gain came entirely from the reflection loop, not a stronger base model. <cite index="70-1">Reflexion agents verbally reflect on task feedback signals, then maintain their own reflective text in an episodic memory buffer to induce better decision-making in subsequent trials.</cite></p>
+      </div>
+      <div class="code-wrap">
+        <div class="code-head"><span>reflexion_loop.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre>memory = []
+<span class="tok-kw">for</span> trial <span class="tok-kw">in</span> range(max_trials):
+    trajectory = actor.run(task, reflections=memory)     <span class="tok-com"># Actor sees past reflections</span>
+    score = evaluator.score(trajectory)                  <span class="tok-com"># unit tests, binary success, or LLM judge</span>
+    <span class="tok-kw">if</span> score &gt;= threshold:
+        <span class="tok-kw">break</span>
+    reflection = self_reflect_model.generate(trajectory, score)
+    memory.append(reflection)                             <span class="tok-com"># episodic memory buffer</span></pre>
+      </div>
+      <div class="callout pitfall">
+        <span class="callout-label">Real limitation</span>
+        <p><cite index="72-1">Reflexion relies on the LLM's own self-evaluation capability (or a heuristic evaluator) to generate useful verbal feedback, and without formal convergence guarantees, there's no assurance the iterative process consistently steers the Actor toward correct outcomes</cite> — a bad Evaluator or vague reflections can make the loop spin without actually improving.</p>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"Design a coding agent that gets better across attempts on the same failing test." — Reflexion: Actor writes code, Evaluator runs the test suite (a hard signal, not an LLM judge — much more reliable), on failure a Self-Reflection pass reads the stack trace and writes a targeted diagnosis, which is prepended to context on the next attempt. Cap trials at 3-5 to bound cost, and always prefer an executable/hard evaluator over an LLM judge when one is available.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 07 SELF-REFINE ============ -->
+  <section class="chapter" id="self-refine">
+    <div class="chapter-head"><span class="chapter-num">07</span><h2 class="chapter-title">Self-Refine</h2></div>
+    <p class="chapter-dek">Madaan et al., 2023. Reflexion's simpler cousin — no environment, no episodic memory across tasks, just "critique your own output and rewrite it," in a single sitting.</p>
+    <div class="chapter-body">
+      <p>Self-Refine is the pattern to reach for when there's <strong>no external environment to give you ground-truth feedback</strong> — no unit tests, no task success signal — just a piece of generated text (an essay, an email, a summary) that could plausibly be better. The same LLM plays two roles in sequence: generate an output, then critique that exact output against a rubric, then revise based on the critique. Repeat for a fixed number of rounds or until the critique says "no further changes needed."</p>
+      <div class="code-wrap">
+        <div class="code-head"><span>self_refine.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre>output = model.invoke(f<span class="tok-str">"Write: {task}"</span>)
+<span class="tok-kw">for</span> _ <span class="tok-kw">in</span> range(<span class="tok-num">3</span>):
+    critique = model.invoke(f<span class="tok-str">"Critique this against the goal:\n{output}"</span>)
+    <span class="tok-kw">if</span> <span class="tok-str">"no changes needed"</span> <span class="tok-kw">in</span> critique.lower():
+        <span class="tok-kw">break</span>
+    output = model.invoke(f<span class="tok-str">"Revise using this critique:\n{output}\n\n{critique}"</span>)</pre>
+      </div>
+      <table class="tbl">
+        <tr><th></th><th>Self-Refine</th><th>Reflexion</th></tr>
+        <tr><td class="k">Feedback source</td><td>The model critiquing itself, same session</td><td>An environment/evaluator with (ideally) ground truth, across trials</td></tr>
+        <tr><td class="k">Memory</td><td>None persisted — each task starts fresh</td><td>Episodic memory buffer persists across trials</td></tr>
+        <tr><td class="k">Best for</td><td>Open-ended generation: writing, summarization, code style</td><td>Tasks with a checkable success criterion: tests passing, a game won</td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">Interview trap</span>
+        <p>"Won't the model's critique just be the same biases as its generation?" — Yes, partially. Self-Refine has no access to ground truth, so it can polish style and catch surface errors but can't reliably catch factual mistakes the model itself doesn't know are wrong. That's exactly why Reflexion insists on an external, ideally hard, Evaluator wherever one is available.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 08 TREE OF THOUGHTS ============ -->
+  <section class="chapter" id="tot">
+    <div class="chapter-head"><span class="chapter-num">08</span><h2 class="chapter-title">Tree of Thoughts (ToT)</h2></div>
+    <p class="chapter-dek">Yao et al., 2023. Chain-of-thought is a single path through the woods. ToT lets the model explore several paths and prune the bad ones before committing.</p>
+    <div class="chapter-body">
+      <p><cite index="97-1">ToT organises inference as a search over intermediate thoughts rather than a single left-to-right pass: the agent expands a tree whose nodes are candidate partial solutions, a scorer evaluates each node, and a controller decides which branches to expand or backtrack</cite> — trading tokens for look-ahead and the ability to recover from an early wrong turn that a single chain would be stuck with.</p>
+      <h3>The four operations</h3>
+      <ul>
+        <li><strong>Thought decomposition</strong> — define what counts as one "step" or partial solution for this task.</li>
+        <li><strong>Thought generation</strong> — at each node, sample several candidate next thoughts (not just one).</li>
+        <li><strong>State evaluation</strong> — score each candidate (the model itself, or a separate scorer/critic) — "is this partial solution promising?"</li>
+        <li><strong>Search algorithm</strong> — BFS (keep the top-k candidates at each depth) or DFS (commit to the best-looking branch, backtrack on dead ends).</li>
+      </ul>
+      <div class="diagram">
+        <svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="350" cy="30" r="16" fill="none" stroke="#5fd9c9" stroke-width="1.5"/>
+          <line x1="350" y1="46" x2="160" y2="100" stroke="#242a33" stroke-width="1.5"/>
+          <line x1="350" y1="46" x2="350" y2="100" stroke="#242a33" stroke-width="1.5"/>
+          <line x1="350" y1="46" x2="540" y2="100" stroke="#242a33" stroke-width="1.5"/>
+          <circle cx="160" cy="115" r="14" fill="none" stroke="#c9f04c" stroke-width="1.5"/>
+          <circle cx="350" cy="115" r="14" fill="none" stroke="#ff7a8a" stroke-width="1.5"/>
+          <circle cx="540" cy="115" r="14" fill="none" stroke="#c9f04c" stroke-width="1.5"/>
+          <text x="350" y="140" fill="#ff7a8a" font-family="JetBrains Mono" font-size="10" text-anchor="middle">pruned (low score)</text>
+          <line x1="160" y1="129" x2="80" y2="190" stroke="#242a33" stroke-width="1.5"/>
+          <line x1="160" y1="129" x2="230" y2="190" stroke="#242a33" stroke-width="1.5"/>
+          <line x1="540" y1="129" x2="470" y2="190" stroke="#242a33" stroke-width="1.5"/>
+          <line x1="540" y1="129" x2="620" y2="190" stroke="#242a33" stroke-width="1.5"/>
+          <circle cx="80" cy="205" r="12" fill="#b592ff" stroke="#b592ff"/>
+          <circle cx="230" cy="205" r="12" fill="none" stroke="#5c6672" stroke-width="1.5"/>
+          <circle cx="470" cy="205" r="12" fill="none" stroke="#5c6672" stroke-width="1.5"/>
+          <circle cx="620" cy="205" r="12" fill="none" stroke="#5c6672" stroke-width="1.5"/>
+          <text x="80" y="232" fill="#b592ff" font-family="JetBrains Mono" font-size="10" text-anchor="middle">chosen solution</text>
+        </svg>
+      </div>
+      <div class="callout paper">
+        <span class="callout-label">The headline result</span>
+        <p><cite index="85-1">On the Game of 24 benchmark, GPT-4 achieves 4% with standard prompting and 74% with Tree of Thoughts — an 18.5x improvement</cite> — because Game of 24 has exactly the property ToT needs: a hard, checkable success criterion and a search space small enough to explore several branches cheaply.</p>
+      </div>
+      <table class="tbl">
+        <tr><th>Use ToT when</th><th>Skip ToT when</th></tr>
+        <tr><td>The task has a definable, checkable success criterion to score partial solutions against</td><td>There's no good way to score a partial (unfinished) solution — you only know quality at the very end</td></tr>
+        <tr><td>The cost of a wrong plan is high relative to a few extra LLM calls</td><td>Latency budget doesn't allow multiple LLM calls per decision point (<cite index="85-1">N=3 branches × 10 decision points = 30+ calls minimum</cite>)</td></tr>
+        <tr><td>ReAct/CoT has repeatedly failed on this task class specifically</td><td>ReAct already solves the task reliably — ToT only adds cost from here</td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"When would you NOT reach for Tree of Thoughts even though it clearly outperforms CoT on paper?" — <cite index="85-1">ToT costs 10 to 100 times more tokens than CoT depending on branching factor and depth</cite>, and it needs a working scorer for partial solutions, which many real tasks don't have (you can't score "half a customer support reply" the way you can score "half a sudoku"). Default to ReAct/CoT; add ToT only for a specific task class with repeated failures and a definable evaluation criterion.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 09 GRAPH OF THOUGHTS ============ -->
+  <section class="chapter" id="got">
+    <div class="chapter-head"><span class="chapter-num">09</span><h2 class="chapter-title">Graph of Thoughts (GoT)</h2></div>
+    <p class="chapter-dek">Besta et al., 2024. ToT's tree can't merge two good partial ideas into one better one. GoT can.</p>
+    <div class="chapter-body">
+      <p><cite index="97-1">Graph of Thoughts generalises ToT from trees to arbitrary dependency graphs: thoughts become vertices and edges record informational dependencies, allowing recombination, summarisation, or refinement of subgraphs and feedback loops across them</cite> — which matters for tasks where <cite index="97-1">sub-problems interlock, like sorting with constraints or multi-step data transformations.</cite> A tree structure forces every idea to have exactly one parent; a graph lets you take the best parts of two different branches and merge them into a new node, or refine one thought using another as input.</p>
+      <table class="tbl">
+        <tr><th></th><th>Tree of Thoughts</th><th>Graph of Thoughts</th></tr>
+        <tr><td class="k">Structure</td><td>Strict tree — each thought has one parent</td><td>Arbitrary DAG — thoughts can merge, reference, and refine each other</td></tr>
+        <tr><td class="k">Merging ideas</td><td>Not possible — you must pick one branch</td><td>Native operation — combine two promising thoughts into a stronger one</td></tr>
+        <tr><td class="k">Cost vs ToT</td><td>Baseline</td><td><cite index="97-1">Often lower — sharing and distilling subgraphs instead of re-deriving from scratch reduces both cost and improves quality</cite></td></tr>
+      </table>
+      <div class="callout">
+        <span class="callout-label">Reality check for interviews</span>
+        <p>GoT is much rarer in production than ToT — its implementation complexity (defining merge/refine operations per task) is high relative to the marginal gain over ToT for most business problems. Know it conceptually and be ready to explain the tree-vs-graph distinction; don't expect to be asked to implement it live.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 10 LATS ============ -->
+  <section class="chapter" id="lats">
+    <div class="chapter-head"><span class="chapter-num">10</span><h2 class="chapter-title">LATS — Language Agent Tree Search</h2></div>
+    <p class="chapter-dek">Zhou et al., 2023. The "if you had to pick just one advanced pattern" answer — ReAct's tool use, ToT's search, and Reflexion's self-critique, fused with Monte Carlo Tree Search.</p>
+    <div class="chapter-body">
+      <p><cite index="91-1">LATS is a general LLM agent search algorithm that combines reflection/evaluation and search — specifically Monte Carlo Tree Search — to achieve better overall task performance compared to similar techniques like ReAct, Reflexion, or Tree of Thoughts individually.</cite> Where ToT searches over pure reasoning, LATS searches over actual <strong>action trajectories</strong> in a real environment (tool calls, code execution), scoring and reflecting on each branch as it goes.</p>
+      <h3>The MCTS-style loop</h3>
+      <p><cite index="91-1">Select the best next actions based on aggregate rewards from prior exploration; expand and simulate by picking the most promising candidate actions and executing them in parallel; reflect and evaluate by observing outcomes and scoring the decisions (using reflection, and external feedback where available); backpropagate by updating the scores of ancestor nodes based on the new outcomes</cite> — repeating until a solution is found or a max search depth is reached.</p>
+      <div class="diagram">
+        <svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="la" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff7a8a"/></marker></defs>
+          <circle cx="70" cy="100" r="40" fill="none" stroke="#5fd9c9" stroke-width="1.5"/>
+          <text x="70" y="96" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Select</text>
+          <text x="70" y="110" fill="#9aa3b0" font-family="JetBrains Mono" font-size="9" text-anchor="middle">(UCT)</text>
+          <line x1="110" y1="100" x2="180" y2="100" stroke="#ff7a8a" stroke-width="1.5" marker-end="url(#la)"/>
+          <circle cx="230" cy="100" r="40" fill="none" stroke="#c9f04c" stroke-width="1.5"/>
+          <text x="230" y="96" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Expand +</text>
+          <text x="230" y="110" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Simulate</text>
+          <line x1="270" y1="100" x2="340" y2="100" stroke="#ff7a8a" stroke-width="1.5" marker-end="url(#la)"/>
+          <circle cx="390" cy="100" r="40" fill="none" stroke="#b592ff" stroke-width="1.5"/>
+          <text x="390" y="96" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Reflect +</text>
+          <text x="390" y="110" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Evaluate</text>
+          <line x1="430" y1="100" x2="500" y2="100" stroke="#ff7a8a" stroke-width="1.5" marker-end="url(#la)"/>
+          <circle cx="550" cy="100" r="40" fill="none" stroke="#ff9f40" stroke-width="1.5"/>
+          <text x="550" y="104" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Backprop</text>
+          <path d="M550,60 C 550,-10 70,-10 70,60" fill="none" stroke="#5c6672" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#la)"/>
+          <text x="310" y="0" fill="#5c6672" font-family="JetBrains Mono" font-size="10" text-anchor="middle">repeat until solved or depth limit</text>
+        </svg>
+      </div>
+      <table class="tbl">
+        <tr><th></th><th>ReAct</th><th>Reflexion</th><th>Tree of Thoughts</th><th>LATS</th></tr>
+        <tr><td class="k">Backtracking</td><td>No</td><td>No (within a trial)</td><td>Yes</td><td>Yes (via MCTS)</td></tr>
+        <tr><td class="k">Real environment actions</td><td>Yes</td><td>Yes</td><td>Usually mental simulation only</td><td>Yes</td></tr>
+        <tr><td class="k">Self-critique between attempts</td><td>No</td><td>Yes</td><td>Only via node scoring</td><td>Yes — built in</td></tr>
+        <tr><td class="k">Cost</td><td>Lowest</td><td>Medium (trials × 1 path)</td><td>High (branches × depth)</td><td>Highest</td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">The honest trade-off</span>
+        <p>LATS is the strongest single-agent pattern on hard benchmarks precisely because it does the most work per task. That's also disqualifying for latency-sensitive, high-volume, or cost-constrained production paths. Reserve it for the highest-value, most failure-prone task classes — not as your default agent loop.</p>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"You've tried ReAct and Reflexion on a hard task and both plateau below your accuracy bar — what next?" — LATS: combine tree search (explore multiple action branches, not just multiple reasoning branches) with reflection (critique and score each expanded branch) using MCTS-style selection to focus compute on the most promising parts of the tree. Flag the cost trade-off unprompted — it's the answer the interviewer is listening for.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 11 SELF-DISCOVERY / STORM ============ -->
+  <section class="chapter" id="self-discovery">
+    <div class="chapter-head"><span class="chapter-num">11</span><h2 class="chapter-title">Self-Discovery &amp; STORM — Composable and Research Patterns</h2></div>
+    <p class="chapter-dek">Two more patterns worth recognizing by name even if you'll implement them less often.</p>
+    <div class="chapter-body">
+      <h3>Self-Discovery</h3>
+      <p>Instead of hand-picking a reasoning pattern (CoT vs. step-back vs. decomposition) for a task ahead of time, Self-Discovery has the model <strong>compose its own reasoning structure</strong> from a set of atomic reasoning modules ("break the problem into subproblems," "think step by step," "consider constraints first"...) selected and adapted specifically for the task at hand, before actually solving it. It's a meta-pattern: a plan for how to reason, generated before the reasoning itself.</p>
+      <h3>STORM</h3>
+      <p>STORM is an outline-driven research-and-writing pattern: generate a topic outline, research each section via multiple simulated "perspectives" asking questions of a retrieval tool, then synthesize a long-form article section by section. It's the closest named pattern to a full "deep research" agent pipeline, and a good one to mention if asked to design a research-report-generating agent.</p>
+      <div class="callout">
+        <span class="callout-label">Where these fit</span>
+        <p>Self-Discovery is useful when you're building a general-purpose reasoning agent across wildly different task types and don't want to hand-pick a pattern per task. STORM is useful specifically for long-form research writing where an outline-first, multi-perspective research pass measurably improves depth and citation coverage over a single-pass RAG answer.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 12 DECISION FRAMEWORK ============ -->
+  <section class="chapter" id="decision">
+    <div class="chapter-head"><span class="chapter-num">12</span><h2 class="chapter-title">The Decision Framework</h2></div>
+    <p class="chapter-dek">The table an interviewer actually wants you to have internalized — not memorized definitions, but this.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>If your constraint is...</th><th>Reach for</th></tr>
+        <tr><td class="k">Lowest latency, simplest to build</td><td>ReAct</td></tr>
+        <tr><td class="k">Cheap accuracy boost, clean final answer to vote over</td><td>Self-Consistency</td></tr>
+        <tr><td class="k">Multi-hop factual QA needing explicit decomposition</td><td>Self-Ask</td></tr>
+        <tr><td class="k">Long-horizon task, want a human-reviewable plan first</td><td>Plan-and-Execute</td></tr>
+        <tr><td class="k">Predictable tool dependency chain, minimize LLM calls/cost</td><td>ReWOO</td></tr>
+        <tr><td class="k">Task has a hard pass/fail signal (tests, game outcome), improve across retries</td><td>Reflexion</td></tr>
+        <tr><td class="k">Open-ended generation with no ground-truth evaluator</td><td>Self-Refine</td></tr>
+        <tr><td class="k">Task has a checkable partial-solution score, wrong turns are costly</td><td>Tree of Thoughts</td></tr>
+        <tr><td class="k">Sub-problems interlock and benefit from merging ideas</td><td>Graph of Thoughts</td></tr>
+        <tr><td class="k">Highest achievable accuracy, cost/latency secondary</td><td>LATS</td></tr>
+        <tr><td class="k">Task type varies wildly, don't want to hand-pick a pattern</td><td>Self-Discovery</td></tr>
+        <tr><td class="k">Long-form research report generation</td><td>STORM</td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">The meta-question every senior interview asks</span>
+        <p>"Walk me through how you'd pick a reasoning pattern for a new agent." Answer in this order: (1) does it have a hard, checkable success signal? (2) is the tool-dependency chain predictable or does each step depend on the last observation's content? (3) what's the latency/cost budget per request? (4) is a single wrong step catastrophic or cheaply recoverable? The answers to those four questions, not familiarity with pattern names, determine the right pick.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 13 HYBRIDS ============ -->
+  <section class="chapter" id="hybrids">
+    <div class="chapter-head"><span class="chapter-num">13</span><h2 class="chapter-title">Production Hybrids — What Ships, Not What's in the Paper</h2></div>
+    <p class="chapter-dek">Almost nobody runs a pure pattern in production. Here's what actually gets combined and why.</p>
+    <div class="chapter-body">
+      <div class="pattern-card">
+        <div class="ptitle">ReAct + Reflexion (the most common hybrid)</div>
+        <p><cite index="82-1">Run a ReAct loop for step-by-step adaptation on the common case; if the result fails validation, enter a Reflexion retry cycle for self-correction on the hard cases.</cite> You get ReAct's low cost on the 90% of requests that succeed first try, and Reflexion's recovery on the 10% that don't.</p>
+      </div>
+      <div class="pattern-card">
+        <div class="ptitle">Plan-and-Execute with a ReAct fallback per step</div>
+        <p><cite index="82-1">Plan upfront; if a step returns something unexpected and the re-planner can't handle it, drop into a ReAct loop for that specific step</cite> — plan-level structure with step-level adaptability where it's actually needed.</p>
+      </div>
+      <div class="pattern-card">
+        <div class="ptitle">ReWOO fast path, Plan-and-Execute fallback</div>
+        <p><cite index="82-1">Try ReWOO first for its speed; if any tool call returns an error or an empty result, fall back to Plan-and-Execute's re-planning to recover</cite> — a conditional edge in LangGraph routes between the two based on tool call success.</p>
+      </div>
+      <div class="callout">
+        <span class="callout-label">The framing that separates senior candidates</span>
+        <p><cite index="82-1">"Agent patterns" and "agent frameworks" are different things — ReAct/Reflexion/ToT are architectural patterns, while LangGraph/CrewAI/AutoGen are the plumbing you implement them in.</cite> You can build a ReAct+Reflexion hybrid in LangGraph, in raw Python, or in any other framework — knowing the pattern is framework-independent knowledge, and interviewers specifically probe for whether you understand that distinction.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 14 INTERVIEW ============ -->
+  <section class="chapter" id="interview">
+    <div class="chapter-head"><span class="chapter-num">14</span><h2 class="chapter-title">Interview Cheat-Sheet</h2></div>
+    <p class="chapter-dek">Every question grouped by depth. Answer out loud before revealing.</p>
+    <div class="chapter-body">
+
+      <h4>Definitions &amp; core mechanics</h4>
+      <details class="qa"><summary>What problem does Self-Consistency solve, and why isn't it enough on its own?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>It reduces variance from sampling a single reasoning chain by sampling several independently and majority-voting the final answers. It only works cleanly when there's a discrete final answer to vote over — it can't meaningfully "vote" across five different pieces of open-ended prose, which is why it doesn't help with generation quality the way Self-Refine does.</p></div>
+      </details>
+      <details class="qa"><summary>Explain ReWOO's two-call trick and what it costs you.<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>The planner emits the full tool-call plan in one pass using symbolic placeholders (#E1, #E2...) for results it doesn't have yet; a non-LLM worker executes every call, substituting real values as they resolve; a solver makes one final LLM call over all resolved results. It costs adaptability — because the plan is made without seeing any actual tool output, it can't adjust its query strategy based on what a tool actually returned.</p></div>
+      </details>
+      <details class="qa"><summary>What are the three models in Reflexion and what does each do?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>Actor (generates the trajectory), Evaluator (scores it — ideally against a hard signal like passing tests), Self-Reflection model (writes a natural-language diagnosis of failure that's appended to episodic memory and fed into the Actor's next attempt). None of them update model weights — the "learning" is entirely in the growing text context.</p></div>
+      </details>
+      <details class="qa"><summary>Tree of Thoughts vs Graph of Thoughts — what's the actual structural difference?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>ToT restricts the search to a strict tree — every partial solution has exactly one parent, so you must fully commit to one branch over another. GoT allows arbitrary dependency graphs, so two promising partial solutions from different branches can be merged, refined together, or reference each other — better suited to tasks where sub-problems interlock rather than decompose cleanly.</p></div>
+      </details>
+
+      <h4>Trade-offs &amp; selection</h4>
+      <details class="qa"><summary>When would ReAct actually beat every "smarter" pattern on this list?<span class="qa-tag">tradeoffs</span></summary>
+        <div class="qa-body"><p>When the task is genuinely exploratory — the right next step can only be known after seeing the last observation, so a pre-made plan (Plan-and-Execute, ReWOO) would be wrong, and there's no clean way to score a "partial solution" for a tree search (ToT, LATS) to prune against. Debugging an unfamiliar codebase or exploratory web research are good examples.</p></div>
+      </details>
+      <details class="qa"><summary>Why might Tree of Thoughts fail to beat ReAct even though the paper shows an 18x gain on Game of 24?<span class="qa-tag">tradeoffs</span></summary>
+        <div class="qa-body"><p>Game of 24 has an unusually clean, checkable partial-solution scorer — most real tasks don't. Without a reliable way to score whether a half-finished plan is "promising," ToT's search degrades to expensive random exploration instead of informed pruning, and you pay 10-100x the tokens for little or no accuracy gain.</p></div>
+      </details>
+      <details class="qa"><summary>Reflexion vs Self-Refine — how do you decide which one a task needs?<span class="qa-tag">tradeoffs</span></summary>
+        <div class="qa-body"><p>Check whether ground-truth feedback exists outside the model's own judgment. If there's a hard signal — unit tests, a game's win condition, a validator — use Reflexion, because its Evaluator can be that hard signal instead of the model grading its own homework. If there's no such signal (an essay, an email, a summary), Self-Refine is the honest option — you're improving surface quality, not correctness, and you should say so explicitly.</p></div>
+      </details>
+      <details class="qa"><summary>Your agent is too slow and expensive on a multi-hop research task using ReAct. What do you check before switching patterns?<span class="qa-tag">tradeoffs</span></summary>
+        <div class="qa-body"><p>First: is the tool-dependency chain actually predictable ahead of time, or does step 2's query genuinely depend on step 1's content? If predictable, ReWOO cuts LLM calls dramatically. If not predictable but the task is long-horizon, Plan-and-Execute at least front-loads the planning cost into one call and lets you use a cheaper model for execution steps. Don't reach for ToT/LATS for a latency problem — they make latency and cost worse, not better.</p></div>
+      </details>
+
+      <h4>System design</h4>
+      <details class="qa"><summary>Design a customer-support agent that drafts replies and improves when a human rejects a draft.<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>ReAct or Plan-and-Execute for the initial draft (pull ticket context, relevant KB articles, draft a reply). Wrap it in a Reflexion-style loop where "human rejects with a reason" is the Evaluator's feedback signal instead of an automated one; the reason becomes the verbal reflection fed into the next draft attempt for that ticket. Cap retries at 2-3 before escalating to a human writing it from scratch.</p></div>
+      </details>
+      <details class="qa"><summary>Design a coding agent that fixes a failing CI pipeline.<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Reflexion is the natural fit: Actor proposes a code change, Evaluator is literally the CI pipeline (a hard, unambiguous signal), Self-Reflection reads the failing test output and writes a targeted diagnosis for the next attempt. For a genuinely hard bug where straightforward reflection stalls, escalate to LATS to explore multiple candidate fixes as branches and use MCTS-style selection to focus compute on the most promising one.</p></div>
+      </details>
+      <details class="qa"><summary>Design a long-form research report generator on a topic with no single canonical source.<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>STORM-style: generate a topic outline first, then research each section using multiple simulated perspectives that each ask the retrieval tool different questions (surfacing information a single-angle query would miss), then synthesize section by section. This beats single-pass agentic RAG specifically on breadth and citation diversity for open-ended topics.</p></div>
+      </details>
+      <details class="qa"><summary>You've been asked to reduce a ToT-based agent's cost by 70% without losing accuracy. What do you do first?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Before touching the pattern, check whether the branching factor and depth are actually tuned to the task — most ToT implementations over-explore by default. Second, check whether cheaper models can serve as the node scorer while a stronger model only generates the final chosen path. Third, consider whether the task even needs ToT's full search — if failures cluster on a specific sub-task, a narrower Reflexion loop scoped to just that sub-task is often cheaper than blanket tree search.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ 15 GLOSSARY ============ -->
+  <section class="chapter" id="glossary">
+    <div class="chapter-head"><span class="chapter-num">15</span><h2 class="chapter-title">Glossary</h2></div>
+    <p class="chapter-dek">Every term used in this document, one line each.</p>
+    <div class="chapter-body">
+      <dl class="glossary-grid">
+        <div class="gterm"><dt>Trajectory</dt><dd>The full sequence of thoughts, actions, and observations an agent produces attempting a task.</dd></div>
+        <div class="gterm"><dt>Majority vote</dt><dd>Selecting the most common final answer across multiple independently sampled reasoning chains.</dd></div>
+        <div class="gterm"><dt>Planner / Executor / Solver</dt><dd>The three roles split across Plan-and-Execute (planner, executor) and ReWOO (planner, worker, solver) architectures.</dd></div>
+        <div class="gterm"><dt>Variable substitution (#E1, #E2)</dt><dd>ReWOO's mechanism for referencing not-yet-known tool results symbolically inside a plan written before execution.</dd></div>
+        <div class="gterm"><dt>Episodic memory buffer</dt><dd>Reflexion's growing store of past self-reflections, prepended as context on each new attempt.</dd></div>
+        <div class="gterm"><dt>Actor / Evaluator / Self-Reflection model</dt><dd>Reflexion's three roles: generate, score, and diagnose failure respectively.</dd></div>
+        <div class="gterm"><dt>Verbal reinforcement learning</dt><dd>Reflexion's term for improving behavior via natural-language feedback instead of gradient updates.</dd></div>
+        <div class="gterm"><dt>Thought decomposition</dt><dd>ToT's step of defining what counts as one discrete "step" in the search space for a given task.</dd></div>
+        <div class="gterm"><dt>BFS / DFS search</dt><dd>Breadth-first (keep top-k candidates per depth) vs depth-first (commit and backtrack) strategies for exploring a ToT search tree.</dd></div>
+        <div class="gterm"><dt>MCTS (Monte Carlo Tree Search)</dt><dd>Select/Expand/Simulate/Backpropagate search algorithm; LATS applies it to real agent action trajectories.</dd></div>
+        <div class="gterm"><dt>UCT</dt><dd>Upper Confidence bound applied to Trees — the formula MCTS uses to balance exploring new branches vs exploiting known-good ones.</dd></div>
+        <div class="gterm"><dt>Node scorer / critic</dt><dd>The component (model or heuristic) that assigns a "how promising is this" score to a partial solution in ToT/GoT/LATS.</dd></div>
+        <div class="gterm"><dt>Self-Discovery</dt><dd>Meta-pattern where the model composes its own reasoning structure from atomic modules before solving the task.</dd></div>
+        <div class="gterm"><dt>STORM</dt><dd>Outline-first, multi-perspective research pattern for long-form report generation.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ 16 PAPERS ============ -->
+  <section class="chapter" id="papers">
+    <div class="chapter-head"><span class="chapter-num">16</span><h2 class="chapter-title">Papers to Actually Read</h2></div>
+    <p class="chapter-dek">If you only have time for the abstracts and the method section, these are the ones.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>ReAct</strong> — Yao et al., 2022, arXiv:2210.03629</li>
+        <li><strong>Self-Consistency</strong> — Wang et al., 2022, arXiv:2203.11171</li>
+        <li><strong>Self-Ask</strong> — Press et al., 2022, arXiv:2210.03350</li>
+        <li><strong>Plan-and-Solve Prompting</strong> — Wang et al., 2023, arXiv:2305.04091</li>
+        <li><strong>ReWOO</strong> — Xu et al., 2023, arXiv:2305.18323</li>
+        <li><strong>Reflexion</strong> — Shinn et al., 2023, arXiv:2303.11366</li>
+        <li><strong>Self-Refine</strong> — Madaan et al., 2023, arXiv:2303.17651</li>
+        <li><strong>Tree of Thoughts</strong> — Yao et al., 2023, arXiv:2305.10601</li>
+        <li><strong>Graph of Thoughts</strong> — Besta et al., 2024, arXiv:2308.09687</li>
+        <li><strong>LATS</strong> — Zhou et al., 2023, arXiv:2310.04406</li>
+        <li><strong>Self-Discovery</strong> — Zhou et al., 2024, arXiv:2402.03620</li>
+      </ul>
+      <div class="callout">
+        <span class="callout-label">How to actually study these before an interview</span>
+        <p>Don't read them front to back. For each: read the abstract, then find the one diagram that shows the architecture, then read only the method section long enough to draw that diagram from memory and explain it out loud in under 90 seconds. That's the depth interviewers are actually testing for.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">Topic 1 of 10 — Agent Reasoning Patterns Beyond ReAct. Next up: framework choice (LangGraph vs CrewAI vs AutoGen vs custom) and defending it under pushback.</div>
+</main>
+</div>
+
+<script>
+const links = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('section.chapter');
+const map = new Map();
+links.forEach(l => map.set(l.getAttribute('href').slice(1), l));
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const link = map.get(entry.target.id);
+    if(!link) return;
+    if(entry.isIntersecting){
+      links.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, {rootMargin: '-15% 0px -70% 0px', threshold: 0});
+sections.forEach(s => io.observe(s));
+</script>
+</body>
+</html>

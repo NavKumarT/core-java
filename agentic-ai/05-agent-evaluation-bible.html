@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Evaluation — The Bible</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d10; --bg-raised:#12151a; --bg-card:#14181f;
+  --line:#242a33; --line-soft:#1b2028;
+  --ink:#e7e9ec; --ink-dim:#9aa3b0; --ink-faint:#5c6672;
+  --amber:#ff9f40; --amber-dim:#c97a2e; --lime:#c9f04c; --cyan:#5fd9c9; --violet:#b592ff; --rose:#ff7a8a;
+  --serif:'Source Serif 4', Georgia, serif;
+  --display:'Space Grotesk', sans-serif;
+  --mono:'JetBrains Mono', 'Courier New', monospace;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:radial-gradient(var(--line-soft) 1px, transparent 1px);
+  background-size:22px 22px; background-color:var(--bg);
+  color:var(--ink); font-family:var(--serif); font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+a{color:var(--amber); text-decoration:none;}
+::selection{background:var(--amber); color:#111;}
+.shell{display:grid; grid-template-columns:290px 1fr; min-height:100vh;}
+@media (max-width:920px){ .shell{grid-template-columns:1fr;} .side{display:none;} }
+.side{position:sticky; top:0; height:100vh; overflow-y:auto; border-right:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(18,21,26,.9), rgba(11,13,16,.9)); padding:28px 20px 60px;}
+.side::-webkit-scrollbar{width:6px;} .side::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.brand{font-family:var(--display); font-weight:700; font-size:15px; color:var(--ink); margin-bottom:2px;}
+.brand span{color:var(--amber);}
+.brand-sub{font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-bottom:24px;}
+.back-link{display:inline-block; font-family:var(--mono); font-size:11px; color:var(--cyan); margin-bottom:20px; border:1px solid var(--line); padding:5px 10px; border-radius:6px;}
+.nav-link{display:flex; align-items:baseline; gap:7px; font-family:var(--display); font-size:12.2px; color:var(--ink-dim);
+  padding:5px 7px; border-radius:6px; border-left:2px solid transparent; transition:.15s;}
+.nav-link:hover{color:var(--ink); background:var(--bg-raised);}
+.nav-link.active{color:var(--amber); border-left-color:var(--amber); background:var(--bg-raised);}
+.nav-num{font-family:var(--mono); font-size:9.5px; color:var(--ink-faint); min-width:20px;}
+.main{max-width:920px; padding:0 44px 140px; margin:0 auto;}
+@media (max-width:700px){ .main{padding:0 20px 100px;} }
+.hero{padding:76px 0 54px; border-bottom:1px solid var(--line);}
+.hero-eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--lime);
+  margin-bottom:18px; display:flex; align-items:center; gap:10px;}
+.hero-eyebrow::before{content:''; width:22px; height:1px; background:var(--lime); display:inline-block;}
+h1.title{font-family:var(--display); font-weight:700; font-size:clamp(32px,5vw,54px); line-height:1.06; letter-spacing:-.02em; color:var(--ink); max-width:14ch;}
+h1.title em{font-style:normal; color:var(--amber);}
+.hero-sub{font-family:var(--serif); font-size:18px; color:var(--ink-dim); max-width:62ch; margin-top:20px;}
+.tag-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:26px;}
+.tag{font-family:var(--mono); font-size:11px; padding:5px 11px; border-radius:20px; border:1px solid var(--line); color:var(--ink-dim); background:var(--bg-raised);}
+section.chapter{padding:60px 0; border-bottom:1px solid var(--line);}
+section.chapter:last-of-type{border-bottom:none;}
+.chapter-head{display:flex; align-items:flex-start; gap:16px; margin-bottom:8px;}
+.chapter-num{font-family:var(--mono); font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:20px; padding:3px 11px; margin-top:6px; white-space:nowrap;}
+h2.chapter-title{font-family:var(--display); font-weight:600; font-size:clamp(22px,3.2vw,30px); color:var(--ink); letter-spacing:-.01em;}
+.chapter-dek{font-family:var(--serif); font-style:italic; color:var(--ink-dim); font-size:16px; max-width:66ch; margin:14px 0 30px 0; padding-left:66px;}
+@media (max-width:700px){.chapter-dek{padding-left:0;}}
+.chapter-body{padding-left:66px;}
+@media (max-width:700px){.chapter-body{padding-left:0;}}
+.chapter-body h3{font-family:var(--display); font-weight:600; font-size:19px; color:var(--ink); margin:32px 0 12px;}
+.chapter-body h4{font-family:var(--display); font-weight:600; color:var(--cyan); margin:22px 0 10px; text-transform:uppercase; letter-spacing:.04em; font-size:12px;}
+.chapter-body p{color:var(--ink-dim); margin-bottom:14px; max-width:72ch;}
+.chapter-body ul, .chapter-body ol{color:var(--ink-dim); margin:0 0 16px 20px; max-width:70ch;}
+.chapter-body li{margin-bottom:7px;}
+.chapter-body strong{color:var(--ink); font-weight:600;}
+code.inline{font-family:var(--mono); font-size:.87em; background:var(--bg-raised); color:var(--lime); padding:1px 6px; border-radius:4px; border:1px solid var(--line);}
+.callout{border-left:3px solid var(--amber); background:var(--bg-card); padding:16px 18px; border-radius:0 8px 8px 0; margin:20px 0; max-width:70ch;}
+.callout p{margin-bottom:0; color:var(--ink-dim); font-size:14.5px;}
+.callout .callout-label{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--amber); margin-bottom:6px; display:block;}
+.callout.interview{border-left-color:var(--violet);} .callout.interview .callout-label{color:var(--violet);}
+.callout.pitfall{border-left-color:var(--rose);} .callout.pitfall .callout-label{color:var(--rose);}
+.callout.paper{border-left-color:var(--cyan);} .callout.paper .callout-label{color:var(--cyan);}
+.callout.focus{border-left-color:var(--lime); background:#151b12;} .callout.focus .callout-label{color:var(--lime);}
+.code-wrap{background:#0a0c0f; border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:18px 0 24px;}
+.code-head{display:flex; align-items:center; justify-content:space-between; padding:9px 14px; border-bottom:1px solid var(--line); background:var(--bg-raised); font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+.code-dots{display:flex; gap:5px;} .code-dots span{width:8px; height:8px; border-radius:50%; background:var(--line);}
+pre{padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:12.6px; line-height:1.7; color:#d7dbe0;}
+pre::-webkit-scrollbar{height:6px;} pre::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.tok-kw{color:var(--violet);} .tok-str{color:var(--lime);} .tok-com{color:var(--ink-faint); font-style:italic;} .tok-fn{color:var(--cyan);} .tok-num{color:var(--amber);}
+.tbl{width:100%; border-collapse:collapse; margin:18px 0 26px; font-size:13.2px; max-width:78ch;}
+.tbl th{text-align:left; font-family:var(--mono); font-size:10.2px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); padding:10px 12px; border-bottom:1px solid var(--line);}
+.tbl td{padding:11px 12px; border-bottom:1px solid var(--line-soft); color:var(--ink-dim); vertical-align:top;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl td.k{color:var(--ink); font-family:var(--mono); font-size:12.2px; white-space:nowrap;}
+.diagram{background:var(--bg-card); border:1px solid var(--line); border-radius:12px; padding:22px; margin:20px 0 26px;}
+.diagram svg{width:100%; height:auto; display:block;}
+.legend{display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; font-family:var(--mono); font-size:10.5px; color:var(--ink-faint);}
+.legend span{display:inline-flex; align-items:center; gap:6px;} .legend i{width:9px; height:9px; border-radius:2px; display:inline-block;}
+.qa{border:1px solid var(--line); border-radius:10px; margin-bottom:10px; background:var(--bg-card); overflow:hidden;}
+.qa summary{list-style:none; cursor:pointer; padding:15px 18px; display:flex; gap:12px; align-items:flex-start; font-family:var(--display); font-size:14px; color:var(--ink); font-weight:500;}
+.qa summary::-webkit-details-marker{display:none;}
+.qa summary::before{content:'+'; font-family:var(--mono); color:var(--amber); font-size:16px; line-height:1;}
+.qa[open] summary::before{content:'–';}
+.qa .qa-body{padding:0 18px 18px 40px; color:var(--ink-dim); font-size:14px; max-width:68ch;}
+.qa .qa-body p{margin-bottom:10px;}
+.qa-tag{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; background:var(--bg-raised); color:var(--ink-faint); padding:2px 8px; border-radius:20px; border:1px solid var(--line); margin-left:auto; white-space:nowrap; flex-shrink:0;}
+.glossary-grid{display:grid; grid-template-columns:1fr 1fr; gap:2px 28px;}
+@media (max-width:700px){.glossary-grid{grid-template-columns:1fr;}}
+.gterm{padding:14px 0; border-bottom:1px solid var(--line-soft);}
+.gterm dt{font-family:var(--mono); color:var(--cyan); font-size:13px; margin-bottom:4px;}
+.gterm dd{color:var(--ink-dim); font-size:13px; line-height:1.55;}
+.footer{padding:60px 0 20px; text-align:center; color:var(--ink-faint); font-family:var(--mono); font-size:12px;}
+.statgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:20px 0 26px;}
+@media (max-width:700px){.statgrid{grid-template-columns:1fr;}}
+.statcard{background:var(--bg-card); border:1px solid var(--line); border-radius:10px; padding:16px;}
+.statcard .num{font-family:var(--display); font-weight:700; font-size:24px; color:var(--amber);}
+.statcard .lbl{font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); margin-top:4px;}
+.biascard{background:var(--bg-card); border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin:12px 0;}
+.biascard .bname{font-family:var(--display); font-weight:600; color:var(--rose); font-size:14.5px; margin-bottom:5px;}
+.biascard p{margin-bottom:0; font-size:13.6px;}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav class="side" id="side">
+  <a class="back-link" href="#">← Topic 3: Multi-Agent</a>
+  <div class="brand">Agent Eval <span>Bible</span></div>
+  <div class="brand-sub">Topic 5 of 10 — the most important one</div>
+  <a class="nav-link" href="#why-different"><span class="nav-num">00</span>Why Agent Eval ≠ LLM Eval</a>
+  <a class="nav-link" href="#diagnostic-stack"><span class="nav-num">01</span>The Diagnostic Stack</a>
+  <a class="nav-link" href="#outcome"><span class="nav-num">02</span>Outcome / Task Completion</a>
+  <a class="nav-link" href="#trajectory"><span class="nav-num">03</span>Trajectory Evaluation</a>
+  <a class="nav-link" href="#judge-techniques"><span class="nav-num">04</span>LLM-as-Judge Techniques</a>
+  <a class="nav-link" href="#judge-bias"><span class="nav-num">05</span>★ Judge Biases, Fully Mapped</a>
+  <a class="nav-link" href="#benchmarks"><span class="nav-num">06</span>Benchmarks: tau, SWE, GAIA &amp; More</a>
+  <a class="nav-link" href="#rag-eval"><span class="nav-num">07</span>RAG Evaluation (RAGAS)</a>
+  <a class="nav-link" href="#datasets"><span class="nav-num">08</span>Building Eval Datasets</a>
+  <a class="nav-link" href="#tools"><span class="nav-num">09</span>Tooling: LangSmith vs Braintrust vs Phoenix vs DeepEval</a>
+  <a class="nav-link" href="#eval-driven"><span class="nav-num">10</span>Eval-Driven Development &amp; CI/CD</a>
+  <a class="nav-link" href="#production"><span class="nav-num">11</span>Online / Production Evaluation</a>
+  <a class="nav-link" href="#statistics"><span class="nav-num">12</span>Statistical Rigor</a>
+  <a class="nav-link" href="#antipatterns"><span class="nav-num">13</span>Failure Modes &amp; Anti-Patterns</a>
+  <a class="nav-link" href="#decision"><span class="nav-num">14</span>Decision Framework</a>
+  <a class="nav-link" href="#interview"><span class="nav-num">15</span>Interview Cheat-Sheet</a>
+  <a class="nav-link" href="#glossary"><span class="nav-num">16</span>Glossary</a>
+  <a class="nav-link" href="#resources"><span class="nav-num">17</span>Resources</a>
+</nav>
+
+<main class="main">
+  <div class="hero">
+    <div class="hero-eyebrow">Deep reference · Topic 5 of 10 · The bible</div>
+    <h1 class="title">Agent Evaluation, <em>Fully Mapped</em></h1>
+    <p class="hero-sub">The round that fails most candidates, and the discipline that separates a demo from something you can trust in production. Outcome vs trajectory vs component evaluation, every LLM-as-judge bias with its measured magnitude and fix, the benchmarks that actually matter (tau-bench, SWE-bench, GAIA), RAG-specific metrics with their formulas, the tooling landscape, and eval-driven development as a closed loop — not a one-time checklist.</p>
+    <div class="tag-row">
+      <span class="tag">Trajectory Eval</span><span class="tag">LLM-as-Judge</span><span class="tag">Judge Bias</span>
+      <span class="tag">tau-bench</span><span class="tag">SWE-bench</span><span class="tag">GAIA</span>
+      <span class="tag">RAGAS</span><span class="tag">LangSmith</span><span class="tag">CI/CD Gating</span><span class="tag">Production Monitoring</span>
+    </div>
+  </div>
+
+  <!-- ============ 00 WHY DIFFERENT ============ -->
+  <section class="chapter" id="why-different">
+    <div class="chapter-head"><span class="chapter-num">00</span><h2 class="chapter-title">Why Agent Evaluation Is a Different Problem</h2></div>
+    <p class="chapter-dek">The single distinction every eval conversation in an interview comes back to. Get this exactly right before anything else.</p>
+    <div class="chapter-body">
+      <p><cite index="57-1">An LLM eval is a function from (input, output) to a score. An agent eval is a function from trajectory to a score, where the trajectory is the ordered sequence of system prompt, user input, agent reasoning, tool calls (name plus arguments plus return value), retrieval results, intermediate LLM calls, final response, and outcome metadata.</cite> <cite index="58-1">Two runs of the same task can take completely different paths and both be correct, or both be wrong for different reasons — that changes what "good" means.</cite></p>
+      <div class="callout paper">
+        <span class="callout-label">The example every senior interviewer uses</span>
+        <p><cite index="64-1">Picture a support agent that gives a polite, accurate answer at every step but never actually resolves the ticket. Turn-level scoring says it is great. The user says it failed.</cite> <cite index="62-1">A held-out benchmark and a final-answer pass/fail tells you almost nothing about whether the agent looped before answering, called the wrong tool and recovered, leaked its reasoning, or left the user frustrated three turns in.</cite></p>
+      </div>
+      <p><cite index="59-1">According to LangChain's 2026 State of AI Agents report, 57% of organizations now have agents in production, and quality is the #1 barrier to deployment.</cite> This is not a niche concern — it is the current bottleneck of the entire field, which is exactly why it's the round interviewers weight most heavily.</p>
+    </div>
+  </section>
+
+  <!-- ============ 01 DIAGNOSTIC STACK ============ -->
+  <section class="chapter" id="diagnostic-stack">
+    <div class="chapter-head"><span class="chapter-num">01</span><h2 class="chapter-title">The Diagnostic Stack — Outcome, Trajectory, Component</h2></div>
+    <p class="chapter-dek">Three layers, used as a funnel: cheap and blunt at the top, expensive and precise at the bottom.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Layer</th><th>Question it answers</th><th>Cost</th></tr>
+        <tr><td class="k">Outcome</td><td><cite index="55-1">Did the agent's full run actually accomplish the user's goal?</cite> — simple, but blunt: tells you something went wrong, not where</td><td>Lowest</td></tr>
+        <tr><td class="k">Trajectory</td><td><cite index="55-1">Looks at the plan, reasoning steps, tool calls, retries, and handoffs that produced the result</cite> — this is where the real diagnostic signal lives</td><td>Medium</td></tr>
+        <tr><td class="k">Component</td><td><cite index="55-1">Tests individual components — retrievers, models, sub-agents, tool calls, RAG pipelines — to identify exactly where failures or bottlenecks occur</cite></td><td>Highest (most granular)</td></tr>
+      </table>
+      <div class="diagram">
+        <svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="dsm" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff9f40"/></marker></defs>
+          <rect x="30" y="30" width="180" height="50" rx="8" fill="none" stroke="#5fd9c9" stroke-width="1.5"/>
+          <text x="120" y="60" fill="#e7e9ec" font-family="JetBrains Mono" font-size="13" text-anchor="middle">Outcome eval</text>
+          <line x1="120" y1="80" x2="120" y2="110" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#dsm)"/>
+          <text x="150" y="98" fill="#c9f04c" font-family="JetBrains Mono" font-size="10">failed?</text>
+          <rect x="30" y="110" width="180" height="50" rx="8" fill="none" stroke="#ff9f40" stroke-width="1.5"/>
+          <text x="120" y="140" fill="#e7e9ec" font-family="JetBrains Mono" font-size="13" text-anchor="middle">Trajectory eval</text>
+          <line x1="120" y1="160" x2="120" y2="185" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#dsm)"/>
+          <text x="480" y="60" fill="#5c6672" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Use as a diagnostic funnel: outcome first, then path, then failing component</text>
+          <rect x="250" y="110" width="180" height="50" rx="8" fill="none" stroke="#b592ff" stroke-width="1.5"/>
+          <text x="340" y="140" fill="#e7e9ec" font-family="JetBrains Mono" font-size="13" text-anchor="middle">Component eval</text>
+        </svg>
+      </div>
+      <p><cite index="55-1">Use these levels as a diagnostic stack: outcome first, then path, then failing component</cite> — don't jump straight to expensive component-level testing on every case; reserve it for the failures outcome and trajectory eval flag as worth digging into.</p>
+    </div>
+  </section>
+
+  <!-- ============ 02 OUTCOME ============ -->
+  <section class="chapter" id="outcome">
+    <div class="chapter-head"><span class="chapter-num">02</span><h2 class="chapter-title">Outcome / Task Completion Evaluation</h2></div>
+    <p class="chapter-dek">The blunt, cheap, non-negotiable first layer.</p>
+    <div class="chapter-body">
+      <p><cite index="55-1">Task Completion, also known as task success or goal accuracy, measures whether an agent completed a user-given task. The definition of "done" depends on the task; for tool-calling, planning, and autonomous agents this metric is often the clearest end-to-end signal of whether the agent actually worked.</cite> <cite index="59-1">Grading methods: exact or rule-based matching for deterministic outputs, code-based assertions and schema checks, model-based grading where an LLM judges the output against criteria, and human review for the cases automation cannot cover — most production suites combine all of these, using cheap deterministic checks where possible and LLM-as-judge only where nuance is required.</cite></p>
+      <div class="callout">
+        <span class="callout-label">Practical stance</span>
+        <p><cite index="70-1">Use outcome metrics for initial validation and continuous monitoring due to lower computational cost; use trajectory metrics for debugging and process improvement, showing how agents work rather than just whether they achieve business goals.</cite></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 TRAJECTORY ============ -->
+  <section class="chapter" id="trajectory">
+    <div class="chapter-head"><span class="chapter-num">03</span><h2 class="chapter-title">Trajectory Evaluation — Where the Real Signal Lives</h2></div>
+    <p class="chapter-dek">Five categories, and the flat-metric trap that makes teams think they're done when they aren't.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Category</th><th>What it checks</th></tr>
+        <tr><td class="k">Goal completion</td><td><cite index="60-1">Did the agent finish the user's task? The outcome metric, and the only one users directly care about.</cite></td></tr>
+        <tr><td class="k">Tool selection accuracy</td><td><cite index="60-1">Did it pick the right tool at each step?</cite></td></tr>
+        <tr><td class="k">Tool argument correctness</td><td><cite index="60-1">Did it pass the right parameters?</cite></td></tr>
+        <tr><td class="k">Trajectory efficiency</td><td><cite index="60-1">How many redundant steps, retries, and loops occurred?</cite></td></tr>
+        <tr><td class="k">Final answer quality</td><td><cite index="60-1">Groundedness, factuality, safety of the final response.</cite></td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">The flat-metric trap</span>
+        <p><cite index="60-1">A flat metric like AnswerRelevancy on the final response misses the eight retries, three retrieval misses, and one wrong tool call that produced the right-looking answer.</cite> An agent that scores perfectly on outcome but wandered wildly to get there will keep wandering on harder inputs where it doesn't get lucky — trajectory eval is what catches that before it becomes a production incident.</p>
+      </div>
+      <div class="code-wrap">
+        <div class="code-head"><span>trajectory_eval_shape.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre>trajectory = {
+    <span class="tok-str">"system_prompt"</span>: ...,
+    <span class="tok-str">"user_input"</span>: ...,
+    <span class="tok-str">"steps"</span>: [
+        {<span class="tok-str">"reasoning"</span>: ..., <span class="tok-str">"tool_call"</span>: {<span class="tok-str">"name"</span>: ..., <span class="tok-str">"args"</span>: {...}}, <span class="tok-str">"observation"</span>: ...},
+        <span class="tok-com"># ... every intermediate step, in order</span>
+    ],
+    <span class="tok-str">"final_response"</span>: ...,
+    <span class="tok-str">"outcome_metadata"</span>: {<span class="tok-str">"success"</span>: <span class="tok-kw">True</span>, <span class="tok-str">"tokens_used"</span>: 4210, <span class="tok-str">"latency_ms"</span>: 3800},
+}
+<span class="tok-com"># an agent eval scores THIS whole object, not just final_response</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 04 JUDGE TECHNIQUES ============ -->
+  <section class="chapter" id="judge-techniques">
+    <div class="chapter-head"><span class="chapter-num">04</span><h2 class="chapter-title">LLM-as-Judge Techniques</h2></div>
+    <p class="chapter-dek">Three shapes of judging, and when to reach for each.</p>
+    <div class="chapter-body">
+      <p><cite index="63-1">LLM-as-a-Judge uses an LLM to score, classify, or compare another LLM's outputs — you define what "good" means for your application, then run that judgement repeatedly across datasets, CI/CD pipelines, and production traces.</cite></p>
+      <table class="tbl">
+        <tr><th>Technique</th><th>Shape</th><th>Best for</th></tr>
+        <tr><td class="k">Pointwise / G-Eval</td><td>Score one output against a custom rubric, alone</td><td><cite index="63-1">Custom quality criteria specific to your application</cite></td></tr>
+        <tr><td class="k">Pairwise / ArenaGEval</td><td>Compare two outputs, pick a winner (or tie)</td><td>Prompt or model comparisons, A/B testing changes</td></tr>
+        <tr><td class="k">DAG-based / DAGMetric</td><td>Strict multi-step scoring logic, deterministic branches with LLM judgment at leaves</td><td>Complex pass/fail criteria that need auditable step-by-step logic, not a single freeform score</td></tr>
+      </table>
+      <div class="callout">
+        <span class="callout-label">Reliability lift from technique, not just prompt wording</span>
+        <p><cite index="70-1">Design judge prompts with explicit rubrics, few-shot examples, and structured JSON outputs requiring evidence before scoring; chain-of-thought prompting and few-shot examples improve scoring reliability by over 85%.</cite> <cite index="70-1">Validate reliability by measuring Cronbach's alpha across multiple independent runs to assess internal consistency, and calibrate against human expert evaluation, targeting 0.80+ Spearman correlation for production deployment alignment.</cite></p>
+      </div>
+      <div class="callout pitfall">
+        <span class="callout-label">Give the judge an escape hatch</span>
+        <p><cite index="89-1">Agent-grade judges often show inconsistent strictness and overconfidence when evaluation rubrics are underspecified — a simple reliability trick is to give the judge an explicit "Unknown" option when evidence is insufficient, reducing hallucinated verdicts.</cite></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 05 JUDGE BIAS — THE FOCUS SECTION ============ -->
+  <section class="chapter" id="judge-bias">
+    <div class="chapter-head"><span class="chapter-num">05 ★</span><h2 class="chapter-title">LLM-as-Judge Biases, Fully Mapped</h2></div>
+    <p class="chapter-dek">Every documented bias, its measured magnitude, and the specific mitigation that actually holds up empirically — not vague "be careful" advice.</p>
+    <div class="chapter-body">
+      <div class="statgrid">
+        <div class="statcard"><div class="num">10–15pt</div><div class="lbl">winrate swing from position bias alone on close calls</div></div>
+        <div class="statcard"><div class="num">15–30pt</div><div class="lbl">inflated preference for longer outputs (verbosity bias)</div></div>
+        <div class="statcard"><div class="num">10–25%</div><div class="lbl">self-preference rate — judges favor their own model family's outputs</div></div>
+      </div>
+      <div class="biascard">
+        <div class="bname">Position bias</div>
+        <p><cite index="91-1">A systematic preference for the response appearing in a particular position (first or last), as large as 10–15 percentage points.</cite> <strong>Mitigation:</strong> <cite index="91-1">swap augmentation — evaluate each pair in both orders, accept a consistent judgment, record an inconsistent one as a tie; calibration prompting explicitly instructing the judge not to be influenced by presentation order; ensemble judging across multiple position orderings; and chain-of-thought forcing, requiring a detailed rationale before the verdict, which reduces reliance on superficial positional cues.</cite> <cite index="81-1">Note: position-neutrality language in the prompt alone has near-zero effect — the bias lives in the decode, not the rubric, which is why swap augmentation (an architectural fix) beats prompt wording (a rubric fix) for this specific bias.</cite></p>
+      </div>
+      <div class="biascard">
+        <div class="bname">Verbosity bias</div>
+        <p><cite index="91-1">Longer responses are systematically preferred even when the additional content is irrelevant or repetitive.</cite> <strong>Mitigation:</strong> <cite index="91-1">instruct the judge explicitly to penalize unnecessary length and focus on information quality over quantity, or truncate responses to a fixed length before judging.</cite> <cite index="81-1">Length-neutrality language in the prompt reduces this bias by roughly half</cite> — unlike position bias, prompt wording actually helps here. <cite index="79-1">Note this bias is heterogeneous across models when measured length-aware: some models show it strongly, one major lab's model shows the opposite tendency, and others are close to neutral</cite> — worth checking empirically for your specific judge model rather than assuming.</p>
+      </div>
+      <div class="biascard">
+        <div class="bname">Self-enhancement / self-preference bias</div>
+        <p><cite index="76-1">Judges rate their own model's outputs higher — a special risk in automated training loops where a model's judgments feed back into training itself.</cite> <strong>Mitigation:</strong> <cite index="90-1">use an independent model — from a different provider or lineage — as the judge whenever evaluating that same model's outputs</cite>; <cite index="85-1">ensemble evaluation using multiple models from different families reduces reliance on any single model's self-preference.</cite></p>
+      </div>
+      <div class="biascard">
+        <div class="bname">Format / "beauty" bias</div>
+        <p><cite index="92-1">Privileging superficial features like formality or stylistic polish over deeper content quality.</cite> <strong>Mitigation:</strong> explicitly separate correctness criteria from style criteria in the rubric — score them as distinct dimensions rather than one blended "quality" score, so polish can't substitute for accuracy in the aggregate.</p>
+      </div>
+      <div class="biascard">
+        <div class="bname">Bandwagon / authority / compassion-fade biases</div>
+        <p><cite index="86-1">Bandwagon-effect bias: judgments skew toward stated majority opinions in the system instruction. Authority bias: undue weight given to claims that cite an authoritative-sounding source. Compassion-fade: judgments shift when identifiable names are attached vs anonymized outputs.</cite> <strong>Mitigation:</strong> anonymize model/source identifiers before judging, and never embed claimed consensus ("most experts agree...") in the judge's input context.</p>
+      </div>
+      <div class="biascard">
+        <div class="bname">Calibration drift</div>
+        <p><cite index="81-1">A judge model version bump can shift the mean score and narrow the distribution while your CI gate keeps passing — the judge changed, the rubric didn't, and the signal stops meaning what you thought it meant the day the model rolled.</cite> <strong>Mitigation:</strong> pin judge model versions explicitly, re-run your human-calibration check whenever the judge model changes, and monitor score distribution shape (not just the mean) over time for unexplained narrowing or shifting.</p>
+      </div>
+      <div class="callout paper">
+        <span class="callout-label">The aggregate reliability number worth knowing</span>
+        <p><cite index="68-1">Zheng et al. show that LLM judges can achieve over 80% agreement with humans</cite>, and <cite index="93-1">analysis of over 150,000 evaluation instances across 22 tasks with 15 LLM judges found strong average consensus — more than 80% of cases yield agreement from at least 2 of 3 judges, with full unanimity in about 23%; models sharing architecture and training lineage tend to exhibit higher internal agreement, indicating shared systematic bias patterns, and high-disagreement "hard cases" are strongly associated with minimal answer-quality gaps.</cite> The practical takeaway: <cite index="93-1">majority voting or aggregation across diverse model families mitigates idiosyncratic and familial biases in single-model judgments</cite> — an ensemble of judges from different labs is measurably more reliable than one judge, however strong.</p>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">The question every eval-focused interview asks</span>
+        <p>"How would you validate that your LLM judge is trustworthy before relying on it?" — Full answer: (1) calibrate against a human-labeled golden set, targeting ≥0.80 Spearman correlation; (2) run swap augmentation to detect and correct position bias; (3) test length-neutrality by comparing scores on paraphrased responses of different lengths; (4) use a judge from a different model family than the system under test to avoid self-preference; (5) re-validate whenever you change the judge model version; (6) for high-stakes decisions, ensemble multiple judges and treat disagreement itself as a signal for human review, not just noise to average away.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 06 BENCHMARKS ============ -->
+  <section class="chapter" id="benchmarks">
+    <div class="chapter-head"><span class="chapter-num">06</span><h2 class="chapter-title">Benchmarks: tau-bench, SWE-bench, GAIA &amp; More</h2></div>
+    <p class="chapter-dek">Know exactly what each measures, how it's scored, and — critically — where it stops telling you anything about your own agent.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Benchmark</th><th>Domain</th><th>Scoring method</th></tr>
+        <tr><td class="k">τ-bench / τ²-bench</td><td><cite index="110-1">Realistic customer-service dialogue (retail, airline, telecom) with an LLM-simulated user, domain APIs, and policy guidelines</cite></td><td><cite index="114-1">Compares final database state against an annotated goal state; introduces pass^k to measure reliability across repeated trials, not just one-shot success</cite></td></tr>
+        <tr><td class="k">SWE-bench (Verified)</td><td><cite index="96-1">Real GitHub issues and associated pull requests across popular Python repositories</cite></td><td><cite index="97-1">Whether the patch resolves the issue and passes the repository's hidden unit test suite</cite></td></tr>
+        <tr><td class="k">GAIA</td><td><cite index="107-1">466 human-designed, real-world questions requiring web browsing, multi-modal, and multi-file handling</cite></td><td><cite index="96-1">Exact match against a single reference answer; graded across three escalating difficulty levels</cite></td></tr>
+        <tr><td class="k">AgentBench</td><td><cite index="98-1">Multiple interactive environments — OS commands, databases, knowledge graphs, web browsing — assessing cross-domain generalization</cite></td><td>Per-environment task success; <cite index="98-1">best used to compare architectures and identify where capability transfer breaks down, not to predict production performance directly</cite></td></tr>
+        <tr><td class="k">WebArena / OSWorld</td><td>Autonomous web navigation / general real-desktop computer use</td><td>Task-specific success criteria checked against final browser or OS state</td></tr>
+        <tr><td class="k">METR HCAST / Time Horizons</td><td>Long-horizon autonomy</td><td><cite index="101-1">The longest task an agent can finish 50% of the time — a direct measure of how far autonomous execution holds up before failing</cite></td></tr>
+      </table>
+      <div class="callout paper">
+        <span class="callout-label">The pattern across every serious benchmark</span>
+        <p><cite index="95-1">The pattern across the serious benchmarks is execution-based verification: tau-bench checks the database state, SWE-Bench runs the test suite, tau2-bench's pass^k measures whether the agent succeeds reliably across attempts rather than once. A benchmark that only checks tool-call syntax or final text would pass agents that look right and do the wrong thing.</cite> The same standard should apply to your own eval harness: verify the actual end state, not just the last message.</p>
+      </div>
+      <div class="callout pitfall">
+        <span class="callout-label">The gap that trips people up</span>
+        <p><cite index="99-1">Public benchmark scores serve two valid purposes: coarse model shortlisting and regression detection. They do not predict production performance — a 20-40 percentage point drop from public benchmark to real task distribution is routinely observed. Private evals on your own task samples are the actual production-readiness signal.</cite> <cite index="103-1">Agent scores are also the most harness-sensitive numbers in AI — the same model can score very differently under different scaffolds, so treat a small point gap as noise and only compare scores measured within the same harness.</cite></p>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"How do benchmarks differ from an evaluation framework, and how do you use them together?" — Benchmarks (tau-bench, SWE-bench, GAIA) are fixed, standardized task sets with public leaderboards, used for coarse model comparison and regression detection. Frameworks (LangSmith, DeepEval, Ragas) are tooling you point at your own agent and your own task distribution. Benchmarks tell you which base model or scaffold is roughly in the right range; they don't replace running your own private eval set on your actual production task mix, where the real go/no-go decision has to be made.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 07 RAG EVAL ============ -->
+  <section class="chapter" id="rag-eval">
+    <div class="chapter-head"><span class="chapter-num">07</span><h2 class="chapter-title">RAG-Specific Evaluation (RAGAS)</h2></div>
+    <p class="chapter-dek">Four metrics, two axes — retrieval quality and generation quality — and the exact formulas behind each.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Metric</th><th>Axis</th><th>Definition</th></tr>
+        <tr><td class="k">Faithfulness</td><td>Generation</td><td><cite index="131-1">Fraction of claims in the answer that can be inferred from the retrieved context</cite> — <cite index="128-1">computed by extracting statements from the answer via an LLM, then verifying each against the context: F = |supported statements| / |total statements|</cite></td></tr>
+        <tr><td class="k">Answer Relevancy</td><td>Generation</td><td><cite index="131-1">Semantic similarity between the answer and the question</cite> — <cite index="128-1">computed by generating several questions the answer could plausibly address, then averaging their embedding similarity to the original query</cite></td></tr>
+        <tr><td class="k">Context Precision</td><td>Retrieval</td><td><cite index="131-1">Whether the relevant context chunks are ranked higher</cite> — <cite index="121-1">high values indicate the retrieved set is well focused with little irrelevant material</cite></td></tr>
+        <tr><td class="k">Context Recall</td><td>Retrieval</td><td><cite index="131-1">Fraction of the ground truth that is covered by retrieved context</cite> — <cite index="128-1">compares each statement in a ground-truth answer against the retrieved context to check presence</cite></td></tr>
+      </table>
+      <div class="callout paper">
+        <span class="callout-label">The production incident this exact split explains</span>
+        <p><cite index="129-1">A legal research RAG ships and scores 0.91 faithfulness on the offline eval set. Three weeks into production, customers complain that 1 in 6 responses misses a key statute. The team checks faithfulness in the dashboard: still 0.91. They check context recall: 0.62. The retriever was missing a second statute on multi-hop questions; the generator was answering coherently from the partial context it did have, so faithfulness stayed high. No retrieval-stage metric on the dashboard surfaced the regression.</cite> Faithfulness alone cannot catch a retrieval problem — <strong>you need both retrieval-side and generation-side metrics on the same dashboard, always</strong>, because a generator can be perfectly faithful to incomplete evidence.</p>
+      </div>
+      <p>Beyond the core four, Ragas also ships <cite index="132-1">context entities recall, noise sensitivity, answer semantic similarity, answer correctness, tool call accuracy, and agent goal accuracy</cite> — the last two specifically extending RAGAS-style evaluation into agentic (not just retrieval) workflows.</p>
+      <div class="code-wrap">
+        <div class="code-head"><span>ragas_eval.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> ragas <span class="tok-kw">import</span> evaluate
+<span class="tok-kw">from</span> ragas.metrics <span class="tok-kw">import</span> faithfulness, answer_relevancy, context_precision, context_recall
+
+result = evaluate(
+    dataset=eval_dataset,   <span class="tok-com"># question, contexts, answer, ground_truth per row</span>
+    metrics=[faithfulness, answer_relevancy, context_precision, context_recall],
+)</pre>
+      </div>
+      <div class="callout pitfall">
+        <span class="callout-label">The blind spot even RAGAS doesn't cover</span>
+        <p><cite index="122-1">Standard eval metrics assume a trustworthy index — a system can score 0.95 on faithfulness and still return wrong business answers if the retrieved content is stale, unowned, or misaligned with the canonical source.</cite> Context trustworthiness — freshness, ownership, lineage — sits upstream of every RAGAS metric and needs its own governance check, not just retrieval scoring.</p>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"Your RAG system's faithfulness score looks great but users are complaining about incomplete answers. What do you check?" — Context recall specifically, not faithfulness. High faithfulness with low context recall is the exact signature of a retrieval gap: the generator is being perfectly honest about incomplete evidence. Faithfulness measures whether the answer respects what was retrieved; it says nothing about whether what was retrieved was enough.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 08 DATASETS ============ -->
+  <section class="chapter" id="datasets">
+    <div class="chapter-head"><span class="chapter-num">08</span><h2 class="chapter-title">Building Eval Datasets</h2></div>
+    <p class="chapter-dek">The most underrated engineering effort in the entire eval pipeline.</p>
+    <div class="chapter-body">
+      <p><cite index="59-1">The most underrated engineering challenge in agent evaluation is actually building the test data. Unlike image classification where you can label a photo in 10 seconds, a single agent eval case — with its full task description, tool environment, expected trajectory, and gold output — can take hours to construct correctly.</cite></p>
+      <table class="tbl">
+        <tr><th>Source</th><th>Description</th><th>Volume target</th></tr>
+        <tr><td class="k">Hand-crafted goldens</td><td><cite index="59-1">Experts write tasks and validate expected trajectories manually — highest quality, but expensive</cite></td><td><cite index="59-1">50–100 as your anchor set, covering your most critical user scenarios</cite></td></tr>
+        <tr><td class="k">Production trace mining</td><td><cite index="59-1">Collect real user interactions, filter for interesting or failing cases, add ground-truth labels — high ecological validity since these are real problems real users hit</cite></td><td><cite index="59-1">≥500 cases before trusting aggregate metrics</cite></td></tr>
+        <tr><td class="k">Synthetic generation</td><td><cite index="59-1">Use a strong LLM to generate task variations from a seed set</cite></td><td>Scale up coverage of edge cases the first two sources under-represent</td></tr>
+      </table>
+      <div class="callout">
+        <span class="callout-label">Practical sizing rule for RAG specifically</span>
+        <p><cite index="116-1">Start with 100 to 200 queries, then add batches of 25 until your key metrics (faithfulness, retrieval recall, answer accuracy) change by less than 2 points across two consecutive runs — a defensible stopping rule, not just a fixed range. Use stratified sampling from real traffic so coverage matches production mix: factual lookup, multi-hop reasoning, policy or compliance questions, and ambiguous cases.</cite></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 09 TOOLING ============ -->
+  <section class="chapter" id="tools">
+    <div class="chapter-head"><span class="chapter-num">09</span><h2 class="chapter-title">Tooling: LangSmith vs Braintrust vs Phoenix vs DeepEval vs Ragas</h2></div>
+    <p class="chapter-dek">Every one of these does trajectory eval and LLM-as-judge. The differences are in ecosystem fit and where they sit in your stack.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Tool</th><th>Best fit</th><th>Notable feature</th></tr>
+        <tr><td class="k">LangSmith</td><td><cite index="56-1">Teams building on LangChain/LangGraph, though it supports other frameworks via OpenTelemetry ingestion</cite></td><td><cite index="56-1">Annotation queues for structured human review, and Polly — an AI assistant that analyzes trace data in natural language, summarizing failure patterns and prioritizing improvements by frequency and impact without writing eval code</cite></td></tr>
+        <tr><td class="k">Braintrust</td><td>Teams wanting a polished commercial eval platform with strong CI integration</td><td>Tight prompt-playground-to-eval loop; strong for rapid iterate-and-compare workflows</td></tr>
+        <tr><td class="k">Arize Phoenix</td><td><cite index="66-1">Teams with heavy RAG-specific evaluation needs</cite>, open-source-first, OTel-native observability</td><td>Deep trace-level analysis; strong open-source posture</td></tr>
+        <tr><td class="k">DeepEval</td><td><cite index="60-1">Teams wanting the largest open metric library</cite>, Python-native CI workflows</td><td><cite name="63-1">Reusable LLM judge implementations (GEval, DAGMetric, ArenaGEval) instead of writing judge prompts from scratch</cite></td></tr>
+        <tr><td class="k">Ragas</td><td><cite index="116-1">Fast open-source start for RAG-specific metrics, under ~2,000 evals/week</cite></td><td>The de facto standard formulas for faithfulness/context precision/recall — even other tools often cite Ragas's definitions</td></tr>
+        <tr><td class="k">MLflow (agent eval)</td><td>Teams already on MLflow for ML lifecycle management</td><td><cite index="56-1">Trace-aware evaluation scoring every step — tool calls, LLM invocations, planning decisions — not just final output</cite></td></tr>
+      </table>
+      <div class="callout">
+        <span class="callout-label">Volume-based decision rule</span>
+        <p><cite index="116-1">Choose Ragas or DeepEval under about 2,000 evals per week if you already use Grafana or Datadog. Choose managed platforms such as LangSmith or Arize when volume reaches roughly 8,000–15,000 evals weekly</cite> — and self-hosting/maintenance cost, not feature count, is usually the deciding factor at that scale.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 10 EVAL-DRIVEN DEV ============ -->
+  <section class="chapter" id="eval-driven">
+    <div class="chapter-head"><span class="chapter-num">10</span><h2 class="chapter-title">Eval-Driven Development &amp; the Closed Loop</h2></div>
+    <p class="chapter-dek">The idea that separates teams that ship reliable agents from teams stuck in a debugging cycle.</p>
+    <div class="chapter-body">
+      <p><cite index="57-1">Treat the eval as the static endpoint and your agent drifts. Treat it as a loop and the agent compounds.</cite> <cite index="57-1">An agent eval guide is incomplete without the closed-loop pattern: offline eval feeds the CI gate, the CI gate feeds production trace eval, trace eval feeds an error feed, the error feed feeds optimization, and optimization ships back through CI.</cite></p>
+      <div class="diagram">
+        <svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="clm" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff9f40"/></marker></defs>
+          <circle cx="350" cy="130" r="90" fill="none" stroke="#242a33" stroke-width="1"/>
+          <rect x="270" y="20" width="160" height="42" rx="8" fill="none" stroke="#5fd9c9" stroke-width="1.5"/>
+          <text x="350" y="46" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Offline eval</text>
+          <rect x="500" y="90" width="150" height="42" rx="8" fill="none" stroke="#ff9f40" stroke-width="1.5"/>
+          <text x="575" y="116" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">CI gate</text>
+          <rect x="440" y="200" width="170" height="42" rx="8" fill="none" stroke="#c9f04c" stroke-width="1.5"/>
+          <text x="525" y="226" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Production trace eval</text>
+          <rect x="90" y="200" width="170" height="42" rx="8" fill="none" stroke="#b592ff" stroke-width="1.5"/>
+          <text x="175" y="226" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Error feed</text>
+          <rect x="50" y="90" width="150" height="42" rx="8" fill="none" stroke="#ff7a8a" stroke-width="1.5"/>
+          <text x="125" y="116" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Optimization</text>
+          <path d="M430,41 L500,95" stroke="#5c6672" stroke-width="1.2" marker-end="url(#clm)" fill="none"/>
+          <path d="M575,132 L525,200" stroke="#5c6672" stroke-width="1.2" marker-end="url(#clm)" fill="none"/>
+          <path d="M440,221 L260,221" stroke="#5c6672" stroke-width="1.2" marker-end="url(#clm)" fill="none"/>
+          <path d="M175,200 L125,132" stroke="#5c6672" stroke-width="1.2" marker-end="url(#clm)" fill="none"/>
+          <path d="M200,105 L270,41" stroke="#5c6672" stroke-width="1.2" marker-end="url(#clm)" fill="none"/>
+        </svg>
+      </div>
+      <p><cite index="57-1">Every release ages your eval set the day it lands — new intents, new prompt revisions, new tool schemas, new retrieval indexes, new traffic shapes. A static offline pass is a necessary condition; it is never sufficient.</cite></p>
+      <h3>CI gating in practice</h3>
+      <p><cite index="70-1">Integrate evaluation into CI/CD with progressive canary deployment patterns</cite> — run the offline eval suite pre-merge as a hard gate (block on regressions and safety violations), then run the same rubric against a sample of live production traffic post-deploy, and route any drift or new failure clusters back into the eval dataset as new golden cases, so the suite itself grows in step with what production actually throws at the agent.</p>
+    </div>
+  </section>
+
+  <!-- ============ 11 PRODUCTION ============ -->
+  <section class="chapter" id="production">
+    <div class="chapter-head"><span class="chapter-num">11</span><h2 class="chapter-title">Online / Production Evaluation</h2></div>
+    <p class="chapter-dek">LLM-as-judge is the wrong tool for evaluating every single production turn. Know why, and what replaces it.</p>
+    <div class="chapter-body">
+      <p><cite index="62-1">Each LLM-as-judge call is a full model call, so it's too expensive to run on every production turn, and the same trajectory can score differently across runs. LLM-as-judge is fine for offline scoring on a held-out sample, where cost and variance are bounded and you can ensemble or human-review the edge cases — it is the wrong tool for the per-turn job.</cite></p>
+      <div class="callout focus">
+        <span class="callout-label">The right shape for per-turn production labels</span>
+        <p><cite index="62-1">Per-turn evaluation is a classification problem: take one turn, return a label — not a full LLM-judge call.</cite> A small, cheap, fast classifier (fine-tuned or distilled specifically for your failure taxonomy) can label every production turn in milliseconds, feeding those labels into your eval set, fine-tuning data, and monitoring dashboards, while full LLM-as-judge stays reserved for offline batch scoring on a sampled subset.</p>
+      </div>
+      <table class="tbl">
+        <tr><th>Signal</th><th>What it catches</th></tr>
+        <tr><td class="k">Topic relevancy</td><td><cite index="74-1">Whether questions and responses stay within the application's intended domain</cite></td></tr>
+        <tr><td class="k">Negative sentiment detection</td><td><cite index="74-1">User frustration — often indicates task failure even when the response was technically accurate</cite></td></tr>
+        <tr><td class="k">Policy violation / safety monitoring</td><td><cite index="74-1">Toxicity in inputs and outputs, prompt injection attempts, domain-specific policy violations</cite></td></tr>
+        <tr><td class="k">Human annotation queues</td><td>Structured expert review of sampled or flagged traces, building the next round of golden eval cases</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 12 STATISTICS ============ -->
+  <section class="chapter" id="statistics">
+    <div class="chapter-head"><span class="chapter-num">12</span><h2 class="chapter-title">Statistical Rigor</h2></div>
+    <p class="chapter-dek">Numbers to actually cite when asked "how do you know your eval is trustworthy."</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Metric</th><th>What it validates</th><th>Target</th></tr>
+        <tr><td class="k">Spearman correlation (judge vs human)</td><td>Judge alignment with expert human judgment</td><td><cite index="70-1">≥0.80 for production deployment alignment</cite></td></tr>
+        <tr><td class="k">Cronbach's alpha</td><td>Internal consistency of the judge across repeated independent runs</td><td>Higher is more consistent; run multiple passes and check variance before trusting a single score</td></tr>
+        <tr><td class="k">pass^k</td><td><cite index="114-1">Reliability of agent behavior across multiple trials of the same task, not just one-shot success</cite></td><td>Report alongside pass@1 — a large gap between the two signals inconsistency, not just capability</td></tr>
+        <tr><td class="k">Inter-rater reliability (Cohen's kappa)</td><td>Agreement between human reviewers on high-stakes manual audits</td><td><cite index="116-1">≥0.60 in enterprise legal/medical audit workflows, with two independent reviewers</cite></td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">The pass^k reveal</span>
+        <p><cite index="114-1">Even state-of-the-art function-calling agents (gpt-4o) succeed on under 50% of tau-bench tasks and are terribly inconsistent — pass^8 under 25% in the retail domain.</cite> A model that looks strong on pass@1 can be dramatically less reliable across repeated attempts at the identical task — this is exactly the gap outcome-only, single-run evaluation hides.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 13 ANTI-PATTERNS ============ -->
+  <section class="chapter" id="antipatterns">
+    <div class="chapter-head"><span class="chapter-num">13</span><h2 class="chapter-title">Failure Modes &amp; Anti-Patterns</h2></div>
+    <p class="chapter-dek">What actually goes wrong when evaluation is treated as a checkbox instead of infrastructure.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Scoring only the final message.</strong> Misses the entire trajectory — an agent can accumulate retries, wrong tool calls, and loops while still landing on a correct-looking final answer.</li>
+        <li><strong>Trusting a single LLM judge run.</strong> No swap augmentation, no ensemble, no human calibration check — a single unvalidated judge call is exactly as unreliable as the documented bias magnitudes above.</li>
+        <li><strong>Treating a static offline eval set as permanently sufficient.</strong> <cite index="57-1">Every release ages your eval set — new intents, prompt revisions, tool schemas, and traffic shapes all erode a static suite's coverage over time.</cite></li>
+        <li><strong>Confusing faithfulness with retrieval completeness in RAG.</strong> The legal-research incident above — high faithfulness, silently low context recall — is one of the most common production surprises in RAG systems specifically.</li>
+        <li><strong>Reporting only pass@1 on a reliability-sensitive task.</strong> Hides the pass^k gap that reveals whether an agent is actually consistent or just got lucky once.</li>
+        <li><strong>Relying on public benchmark scores as a production-readiness signal.</strong> <cite index="99-1">A 20-40 percentage point drop from public benchmark to real task distribution is routinely observed</cite> — private evals on your own data are the actual signal.</li>
+        <li><strong>No per-turn production monitoring, only periodic offline batch eval.</strong> Misses drift and emerging failure clusters between eval runs — the closed-loop pattern exists specifically to prevent this gap.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 14 DECISION FRAMEWORK ============ -->
+  <section class="chapter" id="decision">
+    <div class="chapter-head"><span class="chapter-num">14</span><h2 class="chapter-title">Decision Framework</h2></div>
+    <p class="chapter-dek">What to build, in what order, for a new agent with no eval infrastructure yet.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Step</th><th>What to build</th></tr>
+        <tr><td class="k">1</td><td>Deterministic outcome check (schema validation, exact match, code assertion) for anything that can be checked without an LLM — cheapest, run it first and always</td></tr>
+        <tr><td class="k">2</td><td>50–100 hand-crafted golden trajectories covering your most critical scenarios, with expected tool calls annotated, not just expected final answers</td></tr>
+        <tr><td class="k">3</td><td>LLM-as-judge for what can't be checked deterministically — with explicit rubric, few-shot examples, structured output, and an "Unknown" escape hatch</td></tr>
+        <tr><td class="k">4</td><td>Bias validation on that judge — swap augmentation, an independent-model judge, calibration against a human-labeled subset (≥0.80 Spearman target)</td></tr>
+        <tr><td class="k">5</td><td>CI gate wired to the golden set — block merges on regression, before you ever touch production traffic</td></tr>
+        <tr><td class="k">6</td><td>Production trace mining to grow the eval set past 500 cases with real, ecologically valid failures</td></tr>
+        <tr><td class="k">7</td><td>Cheap per-turn classifiers for production monitoring — reserve full LLM-as-judge for offline sampled batches</td></tr>
+        <tr><td class="k">8</td><td>Close the loop — route production failure clusters back into the golden set and CI gate continuously</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 15 INTERVIEW ============ -->
+  <section class="chapter" id="interview">
+    <div class="chapter-head"><span class="chapter-num">15</span><h2 class="chapter-title">Interview Cheat-Sheet</h2></div>
+    <p class="chapter-dek">Every question grouped by depth — this is the round that fails most candidates, so this section is deliberately the longest in the document.</p>
+    <div class="chapter-body">
+
+      <h4>Core distinctions</h4>
+      <details class="qa"><summary>Why is evaluating an agent fundamentally different from evaluating a single LLM call?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>An LLM eval is a function from (input, output) to a score. An agent eval is a function from a full trajectory — reasoning, tool calls with arguments and results, retrieval, intermediate LLM calls, and final outcome — to a score. Two agent runs can reach the same correct final answer through completely different, differently-flawed paths, so scoring only the final output is blind to how the agent actually behaved.</p></div>
+      </details>
+      <details class="qa"><summary>Walk through the diagnostic stack: outcome, trajectory, component.<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>Outcome eval is cheap and blunt — did the task succeed, yes or no. Trajectory eval looks at the full path — tool selection, argument correctness, efficiency, reasoning quality — and is where the real diagnostic signal lives. Component eval tests individual pieces (a retriever, a specific sub-agent, a tool) in isolation to pinpoint exactly where a trajectory-level failure originated. Use them as a funnel: outcome first to detect a problem exists, trajectory to localize it to a phase, component to pin the exact cause.</p></div>
+      </details>
+      <details class="qa"><summary>Give a concrete example of an agent that passes turn-level evaluation but fails the user.<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>A support agent that gives a polite, accurate, well-formatted answer at every single turn but never actually resolves the underlying ticket. Turn-level scoring rates every message highly; the user still walks away with an unresolved problem. This is exactly why agent evaluation needs goal-level, trajectory-spanning metrics rather than per-message scoring alone.</p></div>
+      </details>
+
+      <h4>LLM-as-judge</h4>
+      <details class="qa"><summary>Name three documented LLM-judge biases and a specific mitigation for each.<span class="qa-tag">judge</span></summary>
+        <div class="qa-body"><p>Position bias (10-15 point winrate swing on close calls) — mitigate with swap augmentation, evaluating both orderings and treating an inconsistent result as a tie. Verbosity bias (15-30 point inflation for longer outputs) — mitigate with explicit length-neutrality instructions in the rubric, which measurably cuts the effect roughly in half. Self-preference bias (10-25% inflated self-scoring) — mitigate by always using a judge from a different model family than the system under test.</p></div>
+      </details>
+      <details class="qa"><summary>Why does prompt wording fix verbosity bias but not position bias?<span class="qa-tag">judge</span></summary>
+        <div class="qa-body"><p>Verbosity bias responds to explicit instructions because it's a content-level heuristic the model can consciously override when told to. Position bias lives deeper in how the model attends to input order during decoding — telling it not to be influenced by position has near-zero measured effect. Position bias needs an architectural fix (swap the order and compare, or ensemble across orderings), not a rubric fix.</p></div>
+      </details>
+      <details class="qa"><summary>How do you validate that your LLM judge is actually trustworthy before shipping it?<span class="qa-tag">judge</span></summary>
+        <div class="qa-body"><p>Calibrate against a human-labeled golden set targeting at least 0.80 Spearman correlation. Check internal consistency across repeated runs (Cronbach's alpha). Run swap augmentation to catch position bias. Confirm the judge model is a different family than the system under test to avoid self-preference. Re-validate every time the judge model version changes, since calibration drift is real and a CI gate can silently keep passing while the judge's meaning shifts underneath it.</p></div>
+      </details>
+      <details class="qa"><summary>When is LLM-as-judge the wrong tool entirely?<span class="qa-tag">judge</span></summary>
+        <div class="qa-body"><p>For per-turn production evaluation at scale — it's too expensive to run on every live turn and too variance-prone (the same trajectory can score differently across runs) to trust as a real-time signal. The right tool for that job is a cheap, fast, purpose-built classifier trained on your specific failure taxonomy; reserve full LLM-as-judge for offline batch scoring on a bounded, sampled dataset where cost and variance are controlled.</p></div>
+      </details>
+
+      <h4>Benchmarks</h4>
+      <details class="qa"><summary>What does tau-bench measure that SWE-bench and GAIA don't?<span class="qa-tag">benchmarks</span></summary>
+        <div class="qa-body"><p>Reliability across repeated attempts at the same task, via its pass^k metric, and realistic multi-turn dialogue with a simulated user under written policy constraints — closer to production customer-service agent behavior than a single-shot task. SWE-bench and GAIA are largely single-attempt, single-turn task-resolution benchmarks; tau-bench specifically targets the gap between "can solve it once" and "solves it reliably while following rules and talking to a user."</p></div>
+      </details>
+      <details class="qa"><summary>Your agent scores well on GAIA. Can you conclude it will perform well in your production environment?<span class="qa-tag">benchmarks</span></summary>
+        <div class="qa-body"><p>No — a 20-40 percentage point drop from public benchmark score to real task distribution performance is routinely observed, and benchmark scores are highly sensitive to the specific agent harness/scaffold used, which likely differs from your production setup. GAIA is useful for coarse model shortlisting and detecting regressions, not as a substitute for evaluating on your own private task distribution.</p></div>
+      </details>
+      <details class="qa"><summary>Why does pass^k matter more than pass@1 for a production agent?<span class="qa-tag">benchmarks</span></summary>
+        <div class="qa-body"><p>Pass@1 only tells you whether the agent can succeed once, possibly by luck. Pass^k measures success rate across repeated attempts at the identical task, revealing consistency. A documented example: GPT-4o scores under 50% pass@1 on tau-bench but drops to under 25% pass^8 in retail — meaning it's dramatically less reliable across repeated attempts than a single success rate suggests, which matters enormously for a production agent serving the same type of request many times over.</p></div>
+      </details>
+
+      <h4>RAG evaluation</h4>
+      <details class="qa"><summary>Explain faithfulness vs context recall, and why you need both.<span class="qa-tag">rag</span></summary>
+        <div class="qa-body"><p>Faithfulness measures whether the generated answer's claims are actually supported by the retrieved context — it catches hallucination relative to what was retrieved. Context recall measures whether the retrieved context actually contains everything needed to answer correctly — it catches retrieval gaps. A system can score high faithfulness while still giving an incomplete or wrong-feeling answer, because the generator is being perfectly honest about partial evidence the retriever failed to surface. You need both metrics on the same dashboard, always — faithfulness alone can't distinguish a generation problem from a retrieval problem.</p></div>
+      </details>
+      <details class="qa"><summary>Walk through the legal-research RAG incident and what it teaches about metric selection.<span class="qa-tag">rag</span></summary>
+        <div class="qa-body"><p>A system shipped with a 0.91 faithfulness score. Weeks later, users reported answers missing a key statute roughly one in six times. Faithfulness stayed at 0.91 the whole time because the generator was faithfully summarizing whatever partial context it received — the actual regression was in context recall (dropped to 0.62), invisible on a dashboard that only tracked generation-side metrics. The lesson: always pair generation metrics with retrieval metrics; a healthy generation score can mask a badly broken retriever.</p></div>
+      </details>
+      <details class="qa"><summary>How large should your RAG eval dataset be before you trust the aggregate score?<span class="qa-tag">rag</span></summary>
+        <div class="qa-body"><p>Start around 100-200 queries, then add batches of roughly 25 more until key metrics (faithfulness, retrieval recall, answer accuracy) stop moving by more than about 2 points across two consecutive runs — that stability threshold is a defensible, principled stopping rule rather than an arbitrary fixed number. Sample should be stratified from real traffic patterns: factual lookup, multi-hop reasoning, policy/compliance questions, and ambiguous cases specifically, not just easy queries.</p></div>
+      </details>
+
+      <h4>System design &amp; production</h4>
+      <details class="qa"><summary>Design an evaluation pipeline for a customer-support agent from scratch.<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Start with deterministic checks wherever possible (was a ticket actually closed in the system of record — schema/state check, no LLM needed). Build 50-100 hand-crafted golden trajectories covering critical scenarios with expected tool calls annotated. Add LLM-as-judge with an explicit rubric for what can't be checked deterministically (tone, resolution quality), validated against human labels at ≥0.80 Spearman correlation and checked for position/verbosity/self-preference bias. Wire the golden set into a CI gate blocking regressions pre-merge. Add a cheap per-turn classifier in production for negative-sentiment and policy-violation detection, feeding an error queue that routes real failures back into the golden set — closing the loop rather than treating eval as a one-time setup task.</p></div>
+      </details>
+      <details class="qa"><summary>Your team wants to skip building an eval set and just "eyeball" outputs during development. How do you push back?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>LLM outputs are non-deterministic — a change that looks fine on the handful of examples you eyeballed can regress on dozens of cases you didn't happen to check, silently, with no way to detect it before a user does. Manual spot-checking doesn't scale and isn't repeatable across prompt/model changes. Frame it in cost terms: building even a 50-case golden set is a one-time investment that turns every future change into a fast, automated, repeatable pass/fail check instead of a fresh round of manual review each time.</p></div>
+      </details>
+      <details class="qa"><summary>How do you decide what goes in the CI gate versus what's monitored only in production?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>CI gate: your curated golden set plus any known regression cases — bounded, fast enough to run pre-merge, and directly tied to a merge/no-merge decision. Production monitoring: cheap per-turn classifiers for drift and safety signals across all live traffic, plus periodic LLM-as-judge sampling on a bounded batch of production traces for deeper quality checks the fast classifiers can't do. The failures production monitoring surfaces should routinely get promoted into the CI golden set — that promotion path is what keeps the gate meaningful over time instead of stale.</p></div>
+      </details>
+      <details class="qa"><summary>How would you catch the fact that your agent has gotten quietly worse after a prompt change, before users notice?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>This is precisely what the CI gate exists to prevent — run the full golden trajectory set (not just final-answer checks) against the new prompt before merge, comparing trajectory-level metrics (tool selection accuracy, efficiency, not just outcome) against the previous baseline, and block the merge on any statistically meaningful regression. If the regression is subtle enough to slip past a bounded golden set, production trace monitoring with per-turn classifiers and periodic sampled LLM-judge review is the second line of defense, feeding newly discovered failure patterns back into the golden set.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ 16 GLOSSARY ============ -->
+  <section class="chapter" id="glossary">
+    <div class="chapter-head"><span class="chapter-num">16</span><h2 class="chapter-title">Glossary</h2></div>
+    <p class="chapter-dek">Every term used in this document.</p>
+    <div class="chapter-body">
+      <dl class="glossary-grid">
+        <div class="gterm"><dt>Trajectory</dt><dd>The full ordered sequence of prompts, reasoning, tool calls, observations, and final response an agent produces for one task.</dd></div>
+        <div class="gterm"><dt>Outcome eval</dt><dd>Binary/scalar scoring of whether the final task goal was achieved, independent of path taken.</dd></div>
+        <div class="gterm"><dt>Component eval</dt><dd>Testing an individual piece (retriever, sub-agent, tool) of the system in isolation.</dd></div>
+        <div class="gterm"><dt>LLM-as-judge</dt><dd>Using an LLM to score, classify, or compare another system's outputs against a rubric.</dd></div>
+        <div class="gterm"><dt>Pointwise / pairwise judging</dt><dd>Scoring one output alone vs. comparing two outputs to pick a winner.</dd></div>
+        <div class="gterm"><dt>Position bias</dt><dd>Judge preference for a response based on its presentation order, not its quality.</dd></div>
+        <div class="gterm"><dt>Verbosity bias</dt><dd>Judge preference for longer responses regardless of added value.</dd></div>
+        <div class="gterm"><dt>Self-preference / self-enhancement bias</dt><dd>Judge tendency to rate its own model family's outputs more favorably.</dd></div>
+        <div class="gterm"><dt>Swap augmentation</dt><dd>Evaluating a pairwise comparison in both orderings to detect and correct position bias.</dd></div>
+        <div class="gterm"><dt>Spearman correlation</dt><dd>Statistical measure of judge-vs-human ranking agreement; ≥0.80 is a common production target.</dd></div>
+        <div class="gterm"><dt>pass^k</dt><dd>Reliability metric measuring success rate across k repeated attempts at the same task, not just one.</dd></div>
+        <div class="gterm"><dt>Faithfulness</dt><dd>RAGAS metric: fraction of an answer's claims supported by the retrieved context.</dd></div>
+        <div class="gterm"><dt>Context recall</dt><dd>RAGAS metric: fraction of ground-truth information actually present in retrieved context.</dd></div>
+        <div class="gterm"><dt>Context precision</dt><dd>RAGAS metric: whether relevant retrieved chunks are ranked highly.</dd></div>
+        <div class="gterm"><dt>Golden dataset</dt><dd>A curated, expert-validated set of eval cases with known-correct expected trajectories/outputs.</dd></div>
+        <div class="gterm"><dt>Eval-driven development</dt><dd>Treating evaluation as a continuous closed loop (offline → CI → production → error feed → optimization) rather than a one-time gate.</dd></div>
+        <div class="gterm"><dt>Calibration drift</dt><dd>Silent change in a judge's effective scoring behavior after a model version update, undetected by an unchanged rubric.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ 17 RESOURCES ============ -->
+  <section class="chapter" id="resources">
+    <div class="chapter-head"><span class="chapter-num">17</span><h2 class="chapter-title">Resources</h2></div>
+    <p class="chapter-dek">Primary sources worth reading directly.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Zheng et al., "Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena"</strong> — the foundational paper on judge biases</li>
+        <li><strong>τ-bench / τ²-bench papers (Sierra AI)</strong> — the pass^k reliability metric and the dual-control benchmark design</li>
+        <li><strong>SWE-bench / SWE-bench Verified</strong> — GitHub issue resolution methodology</li>
+        <li><strong>GAIA paper (Mialon et al.)</strong> — general assistant task design across difficulty tiers</li>
+        <li><strong>RAGAS documentation (docs.ragas.io)</strong> — canonical formulas for every RAG metric referenced here</li>
+        <li><strong>LangChain's 2026 State of AI Agents report</strong> — production adoption and the "quality is the #1 barrier" finding</li>
+      </ul>
+      <div class="callout">
+        <span class="callout-label">How to actually get interview-ready on this topic</span>
+        <p>Take any agent you've built (even a toy one) and build a real eval pipeline for it this week: 20 golden trajectories, one LLM judge with bias mitigation applied, one deterministic check, and a CI gate. Having your own concrete numbers — your judge's Spearman correlation, your pass^k on 3 attempts — is worth far more in an interview than reciting the figures in this document secondhand.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">Topic 5 of 10 — Agent Evaluation. Next up: Security &amp; Guardrails (prompt injection defense, sandboxing, tool permissioning, and the OWASP LLM Top 10 for agents).</div>
+</main>
+</div>
+
+<script>
+const links = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('section.chapter');
+const map = new Map();
+links.forEach(l => map.set(l.getAttribute('href').slice(1), l));
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const link = map.get(entry.target.id);
+    if(!link) return;
+    if(entry.isIntersecting){
+      links.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, {rootMargin: '-15% 0px -70% 0px', threshold: 0});
+sections.forEach(s => io.observe(s));
+</script>
+</body>
+</html>
