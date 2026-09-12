@@ -1,0 +1,1721 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stream API Bible — GrowthScript Engineering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy:#0F172A; --navy-mid:#1E293B; --brand:#1B4FD8; --brand-soft:#EFF3FE; --brand-mid:#DBEAFE;
+    --accent2:#7C3AED; --accent2-soft:#F5F3FF; --success:#059669; --success-soft:#ECFDF5;
+    --success-border:#A7F3D0; --warn:#D97706; --warn-soft:#FFFBEB; --warn-border:#FDE68A;
+    --warn-text:#78350F; --warn-text-strong:#92400E; --danger:#E11D48; --danger-soft:#FFF1F2;
+    --danger-border:#FECDD3; --purple:#9333EA; --purple-soft:#FDF4FF;
+    --text-1:#0F172A; --text-2:#334155; --text-3:#64748B; --text-4:#94A3B8;
+    --border:#E2E8F0; --border-strong:#CBD5E1; --surface:#FFFFFF; --page:#F8FAFC; --code-bg:#F1F5F9;
+    --sidebar-w:240px; --radius-sm:6px; --radius:10px; --radius-lg:14px;
+    --syn-kw:#6D28D9; --syn-cm:#94A3B8; --syn-st:#059669; --syn-ty:#D97706; --syn-fn:#1B4FD8;
+    color-scheme:light;
+  }
+  [data-theme="dark"] {
+    --navy:#E2E8F0; --navy-mid:#CBD5E1; --brand:#6D9BFF; --brand-soft:#1A2540; --brand-mid:#2A3B66;
+    --accent2:#A78BFA; --accent2-soft:#2A2150; --success:#34D399; --success-soft:#103326;
+    --success-border:#1D5C44; --warn:#FBBF24; --warn-soft:#3A2A0A; --warn-border:#5C4310;
+    --warn-text:#FDE68A; --warn-text-strong:#FCD34D; --danger:#FB7185; --danger-soft:#3A1620;
+    --danger-border:#5C2330; --purple:#D8B4FE; --purple-soft:#2A1A40;
+    --text-1:#E8ECF2; --text-2:#B6C0CE; --text-3:#8895A7; --text-4:#647082;
+    --border:#2A3441; --border-strong:#3D4859; --surface:#161D29; --page:#0D1219; --code-bg:#0F1722;
+    --syn-kw:#C4A7FF; --syn-cm:#6B7888; --syn-st:#6EE7B7; --syn-ty:#FCD34D; --syn-fn:#7FB3FF;
+    color-scheme:dark;
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family:'Inter',-apple-system,sans-serif; background:var(--page); color:var(--text-1); font-size:15px; line-height:1.7; -webkit-font-smoothing:antialiased; display:flex; min-height:100vh; transition:background 0.2s,color 0.2s; }
+  .sidebar { width:var(--sidebar-w); flex-shrink:0; position:sticky; top:0; height:100vh; overflow-y:auto; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:0 0 32px; transition:background 0.2s,border-color 0.2s; }
+  .sidebar-brand { padding:16px 20px 14px; border-bottom:1px solid var(--border); margin-bottom:8px; position:sticky; top:0; background:var(--surface); z-index:10; display:flex; flex-direction:column; gap:10px; }
+  .brand-row { display:flex; flex-direction:column; }
+  .sidebar-logo { font-family:'Space Mono',monospace; font-size:12px; font-weight:700; color:var(--brand); letter-spacing:0.04em; display:block; margin-bottom:2px; }
+  .sidebar-tagline { font-size:11px; color:var(--text-4); }
+  .sidebar-group { padding:12px 0 4px; }
+  .sidebar-group-label { font-family:'Space Mono',monospace; font-size:9.5px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-4); padding:0 20px; margin-bottom:4px; display:block; }
+  .sidebar-link { display:flex; align-items:center; gap:8px; padding:6px 20px; font-size:13px; color:var(--text-2); text-decoration:none; border-left:2px solid transparent; transition:all 0.12s; line-height:1.4; }
+  .sidebar-link:hover { color:var(--brand); background:var(--brand-soft); border-left-color:var(--brand-mid); }
+  .sidebar-link.active { color:var(--brand); background:var(--brand-soft); border-left-color:var(--brand); font-weight:500; }
+  .sidebar-link .sl-dot { width:5px; height:5px; border-radius:50%; background:var(--border-strong); flex-shrink:0; }
+  .sidebar-link.active .sl-dot,.sidebar-link:hover .sl-dot { background:var(--brand); }
+  .sidebar-sub-link { display:flex; align-items:center; gap:8px; padding:4px 20px 4px 34px; font-size:12px; color:var(--text-3); text-decoration:none; border-left:2px solid transparent; transition:all 0.12s; }
+  .sidebar-sub-link:hover { color:var(--brand); background:var(--brand-soft); }
+  .theme-toggle { display:flex; align-items:center; background:var(--page); border:1px solid var(--border); border-radius:20px; padding:3px; width:fit-content; }
+  .theme-toggle-btn { display:flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; border:none; background:transparent; color:var(--text-3); cursor:pointer; font-size:13px; transition:all 0.15s; }
+  .theme-toggle-btn.active { background:var(--surface); color:var(--brand); box-shadow:0 1px 3px rgba(0,0,0,0.1); }
+  .main { flex:1; min-width:0; padding:48px 64px 80px 64px; max-width:1100px; }
+  .page-title-block { padding-bottom:36px; border-bottom:1px solid var(--border); margin-bottom:52px; }
+  .page-eyebrow { font-family:'Space Mono',monospace; font-size:11px; font-weight:700; letter-spacing:0.1em; color:var(--text-4); text-transform:uppercase; margin-bottom:10px; display:block; }
+  .page-title-block h1 { font-size:30px; font-weight:600; color:var(--navy); letter-spacing:-0.02em; line-height:1.2; margin-bottom:10px; }
+  .page-title-block > p { font-size:15px; color:var(--text-2); max-width:680px; line-height:1.65; }
+  .tc-row { display:flex; gap:16px; margin-top:18px; flex-wrap:wrap; }
+  .tc-pill { font-size:12px; color:var(--text-3); display:flex; align-items:center; gap:5px; }
+  .tc-pill span { width:6px; height:6px; border-radius:50%; background:var(--brand); display:inline-block; }
+  .section { margin-bottom:60px; scroll-margin-top:32px; }
+  .section-header { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+  .section-eyebrow { font-family:'Space Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.1em; color:var(--text-4); text-transform:uppercase; white-space:nowrap; }
+  .section-rule { flex:1; height:1px; background:var(--border); }
+  .section h2 { font-size:21px; font-weight:600; color:var(--navy); letter-spacing:-0.02em; margin-bottom:8px; }
+  .section-intro { font-size:14.5px; color:var(--text-2); margin-bottom:28px; max-width:760px; line-height:1.7; }
+  .sub-heading { font-size:14px; font-weight:600; color:var(--navy); margin:28px 0 10px; display:flex; align-items:center; gap:8px; }
+  .sub-heading::after { content:''; flex:1; height:1px; background:var(--border); }
+  .section-divider { height:1px; background:var(--border); margin:48px 0; }
+  .body-p { font-size:14px; color:var(--text-2); margin-bottom:14px; line-height:1.7; }
+  .split-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px; }
+  .rule-card { background:var(--page); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
+  .rule-card-label { font-family:'Space Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-4); margin-bottom:10px; display:block; }
+  .rule-list { list-style:none; }
+  .rule-list li { font-size:13px; color:var(--text-2); padding-left:18px; position:relative; margin-bottom:6px; line-height:1.6; }
+  .rule-list li::before { content:'→'; position:absolute; left:0; color:var(--brand); font-size:11px; top:2px; }
+  .rule-list li.no::before  { content:'✗'; color:var(--danger);  font-size:12px; }
+  .rule-list li.yes::before { content:'✓'; color:var(--success); font-size:12px; }
+  .tip-box { display:flex; gap:10px; background:var(--brand-soft); border:1px solid var(--brand-mid); border-radius:var(--radius); padding:11px 14px; margin-top:14px; }
+  .tip-icon { flex-shrink:0; font-size:14px; margin-top:2px; }
+  .tip-text { font-size:12.5px; color:var(--navy-mid); line-height:1.6; }
+  .tip-text strong { color:var(--brand); font-weight:600; }
+  [data-theme="dark"] .tip-text { color:var(--text-2); }
+  .warn-box { display:flex; gap:10px; background:var(--warn-soft); border:1px solid var(--warn-border); border-radius:var(--radius); padding:11px 14px; margin-top:12px; }
+  .warn-text { font-size:12.5px; color:var(--warn-text); line-height:1.6; }
+  .warn-text strong { color:var(--warn-text-strong); font-weight:600; }
+  .danger-box { display:flex; gap:10px; background:var(--danger-soft); border:1px solid var(--danger-border); border-radius:var(--radius); padding:11px 14px; margin-top:12px; }
+  .danger-text { font-size:12.5px; color:var(--danger); line-height:1.6; }
+  .danger-text strong { font-weight:600; }
+  pre { background:var(--code-bg); border-top:1px solid var(--border); padding:14px 16px; overflow-x:auto; font-family:'Space Mono',monospace; font-size:12px; line-height:1.8; color:var(--text-1); }
+  code.inline { font-family:'Space Mono',monospace; font-size:11.5px; background:var(--code-bg); padding:1px 5px; border-radius:4px; color:var(--text-1); }
+  .kw { color:var(--syn-kw); font-weight:700; }
+  .cm { color:var(--syn-cm); font-style:italic; }
+  .st { color:var(--syn-st); }
+  .ty { color:var(--syn-ty); }
+  .fn { color:var(--syn-fn); }
+  .an { color:var(--syn-ty); font-weight:600; }
+  .code-pair { margin-top:14px; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  .code-pair-tabs { display:flex; border-bottom:1px solid var(--border); }
+  .cpt { flex:1; padding:7px 14px; font-size:12px; font-weight:600; color:var(--text-3); text-align:center; cursor:pointer; transition:all 0.12s; user-select:none; }
+  .cpt.bad { border-right:1px solid var(--border); }
+  .cpt.bad.active  { background:var(--danger-soft); color:var(--danger); }
+  .cpt.good.active { background:var(--success-soft); color:var(--success); }
+  .code-pane { display:none; }
+  .code-pane.active { display:block; }
+  .code-pane pre { border-top:none; border-radius:0; }
+  .code-tabs-wrap { border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; margin-top:14px; }
+  .code-tabs-header { display:flex; overflow-x:auto; border-bottom:1px solid var(--border); background:var(--page); }
+  .ct-tab { padding:9px 16px; font-size:12px; font-weight:500; color:var(--text-3); cursor:pointer; white-space:nowrap; border-right:1px solid var(--border); transition:all 0.12s; font-family:'Space Mono',monospace; user-select:none; flex-shrink:0; }
+  .ct-tab:hover { color:var(--brand); background:var(--brand-soft); }
+  .ct-tab.active { color:var(--brand); background:var(--surface); border-bottom:2px solid var(--brand); font-weight:700; }
+  .ct-pane { display:none; }
+  .ct-pane.active { display:block; }
+  .ct-pane pre { border-top:none; border-radius:0; font-size:12px; }
+  .step-list { display:flex; flex-direction:column; gap:8px; margin-bottom:18px; }
+  .step-item { display:flex; gap:12px; align-items:flex-start; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:10px 14px; }
+  .step-num { flex-shrink:0; width:22px; height:22px; border-radius:50%; background:var(--brand); color:#fff; font-family:'Space Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:2px; }
+  .step-body { font-size:13px; color:var(--text-2); line-height:1.6; }
+  .step-body strong { color:var(--navy); }
+  .code-block-wrap { border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-top:12px; margin-bottom:4px; }
+  .code-block-label { font-family:'Space Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-4); background:var(--page); padding:7px 14px; border-bottom:1px solid var(--border); display:block; }
+  .code-block-wrap pre { border-top:none; }
+  .ref-table { width:100%; border-collapse:collapse; font-size:13px; margin-top:14px; border-radius:var(--radius); overflow:hidden; border:1px solid var(--border); }
+  .ref-table th { background:var(--page); color:var(--navy); font-weight:600; text-align:left; padding:10px 14px; border-bottom:2px solid var(--border); font-family:'Space Mono',monospace; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; }
+  .ref-table td { padding:9px 14px; border-bottom:1px solid var(--border); color:var(--text-2); vertical-align:top; line-height:1.6; }
+  .ref-table tr:last-child td { border-bottom:none; }
+  .ref-table tr:hover td { background:var(--brand-soft); }
+  .ref-table .yes { color:var(--success); font-weight:600; }
+  .ref-table .no  { color:var(--danger);  font-weight:600; }
+  .cheat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; }
+  .cheat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
+  .cheat-card h4 { font-size:12.5px; font-weight:600; color:var(--navy); margin-bottom:8px; }
+  .cheat-card ul { list-style:none; }
+  .cheat-card li { font-size:12px; color:var(--text-2); padding-left:13px; position:relative; line-height:1.55; margin-bottom:4px; }
+  .cheat-card li::before { content:'→'; position:absolute; left:0; color:var(--brand); font-size:10.5px; top:1px; }
+  /* Thread state diagram */
+  .state-diagram { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; overflow-x:auto; margin-bottom:6px; }
+  /* Concept pill tags */
+  .tag-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .tag { font-size:11.5px; font-weight:500; padding:3px 10px; border-radius:20px; border:1px solid var(--border); color:var(--text-2); background:var(--page); font-family:'Space Mono',monospace; }
+  .tag-brand  { background:var(--brand-soft);   border-color:var(--brand-mid);      color:var(--brand);   }
+  .tag-warn   { background:var(--warn-soft);    border-color:var(--warn-border);    color:var(--warn);    }
+  .tag-danger { background:var(--danger-soft);  border-color:var(--danger-border);  color:var(--danger);  }
+  .tag-green  { background:var(--success-soft); border-color:var(--success-border); color:var(--success); }
+  /* Comparison table accent rows */
+  .ref-table tr.accent td { background:var(--brand-soft); font-weight:500; }
+  .page-footer { border-top:1px solid var(--border); padding:20px 0 0; display:flex; justify-content:space-between; align-items:center; }
+  .footer-brand { font-family:'Space Mono',monospace; font-size:11px; font-weight:700; color:var(--brand); }
+  .footer-note  { font-size:11.5px; color:var(--text-4); }
+  @media(max-width:860px){
+    body{flex-direction:column;}
+    .sidebar{width:100%;height:auto;position:static;border-right:none;border-bottom:1px solid var(--border);padding-bottom:0;}
+    .sidebar-group{display:flex;flex-wrap:wrap;padding:8px 16px;gap:4px;}
+    .sidebar-group-label{display:none;}
+    .sidebar-link{padding:5px 10px;border-left:none;border-radius:20px;border:1px solid var(--border);font-size:12px;}
+    .sidebar-link:hover,.sidebar-link.active{background:var(--brand-soft);border-color:var(--brand-mid);}
+    .sidebar-sub-link{display:none;}
+    .main{padding:32px 20px 60px;}
+    .split-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-row">
+      <span class="sidebar-logo">GS // Stream API Bible</span>
+      <span class="sidebar-tagline">Interview Reference</span>
+    </div>
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <button class="theme-toggle-btn active" id="btn-light">☀️</button>
+      <button class="theme-toggle-btn" id="btn-dark">🌙</button>
+    </div>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Foundations</span>
+    <a href="#foundations" class="sidebar-link active"><span class="sl-dot"></span>What is a Stream?</a>
+    <a href="#foundations" class="sidebar-sub-link">Stream vs Collection</a>
+    <a href="#creating-streams" class="sidebar-link"><span class="sl-dot"></span>Creating Streams</a>
+    <a href="#pipeline-model" class="sidebar-link"><span class="sl-dot"></span>The Pipeline Model</a>
+    <a href="#laziness" class="sidebar-link"><span class="sl-dot"></span>Laziness &amp; Short-Circuiting</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Intermediate Operations</span>
+    <a href="#map-flatmap" class="sidebar-link"><span class="sl-dot"></span>map() vs flatMap()</a>
+    <a href="#filter-stateful" class="sidebar-link"><span class="sl-dot"></span>filter, distinct, sorted, limit/skip</a>
+    <a href="#filter-stateful" class="sidebar-sub-link">Stateless vs stateful ops</a>
+    <a href="#reduce" class="sidebar-link"><span class="sl-dot"></span>reduce() — All 3 Overloads</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Terminal Operations</span>
+    <a href="#terminal-ops" class="sidebar-link"><span class="sl-dot"></span>Terminal Operations Catalog</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Collectors</span>
+    <a href="#collectors-basic" class="sidebar-link"><span class="sl-dot"></span>toList, toSet, toMap, joining</a>
+    <a href="#collectors-basic" class="sidebar-sub-link">toMap merge-function trap</a>
+    <a href="#collectors-grouping" class="sidebar-link"><span class="sl-dot"></span>groupingBy &amp; partitioningBy</a>
+    <a href="#collectors-grouping" class="sidebar-sub-link">Multi-level grouping</a>
+    <a href="#collectors-advanced" class="sidebar-link"><span class="sl-dot"></span>Advanced Collectors</a>
+    <a href="#collectors-advanced" class="sidebar-sub-link">teeing, custom Collector.of</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Specialized Streams</span>
+    <a href="#primitive-streams" class="sidebar-link"><span class="sl-dot"></span>Primitive Streams</a>
+    <a href="#primitive-streams" class="sidebar-sub-link">IntStream, boxing cost</a>
+    <a href="#optional" class="sidebar-link"><span class="sl-dot"></span>Optional Deep Dive</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Parallel Streams</span>
+    <a href="#parallel-internals" class="sidebar-link"><span class="sl-dot"></span>Parallel Streams — Internals</a>
+    <a href="#parallel-internals" class="sidebar-sub-link">ForkJoinPool, Spliterator</a>
+    <a href="#parallel-pitfalls" class="sidebar-link"><span class="sl-dot"></span>Parallel Stream Pitfalls</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Practical Java</span>
+    <a href="#mistakes" class="sidebar-link"><span class="sl-dot"></span>Common Mistakes &amp; Anti-Patterns</a>
+    <a href="#real-world" class="sidebar-link"><span class="sl-dot"></span>Real-World Scenarios</a>
+    <a href="#performance" class="sidebar-link"><span class="sl-dot"></span>Performance Considerations</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Reference</span>
+    <a href="#faang-qa" class="sidebar-link"><span class="sl-dot"></span>FAANG Rapid-Fire Q&amp;A</a>
+    <a href="#cheatsheet" class="sidebar-link"><span class="sl-dot"></span>Interview Cheatsheet</a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+<div class="page-title-block">
+  <span class="page-eyebrow">java.util.stream — Java 8+</span>
+  <h1>Stream API Bible</h1>
+  <p>Complete Java Stream API reference for FAANG and product-based interviews — the full pipeline model, every intermediate and terminal operation, a deep Collectors treatment through multi-level groupingBy and teeing, parallel stream internals and their pitfalls, and the real-world patterns and mistakes interviewers actually probe for.</p>
+  <div class="tc-row">
+    <span class="tc-pill"><span></span>map vs flatMap</span>
+    <span class="tc-pill"><span></span>Collectors</span>
+    <span class="tc-pill"><span></span>groupingBy</span>
+    <span class="tc-pill"><span></span>Parallel Streams</span>
+    <span class="tc-pill"><span></span>Laziness</span>
+    <span class="tc-pill"><span></span>Real-World Patterns</span>
+  </div>
+</div>
+<!-- ═══ SECTION 1: FOUNDATIONS ═══ -->
+<section class="section" id="foundations">
+  <div class="section-header"><span class="section-eyebrow">Java 8+</span><span class="section-rule"></span></div>
+  <h2>What is a Stream?</h2>
+  <p class="section-intro">A <code class="inline">Stream</code> is a sequence of elements supporting functional-style, declarative operations — you describe WHAT transformation you want, not HOW to loop and accumulate it. Critically, a stream is NOT a data structure: it doesn't store elements, it processes them from a source, on demand.</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th></th><th>Collection</th><th>Stream</th></tr></thead>
+    <tbody>
+      <tr><td>Stores data?</td><td class="yes">Yes — data sits in memory</td><td class="no">No — a pipeline of computation over a source</td></tr>
+      <tr><td>Consumption</td><td>Can be iterated many times</td><td>Consumed ONCE — a second terminal op throws IllegalStateException</td></tr>
+      <tr><td>Evaluation</td><td>Eager — building the collection does the work</td><td>Lazy — nothing runs until a terminal operation</td></tr>
+      <tr><td>Mutation</td><td>You mutate it directly (add/remove)</td><td>Never mutates its source; produces new streams/results</td></tr>
+      <tr><td>Iteration control</td><td>External — you write the loop</td><td>Internal — the Stream API controls the iteration for you</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">The declarative shift, side by side</span>
+<pre><span class="cm">// Imperative — external iteration, you manage state manually</span>
+<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; result = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;();
+<span class="kw">for</span> (<span class="ty">Employee</span> e : employees) {
+    <span class="kw">if</span> (e.<span class="fn">getSalary</span>() &gt; 50000) {
+        result.<span class="fn">add</span>(e.<span class="fn">getName</span>().<span class="fn">toUpperCase</span>());
+    }
+}
+
+<span class="cm">// Declarative — internal iteration, you describe the transformation</span>
+<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; result2 = employees.<span class="fn">stream</span>()
+    .<span class="fn">filter</span>(e -&gt; e.<span class="fn">getSalary</span>() &gt; 50000)
+    .<span class="fn">map</span>(e -&gt; e.<span class="fn">getName</span>().<span class="fn">toUpperCase</span>())
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">toList</span>());
+<span class="cm">// Same result — but the STRUCTURE of the transformation is now explicit,</span>
+<span class="cm">// composable, and (as covered later) trivially parallelizable via</span>
+<span class="cm">// .parallelStream() with zero change to the pipeline's logic</span></pre>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "A Stream is a view of computation over a source, not a container — it's consumed exactly once, evaluated lazily, and never mutates the underlying data." This single sentence answers a huge fraction of "what is a stream" follow-up questions.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 2: CREATING STREAMS ═══ -->
+<section class="section" id="creating-streams">
+  <div class="section-header"><span class="section-eyebrow">Every Source</span><span class="section-rule"></span></div>
+  <h2>Creating Streams</h2>
+  <p class="section-intro">Streams can originate from collections, arrays, individual values, generator functions, or even files — knowing the full menu (not just <code class="inline">.stream()</code>) signals real fluency.</p>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'cs-collection')">From a Collection or array</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'cs-of')">Stream.of() &amp; Stream.empty()</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'cs-generate')">Stream.iterate() &amp; Stream.generate()</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'cs-builder')">Stream.builder() &amp; Files.lines()</div>
+    </div>
+    <div id="cs-collection" class="ct-pane active"><pre><span class="ty">List</span>&lt;<span class="ty">String</span>&gt; names = <span class="ty">List</span>.<span class="fn">of</span>(<span class="st">"Ravi"</span>, <span class="st">"Sita"</span>, <span class="st">"Amit"</span>);
+<span class="ty">Stream</span>&lt;<span class="ty">String</span>&gt; s1 = names.<span class="fn">stream</span>();          <span class="cm">// sequential</span>
+<span class="ty">Stream</span>&lt;<span class="ty">String</span>&gt; s2 = names.<span class="fn">parallelStream</span>();  <span class="cm">// parallel — covered later</span>
+
+<span class="ty">Integer</span>[] arr = {1, 2, 3};
+<span class="ty">Stream</span>&lt;<span class="ty">Integer</span>&gt; s3 = <span class="ty">Arrays</span>.<span class="fn">stream</span>(arr);
+<span class="kw">int</span>[] primArr = {1, 2, 3};
+<span class="ty">IntStream</span> s4 = <span class="ty">Arrays</span>.<span class="fn">stream</span>(primArr); <span class="cm">// primitive array -&gt; IntStream directly, no boxing</span>
+
+<span class="ty">Map</span>&lt;<span class="ty">String</span>, <span class="ty">Integer</span>&gt; map = <span class="ty">Map</span>.<span class="fn">of</span>(<span class="st">"a"</span>, 1, <span class="st">"b"</span>, 2);
+map.<span class="fn">entrySet</span>().<span class="fn">stream</span>(); <span class="cm">// the standard way to stream a Map — via its entry set</span></pre></div>
+    <div id="cs-of" class="ct-pane"><pre><span class="ty">Stream</span>&lt;<span class="ty">String</span>&gt; s = <span class="ty">Stream</span>.<span class="fn">of</span>(<span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"c"</span>); <span class="cm">// varargs — any number of individual values</span>
+<span class="ty">Stream</span>&lt;<span class="ty">Integer</span>&gt; single = <span class="ty">Stream</span>.<span class="fn">of</span>(42);     <span class="cm">// even a single element works</span>
+<span class="ty">Stream</span>&lt;<span class="ty">String</span>&gt; empty = <span class="ty">Stream</span>.<span class="fn">empty</span>();       <span class="cm">// a genuinely empty stream — useful as a safe default return value</span>
+
+<span class="ty">IntStream</span> range = <span class="ty">IntStream</span>.<span class="fn">range</span>(0, 5);        <span class="cm">// 0,1,2,3,4 — exclusive upper bound</span>
+<span class="ty">IntStream</span> rangeClosed = <span class="ty">IntStream</span>.<span class="fn">rangeClosed</span>(0, 5); <span class="cm">// 0,1,2,3,4,5 — INCLUSIVE upper bound</span></pre></div>
+    <div id="cs-generate" class="ct-pane"><pre><span class="cm">// Stream.iterate(seed, unaryOperator) — each element derived from the previous</span>
+<span class="ty">Stream</span>&lt;<span class="ty">Integer</span>&gt; powers = <span class="ty">Stream</span>.<span class="fn">iterate</span>(1, n -&gt; n * 2).<span class="fn">limit</span>(5);
+<span class="cm">// [1, 2, 4, 8, 16] — INFINITE without limit()! Always bound it or add a</span>
+<span class="cm">// predicate-based overload (Java 9+): Stream.iterate(1, n -&gt; n &lt; 100, n -&gt; n * 2)</span>
+
+<span class="cm">// Stream.generate(supplier) — each element independently produced, no relation to the last</span>
+<span class="ty">Stream</span>&lt;<span class="ty">Double</span>&gt; randoms = <span class="ty">Stream</span>.<span class="fn">generate</span>(<span class="ty">Math</span>::random).<span class="fn">limit</span>(3);
+<span class="cm">// ALSO infinite without limit() — generate() has no natural termination at all</span></pre></div>
+    <div id="cs-builder" class="ct-pane"><pre><span class="cm">// Stream.builder() — imperative-style construction when elements come from</span>
+<span class="cm">// conditional logic rather than an existing source</span>
+<span class="ty">Stream</span>&lt;<span class="ty">String</span>&gt; built = <span class="ty">Stream</span>.&lt;<span class="ty">String</span>&gt;builder()
+    .<span class="fn">add</span>(<span class="st">"x"</span>).<span class="fn">add</span>(<span class="st">"y"</span>).<span class="fn">add</span>(<span class="st">"z"</span>)
+    .<span class="fn">build</span>();
+
+<span class="cm">// Files.lines() — a LAZY stream of a text file's lines, must be closed (try-with-resources)</span>
+<span class="kw">try</span> (<span class="ty">Stream</span>&lt;<span class="ty">String</span>&gt; lines = <span class="ty">Files</span>.<span class="fn">lines</span>(<span class="ty">Path</span>.<span class="fn">of</span>(<span class="st">"data.txt"</span>))) {
+    <span class="kw">long</span> errorCount = lines.<span class="fn">filter</span>(l -&gt; l.<span class="fn">contains</span>(<span class="st">"ERROR"</span>)).<span class="fn">count</span>();
+} <span class="cm">// unlike Files.readAllLines() (eager, loads the whole file), Files.lines() streams</span>
+  <span class="cm">// line by line — the right choice for files too large to hold entirely in memory</span></pre></div>
+  </div>
+
+  <div class="warn-box">
+    <span class="tip-icon">⚠️</span>
+    <span class="warn-text"><strong>Interview trap:</strong> <code class="inline">Stream.iterate()</code> and <code class="inline">Stream.generate()</code> produce INFINITE streams by default. Forgetting <code class="inline">.limit()</code> (or, for iterate, the Java 9+ predicate overload) hangs the program — this is one of the most common "gotcha" questions asked specifically to see if you know streams don't self-terminate.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 3: THE PIPELINE MODEL ═══ -->
+<section class="section" id="pipeline-model">
+  <div class="section-header"><span class="section-eyebrow">Source → Intermediate → Terminal</span><span class="section-rule"></span></div>
+  <h2>The Pipeline Model</h2>
+  <p class="section-intro">Every stream pipeline has exactly three parts: ONE source, ZERO or more intermediate operations, and EXACTLY ONE terminal operation. Understanding this shape is the foundation for nearly every other stream question.</p>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">Anatomy of a pipeline</span>
+<pre>employees.stream()                              ← SOURCE
+    .filter(e -&gt; e.getSalary() &gt; 50000)          ← INTERMEDIATE (returns a Stream)
+    .map(Employee::getName)                       ← INTERMEDIATE (returns a Stream)
+    .sorted()                                     ← INTERMEDIATE (returns a Stream)
+    .collect(Collectors.toList());                ← TERMINAL (returns a result, ends the pipeline)</pre>
+  </div>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th></th><th>Intermediate Operations</th><th>Terminal Operations</th></tr></thead>
+    <tbody>
+      <tr><td>Return type</td><td>Another Stream</td><td>A concrete result (List, count, boolean, Optional, void...)</td></tr>
+      <tr><td>Evaluation</td><td>LAZY — just builds up the pipeline description</td><td>Triggers actual execution of the WHOLE pipeline</td></tr>
+      <tr><td>Chainable?</td><td>Yes — can chain any number of them</td><td>No — ends the pipeline; the stream is now consumed</td></tr>
+      <tr><td>Examples</td><td>filter, map, flatMap, distinct, sorted, limit, skip, peek</td><td>collect, forEach, reduce, count, anyMatch, findFirst, toArray</td></tr>
+    </tbody>
+  </table>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "Intermediate operations are lazy and return a Stream, so they can be chained; terminal operations are eager, return a concrete value, and consume the stream. A pipeline with intermediate operations but no terminal operation never actually executes at all — a very common early mistake."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 4: LAZINESS & SHORT-CIRCUITING ═══ -->
+<section class="section" id="laziness">
+  <div class="section-header"><span class="section-eyebrow">Why Order of Operations Matters</span><span class="section-rule"></span></div>
+  <h2>Laziness &amp; Short-Circuiting</h2>
+  <p class="section-intro">Streams don't process elements stage-by-stage across the WHOLE collection — they process ONE ELEMENT AT A TIME through the ENTIRE pipeline, driven by the terminal operation pulling elements as needed. This is a genuinely different execution model than a naive reading suggests, and it's exactly why performance and even correctness questions come up.</p>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'lz-vertical')">Vertical execution, not horizontal</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'lz-notrigger')">No terminal op = nothing runs</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'lz-shortcircuit')">Short-circuiting operations</div>
+    </div>
+    <div id="lz-vertical" class="ct-pane active"><pre><span class="ty">List</span>&lt;<span class="ty">String</span>&gt; names = <span class="ty">List</span>.<span class="fn">of</span>(<span class="st">"Ann"</span>, <span class="st">"Bob"</span>, <span class="st">"Cal"</span>);
+
+names.<span class="fn">stream</span>()
+    .<span class="fn">peek</span>(n -&gt; <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"filter check: "</span> + n))
+    .<span class="fn">filter</span>(n -&gt; n.<span class="fn">startsWith</span>(<span class="st">"A"</span>) || n.<span class="fn">startsWith</span>(<span class="st">"B"</span>))
+    .<span class="fn">peek</span>(n -&gt; <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"map: "</span> + n))
+    .<span class="fn">map</span>(<span class="ty">String</span>::toUpperCase)
+    .<span class="fn">forEach</span>(<span class="ty">System</span>.out::println);
+
+<span class="cm">// Output shows each element runs through the WHOLE pipeline before the next starts:</span>
+<span class="cm">// filter check: Ann</span>
+<span class="cm">// map: Ann</span>
+<span class="cm">// ANN</span>
+<span class="cm">// filter check: Bob</span>
+<span class="cm">// map: Bob</span>
+<span class="cm">// BOB</span>
+<span class="cm">// filter check: Cal    &lt;- filter fails here, map/forEach NEVER run for "Cal"</span>
+<span class="cm">//</span>
+<span class="cm">// NOT: "filter check: Ann, Bob, Cal" then "map: Ann, Bob" then "ANN, BOB" —</span>
+<span class="cm">// that would be the WRONG (horizontal, stage-by-stage) mental model</span></pre></div>
+    <div id="lz-notrigger" class="ct-pane"><pre><span class="ty">List</span>&lt;<span class="ty">String</span>&gt; names = <span class="ty">List</span>.<span class="fn">of</span>(<span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"c"</span>);
+
+names.<span class="fn">stream</span>()
+    .<span class="fn">filter</span>(n -&gt; {
+        <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"filtering: "</span> + n); <span class="cm">// this NEVER prints anything</span>
+        <span class="kw">return</span> <span class="kw">true</span>;
+    });
+<span class="cm">// No terminal operation -&gt; the WHOLE pipeline is a no-op. Nothing executes.</span>
+<span class="cm">// This surprises people coming from eager-evaluation languages, and is a</span>
+<span class="cm">// classic interview trick: "what does this code print?" Answer: nothing.</span></pre></div>
+    <div id="lz-shortcircuit" class="ct-pane"><pre><span class="cm">// SHORT-CIRCUITING operations can stop processing before seeing every element —</span>
+<span class="cm">// a major efficiency win, and only possible BECAUSE of lazy, per-element evaluation</span>
+
+<span class="ty">Optional</span>&lt;<span class="ty">Integer</span>&gt; first = <span class="ty">Stream</span>.<span class="fn">iterate</span>(1, n -&gt; n + 1)  <span class="cm">// an INFINITE stream...</span>
+    .<span class="fn">filter</span>(n -&gt; n % 7 == 0)
+    .<span class="fn">findFirst</span>();                             <span class="cm">// ...but findFirst() stops as soon as ONE match is found — 7</span>
+<span class="cm">// This WORKS despite the infinite source, precisely because findFirst() is</span>
+<span class="cm">// short-circuiting and only pulls as many elements as it actually needs</span>
+
+<span class="kw">boolean</span> hasNegative = numbers.<span class="fn">stream</span>().<span class="fn">anyMatch</span>(n -&gt; n &lt; 0); <span class="cm">// stops at the FIRST negative found</span>
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; firstThree = numbers.<span class="fn">stream</span>().<span class="fn">limit</span>(3).<span class="fn">toList</span>(); <span class="cm">// stops after 3 elements pulled</span>
+
+<span class="cm">// Short-circuiting operations: anyMatch, allMatch, noneMatch, findFirst,</span>
+<span class="cm">// findAny, limit — all can terminate the pipeline early</span></pre></div>
+  </div>
+
+  <div class="danger-box">
+    <span class="tip-icon">🚫</span>
+    <span class="danger-text"><strong>Interview one-liner:</strong> "Streams evaluate lazily and per-element, not stage-by-stage — each element flows through the entire pipeline before the next one starts. This is exactly what makes short-circuiting operations like findFirst() or anyMatch() able to work correctly even against an infinite source stream, since they can signal 'stop pulling' partway through."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 5: MAP VS FLATMAP ═══ -->
+<section class="section" id="map-flatmap">
+  <div class="section-header"><span class="section-eyebrow">The #1 Confusion</span><span class="section-rule"></span></div>
+  <h2>map() vs flatMap()</h2>
+  <p class="section-intro">Both transform elements — but <code class="inline">map()</code> is a strict ONE-TO-ONE transformation, while <code class="inline">flatMap()</code> is ONE-TO-MANY, flattening nested structures into a single, flat stream. Confusing the two is one of the most common real interview stumbling blocks.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">map(Function&lt;T,R&gt;)</span>
+      <ul class="rule-list">
+        <li>Transforms EACH element into exactly ONE new element</li>
+        <li><code class="inline">Stream&lt;T&gt;</code> becomes <code class="inline">Stream&lt;R&gt;</code> — same number of elements, different type/value</li>
+        <li>If the mapping function itself returns a Stream, you get a <code class="inline">Stream&lt;Stream&lt;X&gt;&gt;</code> — a nested mess you almost never actually want</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">flatMap(Function&lt;T, Stream&lt;R&gt;&gt;)</span>
+      <ul class="rule-list">
+        <li>Transforms each element into a STREAM of zero, one, or many elements, then FLATTENS all those streams into one</li>
+        <li>The element count going IN doesn't have to match the count coming OUT</li>
+        <li>Exactly what you need for nested collections — <code class="inline">List&lt;List&lt;X&gt;&gt;</code> → <code class="inline">Stream&lt;X&gt;</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'mf-nested')">The Stream&lt;Stream&lt;X&gt;&gt; problem map() creates</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'mf-flatten')">flatMap() flattening nested lists</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'mf-optional')">flatMap() with Optional</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'mf-words')">Classic use: splitting sentences into words</div>
+    </div>
+    <div id="mf-nested" class="ct-pane active"><pre><span class="ty">List</span>&lt;<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt;&gt; nested = <span class="ty">List</span>.<span class="fn">of</span>(<span class="ty">List</span>.<span class="fn">of</span>(1, 2), <span class="ty">List</span>.<span class="fn">of</span>(3, 4), <span class="ty">List</span>.<span class="fn">of</span>(5));
+
+<span class="cm">// Using map() here gives you a Stream of Streams — NOT what you want</span>
+<span class="ty">Stream</span>&lt;<span class="ty">Stream</span>&lt;<span class="ty">Integer</span>&gt;&gt; wrong = nested.<span class="fn">stream</span>().<span class="fn">map</span>(<span class="ty">List</span>::stream);
+<span class="cm">// You'd need to manually flatten this yourself — awkward and rarely useful as-is</span></pre></div>
+    <div id="mf-flatten" class="ct-pane"><pre><span class="ty">List</span>&lt;<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt;&gt; nested = <span class="ty">List</span>.<span class="fn">of</span>(<span class="ty">List</span>.<span class="fn">of</span>(1, 2), <span class="ty">List</span>.<span class="fn">of</span>(3, 4), <span class="ty">List</span>.<span class="fn">of</span>(5));
+
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; flat = nested.<span class="fn">stream</span>()
+    .<span class="fn">flatMap</span>(<span class="ty">List</span>::stream) <span class="cm">// each inner List becomes a Stream, all merged into ONE flat stream</span>
+    .<span class="fn">toList</span>();
+<span class="ty">System</span>.out.<span class="fn">println</span>(flat); <span class="cm">// [1, 2, 3, 4, 5] — exactly the flattened result</span>
+
+<span class="cm">// Real-world: getting every order line item across every order in a list</span>
+<span class="ty">List</span>&lt;<span class="ty">LineItem</span>&gt; allItems = orders.<span class="fn">stream</span>()
+    .<span class="fn">flatMap</span>(order -&gt; order.<span class="fn">getLineItems</span>().<span class="fn">stream</span>())
+    .<span class="fn">toList</span>();</pre></div>
+    <div id="mf-optional" class="ct-pane"><pre><span class="cm">// Optional also has flatMap() — same "avoid nesting" principle applied to Optional</span>
+<span class="ty">Optional</span>&lt;<span class="ty">String</span>&gt; name = <span class="ty">Optional</span>.<span class="fn">of</span>(<span class="st">"alice"</span>);
+
+<span class="cm">// map() with a function returning Optional -&gt; nested Optional&lt;Optional&lt;X&gt;&gt;:</span>
+<span class="ty">Optional</span>&lt;<span class="ty">Optional</span>&lt;<span class="ty">String</span>&gt;&gt; nested = name.<span class="fn">map</span>(n -&gt; <span class="fn">lookupEmail</span>(n)); <span class="cm">// lookupEmail returns Optional&lt;String&gt;</span>
+
+<span class="cm">// flatMap() unwraps that extra layer automatically:</span>
+<span class="ty">Optional</span>&lt;<span class="ty">String</span>&gt; email = name.<span class="fn">flatMap</span>(n -&gt; <span class="fn">lookupEmail</span>(n)); <span class="cm">// clean Optional&lt;String&gt;, one level</span></pre></div>
+    <div id="mf-words" class="ct-pane"><pre><span class="cm">// LeetCode/interview-style classic: count unique words across many sentences</span>
+<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; sentences = <span class="ty">List</span>.<span class="fn">of</span>(<span class="st">"the quick fox"</span>, <span class="st">"the lazy dog"</span>);
+
+<span class="ty">Set</span>&lt;<span class="ty">String</span>&gt; uniqueWords = sentences.<span class="fn">stream</span>()
+    .<span class="fn">flatMap</span>(sentence -&gt; <span class="ty">Arrays</span>.<span class="fn">stream</span>(sentence.<span class="fn">split</span>(<span class="st">" "</span>))) <span class="cm">// String[] -&gt; Stream&lt;String&gt; per sentence, then flattened</span>
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">toSet</span>());
+<span class="ty">System</span>.out.<span class="fn">println</span>(uniqueWords); <span class="cm">// [the, quick, fox, lazy, dog] (order not guaranteed — it's a Set)</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "map() is 1-to-1: same element count, transformed values. flatMap() is 1-to-many-then-flattened: each element becomes a stream of its own, and those sub-streams get merged into one. Reach for flatMap() whenever your mapping function would otherwise itself return a Stream, List, Optional, or array."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 6: FILTER, DISTINCT, SORTED, LIMIT/SKIP ═══ -->
+<section class="section" id="filter-stateful">
+  <div class="section-header"><span class="section-eyebrow">Stateless vs Stateful</span><span class="section-rule"></span></div>
+  <h2>filter, distinct, sorted, limit/skip</h2>
+  <p class="section-intro">These four intermediate operations look similarly simple, but split cleanly into two categories with VERY different performance and parallelization implications — a distinction senior interviewers specifically probe for.</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th>Operation</th><th>Stateless or Stateful?</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td><code class="inline">filter(Predicate)</code></td><td>Stateless</td><td>Each element's fate depends only on itself — no memory of prior elements needed</td></tr>
+      <tr><td><code class="inline">map(Function)</code></td><td>Stateless</td><td>Same reasoning — a pure per-element transformation</td></tr>
+      <tr><td><code class="inline">distinct()</code></td><td>Stateful</td><td>Must remember EVERY element seen so far to detect duplicates — needs unbounded memory in the worst case</td></tr>
+      <tr><td><code class="inline">sorted()</code></td><td>Stateful</td><td>Can't produce the first output element until it has seen and buffered ALL elements — fundamentally can't start emitting early</td></tr>
+      <tr><td><code class="inline">limit(n)</code> / <code class="inline">skip(n)</code></td><td>Stateful (but bounded)</td><td>Needs to track a count/position, though the memory cost is small and fixed, not proportional to stream size</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'fs-distinct')">distinct() — uses equals()/hashCode()</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'fs-sorted')">sorted() — natural order vs Comparator</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'fs-limitskip')">limit() / skip() — pagination pattern</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'fs-whyitmatters')">Why the distinction matters for parallel streams</div>
+    </div>
+    <div id="fs-distinct" class="ct-pane active"><pre><span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; nums = <span class="ty">List</span>.<span class="fn">of</span>(1, 2, 2, 3, 3, 3, 4);
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; unique = nums.<span class="fn">stream</span>().<span class="fn">distinct</span>().<span class="fn">toList</span>(); <span class="cm">// [1, 2, 3, 4]</span>
+
+<span class="cm">// distinct() relies on equals()/hashCode() — for custom objects, that</span>
+<span class="cm">// contract must be correctly implemented, exactly like with a HashSet</span>
+<span class="kw">record</span> <span class="ty">Point</span>(<span class="kw">int</span> x, <span class="kw">int</span> y) {} <span class="cm">// records auto-generate a correct equals()/hashCode() — an easy win here</span>
+<span class="ty">List</span>&lt;<span class="ty">Point</span>&gt; points = <span class="ty">List</span>.<span class="fn">of</span>(<span class="kw">new</span> <span class="ty">Point</span>(1,1), <span class="kw">new</span> <span class="ty">Point</span>(1,1), <span class="kw">new</span> <span class="ty">Point</span>(2,2));
+points.<span class="fn">stream</span>().<span class="fn">distinct</span>().<span class="fn">count</span>(); <span class="cm">// 2 — correctly deduplicated by VALUE, thanks to the record's equals()</span></pre></div>
+    <div id="fs-sorted" class="ct-pane"><pre><span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; nums = <span class="ty">List</span>.<span class="fn">of</span>(5, 2, 8, 1);
+nums.<span class="fn">stream</span>().<span class="fn">sorted</span>().<span class="fn">toList</span>(); <span class="cm">// [1, 2, 5, 8] — natural order, requires Comparable</span>
+
+<span class="ty">List</span>&lt;<span class="ty">Employee</span>&gt; employees = <span class="fn">getEmployees</span>();
+employees.<span class="fn">stream</span>()
+    .<span class="fn">sorted</span>(<span class="ty">Comparator</span>.<span class="fn">comparingDouble</span>(<span class="ty">Employee</span>::getSalary).<span class="fn">reversed</span>()
+                        .<span class="fn">thenComparing</span>(<span class="ty">Employee</span>::getName)) <span class="cm">// highest salary first, ties by name</span>
+    .<span class="fn">toList</span>();
+<span class="cm">// sorted() is STABLE — equal elements retain their original relative order,</span>
+<span class="cm">// exactly why chaining thenComparing() for tie-breaks works predictably</span></pre></div>
+    <div id="fs-limitskip" class="ct-pane"><pre><span class="cm">// The classic pagination pattern: skip N, take the next M</span>
+<span class="kw">int</span> pageNumber = 2, pageSize = 10; <span class="cm">// 0-indexed page</span>
+
+<span class="ty">List</span>&lt;<span class="ty">Employee</span>&gt; page = employees.<span class="fn">stream</span>()
+    .<span class="fn">sorted</span>(<span class="ty">Comparator</span>.<span class="fn">comparing</span>(<span class="ty">Employee</span>::getName))
+    .<span class="fn">skip</span>((<span class="kw">long</span>) pageNumber * pageSize)  <span class="cm">// skip the first 20</span>
+    .<span class="fn">limit</span>(pageSize)                    <span class="cm">// take the next 10</span>
+    .<span class="fn">toList</span>();
+
+<span class="cm">// NOTE: skip() then limit() (in that order) is the correct pattern for</span>
+<span class="cm">// pagination — reversing the order changes the semantics entirely</span></pre></div>
+    <div id="fs-whyitmatters" class="ct-pane"><pre><span class="cm">// Stateless operations parallelize CLEANLY — each thread can process its</span>
+<span class="cm">// chunk of the data completely independently, no coordination needed</span>
+list.<span class="fn">parallelStream</span>().<span class="fn">filter</span>(x -&gt; x &gt; 0).<span class="fn">map</span>(x -&gt; x * 2); <span class="cm">// scales well</span>
+
+<span class="cm">// Stateful operations need SYNCHRONIZATION or a full merge step across</span>
+<span class="cm">// threads — distinct() and sorted() specifically need to see (or at least</span>
+<span class="cm">// coordinate across) the WHOLE dataset, which limits how well they</span>
+<span class="cm">// parallelize and can even make a parallel version SLOWER than sequential</span>
+<span class="cm">// for small-to-medium datasets, due to the coordination overhead</span>
+list.<span class="fn">parallelStream</span>().<span class="fn">sorted</span>().<span class="fn">toList</span>(); <span class="cm">// correct, but the sort itself doesn't parallelize for free</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "filter() and map() are stateless — each element is judged in isolation, so they parallelize trivially. distinct() and sorted() are stateful — they need visibility across some or all of the stream, which is exactly why they're more expensive and less parallel-friendly."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 7: REDUCE ═══ -->
+<section class="section" id="reduce">
+  <div class="section-header"><span class="section-eyebrow">Terminal Operation</span><span class="section-rule"></span></div>
+  <h2>reduce() — All 3 Overloads</h2>
+  <p class="section-intro"><code class="inline">reduce()</code> combines every element into a SINGLE result — sum, product, max, string concatenation, or any custom accumulation. It has three overloads, and knowing exactly when the THIRD one is actually required (not just decorative) is a genuine senior-level distinction.</p>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'rd-noidentity')">Optional&lt;T&gt; reduce(BinaryOperator&lt;T&gt;)</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'rd-identity')">T reduce(T identity, BinaryOperator&lt;T&gt;)</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'rd-combiner')">U reduce(U identity, BiFunction, BinaryOperator) — the 3-arg form</div>
+    </div>
+    <div id="rd-noidentity" class="ct-pane active"><pre><span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; nums = <span class="ty">List</span>.<span class="fn">of</span>(3, 7, 2, 9, 4);
+
+<span class="ty">Optional</span>&lt;<span class="ty">Integer</span>&gt; max = nums.<span class="fn">stream</span>().<span class="fn">reduce</span>((a, b) -&gt; a &gt; b ? a : b);
+<span class="cm">// Returns Optional&lt;T&gt; — NOT T directly — because an EMPTY stream has no</span>
+<span class="cm">// meaningful result to return. This overload has no "identity"/default value</span>
+<span class="cm">// to fall back on, so Optional.empty() is the only sane answer for empty input</span>
+
+nums.<span class="fn">stream</span>().<span class="fn">reduce</span>((a, b) -&gt; a + b).<span class="fn">ifPresent</span>(<span class="ty">System</span>.out::println); <span class="cm">// 25</span></pre></div>
+    <div id="rd-identity" class="ct-pane"><pre><span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; nums = <span class="ty">List</span>.<span class="fn">of</span>(3, 7, 2, 9, 4);
+
+<span class="kw">int</span> sum = nums.<span class="fn">stream</span>().<span class="fn">reduce</span>(0, (a, b) -&gt; a + b); <span class="cm">// 25 — returns T directly, not Optional&lt;T&gt;</span>
+<span class="cm">// "0" is the IDENTITY value — the safe starting point AND the correct</span>
+<span class="cm">// result for an EMPTY stream (sum of nothing = 0). This is exactly why</span>
+<span class="cm">// providing an identity removes the need for Optional</span>
+
+<span class="kw">int</span> product = nums.<span class="fn">stream</span>().<span class="fn">reduce</span>(1, (a, b) -&gt; a * b); <span class="cm">// 1512 — identity for multiplication is 1, not 0</span>
+
+<span class="cm">// Method reference form, equally common:</span>
+<span class="kw">int</span> sum2 = nums.<span class="fn">stream</span>().<span class="fn">reduce</span>(0, <span class="ty">Integer</span>::sum);</pre></div>
+    <div id="rd-combiner" class="ct-pane"><pre><span class="cm">// The 3-argument form: reduce(identity, accumulator, combiner)</span>
+<span class="cm">// ONLY relevant for PARALLEL streams — the combiner merges partial results</span>
+<span class="cm">// computed independently by different threads back into one</span>
+
+<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; words = <span class="ty">List</span>.<span class="fn">of</span>(<span class="st">"a"</span>, <span class="st">"bb"</span>, <span class="st">"ccc"</span>);
+
+<span class="kw">int</span> totalLength = words.<span class="fn">parallelStream</span>().<span class="fn">reduce</span>(
+    0,                                  <span class="cm">// identity</span>
+    (partialSum, word) -&gt; partialSum + word.length(), <span class="cm">// accumulator: T + element -&gt; T (note the TYPE MISMATCH — U vs T)</span>
+    (sum1, sum2) -&gt; sum1 + sum2         <span class="cm">// combiner: merges two threads' partial sums together</span>
+);
+<span class="cm">// The accumulator's signature is (U, T) -&gt; U — it can reduce a DIFFERENT</span>
+<span class="cm">// element type T into a result type U (here: String elements -&gt; int result).</span>
+<span class="cm">// The two single-argument overloads REQUIRE T and the result to be the SAME</span>
+<span class="cm">// type — this 3-arg form is the only one that lifts that restriction, and</span>
+<span class="cm">// the combiner is what makes that type-changing reduction safe in parallel</span></pre></div>
+  </div>
+
+  <div class="warn-box">
+    <span class="tip-icon">⚠️</span>
+    <span class="warn-text"><strong>Interview trap:</strong> "When would you actually need the 3-argument reduce() over collect()?" — in practice, almost NEVER for everyday code; <code class="inline">collect()</code> (covered next) is purpose-built for mutable accumulation (building a List, StringBuilder, etc.) and is almost always the better tool. <code class="inline">reduce()</code> is for IMMUTABLE combination — a genuinely new value is produced at each step, not a mutated container. Interviewers ask this specifically to see if you understand that distinction, not to see if you've memorized the 3-arg signature.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 8: TERMINAL OPERATIONS CATALOG ═══ -->
+<section class="section" id="terminal-ops">
+  <div class="section-header"><span class="section-eyebrow">Ending the Pipeline</span><span class="section-rule"></span></div>
+  <h2>Terminal Operations Catalog</h2>
+  <p class="section-intro">Every stream pipeline ends with exactly one of these. Beyond <code class="inline">collect()</code> (its own dedicated sections follow), this is the full cast.</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th>Operation</th><th>Returns</th><th>Short-circuits?</th></tr></thead>
+    <tbody>
+      <tr><td><code class="inline">forEach(Consumer)</code></td><td>void</td><td>No</td></tr>
+      <tr><td><code class="inline">count()</code></td><td>long</td><td>No</td></tr>
+      <tr><td><code class="inline">min(Comparator)</code> / <code class="inline">max(Comparator)</code></td><td>Optional&lt;T&gt;</td><td>No</td></tr>
+      <tr><td><code class="inline">anyMatch(Predicate)</code></td><td>boolean</td><td class="yes">Yes — stops at first match</td></tr>
+      <tr><td><code class="inline">allMatch(Predicate)</code></td><td>boolean</td><td class="yes">Yes — stops at first NON-match</td></tr>
+      <tr><td><code class="inline">noneMatch(Predicate)</code></td><td>boolean</td><td class="yes">Yes — stops at first match found</td></tr>
+      <tr><td><code class="inline">findFirst()</code></td><td>Optional&lt;T&gt;</td><td class="yes">Yes — first element, respects encounter order</td></tr>
+      <tr><td><code class="inline">findAny()</code></td><td>Optional&lt;T&gt;</td><td class="yes">Yes — ANY element; faster than findFirst() in parallel streams</td></tr>
+      <tr><td><code class="inline">toArray()</code></td><td>Object[] or T[]</td><td>No</td></tr>
+      <tr><td><code class="inline">reduce(...)</code></td><td>Optional&lt;T&gt; or T</td><td>No</td></tr>
+      <tr><td><code class="inline">collect(...)</code></td><td>Whatever the Collector produces</td><td>No</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'to-matches')">anyMatch / allMatch / noneMatch on empty streams</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'to-findfirstany')">findFirst() vs findAny()</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'to-toarray')">toArray() — the generator-function form</div>
+    </div>
+    <div id="to-matches" class="ct-pane active"><pre><span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; empty = <span class="ty">List</span>.of();
+
+empty.<span class="fn">stream</span>().<span class="fn">anyMatch</span>(n -&gt; n &gt; 0);  <span class="cm">// false — vacuously, nothing matched</span>
+empty.<span class="fn">stream</span>().<span class="fn">allMatch</span>(n -&gt; n &gt; 0);  <span class="cm">// TRUE — vacuously true! No element violates the condition</span>
+empty.<span class="fn">stream</span>().<span class="fn">noneMatch</span>(n -&gt; n &gt; 0); <span class="cm">// true — vacuously, nothing failed to avoid matching</span>
+
+<span class="cm">// The allMatch() result on an empty stream is the classic trip-up — it</span>
+<span class="cm">// mirrors formal logic's "vacuous truth" (a universally-quantified statement</span>
+<span class="cm">// over an empty set is true), not an intuitive "well there's nothing so...false?"</span></pre></div>
+    <div id="to-findfirstany" class="ct-pane"><pre><span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; nums = <span class="ty">List</span>.<span class="fn">of</span>(4, 2, 9, 1, 7);
+
+<span class="ty">Optional</span>&lt;<span class="ty">Integer</span>&gt; first = nums.<span class="fn">stream</span>().<span class="fn">filter</span>(n -&gt; n &gt; 3).<span class="fn">findFirst</span>(); <span class="cm">// ALWAYS 4 — deterministic, respects order</span>
+<span class="ty">Optional</span>&lt;<span class="ty">Integer</span>&gt; any   = nums.<span class="fn">stream</span>().<span class="fn">filter</span>(n -&gt; n &gt; 3).<span class="fn">findAny</span>();   <span class="cm">// 4 in SEQUENTIAL streams too, deterministically</span>
+
+<span class="cm">// The difference only matters for PARALLEL streams:</span>
+<span class="ty">Optional</span>&lt;<span class="ty">Integer</span>&gt; anyParallel = nums.<span class="fn">parallelStream</span>().<span class="fn">filter</span>(n -&gt; n &gt; 3).<span class="fn">findAny</span>();
+<span class="cm">// findAny() can return WHICHEVER matching element some thread finds first —</span>
+<span class="cm">// NOT necessarily 4. findFirst() on a parallel stream still has to coordinate</span>
+<span class="cm">// to respect encounter order, which costs some parallel performance.</span>
+<span class="cm">// Use findAny() when you truly don't care WHICH match you get — it's faster in parallel</span></pre></div>
+    <div id="to-toarray" class="ct-pane"><pre><span class="ty">List</span>&lt;<span class="ty">String</span>&gt; names = <span class="ty">List</span>.<span class="fn">of</span>(<span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"c"</span>);
+
+<span class="ty">Object</span>[] objArr = names.<span class="fn">stream</span>().<span class="fn">toArray</span>();           <span class="cm">// Object[] — loses the specific type</span>
+<span class="ty">String</span>[] strArr = names.<span class="fn">stream</span>().<span class="fn">toArray</span>(<span class="ty">String</span>[]::new); <span class="cm">// typed array — the generator function form</span>
+<span class="cm">// String[]::new is a constructor reference matching IntFunction&lt;String[]&gt; —</span>
+<span class="cm">// the stream tells it exactly how many elements it needs, and it builds</span>
+<span class="cm">// a correctly-sized, correctly-typed array in one step</span></pre></div>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 9: COLLECTORS I ═══ -->
+<section class="section" id="collectors-basic">
+  <div class="section-header"><span class="section-eyebrow">java.util.stream.Collectors</span><span class="section-rule"></span></div>
+  <h2>toList, toSet, toMap &amp; joining</h2>
+  <p class="section-intro"><code class="inline">collect()</code> is the workhorse terminal operation for MUTABLE accumulation — building up a result container (List, Set, Map, String) as elements flow through. These four are the ones you'll use daily.</p>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'cb-tolist')">toList() vs .toList() (Java 16+)</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'cb-toset')">toSet()</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'cb-tomap')">toMap() — and the duplicate-key crash</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'cb-joining')">joining() — with delimiter/prefix/suffix</div>
+    </div>
+    <div id="cb-tolist" class="ct-pane active"><pre><span class="ty">List</span>&lt;<span class="ty">String</span>&gt; l1 = names.<span class="fn">stream</span>().<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">toList</span>()); <span class="cm">// classic form — mutable, modifiable list</span>
+
+<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; l2 = names.<span class="fn">stream</span>().<span class="fn">toList</span>(); <span class="cm">// Java 16+ shortcut — returns an UNMODIFIABLE list</span>
+<span class="cm">// l2.add("x"); // throws UnsupportedOperationException — different contract than Collectors.toList()!</span>
+
+<span class="cm">// Explicitly requesting an unmodifiable list pre-Java-16:</span>
+<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; l3 = names.<span class="fn">stream</span>().<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">toUnmodifiableList</span>());</pre></div>
+    <div id="cb-toset" class="ct-pane"><pre><span class="ty">Set</span>&lt;<span class="ty">String</span>&gt; unique = names.<span class="fn">stream</span>().<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">toSet</span>());
+<span class="cm">// NO ordering guarantee — backed by a HashSet internally by default</span>
+<span class="cm">// Need insertion order preserved? Use Collectors.toCollection(LinkedHashSet::new) instead</span>
+
+<span class="ty">Set</span>&lt;<span class="ty">String</span>&gt; ordered = names.<span class="fn">stream</span>()
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">toCollection</span>(<span class="ty">LinkedHashSet</span>::new)); <span class="cm">// toCollection() — plug in ANY collection supplier</span></pre></div>
+    <div id="cb-tomap" class="ct-pane"><pre><span class="ty">List</span>&lt;<span class="ty">Employee</span>&gt; employees = <span class="fn">getEmployees</span>();
+
+<span class="ty">Map</span>&lt;<span class="ty">Integer</span>, <span class="ty">String</span>&gt; idToName = employees.<span class="fn">stream</span>()
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">toMap</span>(<span class="ty">Employee</span>::getId, <span class="ty">Employee</span>::getName)); <span class="cm">// (keyFn, valueFn)</span>
+
+<span class="cm">// DUPLICATE KEY -&gt; throws IllegalStateException: "Duplicate key ..."</span>
+<span class="ty">Map</span>&lt;<span class="ty">String</span>, <span class="ty">Employee</span>&gt; byDept = employees.<span class="fn">stream</span>()
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">toMap</span>(<span class="ty">Employee</span>::getDepartment, e -&gt; e)); <span class="cm">// CRASHES if two employees share a department!</span>
+
+<span class="cm">// FIX: the 3-arg overload with a MERGE FUNCTION resolves collisions instead of crashing</span>
+<span class="ty">Map</span>&lt;<span class="ty">String</span>, <span class="ty">Employee</span>&gt; highestPaidByDept = employees.<span class="fn">stream</span>()
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">toMap</span>(
+        <span class="ty">Employee</span>::getDepartment,
+        e -&gt; e,
+        (existing, incoming) -&gt; existing.<span class="fn">getSalary</span>() &gt; incoming.<span class="fn">getSalary</span>() ? existing : incoming <span class="cm">// keep the higher-paid one on collision</span>
+    ));</pre></div>
+    <div id="cb-joining" class="ct-pane"><pre><span class="ty">List</span>&lt;<span class="ty">String</span>&gt; names = <span class="ty">List</span>.<span class="fn">of</span>(<span class="st">"Alice"</span>, <span class="st">"Bob"</span>, <span class="st">"Cara"</span>);
+
+names.<span class="fn">stream</span>().<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">joining</span>());          <span class="cm">// "AliceBobCara" — no separator</span>
+names.<span class="fn">stream</span>().<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">joining</span>(<span class="st">", "</span>));    <span class="cm">// "Alice, Bob, Cara"</span>
+names.<span class="fn">stream</span>().<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">joining</span>(<span class="st">", "</span>, <span class="st">"["</span>, <span class="st">"]"</span>)); <span class="cm">// "[Alice, Bob, Cara]" — delimiter, prefix, suffix</span>
+
+<span class="cm">// Internally backed by StringBuilder — far more efficient than "+" concatenation</span>
+<span class="cm">// inside a forEach loop, which would create a new String object every iteration</span></pre></div>
+  </div>
+
+  <div class="danger-box">
+    <span class="tip-icon">🚫</span>
+    <span class="danger-text"><strong>Interview trap:</strong> the 2-argument <code class="inline">Collectors.toMap(keyFn, valueFn)</code> THROWS <code class="inline">IllegalStateException</code> the instant two elements produce the same key — it does NOT silently overwrite like a plain <code class="inline">HashMap.put()</code> loop would. This is a deliberate safety design, and interviewers use it to check whether you know the 3-argument merge-function overload exists as the fix.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 10: COLLECTORS II — GROUPING ═══ -->
+<section class="section" id="collectors-grouping">
+  <div class="section-header"><span class="section-eyebrow">SQL's GROUP BY, In Java</span><span class="section-rule"></span></div>
+  <h2>groupingBy &amp; partitioningBy</h2>
+  <p class="section-intro">The single most interview-tested Collector. <code class="inline">groupingBy()</code> is the functional equivalent of SQL's <code class="inline">GROUP BY</code> — and its real power (and complexity) comes from stacking DOWNSTREAM collectors for multi-level aggregation.</p>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'gp-basic')">Basic groupingBy — 1 argument</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'gp-downstream')">groupingBy + downstream collector</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'gp-multilevel')">Multi-level (nested) groupingBy</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'gp-partition')">partitioningBy — exactly 2 groups</div>
+    </div>
+    <div id="gp-basic" class="ct-pane active"><pre><span class="ty">List</span>&lt;<span class="ty">Employee</span>&gt; employees = <span class="fn">getEmployees</span>();
+
+<span class="cm">// 1-arg groupingBy: classifier only -&gt; Map&lt;K, List&lt;T&gt;&gt; (List is the IMPLICIT default downstream)</span>
+<span class="ty">Map</span>&lt;<span class="ty">String</span>, <span class="ty">List</span>&lt;<span class="ty">Employee</span>&gt;&gt; byDept = employees.<span class="fn">stream</span>()
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">groupingBy</span>(<span class="ty">Employee</span>::getDepartment));
+<span class="cm">// {"Engineering": [emp1, emp3], "Sales": [emp2], ...}</span></pre></div>
+    <div id="gp-downstream" class="ct-pane"><pre><span class="cm">// 2-arg groupingBy: classifier + DOWNSTREAM collector -&gt; transforms each group's List</span>
+
+<span class="ty">Map</span>&lt;<span class="ty">String</span>, <span class="ty">Long</span>&gt; countByDept = employees.<span class="fn">stream</span>()
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">groupingBy</span>(<span class="ty">Employee</span>::getDepartment, <span class="ty">Collectors</span>.<span class="fn">counting</span>()));
+<span class="cm">// {"Engineering": 2, "Sales": 1}  — how many employees per department</span>
+
+<span class="ty">Map</span>&lt;<span class="ty">String</span>, <span class="ty">Double</span>&gt; avgSalaryByDept = employees.<span class="fn">stream</span>()
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">groupingBy</span>(<span class="ty">Employee</span>::getDepartment, <span class="ty">Collectors</span>.<span class="fn">averagingDouble</span>(<span class="ty">Employee</span>::getSalary)));
+<span class="cm">// {"Engineering": 95000.0, "Sales": 72000.0}</span>
+
+<span class="ty">Map</span>&lt;<span class="ty">String</span>, <span class="ty">Set</span>&lt;<span class="ty">String</span>&gt;&gt; namesByDept = employees.<span class="fn">stream</span>()
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">groupingBy</span>(<span class="ty">Employee</span>::getDepartment,
+                              <span class="ty">Collectors</span>.<span class="fn">mapping</span>(<span class="ty">Employee</span>::getName, <span class="ty">Collectors</span>.<span class="fn">toSet</span>())));
+<span class="cm">// mapping() transforms EACH element before it reaches its downstream collector —</span>
+<span class="cm">// here: extract just the name, THEN collect those names into a Set</span></pre></div>
+    <div id="gp-multilevel" class="ct-pane"><pre><span class="cm">// NESTING groupingBy as the downstream of another groupingBy -&gt; multi-level grouping</span>
+<span class="ty">Map</span>&lt;<span class="ty">String</span>, <span class="ty">Map</span>&lt;<span class="ty">String</span>, <span class="ty">List</span>&lt;<span class="ty">Employee</span>&gt;&gt;&gt; byDeptThenLevel = employees.<span class="fn">stream</span>()
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">groupingBy</span>(<span class="ty">Employee</span>::getDepartment,
+                              <span class="ty">Collectors</span>.<span class="fn">groupingBy</span>(<span class="ty">Employee</span>::getLevel)));
+<span class="cm">// {"Engineering": {"Senior": [...], "Junior": [...]}, "Sales": {"Senior": [...]}}</span>
+<span class="cm">// Read it INSIDE-OUT: the innermost groupingBy runs FIRST conceptually per</span>
+<span class="cm">// department-bucket, producing the nested Map as the "downstream" result</span>
+
+<span class="cm">// Combine multi-level grouping WITH a further downstream aggregation:</span>
+<span class="ty">Map</span>&lt;<span class="ty">String</span>, <span class="ty">Map</span>&lt;<span class="ty">String</span>, <span class="ty">Double</span>&gt;&gt; avgSalaryByDeptAndLevel = employees.<span class="fn">stream</span>()
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">groupingBy</span>(<span class="ty">Employee</span>::getDepartment,
+                              <span class="ty">Collectors</span>.<span class="fn">groupingBy</span>(<span class="ty">Employee</span>::getLevel,
+                                                    <span class="ty">Collectors</span>.<span class="fn">averagingDouble</span>(<span class="ty">Employee</span>::getSalary))));</pre></div>
+    <div id="gp-partition" class="ct-pane"><pre><span class="cm">// partitioningBy: a SPECIAL CASE of grouping — always produces EXACTLY 2</span>
+<span class="cm">// groups (true/false), keyed by a boolean Predicate, not an arbitrary classifier</span>
+
+<span class="ty">Map</span>&lt;<span class="ty">Boolean</span>, <span class="ty">List</span>&lt;<span class="ty">Employee</span>&gt;&gt; partitioned = employees.<span class="fn">stream</span>()
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">partitioningBy</span>(e -&gt; e.<span class="fn">getSalary</span>() &gt; 80000));
+<span class="ty">List</span>&lt;<span class="ty">Employee</span>&gt; highEarners = partitioned.<span class="fn">get</span>(<span class="kw">true</span>);
+<span class="ty">List</span>&lt;<span class="ty">Employee</span>&gt; others      = partitioned.<span class="fn">get</span>(<span class="kw">false</span>);
+
+<span class="cm">// KEY DIFFERENCE from groupingBy: the resulting Map ALWAYS has BOTH keys</span>
+<span class="cm">// present (true AND false), even if one group is completely EMPTY — unlike</span>
+<span class="cm">// groupingBy(), which only creates entries for classifier values that actually occurred</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "groupingBy() with a downstream collector is how you go from SQL's GROUP BY + aggregate function to Java streams — the classifier is your GROUP BY column, and the downstream collector (counting, averagingDouble, another groupingBy) is your aggregate function. partitioningBy is just groupingBy specialized to a boolean predicate, guaranteed to always produce both true and false keys."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 11: COLLECTORS III — ADVANCED ═══ -->
+<section class="section" id="collectors-advanced">
+  <div class="section-header"><span class="section-eyebrow">Beyond the Basics</span><span class="section-rule"></span></div>
+  <h2>Advanced Collectors</h2>
+  <p class="section-intro">These are the collectors that separate "I know groupingBy" from "I know the whole toolbox" — including <code class="inline">teeing()</code> (Java 12+), a genuine favorite for senior-level questions since it's rarely taught but elegantly solves a common problem.</p>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'ca-summary')">summarizingDouble() — stats in one pass</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ca-filtering')">filtering() as a downstream collector</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ca-teeing')">teeing() — combining two collectors</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ca-custom')">Custom Collector.of()</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ca-collectandthen')">collectingAndThen() — post-process the result</div>
+    </div>
+    <div id="ca-summary" class="ct-pane active"><pre><span class="ty">DoubleSummaryStatistics</span> stats = employees.<span class="fn">stream</span>()
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">summarizingDouble</span>(<span class="ty">Employee</span>::getSalary));
+
+stats.<span class="fn">getMin</span>();     stats.<span class="fn">getMax</span>();
+stats.<span class="fn">getAverage</span>(); stats.<span class="fn">getSum</span>();
+stats.<span class="fn">getCount</span>();
+
+<span class="cm">// ONE pass over the data computes min/max/avg/sum/count TOGETHER —</span>
+<span class="cm">// far more efficient than calling separate min(), max(), average() streams,</span>
+<span class="cm">// each of which would re-traverse the whole source independently</span>
+<span class="cm">// Also available: summarizingInt(), summarizingLong()</span></pre></div>
+    <div id="ca-filtering" class="ct-pane"><pre><span class="cm">// filtering() as a DOWNSTREAM collector — different from stream.filter()!</span>
+<span class="cm">// stream.filter() removes elements BEFORE grouping — an element filtered out</span>
+<span class="cm">// never even reaches its group, so that GROUP KEY might disappear entirely.</span>
+<span class="cm">// Collectors.filtering() filters WITHIN each already-formed group instead.</span>
+
+<span class="ty">Map</span>&lt;<span class="ty">String</span>, <span class="ty">List</span>&lt;<span class="ty">Employee</span>&gt;&gt; highEarnersByDept = employees.<span class="fn">stream</span>()
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">groupingBy</span>(<span class="ty">Employee</span>::getDepartment,
+                              <span class="ty">Collectors</span>.<span class="fn">filtering</span>(e -&gt; e.<span class="fn">getSalary</span>() &gt; 100000, <span class="ty">Collectors</span>.<span class="fn">toList</span>())));
+<span class="cm">// Every department key STILL appears, even ones with ZERO high earners</span>
+<span class="cm">// (mapping to an empty list) — using stream.filter() BEFORE groupingBy</span>
+<span class="cm">// would have silently DROPPED any department with no qualifying employees</span></pre></div>
+    <div id="ca-teeing" class="ct-pane"><pre><span class="cm">// teeing() (Java 12+): run TWO downstream collectors over the SAME stream,</span>
+<span class="cm">// then merge their results with a BiFunction — solves the classic "I need</span>
+<span class="cm">// two different aggregates from ONE pass" problem elegantly</span>
+
+<span class="kw">record</span> <span class="ty">MinMax</span>(<span class="kw">int</span> min, <span class="kw">int</span> max) {}
+
+<span class="ty">MinMax</span> range = <span class="ty">Stream</span>.<span class="fn">of</span>(3, 7, 1, 9, 4)
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">teeing</span>(
+        <span class="ty">Collectors</span>.<span class="fn">minBy</span>(<span class="ty">Integer</span>::compareTo),  <span class="cm">// collector 1</span>
+        <span class="ty">Collectors</span>.<span class="fn">maxBy</span>(<span class="ty">Integer</span>::compareTo),  <span class="cm">// collector 2, applied to the SAME elements</span>
+        (min, max) -&gt; <span class="kw">new</span> <span class="ty">MinMax</span>(min.get(), max.get()) <span class="cm">// merge function — combines both results</span>
+    ));
+<span class="cm">// BEFORE teeing(): you'd have to either stream the data TWICE (wasteful),</span>
+<span class="cm">// or hand-write a single custom Collector to track both min and max —</span>
+<span class="cm">// teeing() gives you the "two collectors, one pass" pattern for free</span></pre></div>
+    <div id="ca-custom" class="ct-pane"><pre><span class="cm">// Collector.of(supplier, accumulator, combiner, [finisher]) — build your own</span>
+<span class="ty">Collector</span>&lt;<span class="ty">String</span>, <span class="ty">StringJoiner</span>, <span class="ty">String</span>&gt; customJoiner = <span class="ty">Collector</span>.of(
+    () -&gt; <span class="kw">new</span> <span class="ty">StringJoiner</span>(<span class="st">", "</span>, <span class="st">"["</span>, <span class="st">"]"</span>), <span class="cm">// SUPPLIER: creates the mutable accumulator container</span>
+    <span class="ty">StringJoiner</span>::add,                     <span class="cm">// ACCUMULATOR: folds one element into the container</span>
+    <span class="ty">StringJoiner</span>::merge                    <span class="cm">// COMBINER: merges two containers (for parallel streams)</span>
+                                           <span class="cm">// no 4th arg -&gt; the container itself IS the final result (Collector.of has a default identity finisher when omitted, or use the 4-arg form)</span>
+);
+<span class="ty">String</span> result = <span class="ty">Stream</span>.<span class="fn">of</span>(<span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"c"</span>).<span class="fn">collect</span>(customJoiner);
+
+<span class="cm">// This is EXACTLY the same shape as collect()'s own 3-arg overload:</span>
+<span class="cm">// collect(Supplier, BiConsumer, BiConsumer) — Collectors.of() just packages</span>
+<span class="cm">// that same idea into a reusable, named Collector object</span></pre></div>
+    <div id="ca-collectandthen" class="ct-pane"><pre><span class="cm">// collectingAndThen(): wraps another collector, then applies a final</span>
+<span class="cm">// transformation to its result — commonly used to make a result immutable</span>
+
+<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; immutableNames = names.<span class="fn">stream</span>()
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">collectingAndThen</span>(
+        <span class="ty">Collectors</span>.<span class="fn">toList</span>(),          <span class="cm">// the underlying collector — builds a normal mutable List</span>
+        <span class="ty">Collections</span>::unmodifiableList <span class="cm">// the finishing transformation — wraps it as read-only</span>
+    ));
+<span class="cm">// Also useful as the downstream of a groupingBy, to post-process each group's result</span></pre></div>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 12: PRIMITIVE STREAMS ═══ -->
+<section class="section" id="primitive-streams">
+  <div class="section-header"><span class="section-eyebrow">Avoiding Boxing</span><span class="section-rule"></span></div>
+  <h2>Primitive Streams — IntStream, LongStream, DoubleStream</h2>
+  <p class="section-intro">A <code class="inline">Stream&lt;Integer&gt;</code> boxes every single <code class="inline">int</code> into an <code class="inline">Integer</code> object — real memory and GC overhead at scale. The JDK ships specialized primitive stream types specifically to avoid this.</p>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'ps-boxing')">The boxing cost, concretely</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ps-conversion')">Converting between Stream&lt;T&gt; and IntStream</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ps-methods')">Extra methods primitive streams offer</div>
+    </div>
+    <div id="ps-boxing" class="ct-pane active"><pre><span class="cm">// Pitfall: boxing every element for a purely numeric operation</span>
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; numbers = <span class="ty">IntStream</span>.<span class="fn">range</span>(0, 1_000_000)
+    .<span class="fn">boxed</span>()                          <span class="cm">// int -&gt; Integer, for EVERY element — a real allocation each time</span>
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">toList</span>());
+
+<span class="kw">long</span> sum = numbers.<span class="fn">stream</span>()
+    .<span class="fn">mapToLong</span>(<span class="ty">Integer</span>::longValue)         <span class="cm">// unboxing again to sum — wasted round-trip</span>
+    .<span class="fn">sum</span>();
+
+<span class="cm">// Better: stay in IntStream the whole time, no boxing at all</span>
+<span class="kw">long</span> sum2 = <span class="ty">IntStream</span>.<span class="fn">range</span>(0, 1_000_000).<span class="fn">asLongStream</span>().<span class="fn">sum</span>();
+<span class="cm">// or simply: IntStream.range(0, 1_000_000).sum() if int-range is enough</span></pre></div>
+    <div id="ps-conversion" class="ct-pane"><pre><span class="ty">List</span>&lt;<span class="ty">Employee</span>&gt; employees = <span class="fn">getEmployees</span>();
+
+<span class="cm">// Stream&lt;T&gt; -&gt; IntStream: via mapToInt/mapToLong/mapToDouble</span>
+<span class="ty">IntStream</span> ages = employees.<span class="fn">stream</span>().<span class="fn">mapToInt</span>(<span class="ty">Employee</span>::getAge);
+<span class="kw">int</span> totalAge = ages.<span class="fn">sum</span>();       <span class="cm">// primitive streams have sum()/average()/max()/min() DIRECTLY, no Comparator needed</span>
+
+<span class="cm">// IntStream -&gt; Stream&lt;Integer&gt;: via boxed(), when you need object semantics</span>
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; boxedAges = employees.<span class="fn">stream</span>()
+    .<span class="fn">mapToInt</span>(<span class="ty">Employee</span>::getAge)
+    .<span class="fn">boxed</span>()                    <span class="cm">// needed because Collectors.toList() requires a reference type, not int</span>
+    .<span class="fn">toList</span>();</pre></div>
+    <div id="ps-methods" class="ct-pane"><pre><span class="cm">// Primitive streams expose extra methods a Stream&lt;Integer&gt; simply doesn't have:</span>
+<span class="ty">IntStream</span> nums = <span class="ty">IntStream</span>.<span class="fn">of</span>(3, 7, 2, 9, 4);
+
+nums.<span class="fn">sum</span>();     <span class="cm">// int — direct, no reduce() needed</span>
+<span class="ty">IntStream</span>.<span class="fn">of</span>(3, 7, 2, 9, 4).<span class="fn">average</span>(); <span class="cm">// OptionalDouble — NOT Optional&lt;Double&gt;</span>
+<span class="ty">IntStream</span>.<span class="fn">of</span>(3, 7, 2, 9, 4).<span class="fn">max</span>();     <span class="cm">// OptionalInt — NOT Optional&lt;Integer&gt;</span>
+<span class="ty">IntStream</span>.<span class="fn">of</span>(3, 7, 2, 9, 4).<span class="fn">summaryStatistics</span>(); <span class="cm">// IntSummaryStatistics — min/max/avg/sum/count in one pass</span>
+
+<span class="cm">// Note the SPECIALIZED Optional types: OptionalInt/OptionalLong/OptionalDouble —</span>
+<span class="cm">// NOT generic Optional&lt;Integer&gt; — this is itself a common trick question,</span>
+<span class="cm">// since it's easy to assume Optional&lt;Integer&gt; and get a compile error</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "IntStream/LongStream/DoubleStream exist purely to avoid autoboxing overhead for numeric-heavy pipelines — sum()/average()/max() are built in directly, and the Optional variants (OptionalInt, etc.) avoid boxing there too. Reach for them whenever a pipeline is doing genuinely numeric work, not just passing objects through."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 13: OPTIONAL DEEP DIVE ═══ -->
+<section class="section" id="optional">
+  <div class="section-header"><span class="section-eyebrow">Streams' Constant Companion</span><span class="section-rule"></span></div>
+  <h2>Optional Deep Dive</h2>
+  <p class="section-intro"><code class="inline">Optional&lt;T&gt;</code> shows up constantly as a stream result type (<code class="inline">findFirst()</code>, <code class="inline">min()</code>, <code class="inline">reduce()</code> without identity) — a container that may or may not hold a value, designed to make the ABSENCE of a result an explicit, type-checked possibility instead of a silent <code class="inline">null</code>.</p>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'opt-antipattern')">The anti-pattern: isPresent() + get()</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'opt-idiomatic')">Idiomatic Optional usage</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'opt-chaining')">map/filter/flatMap chaining on Optional</div>
+    </div>
+    <div id="opt-antipattern" class="ct-pane active"><pre><span class="ty">Optional</span>&lt;<span class="ty">Employee</span>&gt; result = employees.<span class="fn">stream</span>()
+    .<span class="fn">filter</span>(e -&gt; e.<span class="fn">getId</span>() == 42)
+    .<span class="fn">findFirst</span>();
+
+<span class="cm">// ANTI-PATTERN — this is just null-checking with extra steps</span>
+<span class="kw">if</span> (result.<span class="fn">isPresent</span>()) {
+    <span class="ty">System</span>.out.<span class="fn">println</span>(result.<span class="fn">get</span>().<span class="fn">getName</span>());
+} <span class="kw">else</span> {
+    <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"Not found"</span>);
+}
+<span class="cm">// Interviewers specifically ask "how would you improve this" — the fix is</span>
+<span class="cm">// using Optional's own functional-style methods instead, shown next</span></pre></div>
+    <div id="opt-idiomatic" class="ct-pane"><pre><span class="ty">Optional</span>&lt;<span class="ty">Employee</span>&gt; result = employees.<span class="fn">stream</span>().<span class="fn">filter</span>(e -&gt; e.<span class="fn">getId</span>() == 42).<span class="fn">findFirst</span>();
+
+result.<span class="fn">ifPresent</span>(e -&gt; <span class="ty">System</span>.out.<span class="fn">println</span>(e.<span class="fn">getName</span>())); <span class="cm">// runs ONLY if present, no branching needed</span>
+
+<span class="ty">String</span> name = result.<span class="fn">map</span>(<span class="ty">Employee</span>::getName).<span class="fn">orElse</span>(<span class="st">"Unknown"</span>); <span class="cm">// transform + default, one line</span>
+
+<span class="ty">String</span> name2 = result.<span class="fn">map</span>(<span class="ty">Employee</span>::getName)
+                       .<span class="fn">orElseGet</span>(() -&gt; <span class="fn">computeDefaultName</span>()); <span class="cm">// LAZY default — only computed if actually needed</span>
+<span class="cm">// orElse() ALWAYS evaluates its argument eagerly, even when the Optional</span>
+<span class="cm">// IS present and the fallback is discarded — orElseGet() avoids that waste</span>
+<span class="cm">// for expensive fallback computations. A genuinely common gotcha.</span>
+
+result.<span class="fn">orElseThrow</span>(() -&gt; <span class="kw">new</span> <span class="ty">NoSuchElementException</span>(<span class="st">"Employee not found"</span>)); <span class="cm">// explicit failure instead of a silent default</span></pre></div>
+    <div id="opt-chaining" class="ct-pane"><pre><span class="cm">// Optional supports the SAME map/filter/flatMap vocabulary as Stream —</span>
+<span class="cm">// deliberately, since it's conceptually "a stream of 0 or 1 elements"</span>
+
+<span class="ty">Optional</span>&lt;<span class="ty">Employee</span>&gt; emp = <span class="fn">findEmployee</span>(42);
+
+<span class="ty">String</span> deptName = emp
+    .<span class="fn">filter</span>(e -&gt; e.<span class="fn">isActive</span>())              <span class="cm">// discard if inactive -&gt; becomes empty</span>
+    .<span class="fn">map</span>(<span class="ty">Employee</span>::getDepartment)         <span class="cm">// Optional&lt;String&gt; if present</span>
+    .<span class="fn">orElse</span>(<span class="st">"No active department"</span>);
+
+<span class="cm">// Chaining a call that ITSELF returns Optional -&gt; use flatMap(), same</span>
+<span class="cm">// principle as flatMap() on Stream avoiding Optional&lt;Optional&lt;X&gt;&gt;</span>
+<span class="ty">Optional</span>&lt;<span class="ty">Manager</span>&gt; manager = emp.<span class="fn">flatMap</span>(<span class="ty">Employee</span>::getManager); <span class="cm">// getManager() returns Optional&lt;Manager&gt;</span></pre></div>
+  </div>
+
+  <div class="warn-box">
+    <span class="tip-icon">⚠️</span>
+    <span class="warn-text"><strong>Interview trap:</strong> <code class="inline">Optional.get()</code> without first checking presence throws <code class="inline">NoSuchElementException</code> on an empty Optional — it's just as dangerous as an unchecked <code class="inline">null</code> dereference if used carelessly. The entire point of Optional is defeated if you reflexively call <code class="inline">.get()</code> everywhere; prefer <code class="inline">map</code>/<code class="inline">orElse</code>/<code class="inline">ifPresent</code>/<code class="inline">orElseThrow</code> instead.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 14: PARALLEL STREAMS — INTERNALS ═══ -->
+<section class="section" id="parallel-internals">
+  <div class="section-header"><span class="section-eyebrow">Under the Hood</span><span class="section-rule"></span></div>
+  <h2>Parallel Streams — Internals</h2>
+  <p class="section-intro">Calling <code class="inline">.parallelStream()</code> or <code class="inline">.parallel()</code> looks like a free performance switch — understanding what's ACTUALLY happening underneath is exactly what separates a surface-level answer from a senior one.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">ForkJoinPool.commonPool()</span>
+      <ul class="rule-list">
+        <li>Parallel streams use the shared, JVM-wide <code class="inline">ForkJoinPool.commonPool()</code> by default — NOT a pool you create per-call</li>
+        <li>Default parallelism level = <code class="inline">Runtime.availableProcessors() - 1</code> worker threads</li>
+        <li>Because it's SHARED across your entire application, a blocking or long-running task submitted to it from ANYWHERE can starve other unrelated parallel streams running concurrently</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Spliterator — the splitting mechanism</span>
+      <ul class="rule-list">
+        <li>Every stream source has a <code class="inline">Spliterator</code> ("splittable iterator") responsible for dividing the data into chunks for separate threads</li>
+        <li>How WELL a source splits varies enormously: arrays and ArrayList split cheaply and evenly (known size, direct indexing); LinkedList and <code class="inline">Stream.iterate()</code> split poorly (must walk element-by-element to even find a split point)</li>
+        <li>This is exactly why the underlying DATA STRUCTURE matters for parallel stream performance, not just the data size</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'pi-forkjoin')">The fork/join work-stealing model</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pi-customPool')">Using a custom ForkJoinPool</div>
+    </div>
+    <div id="pi-forkjoin" class="ct-pane active"><pre><span class="cm">// Conceptually, a parallel stream recursively splits the work (FORK),</span>
+<span class="cm">// processes each piece independently, then combines results (JOIN) —</span>
+<span class="cm">// exactly the divide-and-conquer pattern ForkJoinPool was built for</span>
+
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; bigList = <span class="fn">generateMillionNumbers</span>();
+
+<span class="kw">long</span> sum = bigList.<span class="fn">parallelStream</span>()
+    .<span class="fn">mapToLong</span>(<span class="ty">Integer</span>::longValue)
+    .<span class="fn">sum</span>();
+<span class="cm">// Internally: the list is recursively split into halves until chunks are</span>
+<span class="cm">// small enough to process directly, each chunk is summed independently</span>
+<span class="cm">// (possibly on a different worker thread), and partial sums are combined —</span>
+<span class="cm">// this is WORK STEALING: idle threads "steal" pending sub-tasks from busy</span>
+<span class="cm">// threads' queues, keeping all cores productively busy</span></pre></div>
+    <div id="pi-customPool" class="ct-pane"><pre><span class="cm">// Submitting a parallel stream operation to a CUSTOM pool, isolating it</span>
+<span class="cm">// from the shared commonPool (useful to avoid starving unrelated app code)</span>
+<span class="ty">ForkJoinPool</span> customPool = <span class="kw">new</span> <span class="ty">ForkJoinPool</span>(4); <span class="cm">// 4 threads, dedicated to this work</span>
+
+<span class="kw">try</span> {
+    <span class="kw">long</span> sum = customPool.<span class="fn">submit</span>(() -&gt;
+        bigList.<span class="fn">parallelStream</span>().<span class="fn">mapToLong</span>(<span class="ty">Integer</span>::longValue).<span class="fn">sum</span>()
+    ).<span class="fn">get</span>();
+} <span class="kw">finally</span> {
+    customPool.<span class="fn">shutdown</span>(); <span class="cm">// always clean up custom pools explicitly</span>
+}
+<span class="cm">// This pattern is exactly what senior interviewers listen for when they</span>
+<span class="cm">// ask "how would you avoid one slow parallel stream affecting unrelated</span>
+<span class="cm">// code elsewhere in the application" — the commonPool being SHARED is the crux</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "Parallel streams split the source via a Spliterator, distribute chunks across ForkJoinPool.commonPool()'s worker threads using work-stealing, and merge partial results back together. It's genuinely powerful for large, CPU-bound, easily-splittable data — and genuinely risky for small datasets, I/O-bound work, or anything that shares the common pool with other blocking operations."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 15: PARALLEL STREAM PITFALLS ═══ -->
+<section class="section" id="parallel-pitfalls">
+  <div class="section-header"><span class="section-eyebrow">Where It Goes Wrong</span><span class="section-rule"></span></div>
+  <h2>Parallel Stream Pitfalls</h2>
+  <p class="section-intro"><strong>"Parallel does not always mean faster"</strong> is the single sentence interviewers most want to hear you say — followed by a concrete explanation of why. This is consistently cited as the #1 thing separating junior from senior answers on this topic.</p>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'pp-sharedstate')">Shared mutable state — silent data corruption</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pp-smalldataset')">Small datasets — overhead exceeds benefit</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pp-blocking')">Blocking I/O starving the common pool</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pp-orderedops')">forEachOrdered() negating parallelism</div>
+    </div>
+    <div id="pp-sharedstate" class="ct-pane active"><pre><span class="cm">// THE classic parallel stream bug: mutating shared state from a lambda</span>
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; results = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;(); <span class="cm">// NOT thread-safe</span>
+
+numbers.<span class="fn">parallelStream</span>().<span class="fn">forEach</span>(n -&gt; results.<span class="fn">add</span>(n * 2)); <span class="cm">// multiple threads calling add() concurrently</span>
+<span class="cm">// RESULT: unpredictable — lost updates, ArrayIndexOutOfBoundsException, or</span>
+<span class="cm">// even an infinite loop internally, since ArrayList's internal array-resize</span>
+<span class="cm">// logic is not designed to survive concurrent mutation</span>
+
+<span class="cm">// FIX 1: use a proper collector — thread-safety is handled FOR you</span>
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; safe = numbers.<span class="fn">parallelStream</span>()
+    .<span class="fn">map</span>(n -&gt; n * 2)
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">toList</span>()); <span class="cm">// collect() manages merging safely across threads internally</span></pre></div>
+    <div id="pp-smalldataset" class="ct-pane"><pre><span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; tiny = <span class="ty">List</span>.<span class="fn">of</span>(1, 2, 3, 4, 5);
+
+<span class="kw">int</span> sum = tiny.<span class="fn">parallelStream</span>().<span class="fn">mapToInt</span>(<span class="ty">Integer</span>::intValue).<span class="fn">sum</span>();
+<span class="cm">// LIKELY SLOWER than tiny.stream()...sum() — the overhead of splitting work,</span>
+<span class="cm">// scheduling across the ForkJoinPool, and merging results FAR exceeds the</span>
+<span class="cm">// trivial cost of just summing 5 ints sequentially on one thread</span>
+
+<span class="cm">// Rule of thumb repeatedly cited by interviewers and JDK docs alike:</span>
+<span class="cm">// parallel streams only pay off for LARGE datasets (often cited: tens of</span>
+<span class="cm">// thousands of elements or more) combined with genuinely CPU-intensive</span>
+<span class="cm">// per-element work — never assume "parallel" is a free upgrade</span></pre></div>
+    <div id="pp-blocking" class="ct-pane"><pre><span class="cm">// Blocking (I/O, network calls, sleep) inside a parallel stream is a serious anti-pattern</span>
+urls.<span class="fn">parallelStream</span>()
+    .<span class="fn">map</span>(url -&gt; <span class="fn">fetchOverNetwork</span>(url)) <span class="cm">// BLOCKS a commonPool worker thread while waiting on the network</span>
+    .<span class="fn">toList</span>();
+
+<span class="cm">// PROBLEM: the commonPool is SHARED across your ENTIRE JVM process. If</span>
+<span class="cm">// this pipeline ties up most/all of its worker threads waiting on slow</span>
+<span class="cm">// network calls, ANY OTHER unrelated parallel stream running anywhere else</span>
+<span class="cm">// in the same application — even in a completely different part of the</span>
+<span class="cm">// codebase — can be starved of threads to run on</span>
+
+<span class="cm">// FIX: use a dedicated ExecutorService + CompletableFuture for I/O-bound</span>
+<span class="cm">// work instead of parallel streams, which are designed for CPU-bound tasks</span></pre></div>
+    <div id="pp-orderedops" class="ct-pane"><pre><span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; nums = <span class="fn">generateMillionNumbers</span>();
+
+nums.<span class="fn">parallelStream</span>()
+    .<span class="fn">map</span>(n -&gt; n * 2)
+    .<span class="fn">forEachOrdered</span>(<span class="ty">System</span>.out::println); <span class="cm">// forces ENCOUNTER ORDER to be preserved</span>
+<span class="cm">// This largely NEGATES the parallelism benefit — the whole point of</span>
+<span class="cm">// parallel execution is that threads finish in whatever order they finish,</span>
+<span class="cm">// and forcing re-sequencing back into original order adds real coordination cost</span>
+
+<span class="cm">// If order doesn't genuinely matter for your use case, use plain forEach()</span>
+<span class="cm">// instead — it makes NO ordering guarantee and lets threads report results</span>
+<span class="cm">// as they finish, which is exactly what unlocks full parallel throughput</span></pre></div>
+  </div>
+
+  <div class="danger-box">
+    <span class="tip-icon">🚫</span>
+    <span class="danger-text"><strong>The complete "when NOT to use parallel streams" checklist:</strong> small datasets, I/O-bound or blocking operations, stateful/shared-mutable-state lambdas, poorly-splitting sources (LinkedList, Stream.iterate()), and anywhere strict encounter order must be preserved throughout. When in doubt: measure with a real benchmark (JMH) rather than assuming — parallel streams are a targeted optimization, not a default.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 16: COMMON MISTAKES & ANTI-PATTERNS ═══ -->
+<section class="section" id="mistakes">
+  <div class="section-header"><span class="section-eyebrow">Beyond Parallel Streams</span><span class="section-rule"></span></div>
+  <h2>Common Mistakes &amp; Anti-Patterns</h2>
+  <p class="section-intro">Sequential-stream mistakes that come up just as often as the parallel ones — these are the "everyday code review" gotchas.</p>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'mst-reuse')">Reusing a consumed stream</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'mst-sideeffects')">Side effects inside map()</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'mst-peek')">Misusing peek() for logic, not debugging</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'mst-null')">Streams don't handle null automatically</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'mst-overengineering')">Over-engineering a simple loop into a stream</div>
+    </div>
+    <div id="mst-reuse" class="ct-pane active"><pre><span class="ty">Stream</span>&lt;<span class="ty">String</span>&gt; stream = names.<span class="fn">stream</span>();
+stream.<span class="fn">forEach</span>(<span class="ty">System</span>.out::println);
+stream.<span class="fn">forEach</span>(<span class="ty">System</span>.out::println); <span class="cm">// java.lang.IllegalStateException: stream has already been operated upon or closed</span>
+
+<span class="cm">// FIX: create a new stream for each independent traversal</span>
+names.<span class="fn">stream</span>().<span class="fn">forEach</span>(<span class="ty">System</span>.out::println);
+names.<span class="fn">stream</span>().<span class="fn">forEach</span>(<span class="ty">System</span>.out::println); <span class="cm">// fine — freshly created each time</span>
+<span class="cm">// Remember: a Stream models a ONE-TIME pipeline of computation, not a</span>
+<span class="cm">// reusable data structure — this is precisely the Stream vs Collection</span>
+<span class="cm">// distinction from the Foundations section, manifesting as a runtime bug</span></pre></div>
+    <div id="mst-sideeffects" class="ct-pane"><pre><span class="cm">// ANTI-PATTERN: mutating external state from inside map() — map() should be a PURE function</span>
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; results = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;();
+
+numbers.<span class="fn">stream</span>()
+    .<span class="fn">map</span>(x -&gt; {
+        results.<span class="fn">add</span>(x * 2); <span class="cm">// SIDE EFFECT inside map() — fragile even sequentially, dangerous in parallel</span>
+        <span class="kw">return</span> x * 2;
+    })
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">toList</span>());
+
+<span class="cm">// FIX: let the terminal operation own the accumulation — that's its job</span>
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; results2 = numbers.<span class="fn">stream</span>()
+    .<span class="fn">map</span>(x -&gt; x * 2)
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">toList</span>()); <span class="cm">// clean, no side effects, safe in parallel too</span></pre></div>
+    <div id="mst-peek" class="ct-pane"><pre><span class="cm">// peek() is documented as a DEBUGGING tool, not a general-purpose side-effect hook</span>
+<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; result = names.<span class="fn">stream</span>()
+    .<span class="fn">peek</span>(n -&gt; auditLog.<span class="fn">record</span>(n)) <span class="cm">// using peek() for real business logic — fragile</span>
+    .<span class="fn">map</span>(<span class="ty">String</span>::toUpperCase)
+    .<span class="fn">toList</span>();
+<span class="cm">// RISK: peek() may not even RUN for every element if the JVM determines</span>
+<span class="cm">// its result is unused by the rest of the pipeline (e.g. with certain</span>
+<span class="cm">// short-circuiting terminal ops) — relying on it for side effects that</span>
+<span class="cm">// MUST happen is unreliable by design, not just bad style</span>
+
+<span class="cm">// peek() is fine for its INTENDED purpose — temporary debugging visibility:</span>
+names.<span class="fn">stream</span>()
+    .<span class="fn">peek</span>(n -&gt; <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"before filter: "</span> + n)) <span class="cm">// remove before shipping</span>
+    .<span class="fn">filter</span>(n -&gt; n.<span class="fn">length</span>() &gt; 3)
+    .<span class="fn">toList</span>();</pre></div>
+    <div id="mst-null" class="ct-pane"><pre><span class="ty">List</span>&lt;<span class="ty">String</span>&gt; namesWithNulls = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;(<span class="ty">Arrays</span>.<span class="fn">asList</span>(<span class="st">"Alice"</span>, <span class="kw">null</span>, <span class="st">"Bob"</span>));
+
+<span class="cm">// namesWithNulls.stream().map(String::toUpperCase).toList();</span>
+<span class="cm">// throws NullPointerException at the null element — streams do NOT silently skip nulls</span>
+
+<span class="cm">// FIX: explicitly filter nulls out first</span>
+<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; safe = namesWithNulls.<span class="fn">stream</span>()
+    .<span class="fn">filter</span>(<span class="ty">Objects</span>::nonNull) <span class="cm">// removes nulls BEFORE they reach map()</span>
+    .<span class="fn">map</span>(<span class="ty">String</span>::toUpperCase)
+    .<span class="fn">toList</span>();
+
+<span class="cm">// Also: Collectors.toMap() and List.of() THROW on null values/elements —</span>
+<span class="cm">// a frequent source of NullPointerException in code migrated from older</span>
+<span class="cm">// null-tolerant collection styles</span></pre></div>
+    <div id="mst-overengineering" class="ct-pane"><pre><span class="cm">// Streams aren't always the answer — a simple loop is sometimes genuinely clearer</span>
+<span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; nums = <span class="ty">List</span>.<span class="fn">of</span>(1, 2, 3);
+
+<span class="cm">// Over-engineered: a stream pipeline for one trivial side effect</span>
+<span class="ty">AtomicInteger</span> sum = <span class="kw">new</span> <span class="ty">AtomicInteger</span>();
+nums.<span class="fn">forEach</span>(n -&gt; sum.<span class="fn">addAndGet</span>(n)); <span class="cm">// needing AtomicInteger just to "escape" effectively-final rules is a smell</span>
+
+<span class="cm">// Clearer AND simpler: just use the purpose-built terminal operation</span>
+<span class="kw">int</span> total = nums.<span class="fn">stream</span>().<span class="fn">mapToInt</span>(<span class="ty">Integer</span>::intValue).<span class="fn">sum</span>();
+
+<span class="cm">// Or, for genuinely simple imperative logic, a plain for-loop can be more</span>
+<span class="cm">// readable than forcing it into a stream pipeline. Streams are a tool for</span>
+<span class="cm">// DECLARATIVE transformations, not a mandate to eliminate every loop</span></pre></div>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 17: REAL-WORLD SCENARIOS ═══ -->
+<section class="section" id="real-world">
+  <div class="section-header"><span class="section-eyebrow">Business Logic Patterns</span><span class="section-rule"></span></div>
+  <h2>Real-World Scenarios</h2>
+  <p class="section-intro">The kind of stream pipelines that actually show up in take-home assignments and "design a small feature" interview rounds — not LeetCode puzzles, but everyday business-logic transformations.</p>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'rw-orders')">E-commerce: order total &amp; top products</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'rw-logs')">Log analysis: error rate by service</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'rw-dedup')">Deduplicating records by a business key</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'rw-validation')">Validation: collecting all errors, not just the first</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'rw-csv')">Transforming API results into a report structure</div>
+    </div>
+    <div id="rw-orders" class="ct-pane active"><pre><span class="kw">record</span> <span class="ty">Order</span>(<span class="ty">String</span> customerId, <span class="ty">String</span> product, <span class="kw">int</span> quantity, <span class="kw">double</span> price) {}
+
+<span class="ty">List</span>&lt;<span class="ty">Order</span>&gt; orders = <span class="fn">getOrders</span>();
+
+<span class="cm">// Total revenue across all orders</span>
+<span class="kw">double</span> totalRevenue = orders.<span class="fn">stream</span>()
+    .<span class="fn">mapToDouble</span>(o -&gt; o.<span class="fn">quantity</span>() * o.<span class="fn">price</span>())
+    .<span class="fn">sum</span>();
+
+<span class="cm">// Top 3 products by total revenue — a very common "real feature" ask</span>
+<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; top3Products = orders.<span class="fn">stream</span>()
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">groupingBy</span>(<span class="ty">Order</span>::product,
+                              <span class="ty">Collectors</span>.<span class="fn">summingDouble</span>(o -&gt; o.<span class="fn">quantity</span>() * o.<span class="fn">price</span>())))
+    .<span class="fn">entrySet</span>().<span class="fn">stream</span>()
+    .<span class="fn">sorted</span>(<span class="ty">Map</span>.<span class="ty">Entry</span>.&lt;<span class="ty">String</span>, <span class="ty">Double</span>&gt;comparingByValue().<span class="fn">reversed</span>())
+    .<span class="fn">limit</span>(3)
+    .<span class="fn">map</span>(<span class="ty">Map</span>.<span class="ty">Entry</span>::getKey)
+    .<span class="fn">toList</span>();</pre></div>
+    <div id="rw-logs" class="ct-pane"><pre><span class="kw">record</span> <span class="ty">LogEntry</span>(<span class="ty">String</span> service, <span class="ty">String</span> level, <span class="ty">String</span> message) {}
+
+<span class="ty">List</span>&lt;<span class="ty">LogEntry</span>&gt; logs = <span class="fn">getLogs</span>();
+
+<span class="cm">// Error COUNT per service — a standard groupingBy+filtering+counting combo</span>
+<span class="ty">Map</span>&lt;<span class="ty">String</span>, <span class="ty">Long</span>&gt; errorsByService = logs.<span class="fn">stream</span>()
+    .<span class="fn">filter</span>(l -&gt; l.<span class="fn">level</span>().<span class="fn">equals</span>(<span class="st">"ERROR"</span>))
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">groupingBy</span>(<span class="ty">LogEntry</span>::service, <span class="ty">Collectors</span>.<span class="fn">counting</span>()));
+
+<span class="cm">// ERROR RATE per service (needs the total too — teeing() from earlier fits perfectly)</span>
+<span class="ty">Map</span>&lt;<span class="ty">String</span>, <span class="ty">Double</span>&gt; errorRateByService = logs.<span class="fn">stream</span>()
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">groupingBy</span>(<span class="ty">LogEntry</span>::service,
+        <span class="ty">Collectors</span>.<span class="fn">teeing</span>(
+            <span class="ty">Collectors</span>.<span class="fn">counting</span>(),
+            <span class="ty">Collectors</span>.<span class="fn">filtering</span>(l -&gt; l.<span class="fn">level</span>().<span class="fn">equals</span>(<span class="st">"ERROR"</span>), <span class="ty">Collectors</span>.<span class="fn">counting</span>()),
+            (total, errors) -&gt; total == 0 ? 0.0 : (<span class="kw">double</span>) errors / total
+        )));</pre></div>
+    <div id="rw-dedup" class="ct-pane"><pre><span class="cm">// Deduplicate by a BUSINESS KEY (e.g. email), keeping the MOST RECENT record —</span>
+<span class="cm">// plain distinct() can't do this since it only knows equals()/hashCode()</span>
+<span class="kw">record</span> <span class="ty">User</span>(<span class="ty">String</span> email, <span class="ty">String</span> name, <span class="ty">Instant</span> updatedAt) {}
+
+<span class="ty">Collection</span>&lt;<span class="ty">User</span>&gt; deduped = users.<span class="fn">stream</span>()
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">toMap</span>(
+        <span class="ty">User</span>::email,                                              <span class="cm">// dedup key</span>
+        u -&gt; u,                                                       <span class="cm">// value</span>
+        (existing, incoming) -&gt; incoming.<span class="fn">updatedAt</span>().<span class="fn">isAfter</span>(existing.<span class="fn">updatedAt</span>()) ? incoming : existing
+    ))
+    .<span class="fn">values</span>();
+<span class="cm">// This "toMap with a merge function" pattern is THE standard way to</span>
+<span class="cm">// deduplicate-by-key-with-a-tiebreak in real code — worth memorizing</span></pre></div>
+    <div id="rw-validation" class="ct-pane"><pre><span class="cm">// Real form/API validation: collect ALL errors, don't stop at the first —</span>
+<span class="cm">// a genuinely common "design this small piece" interview ask</span>
+<span class="kw">record</span> <span class="ty">ValidationRule</span>(<span class="ty">Predicate</span>&lt;<span class="ty">UserForm</span>&gt; check, <span class="ty">String</span> errorMessage) {}
+
+<span class="ty">List</span>&lt;<span class="ty">ValidationRule</span>&gt; rules = <span class="ty">List</span>.<span class="fn">of</span>(
+    <span class="kw">new</span> <span class="ty">ValidationRule</span>(f -&gt; f.<span class="fn">email</span>().<span class="fn">contains</span>(<span class="st">"@"</span>), <span class="st">"Invalid email"</span>),
+    <span class="kw">new</span> <span class="ty">ValidationRule</span>(f -&gt; f.<span class="fn">age</span>() &gt;= 18, <span class="st">"Must be 18+"</span>),
+    <span class="kw">new</span> <span class="ty">ValidationRule</span>(f -&gt; !f.<span class="fn">name</span>().<span class="fn">isBlank</span>(), <span class="st">"Name required"</span>)
+);
+
+<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; errors = rules.<span class="fn">stream</span>()
+    .<span class="fn">filter</span>(rule -&gt; !rule.<span class="fn">check</span>().<span class="fn">test</span>(userForm)) <span class="cm">// keep only FAILED rules</span>
+    .<span class="fn">map</span>(<span class="ty">ValidationRule</span>::errorMessage)
+    .<span class="fn">toList</span>();
+
+<span class="kw">if</span> (!errors.<span class="fn">isEmpty</span>()) <span class="kw">throw new</span> <span class="ty">ValidationException</span>(errors); <span class="cm">// report EVERYTHING wrong at once, not just the first failure</span></pre></div>
+    <div id="rw-csv" class="ct-pane"><pre><span class="cm">// Shaping raw API/DB results into a report-ready nested structure —</span>
+<span class="cm">// exactly the kind of transformation a "build a small endpoint" round asks for</span>
+<span class="kw">record</span> <span class="ty">Sale</span>(<span class="ty">String</span> region, <span class="ty">String</span> quarter, <span class="kw">double</span> amount) {}
+
+<span class="ty">Map</span>&lt;<span class="ty">String</span>, <span class="ty">Map</span>&lt;<span class="ty">String</span>, <span class="ty">Double</span>&gt;&gt; report = sales.<span class="fn">stream</span>()
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">groupingBy</span>(<span class="ty">Sale</span>::region,
+                              <span class="ty">Collectors</span>.<span class="fn">groupingBy</span>(<span class="ty">Sale</span>::quarter,
+                                                    <span class="ty">Collectors</span>.<span class="fn">summingDouble</span>(<span class="ty">Sale</span>::amount))));
+<span class="cm">// {"West": {"Q1": 50000.0, "Q2": 62000.0}, "East": {"Q1": 41000.0, ...}}</span>
+<span class="cm">// — ready to serialize straight into a JSON report response</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text">Notice the pattern across nearly all of these: <strong>groupingBy + a downstream aggregator</strong> (counting, summingDouble, teeing, or another groupingBy) solves the overwhelming majority of real reporting and aggregation tasks. If an interviewer describes a "group X by Y and compute Z" feature, this combo is almost always the answer they're listening for.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 18: PERFORMANCE CONSIDERATIONS ═══ -->
+<section class="section" id="performance">
+  <div class="section-header"><span class="section-eyebrow">Streams vs Loops</span><span class="section-rule"></span></div>
+  <h2>Performance Considerations</h2>
+  <p class="section-intro">Streams add a genuine (small) overhead versus a hand-written loop — object allocation for each pipeline stage, virtual method dispatch through lambdas, and boxing where applicable. For 95% of business code this is irrelevant; for hot paths, it's worth knowing where the cost actually comes from.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Where the overhead comes from</span>
+      <ul class="rule-list">
+        <li>Each intermediate operation wraps the previous stage — a chain of small objects gets built even before any element is processed</li>
+        <li>Lambda calls go through an invokedynamic-generated functional interface implementation — cheap, but not literally zero-cost like inlined loop body code</li>
+        <li>Boxing for <code class="inline">Stream&lt;Integer&gt;</code>-style pipelines over numeric data, as covered in the Primitive Streams section</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">When to actually care</span>
+      <ul class="rule-list">
+        <li>Tight loops executed millions of times per second in a genuine hot path (verified via profiling, not guessed)</li>
+        <li>Very large numeric computations where boxing overhead compounds — prefer primitive streams there</li>
+        <li>For everyday CRUD/business logic, readability and correctness should win — the JIT optimizes stream pipelines quite well in steady state, and premature "loop is faster" rewrites are rarely worth the lost clarity</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'perf-chaining')">Redundant chained filters</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'perf-datastructure')">Underlying data structure matters for parallel</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'perf-lazyshortcircuit')">Ordering operations to exploit short-circuiting</div>
+    </div>
+    <div id="perf-chaining" class="ct-pane active"><pre><span class="cm">// Multiple separate filters CAN be combined into one predicate for one less pass —</span>
+<span class="cm">// though the JIT often optimizes trivial cases like this away regardless</span>
+<span class="ty">List</span>&lt;<span class="ty">String</span>&gt; words = <span class="fn">getWords</span>();
+
+<span class="kw">long</span> count1 = words.<span class="fn">stream</span>()
+    .<span class="fn">filter</span>(w -&gt; w.<span class="fn">length</span>() &gt; 3)
+    .<span class="fn">filter</span>(w -&gt; w.<span class="fn">startsWith</span>(<span class="st">"a"</span>))
+    .<span class="fn">count</span>();
+
+<span class="kw">long</span> count2 = words.<span class="fn">stream</span>()
+    .<span class="fn">filter</span>(w -&gt; w.<span class="fn">length</span>() &gt; 3 &amp;&amp; w.<span class="fn">startsWith</span>(<span class="st">"a"</span>)) <span class="cm">// one combined predicate — marginally leaner pipeline structure</span>
+    .<span class="fn">count</span>();
+<span class="cm">// The performance difference here is typically negligible — this is a</span>
+<span class="cm">// STYLE/readability decision far more than a real optimization in most cases</span></pre></div>
+    <div id="perf-datastructure" class="ct-pane"><pre><span class="cm">// For parallel streams specifically, the SOURCE data structure genuinely</span>
+<span class="cm">// changes performance — not just a micro-detail</span>
+
+<span class="ty">ArrayList</span>&lt;<span class="ty">Integer</span>&gt; arrayBacked = <span class="kw">new</span> <span class="ty">ArrayList</span>&lt;&gt;(millionNumbers);
+arrayBacked.<span class="fn">parallelStream</span>().<span class="fn">mapToInt</span>(<span class="ty">Integer</span>::intValue).<span class="fn">sum</span>(); <span class="cm">// splits cheaply — known size, direct index access</span>
+
+<span class="ty">LinkedList</span>&lt;<span class="ty">Integer</span>&gt; linkedBacked = <span class="kw">new</span> <span class="ty">LinkedList</span>&lt;&gt;(millionNumbers);
+linkedBacked.<span class="fn">parallelStream</span>().<span class="fn">mapToInt</span>(<span class="ty">Integer</span>::intValue).<span class="fn">sum</span>(); <span class="cm">// splits POORLY — must walk node-by-node to find split points,</span>
+                                                          <span class="cm">// often ends up SLOWER in parallel than the ArrayList version sequentially</span>
+<span class="cm">// Prefer ArrayList/arrays as the source whenever parallel streams are on the table</span></pre></div>
+    <div id="perf-lazyshortcircuit" class="ct-pane"><pre><span class="cm">// Put the CHEAPEST and MOST SELECTIVE filter FIRST — laziness means later</span>
+<span class="cm">// operations never run for elements already excluded, so filtering early saves work</span>
+
+<span class="cm">// Less optimal: expensive check runs on elements a cheap check would already exclude</span>
+list.<span class="fn">stream</span>()
+    .<span class="fn">filter</span>(x -&gt; <span class="fn">expensiveDatabaseCheck</span>(x)) <span class="cm">// runs for EVERY element first</span>
+    .<span class="fn">filter</span>(x -&gt; x.<span class="fn">getStatus</span>() == <span class="ty">Status</span>.ACTIVE) <span class="cm">// a cheap in-memory check, applied second</span>
+    .<span class="fn">toList</span>();
+
+<span class="cm">// Better: cheap, selective filter FIRST — fewer elements ever reach the expensive check</span>
+list.<span class="fn">stream</span>()
+    .<span class="fn">filter</span>(x -&gt; x.<span class="fn">getStatus</span>() == <span class="ty">Status</span>.ACTIVE) <span class="cm">// cheap, run first — narrows the set immediately</span>
+    .<span class="fn">filter</span>(x -&gt; <span class="fn">expensiveDatabaseCheck</span>(x))       <span class="cm">// only runs for the SURVIVORS of the cheap filter</span>
+    .<span class="fn">toList</span>();</pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "For everyday code, stream vs loop performance is a non-issue — readability wins. Where it genuinely matters is avoiding boxing in numeric-heavy pipelines, choosing array-backed sources for parallel streams, and ordering filters cheap-and-selective-first to exploit laziness. I'd reach for a profiler before rewriting a stream pipeline 'for performance' on a hunch."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 19: FAANG Q&A ═══ -->
+<section class="section" id="faang-qa">
+  <div class="section-header"><span class="section-eyebrow">FAANG Rapid Fire</span><span class="section-rule"></span></div>
+  <h2>FAANG Rapid-Fire Q&amp;A</h2>
+  <p class="section-intro">Based on current interview patterns at product-based companies, Stream API questions cluster around laziness, map/flatMap confusion, groupingBy mechanics, and — increasingly at senior levels — parallel stream judgment calls. These are the ones worth being able to answer cold.</p>
+
+  <p class="sub-heading">Output / behavior prediction</p>
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'pq-noterminal')">No terminal operation</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pq-reuse')">Reusing a stream</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pq-allmatchempty')">allMatch on an empty stream</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pq-tomapcrash')">toMap duplicate key</div>
+    </div>
+    <div id="pq-noterminal" class="ct-pane active"><pre><span class="ty">List</span>&lt;<span class="ty">String</span>&gt; names = <span class="ty">List</span>.<span class="fn">of</span>(<span class="st">"a"</span>, <span class="st">"b"</span>);
+names.<span class="fn">stream</span>().<span class="fn">map</span>(s -&gt; { <span class="ty">System</span>.out.<span class="fn">println</span>(<span class="st">"mapping "</span> + s); <span class="kw">return</span> s.<span class="fn">toUpperCase</span>(); });
+<span class="cm">// Q: what prints? A: NOTHING. No terminal operation was called, so this</span>
+<span class="cm">// entire pipeline — including the println side effect inside map() — never runs at all</span></pre></div>
+    <div id="pq-reuse" class="ct-pane"><pre><span class="ty">Stream</span>&lt;<span class="ty">Integer</span>&gt; s = <span class="ty">Stream</span>.<span class="fn">of</span>(1, 2, 3);
+<span class="kw">long</span> count = s.<span class="fn">count</span>();
+s.<span class="fn">forEach</span>(<span class="ty">System</span>.out::println); <span class="cm">// Q: what happens?</span>
+<span class="cm">// A: throws IllegalStateException: stream has already been operated upon or</span>
+<span class="cm">// closed. count() is a terminal op that already consumed s — a Stream can</span>
+<span class="cm">// only be traversed ONCE, ever, unlike a Collection.</span></pre></div>
+    <div id="pq-allmatchempty" class="ct-pane"><pre><span class="ty">List</span>&lt;<span class="ty">Integer</span>&gt; empty = <span class="ty">List</span>.of();
+<span class="ty">System</span>.out.<span class="fn">println</span>(empty.<span class="fn">stream</span>().<span class="fn">allMatch</span>(n -&gt; n &gt; 100)); <span class="cm">// Q: true or false?</span>
+<span class="cm">// A: true — VACUOUS TRUTH. allMatch() only returns false when it finds an</span>
+<span class="cm">// element that VIOLATES the predicate; with zero elements, none can violate</span>
+<span class="cm">// it, so the universally-quantified statement holds trivially.</span></pre></div>
+    <div id="pq-tomapcrash" class="ct-pane"><pre><span class="ty">List</span>&lt;<span class="ty">String</span>&gt; words = <span class="ty">List</span>.<span class="fn">of</span>(<span class="st">"apple"</span>, <span class="st">"avocado"</span>, <span class="st">"banana"</span>);
+<span class="ty">Map</span>&lt;<span class="ty">Character</span>, <span class="ty">String</span>&gt; byFirstLetter = words.<span class="fn">stream</span>()
+    .<span class="fn">collect</span>(<span class="ty">Collectors</span>.<span class="fn">toMap</span>(w -&gt; w.<span class="fn">charAt</span>(0), w -&gt; w)); <span class="cm">// Q: what happens?</span>
+<span class="cm">// A: throws IllegalStateException: Duplicate key a (attempted merging values</span>
+<span class="cm">// "apple" and "avocado"). Both start with 'a' — the 2-arg toMap() has no</span>
+<span class="cm">// merge strategy and crashes rather than silently pick one. Fix: add a</span>
+<span class="cm">// 3rd-argument merge function, e.g. (v1, v2) -&gt; v1 + ", " + v2</span></pre></div>
+  </div>
+
+  <p class="sub-heading">Short-answer FAANG questions</p>
+  <div class="cheat-grid">
+    <div class="cheat-card">
+      <h4>❓ What is a Stream, and how is it different from a Collection?</h4>
+      <ul>
+        <li>A Stream is a lazy, one-time-use pipeline of computation over a source — it doesn't store data</li>
+        <li>A Collection stores data in memory and can be iterated repeatedly; a Stream is consumed once and throws on reuse</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Intermediate vs terminal operations — what's the actual difference?</h4>
+      <ul>
+        <li>Intermediate: returns another Stream, lazy, chainable (filter, map, sorted)</li>
+        <li>Terminal: returns a concrete result, triggers execution, consumes the stream (collect, forEach, reduce)</li>
+        <li>A pipeline with zero terminal operations never executes at all</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ map() vs flatMap() — when do you need flatMap specifically?</h4>
+      <ul>
+        <li>map(): 1-to-1 transformation, same element count</li>
+        <li>flatMap(): 1-to-many, then flattens — needed whenever your mapping function would itself return a Stream/List/Optional, to avoid a nested Stream&lt;Stream&lt;X&gt;&gt;</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Why isn't a parallel stream always faster?</h4>
+      <ul>
+        <li>Overhead of splitting work, scheduling across ForkJoinPool threads, and merging results can exceed the benefit for small datasets</li>
+        <li>Poorly-splitting sources (LinkedList, Stream.iterate) parallelize badly regardless of size</li>
+        <li>Blocking/I/O-bound work starves the shared commonPool, hurting the WHOLE application, not just that pipeline</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ What makes an operation "stateful" vs "stateless," and why does it matter?</h4>
+      <ul>
+        <li>Stateless (filter, map): judges/transforms each element independently — parallelizes trivially</li>
+        <li>Stateful (distinct, sorted): needs visibility across some or all prior elements — harder to parallelize, can't emit results early</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ groupingBy() vs partitioningBy() — when would you use each?</h4>
+      <ul>
+        <li>groupingBy: arbitrary classifier function, produces however many keys naturally occur in the data</li>
+        <li>partitioningBy: boolean predicate only, ALWAYS produces exactly 2 keys (true/false), even if one group is empty</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ How would you compute a group's count AND average in a single pass?</h4>
+      <ul>
+        <li>groupingBy + Collectors.summarizingDouble() gives count/min/max/avg/sum together in one collector</li>
+        <li>Or groupingBy + Collectors.teeing() to combine two independent downstream collectors over the same grouped data</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Why does the 2-argument toMap() throw on duplicate keys instead of overwriting?</h4>
+      <ul>
+        <li>Deliberate safety design — silently overwriting could hide a real data-integrity bug (e.g. two "unique" IDs colliding)</li>
+        <li>The 3-argument overload with an explicit merge function is the intended fix when duplicates are expected and need a defined resolution strategy</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ orElse() vs orElseGet() on Optional — what's the real difference?</h4>
+      <ul>
+        <li>orElse(x): argument is ALWAYS evaluated eagerly, even when the Optional is present and the value is discarded</li>
+        <li>orElseGet(supplier): the supplier only runs if the Optional is actually empty — use it whenever the fallback is expensive to compute</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Can you use a stream twice? What happens if you try?</h4>
+      <ul>
+        <li>No — a Stream is single-use. Calling a second terminal operation on an already-consumed stream throws IllegalStateException</li>
+        <li>To traverse the same source twice, create a fresh stream from it each time (e.g. call .stream() again on the underlying List)</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Why should you avoid side effects inside map()/filter()?</h4>
+      <ul>
+        <li>These are meant to be pure functions — the Stream API's internal execution order (including for parallel streams) isn't something you should rely on for correctness</li>
+        <li>Side effects there are fragile sequentially and genuinely dangerous under parallel execution (race conditions on shared state)</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ What's the purpose of peek(), and why shouldn't you rely on it for logic?</h4>
+      <ul>
+        <li>Documented purpose: debugging visibility into a pipeline's intermediate state, nothing more</li>
+        <li>The JVM may skip running it for elements whose result turns out to be unused (e.g. with certain short-circuiting terminal ops) — unreliable for anything that MUST happen</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ How would you find the top N elements by some field, efficiently?</h4>
+      <ul>
+        <li>sorted(Comparator.comparing(...).reversed()).limit(N) — simple, O(n log n), fine for most cases</li>
+        <li>For very large streams where N is small, a bounded PriorityQueue (from the Collections Bible's Top-K pattern) avoids sorting the entire dataset — O(n log N) instead</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 20: CHEATSHEET ═══ -->
+<section class="section" id="cheatsheet">
+  <div class="section-header"><span class="section-eyebrow">Interview Reference</span><span class="section-rule"></span></div>
+  <h2>Interview Cheatsheet</h2>
+  <p class="section-intro">One-liners for when you're under pressure. Know these cold.</p>
+
+  <div class="cheat-grid">
+    <div class="cheat-card">
+      <h4>🌊 What a Stream is</h4>
+      <ul>
+        <li>A lazy, one-time pipeline of computation over a source — not a data structure</li>
+        <li>Consumed exactly once; a second terminal op throws IllegalStateException</li>
+        <li>Never mutates its source</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🏗️ The pipeline shape</h4>
+      <ul>
+        <li>1 source → 0+ intermediate ops → exactly 1 terminal op</li>
+        <li>Intermediate: lazy, returns a Stream (filter, map, sorted)</li>
+        <li>Terminal: eager, returns a result, ends the pipeline (collect, forEach, reduce)</li>
+        <li>No terminal op = pipeline never runs at all</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>⚡ Laziness &amp; short-circuiting</h4>
+      <ul>
+        <li>Each element flows through the WHOLE pipeline before the next starts (vertical, not horizontal)</li>
+        <li>Short-circuiting: anyMatch, allMatch, noneMatch, findFirst, findAny, limit</li>
+        <li>allMatch() on an empty stream → true (vacuous truth)</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🔀 map() vs flatMap()</h4>
+      <ul>
+        <li>map(): 1-to-1, same element count</li>
+        <li>flatMap(): 1-to-many, then flattens — use when the mapper itself returns a Stream/List/Optional</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>⚖️ Stateless vs stateful ops</h4>
+      <ul>
+        <li>Stateless (parallelize easily): filter, map</li>
+        <li>Stateful (need broader visibility): distinct, sorted, limit/skip</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>➕ reduce() — 3 overloads</h4>
+      <ul>
+        <li>reduce(BinaryOperator) → Optional&lt;T&gt; (no identity, empty-safe via Optional)</li>
+        <li>reduce(identity, BinaryOperator) → T directly</li>
+        <li>reduce(identity, accumulator, combiner) → only needed for TYPE-CHANGING reduction in parallel</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🎯 Terminal ops quick ref</h4>
+      <ul>
+        <li>findFirst(): deterministic, respects order. findAny(): faster in parallel, no order guarantee</li>
+        <li>Object[] toArray() vs T[] toArray(generator)</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>📦 Collectors — the basics</h4>
+      <ul>
+        <li>toList() (Java 16+, unmodifiable) vs Collectors.toList() (mutable)</li>
+        <li>toMap() 2-arg THROWS on duplicate keys — use the 3-arg merge-function overload</li>
+        <li>joining(delim, prefix, suffix)</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>📊 groupingBy &amp; partitioningBy</h4>
+      <ul>
+        <li>groupingBy(classifier, downstream) = SQL GROUP BY + aggregate</li>
+        <li>Nest groupingBy as its own downstream for multi-level grouping</li>
+        <li>partitioningBy: boolean only, ALWAYS both true/false keys present</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🧰 Advanced Collectors</h4>
+      <ul>
+        <li>summarizingDouble(): min/max/avg/sum/count in ONE pass</li>
+        <li>filtering(): filters WITHIN a group (unlike stream.filter() before grouping)</li>
+        <li>teeing() (12+): two collectors, one pass, merged with a BiFunction</li>
+        <li>collectingAndThen(): post-process a collector's result (e.g. make it immutable)</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🔢 Primitive streams</h4>
+      <ul>
+        <li>IntStream/LongStream/DoubleStream avoid boxing for numeric work</li>
+        <li>Return OptionalInt/OptionalLong/OptionalDouble — NOT generic Optional&lt;Integer&gt;</li>
+        <li>boxed() to go back to Stream&lt;Integer&gt;</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Optional essentials</h4>
+      <ul>
+        <li>Avoid isPresent()+get() — prefer map/orElse/ifPresent/orElseThrow</li>
+        <li>orElse(): eager. orElseGet(): lazy — use for expensive fallbacks</li>
+        <li>flatMap() to avoid Optional&lt;Optional&lt;X&gt;&gt;</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🧵 Parallel streams</h4>
+      <ul>
+        <li>Use ForkJoinPool.commonPool() by default — SHARED across the whole JVM</li>
+        <li>Spliterator splits the source — ArrayList/arrays split well, LinkedList/iterate() don't</li>
+        <li>"Parallel does not always mean faster" — the #1 thing to say</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🚫 When NOT to use parallel streams</h4>
+      <ul>
+        <li>Small datasets — overhead exceeds benefit</li>
+        <li>I/O-bound or blocking work — starves the shared commonPool</li>
+        <li>Shared mutable state / stateful lambdas — race conditions</li>
+        <li>forEachOrdered() — negates the parallelism benefit</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🚨 Top interview traps</h4>
+      <ul>
+        <li>Reusing an already-consumed stream → IllegalStateException</li>
+        <li>toMap() duplicate key → IllegalStateException (needs a merge function)</li>
+        <li>Forgetting .limit() on Stream.iterate()/generate() → infinite loop</li>
+        <li>Streams don't skip nulls automatically — filter(Objects::nonNull) first</li>
+        <li>Relying on peek() for real logic — it's a debugging tool, not guaranteed to run</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="page-footer">
+  <span class="footer-brand">GrowthScript // Stream API Bible</span>
+  <span class="footer-note">Pipeline Model · map/flatMap · Collectors · groupingBy · Parallel Streams · Real-World Patterns</span>
+</footer>
+</main>
+
+<script>
+function ctSwitch(tab, id) {
+  const wrap = tab.closest('.code-tabs-wrap');
+  wrap.querySelectorAll('.ct-tab').forEach(t => t.classList.remove('active'));
+  wrap.querySelectorAll('.ct-pane').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+function switchTab(tab, id) {
+  const pair = tab.closest('.code-pair');
+  pair.querySelectorAll('.cpt').forEach(t => t.classList.remove('active'));
+  pair.querySelectorAll('.code-pane').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+function toggleTheme() {
+  const html = document.documentElement;
+  const dark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', dark ? 'light' : 'dark');
+  document.getElementById('btn-light').classList.toggle('active',  dark);
+  document.getElementById('btn-dark').classList.toggle('active',  !dark);
+  localStorage.setItem('stream-theme', dark ? 'light' : 'dark');
+}
+(function(){
+  const saved = localStorage.getItem('stream-theme');
+  if (saved === 'dark') {
+    document.documentElement.setAttribute('data-theme','dark');
+    document.getElementById('btn-light').classList.remove('active');
+    document.getElementById('btn-dark').classList.add('active');
+  }
+})();
+const sections  = document.querySelectorAll('section[id]');
+const sideLinks = document.querySelectorAll('.sidebar-link');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const id = e.target.id;
+      sideLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#'+id));
+    }
+  });
+}, { threshold: 0.15, rootMargin: '-60px 0px -60% 0px' });
+sections.forEach(s => obs.observe(s));
+</script>
+</body>
+</html>
