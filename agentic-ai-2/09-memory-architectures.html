@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memory Architectures for AI Agents — The Complete Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d10; --bg-raised:#12151a; --bg-card:#14181f;
+  --line:#242a33; --line-soft:#1b2028;
+  --ink:#e7e9ec; --ink-dim:#9aa3b0; --ink-faint:#5c6672;
+  --amber:#ff9f40; --amber-dim:#c97a2e; --lime:#c9f04c; --cyan:#5fd9c9; --violet:#b592ff; --rose:#ff7a8a;
+  --serif:'Source Serif 4', Georgia, serif;
+  --display:'Space Grotesk', sans-serif;
+  --mono:'JetBrains Mono', 'Courier New', monospace;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:radial-gradient(var(--line-soft) 1px, transparent 1px);
+  background-size:22px 22px; background-color:var(--bg);
+  color:var(--ink); font-family:var(--serif); font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+a{color:var(--amber); text-decoration:none;}
+::selection{background:var(--amber); color:#111;}
+.shell{display:grid; grid-template-columns:290px 1fr; min-height:100vh;}
+@media (max-width:920px){ .shell{grid-template-columns:1fr;} .side{display:none;} }
+.side{position:sticky; top:0; height:100vh; overflow-y:auto; border-right:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(18,21,26,.9), rgba(11,13,16,.9)); padding:28px 20px 60px;}
+.side::-webkit-scrollbar{width:6px;} .side::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.brand{font-family:var(--display); font-weight:700; font-size:15px; color:var(--ink); margin-bottom:2px;}
+.brand span{color:var(--amber);}
+.brand-sub{font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-bottom:24px;}
+.back-link{display:inline-block; font-family:var(--mono); font-size:11px; color:var(--cyan); margin-bottom:20px; border:1px solid var(--line); padding:5px 10px; border-radius:6px;}
+.nav-link{display:flex; align-items:baseline; gap:7px; font-family:var(--display); font-size:12.2px; color:var(--ink-dim);
+  padding:5px 7px; border-radius:6px; border-left:2px solid transparent; transition:.15s;}
+.nav-link:hover{color:var(--ink); background:var(--bg-raised);}
+.nav-link.active{color:var(--amber); border-left-color:var(--amber); background:var(--bg-raised);}
+.nav-num{font-family:var(--mono); font-size:9.5px; color:var(--ink-faint); min-width:20px;}
+.main{max-width:920px; padding:0 44px 140px; margin:0 auto;}
+@media (max-width:700px){ .main{padding:0 20px 100px;} }
+.hero{padding:76px 0 54px; border-bottom:1px solid var(--line);}
+.hero-eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--lime);
+  margin-bottom:18px; display:flex; align-items:center; gap:10px;}
+.hero-eyebrow::before{content:''; width:22px; height:1px; background:var(--lime); display:inline-block;}
+h1.title{font-family:var(--display); font-weight:700; font-size:clamp(30px,4.8vw,50px); line-height:1.08; letter-spacing:-.02em; color:var(--ink); max-width:15ch;}
+h1.title em{font-style:normal; color:var(--amber);}
+.hero-sub{font-family:var(--serif); font-size:18px; color:var(--ink-dim); max-width:62ch; margin-top:20px;}
+.tag-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:26px;}
+.tag{font-family:var(--mono); font-size:11px; padding:5px 11px; border-radius:20px; border:1px solid var(--line); color:var(--ink-dim); background:var(--bg-raised);}
+section.chapter{padding:60px 0; border-bottom:1px solid var(--line);}
+section.chapter:last-of-type{border-bottom:none;}
+.chapter-head{display:flex; align-items:flex-start; gap:16px; margin-bottom:8px;}
+.chapter-num{font-family:var(--mono); font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:20px; padding:3px 11px; margin-top:6px; white-space:nowrap;}
+h2.chapter-title{font-family:var(--display); font-weight:600; font-size:clamp(22px,3.2vw,30px); color:var(--ink); letter-spacing:-.01em;}
+.chapter-dek{font-family:var(--serif); font-style:italic; color:var(--ink-dim); font-size:16px; max-width:66ch; margin:14px 0 30px 0; padding-left:66px;}
+@media (max-width:700px){.chapter-dek{padding-left:0;}}
+.chapter-body{padding-left:66px;}
+@media (max-width:700px){.chapter-body{padding-left:0;}}
+.chapter-body h3{font-family:var(--display); font-weight:600; font-size:19px; color:var(--ink); margin:32px 0 12px;}
+.chapter-body h4{font-family:var(--display); font-weight:600; color:var(--cyan); margin:22px 0 10px; text-transform:uppercase; letter-spacing:.04em; font-size:12px;}
+.chapter-body p{color:var(--ink-dim); margin-bottom:14px; max-width:72ch;}
+.chapter-body ul, .chapter-body ol{color:var(--ink-dim); margin:0 0 16px 20px; max-width:70ch;}
+.chapter-body li{margin-bottom:7px;}
+.chapter-body strong{color:var(--ink); font-weight:600;}
+code.inline{font-family:var(--mono); font-size:.87em; background:var(--bg-raised); color:var(--lime); padding:1px 6px; border-radius:4px; border:1px solid var(--line);}
+.callout{border-left:3px solid var(--amber); background:var(--bg-card); padding:16px 18px; border-radius:0 8px 8px 0; margin:20px 0; max-width:70ch;}
+.callout p{margin-bottom:0; color:var(--ink-dim); font-size:14.5px;}
+.callout .callout-label{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--amber); margin-bottom:6px; display:block;}
+.callout.interview{border-left-color:var(--violet);} .callout.interview .callout-label{color:var(--violet);}
+.callout.pitfall{border-left-color:var(--rose);} .callout.pitfall .callout-label{color:var(--rose);}
+.callout.paper{border-left-color:var(--cyan);} .callout.paper .callout-label{color:var(--cyan);}
+.callout.focus{border-left-color:var(--lime); background:#151b12;} .callout.focus .callout-label{color:var(--lime);}
+.code-wrap{background:#0a0c0f; border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:18px 0 24px;}
+.code-head{display:flex; align-items:center; justify-content:space-between; padding:9px 14px; border-bottom:1px solid var(--line); background:var(--bg-raised); font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+.code-dots{display:flex; gap:5px;} .code-dots span{width:8px; height:8px; border-radius:50%; background:var(--line);}
+pre{padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:12.6px; line-height:1.7; color:#d7dbe0;}
+pre::-webkit-scrollbar{height:6px;} pre::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.tok-kw{color:var(--violet);} .tok-str{color:var(--lime);} .tok-com{color:var(--ink-faint); font-style:italic;} .tok-fn{color:var(--cyan);} .tok-num{color:var(--amber);}
+.tbl{width:100%; border-collapse:collapse; margin:18px 0 26px; font-size:13.2px; max-width:78ch;}
+.tbl th{text-align:left; font-family:var(--mono); font-size:10.2px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); padding:10px 12px; border-bottom:1px solid var(--line);}
+.tbl td{padding:11px 12px; border-bottom:1px solid var(--line-soft); color:var(--ink-dim); vertical-align:top;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl td.k{color:var(--ink); font-family:var(--mono); font-size:12.2px; white-space:nowrap;}
+.diagram{background:var(--bg-card); border:1px solid var(--line); border-radius:12px; padding:22px; margin:20px 0 26px;}
+.diagram svg{width:100%; height:auto; display:block;}
+.legend{display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; font-family:var(--mono); font-size:10.5px; color:var(--ink-faint);}
+.legend span{display:inline-flex; align-items:center; gap:6px;} .legend i{width:9px; height:9px; border-radius:2px; display:inline-block;}
+.qa{border:1px solid var(--line); border-radius:10px; margin-bottom:10px; background:var(--bg-card); overflow:hidden;}
+.qa summary{list-style:none; cursor:pointer; padding:15px 18px; display:flex; gap:12px; align-items:flex-start; font-family:var(--display); font-size:14px; color:var(--ink); font-weight:500;}
+.qa summary::-webkit-details-marker{display:none;}
+.qa summary::before{content:'+'; font-family:var(--mono); color:var(--amber); font-size:16px; line-height:1;}
+.qa[open] summary::before{content:'–';}
+.qa .qa-body{padding:0 18px 18px 40px; color:var(--ink-dim); font-size:14px; max-width:68ch;}
+.qa .qa-body p{margin-bottom:10px;}
+.qa-tag{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; background:var(--bg-raised); color:var(--ink-faint); padding:2px 8px; border-radius:20px; border:1px solid var(--line); margin-left:auto; white-space:nowrap; flex-shrink:0;}
+.glossary-grid{display:grid; grid-template-columns:1fr 1fr; gap:2px 28px;}
+@media (max-width:700px){.glossary-grid{grid-template-columns:1fr;}}
+.gterm{padding:14px 0; border-bottom:1px solid var(--line-soft);}
+.gterm dt{font-family:var(--mono); color:var(--cyan); font-size:13px; margin-bottom:4px;}
+.gterm dd{color:var(--ink-dim); font-size:13px; line-height:1.55;}
+.footer{padding:60px 0 20px; text-align:center; color:var(--ink-faint); font-family:var(--mono); font-size:12px;}
+.statgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:20px 0 26px;}
+@media (max-width:700px){.statgrid{grid-template-columns:1fr;}}
+.statcard{background:var(--bg-card); border:1px solid var(--line); border-radius:10px; padding:16px;}
+.statcard .num{font-family:var(--display); font-weight:700; font-size:24px; color:var(--amber);}
+.statcard .lbl{font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); margin-top:4px;}
+.memcard{background:var(--bg-card); border:1px solid var(--line); border-radius:10px; padding:18px 20px; margin:14px 0;}
+.memcard .mtitle{font-family:var(--display); font-weight:600; color:var(--amber); font-size:15px; margin-bottom:6px;}
+.memcard p{margin-bottom:0; font-size:13.8px;}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav class="side" id="side">
+  <a class="back-link" href="#">← Topic 8: RAG Deep Dive</a>
+  <div class="brand">Memory <span>Architectures</span></div>
+  <div class="brand-sub">Topic 9 of 10 — deep reference</div>
+  <a class="nav-link" href="#taxonomy"><span class="nav-num">00</span>★ The CoALA Taxonomy</a>
+  <a class="nav-link" href="#working"><span class="nav-num">01</span>Working / In-Context Memory</a>
+  <a class="nav-link" href="#episodic"><span class="nav-num">02</span>★ Episodic Memory, In Depth</a>
+  <a class="nav-link" href="#semantic"><span class="nav-num">03</span>★ Semantic Memory, In Depth</a>
+  <a class="nav-link" href="#procedural"><span class="nav-num">04</span>Procedural Memory — the Immature Frontier</a>
+  <a class="nav-link" href="#consolidation"><span class="nav-num">05</span>Memory Consolidation</a>
+  <a class="nav-link" href="#pipeline"><span class="nav-num">06</span>The 5-Stage Memory Pipeline</a>
+  <a class="nav-link" href="#forgetting"><span class="nav-num">07</span>Forgetting &amp; Staleness Management</a>
+  <a class="nav-link" href="#conflicts"><span class="nav-num">08</span>Conflict Resolution</a>
+  <a class="nav-link" href="#retrieval"><span class="nav-num">09</span>Multi-Signal Memory Retrieval</a>
+  <a class="nav-link" href="#architectures"><span class="nav-num">10</span>★ Reference Architectures: MemGPT/Letta, Mem0, Zep</a>
+  <a class="nav-link" href="#framework-comparison"><span class="nav-num">11</span>Framework Comparison Table</a>
+  <a class="nav-link" href="#benchmarks"><span class="nav-num">12</span>Benchmarks: LongMemEval, DMR</a>
+  <a class="nav-link" href="#org-memory"><span class="nav-num">13</span>Organizational / Governed Memory</a>
+  <a class="nav-link" href="#pitfalls"><span class="nav-num">14</span>Production Pitfalls</a>
+  <a class="nav-link" href="#decision"><span class="nav-num">15</span>Decision Framework</a>
+  <a class="nav-link" href="#interview"><span class="nav-num">16</span>Interview Cheat-Sheet</a>
+  <a class="nav-link" href="#glossary"><span class="nav-num">17</span>Glossary</a>
+  <a class="nav-link" href="#resources"><span class="nav-num">18</span>Resources</a>
+</nav>
+
+<main class="main">
+  <div class="hero">
+    <div class="hero-eyebrow">Deep reference · Topic 9 of 10</div>
+    <h1 class="title">Memory Architectures <em>for AI Agents</em></h1>
+    <p class="hero-sub">The full cognitive-science-grounded taxonomy (working, episodic, semantic, procedural), each type explored in real depth — implementation form, storage mechanics, decay and consolidation — plus the production architectures that implement them (MemGPT/Letta, Mem0, Zep/Graphiti, LangMem), real benchmark numbers, and the failure modes every "agent that remembers you" system eventually hits.</p>
+    <div class="tag-row">
+      <span class="tag">CoALA Taxonomy</span><span class="tag">Episodic Memory</span><span class="tag">Semantic Memory</span>
+      <span class="tag">Procedural Memory</span><span class="tag">Memory Consolidation</span><span class="tag">MemGPT / Letta</span>
+      <span class="tag">Mem0</span><span class="tag">Zep / Graphiti</span><span class="tag">LongMemEval</span>
+    </div>
+  </div>
+
+  <!-- ============ 00 TAXONOMY ============ -->
+  <section class="chapter" id="taxonomy">
+    <div class="chapter-head"><span class="chapter-num">00 ★</span><h2 class="chapter-title">The CoALA Taxonomy — Four Types, Not a Vendor Invention</h2></div>
+    <p class="chapter-dek">The single framework every serious memory conversation is organized around. It comes from cognitive science, not a product team, and knowing that lineage is worth citing directly.</p>
+    <div class="chapter-body">
+      <p>The four standard types are in-context memory (the active context window), episodic memory (records of past interactions), semantic memory (factual world knowledge), and procedural memory (rules and skills). The CoALA paper (Princeton, 2023) formalised this taxonomy from cognitive science for language model agents.</p>
+      <table class="tbl">
+        <tr><th>Type</th><th>Cognitive science origin</th><th>Implementation form</th></tr>
+        <tr><td class="k">Working memory</td><td>Baddeley &amp; Hitch, 1974</td><td>The active context window — everything the model can see this turn</td></tr>
+        <tr><td class="k">Episodic memory</td><td>Tulving, 1972 — episodic/semantic split within declarative memory</td><td>Session logs, conversation transcripts, structured "episodes"</td></tr>
+        <tr><td class="k">Semantic memory</td><td>Tulving, 1972</td><td>Distilled facts, user preferences, entity relationships — vector store or knowledge graph</td></tr>
+        <tr><td class="k">Procedural memory</td><td>Squire, 1987 — declarative/procedural distinction</td><td>System prompts, playbooks, skills, validated runbooks</td></tr>
+      </table>
+      <div class="callout">
+        <span class="callout-label">Why the lineage matters in an interview</span>
+        <p>These are not vendor-invented categories — LangChain's LangGraph documentation adopts the same semantic/episodic/procedural classification for long-term memory and explicitly cites CoALA as the source of the mapping. Being able to say "this maps to Tulving's 1972 episodic/semantic distinction and Squire's 1987 procedural addition, formalized for LLM agents by the CoALA paper" is a genuine signal that you understand the taxonomy is principled, not marketing — most candidates can name the four types; fewer can explain where they came from.</p>
+      </div>
+      <p>Two more types show up in the more advanced 2026 literature:</p>
+      <ul>
+        <li><strong>Organizational / context memory</strong> — a fifth type identified in "Governed Memory: A Production Architecture for Multi-Agent Workflows" (arXiv:2603.17787, March 2026), covered in its own section below.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 01 WORKING MEMORY ============ -->
+  <section class="chapter" id="working">
+    <div class="chapter-head"><span class="chapter-num">01</span><h2 class="chapter-title">Working / In-Context Memory</h2></div>
+    <p class="chapter-dek">The tier you already know deeply from earlier topics — this section is deliberately short and exists mainly to connect it to the taxonomy.</p>
+    <div class="chapter-body">
+      <p>Working memory is the active context window — everything the model can directly attend to this turn, with no retrieval step required. This is exactly the LangGraph thread/checkpointer state from the foundational bible, and the context-compaction techniques (sliding window, summarization, subgraph isolation) from Topic 7's production system-design doc. It's fast, direct, but strictly bounded by context window size and, per Topic 7, interacts with prompt caching in ways that need deliberate coordination.</p>
+      <div class="callout focus">
+        <span class="callout-label">The architectural relationship to everything else in this document</span>
+        <p>Every long-term memory type below exists specifically because working memory is too small and too ephemeral to hold everything an agent might eventually need — long-term memory's entire job is deciding what's worth promoting out of a session's working memory before that session ends and the context is gone.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 EPISODIC ============ -->
+  <section class="chapter" id="episodic">
+    <div class="chapter-head"><span class="chapter-num">02 ★</span><h2 class="chapter-title">Episodic Memory, In Depth</h2></div>
+    <p class="chapter-dek">Records of specific past experiences — what happened, when, with what outcome. The "diary" layer.</p>
+    <div class="chapter-body">
+      <p>Episodic memory records specific past experiences: what happened, when, in which session, with what outcome. Implemented as a time-series store with full-text and embedding-based retrieval, temporally indexed interaction histories — what happened, when, with whom, and with what outcome.</p>
+      <h3>Why a monolithic store fails here</h3>
+      <p>Episodic memory has fundamentally different access patterns than semantic memory: queries are often temporal ("what did we discuss last Tuesday," "what was the outcome of the last three support tickets from this user") rather than purely similarity-based, which is exactly why the required storage and query mechanics differ by memory type, and monolithic storage approaches often fail — a pure vector store with no temporal indexing structurally can't answer "what happened most recently" as a first-class query.</p>
+      <h3>Importance scoring — not every episode deserves to be kept</h3>
+      <p>Not every interaction deserves preservation. Production systems implement importance scoring based on recency, frequency, Bayesian surprise, entity salience, and outcome signals. The top twenty percent of events by composite score are promoted to long-term storage; the bottom twenty percent are pruned.</p>
+      <div class="callout paper">
+        <span class="callout-label">The forgetting-curve connection</span>
+        <p>MemoryBank dynamically adjusts memory strength according to the Ebbinghaus forgetting curve, and supports continual memory updating and user profile construction — episodic memories decay in retrieval priority over time unless reinforced by repeated relevance, directly modeling the human forgetting curve rather than using a flat TTL.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 SEMANTIC ============ -->
+  <section class="chapter" id="semantic">
+    <div class="chapter-head"><span class="chapter-num">03 ★</span><h2 class="chapter-title">Semantic Memory, In Depth</h2></div>
+    <p class="chapter-dek">Distilled, generalized facts — not "what happened," but "what is true." The layer that makes an agent informed rather than merely experienced.</p>
+    <div class="chapter-body">
+      <p>Semantic memory contains distilled facts and preferences extracted from raw episodes — user profiles, entity relationships, and reusable knowledge. This requires vector stores or knowledge graphs with conflict resolution. Implemented as a knowledge graph storing facts, concepts, and relationships with temporal validity bounds, supporting multi-hop graph traversal and hybrid vector-graph retrieval.</p>
+      <p>The critical distinction from episodic memory: semantic memory is <em>derived</em>, not raw. "User prefers window seats" is a semantic fact; "on March 3rd, the user asked for a window seat and confirmed satisfaction" is the episodic record that fact was extracted from. This derivation step is memory consolidation, covered in its own section below.</p>
+      <div class="callout pitfall">
+        <span class="callout-label">Where semantic memory actually breaks in production</span>
+        <p>Failures include stale facts, contradictory entries, and progressive corruption. Unlike episodic memory (where an old record is just an old record — still true that it happened), a stale semantic fact is actively wrong and will be presented to the user or used in reasoning as if current. This is why semantic memory specifically needs conflict resolution and staleness management, covered in their own sections below — episodic memory doesn't have the same acute failure mode.</p>
+      </div>
+      <div class="callout paper">
+        <span class="callout-label">Beyond pure vector similarity — the 2026 shift</span>
+        <p>Graph memory in AI agents was largely experimental in 2024. By 2026, the production pattern has changed — memory systems are moving beyond pure vector similarity. Vector memory retrieves semantically similar facts; graph-style memory retrieves facts through entities and relationships. Both are useful; neither is sufficient alone.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 04 PROCEDURAL ============ -->
+  <section class="chapter" id="procedural">
+    <div class="chapter-head"><span class="chapter-num">04</span><h2 class="chapter-title">Procedural Memory — the Immature, Highest-Leverage Frontier</h2></div>
+    <p class="chapter-dek">"Knowing how" rather than "knowing that" — and, per the most current sources, the layer the ecosystem has invested in least.</p>
+    <div class="chapter-body">
+      <p>Procedural memory in AI agents represents "knowing how" to perform tasks, focusing on execution rather than facts or past events. It governs how agents carry out workflows, use tools, coordinate sub-agents, and make decisions. It captures learned workflows, decision rules, and behavioral patterns, and lives in configuration files, prompt templates, or versioned stores.</p>
+      <div class="callout paper">
+        <span class="callout-label">The honest state of the field — say this to sound current</span>
+        <p>Amazon Bedrock AgentCore Memory has built-in strategies for preferences, facts, summaries, and episodes, but nothing labeled procedural — the closest functional neighbor is the episodic strategy's reflection capability, which consolidates lessons across episodes, useful raw material for procedures but not a managed procedure store. mem0's State of AI Agent Memory 2026 report describes the tooling for managing procedural memory specifically as "still early-stage." That immaturity is exactly why procedural memory is the highest-leverage layer to design deliberately — it is where an agent's performance compounds, and where the ecosystem gives you the least off-the-shelf help.</p>
+      </div>
+      <p>Semantic memory makes an agent informed; procedural memory makes it better at its job. A support agent with rich semantic memory knows the customer's order history; a support agent with rich procedural memory has learned, across thousands of tickets, which troubleshooting sequence actually resolves this class of issue fastest — that's a categorically different, compounding kind of improvement.</p>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"Why is procedural memory harder to build than semantic memory?" — Semantic memory has converged tooling (vector stores, knowledge graphs, well-studied extraction pipelines). Procedural memory requires identifying which action sequences actually caused good outcomes — a credit-assignment problem closer to reinforcement learning than to fact extraction — and the field genuinely lacks mature off-the-shelf tooling for it as of 2026. Most production systems approximate it today with versioned prompt/playbook updates driven by manual review of failure patterns, not automated procedural learning.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 05 CONSOLIDATION ============ -->
+  <section class="chapter" id="consolidation">
+    <div class="chapter-head"><span class="chapter-num">05</span><h2 class="chapter-title">Memory Consolidation — Episodic Becomes Semantic</h2></div>
+    <p class="chapter-dek">The single most important cross-cutting mechanism in this entire document.</p>
+    <div class="chapter-body">
+      <p>A crucial part of building intelligent agents is converting episodic memory into semantic memory. This process involves identifying patterns across past interactions and distilling them into reusable knowledge. Inspired by human cognition, this "memory consolidation" ensures agents can generalize, reduce redundancy, and improve efficiency over time. Without this step, agents remain limited to recalling past events rather than truly learning from them.</p>
+      <div class="diagram">
+        <svg viewBox="0 0 700 160" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="mcm" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff9f40"/></marker></defs>
+          <rect x="30" y="55" width="180" height="50" rx="8" fill="none" stroke="#5fd9c9" stroke-width="1.5"/>
+          <text x="120" y="85" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">Raw episodes</text>
+          <line x1="210" y1="80" x2="270" y2="80" stroke="#ff9f40" stroke-width="1.5" marker-end="url(#mcm)"/>
+          <text x="240" y="70" fill="#c9f04c" font-family="JetBrains Mono" font-size="9" text-anchor="middle">pattern extraction</text>
+          <rect x="270" y="55" width="180" height="50" rx="8" fill="none" stroke="#ff9f40" stroke-width="1.5"/>
+          <text x="360" y="85" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">Consolidation (LLM)</text>
+          <line x1="450" y1="80" x2="510" y2="80" stroke="#ff9f40" stroke-width="1.5" marker-end="url(#mcm)"/>
+          <rect x="510" y="55" width="170" height="50" rx="8" fill="none" stroke="#b592ff" stroke-width="1.5"/>
+          <text x="595" y="85" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">Distilled fact</text>
+        </svg>
+      </div>
+      <p>Concretely: dozens of episodic records of "user asked to reschedule a meeting" over months consolidate into a single semantic fact like "user frequently has scheduling conflicts on Mondays" — a generalization no single episode contains on its own, only visible once patterns across many episodes are distilled. This is the mechanism that turns an agent from "remembers what happened" into "has learned something."</p>
+    </div>
+  </section>
+
+  <!-- ============ 06 PIPELINE ============ -->
+  <section class="chapter" id="pipeline">
+    <div class="chapter-head"><span class="chapter-num">06</span><h2 class="chapter-title">The 5-Stage Memory Pipeline</h2></div>
+    <p class="chapter-dek">Every production memory system, regardless of vendor, implements some version of this same pipeline.</p>
+    <div class="chapter-body">
+      <p>The five-stage pipeline — extraction, integration, storage, retrieval, and forgetting — provides the structural foundation for production deployments.</p>
+      <table class="tbl">
+        <tr><th>Stage</th><th>What happens</th></tr>
+        <tr><td class="k">Extraction</td><td>An LLM extracts salient memory candidates from conversation contexts — deciding what in a raw session is even worth remembering</td></tr>
+        <tr><td class="k">Integration</td><td>Adaptive operations (addition, update, or deletion) based on semantic similarity matching against existing memory — new information gets merged with, or flagged against, what's already stored</td></tr>
+        <tr><td class="k">Storage</td><td>Persisted to the appropriate backend — vector store, knowledge graph, key-value store — matched to the memory type's access pattern</td></tr>
+        <tr><td class="k">Retrieval</td><td>Multi-signal search at query time (covered in its own section below)</td></tr>
+        <tr><td class="k">Forgetting</td><td>Decay, pruning, or supersession of memories that are stale, low-importance, or contradicted (covered next)</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 07 FORGETTING ============ -->
+  <section class="chapter" id="forgetting">
+    <div class="chapter-head"><span class="chapter-num">07</span><h2 class="chapter-title">Forgetting &amp; Staleness Management</h2></div>
+    <p class="chapter-dek">Deliberately forgetting is a feature, not a bug — an agent that never forgets accumulates noise and stale facts at the same rate it accumulates useful memory.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Mechanism</th><th>Description</th></tr>
+        <tr><td class="k">Ebbinghaus-curve decay</td><td>Dynamically adjusts memory strength according to the forgetting curve — unreinforced memories fade in retrieval priority gradually, not via a hard cutoff</td></tr>
+        <tr><td class="k">Composite importance scoring</td><td>Recency, frequency, Bayesian surprise, entity salience, and outcome signals combined into one score, with top/bottom quintile promotion/pruning</td></tr>
+        <tr><td class="k">Supersede detection</td><td>A-MEM introduces dynamic links between memory entries with supersede detection, addressing memory staleness directly — a new fact explicitly marks an old one as outdated rather than the two coexisting ambiguously</td></tr>
+        <tr><td class="k">Tiered decay (short/mid/long-term)</td><td>MemoryOS imposes a three-tier storage architecture with different management strategies per tier — memory migrates between tiers based on reinforcement, not a single global decay rate</td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"Why would you deliberately design an agent to forget things?" — Unbounded memory retention has two costs: retrieval quality degrades as the store fills with low-value or contradicted entries competing for relevance at query time, and stale facts actively mislead reasoning if presented as current. Forgetting mechanisms — decay curves, importance-based pruning, explicit supersession — are how a memory system stays useful rather than becoming an ever-growing liability; this is directly analogous to why Topic 7's context compaction exists for working memory, applied to the long-term tier instead.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 08 CONFLICTS ============ -->
+  <section class="chapter" id="conflicts">
+    <div class="chapter-head"><span class="chapter-num">08</span><h2 class="chapter-title">Conflict Resolution</h2></div>
+    <p class="chapter-dek">What happens when new information contradicts something already stored.</p>
+    <div class="chapter-body">
+      <p>When new information conflicts with stored memories, systems must handle contradictions gracefully. The three broad strategies:</p>
+      <ul>
+        <li><strong>Overwrite</strong> — the new fact simply replaces the old one, appropriate when the new information is clearly more recent and the fact type is inherently single-valued (e.g., "current job title").</li>
+        <li><strong>Supersede with history</strong> — the old fact is marked outdated but retained for audit/temporal-reasoning purposes rather than deleted, exactly what A-MEM's supersede detection and Zep's bi-temporal modeling (below) are built for.</li>
+        <li><strong>Flag for review</strong> — genuinely ambiguous contradictions (not simply "old vs new," but conflicting simultaneous claims) get surfaced rather than silently resolved either way, appropriate for high-stakes semantic facts.</li>
+      </ul>
+      <div class="callout pitfall">
+        <span class="callout-label">The assumption that quietly breaks production systems</span>
+        <p>These systems share a common assumption: the LLM will honor retrieved memory once it is injected into the context. This is not guaranteed — a model can retrieve a correct, current memory and still generate a response inconsistent with it, especially under conflicting signals elsewhere in the prompt. Memory correctness at the storage layer does not guarantee behavioral correctness at generation time; this gap is exactly what recent "persona drift" detection research is starting to measure.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 09 RETRIEVAL ============ -->
+  <section class="chapter" id="retrieval">
+    <div class="chapter-head"><span class="chapter-num">09</span><h2 class="chapter-title">Multi-Signal Memory Retrieval</h2></div>
+    <p class="chapter-dek">Pure vector similarity is no longer the production default for memory retrieval — direct continuity with Topic 8's hybrid-search argument, applied to memory instead of documents.</p>
+    <div class="chapter-body">
+      <p>Multi-signal retrieval runs three scoring passes in parallel — semantic similarity, keyword matching, and entity matching — and fuses the results. The biggest gains are on temporal queries (+29.6 points) and multi-hop reasoning (+23.1 points), the two categories that most directly reflect how agents handle real user histories.</p>
+      <div class="code-wrap">
+        <div class="code-head"><span>mem0_entity_linking.txt</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-com"># Mem0's entity-linking mechanism</span>
+during add():
+    entities = extract_entities(memory_text)
+    store(entities, collection=<span class="tok-str">f"{collection}_entities"</span>)
+
+during search(query):
+    query_entities = extract_entities(query)
+    entity_matches = match(query_entities, <span class="tok-str">f"{collection}_entities"</span>)
+    <span class="tok-com"># entity matches BOOST relevant memories inside the combined score</span>
+    final_score = combine(semantic_score, bm25_score, entity_boost)</pre>
+      </div>
+      <p>Vector memory retrieves semantically similar facts; graph-style memory retrieves facts through entities and relationships. Both are useful; neither is sufficient alone. The direct parallel to Topic 8: exactly as dense embeddings miss exact-match terms that BM25 catches, pure semantic-similarity memory retrieval misses entity-anchored and temporal queries that keyword and graph-traversal signals catch — the fix is the same fusion principle applied to a different data type.</p>
+    </div>
+  </section>
+
+  <!-- ============ 10 ARCHITECTURES ============ -->
+  <section class="chapter" id="architectures">
+    <div class="chapter-head"><span class="chapter-num">10 ★</span><h2 class="chapter-title">Reference Architectures: MemGPT/Letta, Mem0, Zep/Graphiti</h2></div>
+    <p class="chapter-dek">Three genuinely different architectural philosophies for the same problem — know all three well enough to compare them unprompted.</p>
+    <div class="chapter-body">
+      <div class="memcard">
+        <div class="mtitle">MemGPT / Letta — the operating-system model</div>
+        <p>Introduces a virtual memory abstraction inspired by operating systems, in which information is dynamically paged between context and external storage. Letta extends the core architecture with filesystem-based memory storage, PostgreSQL persistence, and enhanced tool integration — the agent itself decides, via explicit tool calls, what to page in and out of its own limited context window, treating the LLM's context exactly like a CPU's fast-but-small RAM and external storage as a large-but-slow disk. This approach relies on recursive summarization and hierarchical compression, which can introduce latency variability and loss of information fidelity, particularly when precise textual recall is required.</p>
+      </div>
+      <div class="memcard">
+        <div class="mtitle">Mem0 — the production extraction pipeline</div>
+        <p>Adopts a two-stage pipeline of memory extraction and update — an LLM extracts salient memory candidates from conversation contexts, then performs adaptive operations (addition, update, or deletion) based on semantic similarity matching. Implements a three-tier memory hierarchy spanning user, session, and agent scopes, combining vector retrieval, graph-based relational storage, and key-value indexing. Reports retrieval Recall@5 in the 0.5–0.6 range on LongMemEval-S — a useful concrete benchmark number to cite directly.</p>
+      </div>
+      <div class="memcard">
+        <div class="mtitle">Zep / Graphiti — the temporal knowledge graph</div>
+        <p>Zep's core component Graphiti is a temporally-aware knowledge graph engine that dynamically synthesizes both unstructured conversational data and structured business data while maintaining historical relationships. Employs a three-tiered subgraph structure comprising episodic, semantic entity, and community layers, using bi-temporal modeling for data integration and hybrid search with multi-strategy reranking. Bi-temporal modeling specifically tracks both <em>when a fact was true in the world</em> and <em>when the system learned it</em> — the mechanism that makes "what did we believe about X as of last month, even though we've since learned it was wrong" queries answerable.</p>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"Compare MemGPT/Letta's approach to Mem0's." — Letta treats memory management as the agent's own responsibility, via explicit paging tool calls modeled on OS virtual memory — powerful and self-directed, but recursive summarization can lose fidelity on precise recall. Mem0 treats memory management as an external pipeline the agent doesn't control directly — an LLM extracts and integrates memories automatically after each conversation, optimized for production reliability and cost rather than agent autonomy over its own memory. The choice is really: do you want the agent deciding what to remember (Letta) or a managed pipeline deciding for it (Mem0)?</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 11 FRAMEWORK COMPARISON ============ -->
+  <section class="chapter" id="framework-comparison">
+    <div class="chapter-head"><span class="chapter-num">11</span><h2 class="chapter-title">Framework Comparison Table</h2></div>
+    <p class="chapter-dek">The full 2026 landscape, condensed.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Framework</th><th>Best fit</th></tr>
+        <tr><td class="k">Mem0</td><td>Best managed, drop-in memory API for personalization agents</td></tr>
+        <tr><td class="k">Zep / Graphiti</td><td>Best for agents that reason about how facts change over time</td></tr>
+        <tr><td class="k">LangMem (LangGraph)</td><td>Best for teams already running on LangChain/LangGraph — but primarily designed for LangGraph and offers limited value outside it; if there's any chance you'll switch frameworks, pick a standalone system instead</td></tr>
+        <tr><td class="k">Letta / MemGPT</td><td>Best for long-running agents that need OS-level memory management</td></tr>
+        <tr><td class="k">Microsoft Semantic Kernel / Kernel Memory</td><td>Best for Azure-native enterprise shops</td></tr>
+        <tr><td class="k">Cognee</td><td>Best for local-first, privacy-critical deployments with graph reasoning</td></tr>
+        <tr><td class="k">Redis Agent Memory Server</td><td>Best as a low-latency storage backend for teams already running Redis</td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">Read the license and the pricing tier before committing</span>
+        <p>Graph features are often paywalled — Mem0's graph capabilities require the $249/mo Pro tier, and Zep's advanced features are cloud-only. Some frameworks are open core with advanced features gated behind commercial tiers — always verify what's actually available under the license you're willing to use.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 12 BENCHMARKS ============ -->
+  <section class="chapter" id="benchmarks">
+    <div class="chapter-head"><span class="chapter-num">12</span><h2 class="chapter-title">Benchmarks: LongMemEval, DMR</h2></div>
+    <p class="chapter-dek">Real numbers to cite instead of vague claims.</p>
+    <div class="chapter-body">
+      <div class="statgrid">
+        <div class="statcard"><div class="num">94.8% vs 93.4%</div><div class="lbl">Zep vs MemGPT on the Deep Memory Retrieval (DMR) benchmark</div></div>
+        <div class="statcard"><div class="num">+18.5%</div><div class="lbl">Zep's accuracy improvement on LongMemEval over baseline</div></div>
+        <div class="statcard"><div class="num">-90%</div><div class="lbl">Zep's response latency reduction vs baseline, simultaneously</div></div>
+      </div>
+      <p>Zep demonstrates superior performance on the DMR benchmark (94.8% vs 93.4%), which the MemGPT team established as their primary evaluation metric. On the more challenging LongMemEval benchmark, which better reflects enterprise use cases through complex temporal reasoning tasks, Zep achieves accuracy improvements of up to 18.5% while simultaneously reducing response latency by 90% compared to baseline implementations. Letta's own LoCoMo evaluation achieved 74.0% accuracy using GPT-4o mini by storing conversation histories as files with semantic search capabilities.</p>
+      <div class="callout pitfall">
+        <span class="callout-label">Read benchmark comparisons the way Topic 5 taught you to</span>
+        <p>These numbers come from each vendor's own published evaluation, often on their own benchmark of choice — exactly the benchmark-vs-production gap discussed in Topic 5. Useful for understanding relative architecture strengths, not a substitute for testing retrieval quality on your own user population and query distribution.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 13 ORG MEMORY ============ -->
+  <section class="chapter" id="org-memory">
+    <div class="chapter-head"><span class="chapter-num">13</span><h2 class="chapter-title">Organizational / Governed Memory — the Emerging Fifth Type</h2></div>
+    <p class="chapter-dek">What enterprise teams discover is missing after they've already built episodic, semantic, and procedural memory correctly.</p>
+    <div class="chapter-body">
+      <p>"We started to realize we were missing this translation layer." The missing layer was organisational context, not conversation history. No upgrade to episodic or semantic memory would have fixed it. Snowflake's internal research, adding an ontology layer (a form of organisational context memory) to their agents, produced a 20% improvement in agent answer accuracy and a 39% reduction in tool calls. The ontology is entity identity mapping across systems — a component of organisational context memory that does not exist in any standard memory type.</p>
+      <div class="callout paper">
+        <span class="callout-label">Why this is genuinely a distinct type, not just more semantic memory</span>
+        <p>Semantic memory answers "what facts does this specific user/agent know." Organizational memory answers a different question: "does 'Acme Corp' in this system refer to the same entity as 'ACME-001' in that system" — cross-system identity resolution that no individual agent's personal semantic memory naturally accumulates, because it's a property of the organization's data landscape, not of any one conversation history.</p>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"Your enterprise agent has solid episodic and semantic memory but still gives inconsistent answers across teams. What's missing?" — Likely an organizational/context memory gap — entity identity isn't unified across the systems the agent touches, so the same real-world entity looks like different things depending on which system's data the agent last queried. The fix is an ontology or entity-resolution layer, not more conversation memory — this is precisely the failure Snowflake's internal research identified, with a measured 20% accuracy and 39% tool-call-reduction improvement once added.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 14 PITFALLS ============ -->
+  <section class="chapter" id="pitfalls">
+    <div class="chapter-head"><span class="chapter-num">14</span><h2 class="chapter-title">Production Pitfalls</h2></div>
+    <p class="chapter-dek">What actually goes wrong.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Assuming retrieved memory is honored by the model.</strong> Injecting a correct, current memory into context doesn't guarantee the generated response is consistent with it — this gap is an active research area (persona drift detection), not a solved problem.</li>
+        <li><strong>Treating memory as write-once, never-forget.</strong> Unbounded retention degrades retrieval quality and lets stale facts actively mislead reasoning — forgetting mechanisms are a feature, not a missing optimization.</li>
+        <li><strong>Pure vector similarity retrieval for memory.</strong> Misses temporal queries and entity-anchored lookups exactly as pure dense retrieval misses exact-match terms in RAG (Topic 8) — multi-signal fusion is the 2026 production default.</li>
+        <li><strong>Conflating episodic and semantic memory in one undifferentiated store.</strong> Different access patterns (temporal vs similarity-based) and different failure modes (an old episode is still true it happened; a stale semantic fact is actively wrong) — monolithic storage structurally can't serve both well.</li>
+        <li><strong>No consolidation step.</strong> An agent that only accumulates raw episodes never generalizes — it remembers everything and learns nothing, since the pattern-distillation step from episodic to semantic memory is what produces reusable knowledge.</li>
+        <li><strong>Framework lock-in from LangMem-style tightly-coupled memory tooling.</strong> If there's any real chance of switching agent frameworks later, a standalone memory system avoids an expensive re-platform.</li>
+        <li><strong>Assuming paid-tier features are available on the free/open-source tier.</strong> Graph capabilities are commonly gated behind commercial tiers across the ecosystem — verify before architecting around a specific capability.</li>
+        <li><strong>No organizational/entity-resolution layer in enterprise deployments.</strong> Solid personal memory per agent doesn't fix cross-system entity identity — a distinct problem requiring its own architecture.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 15 DECISION FRAMEWORK ============ -->
+  <section class="chapter" id="decision">
+    <div class="chapter-head"><span class="chapter-num">15</span><h2 class="chapter-title">Decision Framework</h2></div>
+    <p class="chapter-dek">What to build, roughly in order.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Need</th><th>Reach for</th></tr>
+        <tr><td>Just conversational continuity within a session</td><td>Working memory only — LangGraph checkpointer / thread state, no long-term system needed</td></tr>
+        <tr><td>Personalization across sessions (preferences, history) — fastest to ship</td><td>Mem0 — managed, drop-in, three-tier user/session/agent scoping</td></tr>
+        <tr><td>Reasoning about how facts change over time, enterprise temporal queries</td><td>Zep / Graphiti — bi-temporal knowledge graph</td></tr>
+        <tr><td>Long-running autonomous agents needing fine-grained self-directed memory control</td><td>Letta / MemGPT — OS-inspired paging model</td></tr>
+        <tr><td>Already deep in LangGraph, low risk of switching frameworks</td><td>LangMem</td></tr>
+        <tr><td>Cross-system entity consistency in an enterprise deployment</td><td>Add an organizational/ontology layer on top of whichever memory system you choose — this is additive, not a replacement</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 16 INTERVIEW ============ -->
+  <section class="chapter" id="interview">
+    <div class="chapter-head"><span class="chapter-num">16</span><h2 class="chapter-title">Interview Cheat-Sheet</h2></div>
+    <p class="chapter-dek">Grouped by depth.</p>
+    <div class="chapter-body">
+
+      <h4>Core taxonomy</h4>
+      <details class="qa"><summary>Name and define the four CoALA memory types, and their cognitive-science origins.<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>Working memory (Baddeley &amp; Hitch, 1974) — the active context window. Episodic memory (Tulving, 1972) — records of specific past experiences with a "what happened, when" structure. Semantic memory (Tulving, 1972) — distilled, generalized facts. Procedural memory (Squire, 1987) — learned rules and skills governing how to execute tasks. The CoALA paper (Princeton, 2023) formalized this cognitive-science taxonomy specifically for LLM agents, and it's now the standard reference — LangGraph's own documentation cites it directly.</p></div>
+      </details>
+      <details class="qa"><summary>What's the structural difference between episodic and semantic memory that determines their storage architecture?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>Episodic memory is raw and temporally anchored — queries are often "what happened when," requiring time-series-aware storage with full-text and embedding retrieval. Semantic memory is derived and generalized — a distilled fact with no inherent timestamp of "when it happened," better served by a vector store or knowledge graph with conflict-resolution logic, since (unlike an old episode, which is still true that it occurred) a stale semantic fact is actively wrong if presented as current.</p></div>
+      </details>
+      <details class="qa"><summary>Explain memory consolidation and why it matters.<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>Consolidation is the process of distilling patterns across many raw episodic records into generalized semantic facts — e.g., dozens of individual scheduling-conflict episodes consolidating into "user frequently has Monday conflicts." Without this step, an agent only ever recalls discrete past events; it never generalizes or learns from them, which is the actual difference between an agent that remembers and one that improves.</p></div>
+      </details>
+
+      <h4>Architecture comparison</h4>
+      <details class="qa"><summary>Compare MemGPT/Letta's memory model to Mem0's.<span class="qa-tag">architecture</span></summary>
+        <div class="qa-body"><p>Letta models the LLM's context window as an operating system's fast memory and external storage as disk, with the agent itself issuing explicit paging operations to move information in and out — self-directed, but reliant on recursive summarization that can lose fidelity for precise recall. Mem0 is an external, automated pipeline: an LLM extracts salient facts from a conversation after the fact and integrates them via similarity-matched add/update/delete operations, without the agent directly managing its own memory. The core trade-off is agent autonomy over memory (Letta) versus a managed, production-optimized pipeline (Mem0).</p></div>
+      </details>
+      <details class="qa"><summary>What does Zep's bi-temporal modeling actually solve that a standard knowledge graph doesn't?<span class="qa-tag">architecture</span></summary>
+        <div class="qa-body"><p>A standard knowledge graph typically tracks one timeline — when a fact is true. Bi-temporal modeling tracks two independent timelines: when a fact was true in the world, and when the system learned or recorded it. This makes it possible to correctly answer questions like "what did we believe as of last month" even after that belief has since been corrected — critical for enterprise temporal reasoning and audit trails, and the reason Zep specifically targets that use case over general-purpose semantic memory.</p></div>
+      </details>
+      <details class="qa"><summary>Why is pure vector similarity retrieval increasingly considered insufficient for memory in 2026 production systems?<span class="qa-tag">architecture</span></summary>
+        <div class="qa-body"><p>Vector similarity misses temporal queries ("what happened most recently") and entity-anchored lookups (exact name/identifier matches) — the same structural gap dense-only retrieval has in RAG generally. Production systems now fuse semantic similarity with keyword/BM25 matching and entity matching, with documented gains concentrated specifically on temporal queries (+29.6 points) and multi-hop reasoning (+23.1 points) in at least one reported benchmark — exactly the query types pure similarity search structurally can't serve well.</p></div>
+      </details>
+
+      <h4>System design</h4>
+      <details class="qa"><summary>Design the memory architecture for a personal assistant agent that should get noticeably better at helping a specific user over months of use.<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Working memory for the active conversation (thread state). Episodic memory logging each session with importance scoring (recency, frequency, outcome signals) so only meaningfully important sessions get promoted to long-term storage rather than everything indiscriminately. A consolidation step that periodically distills patterns across episodes into semantic memory — preferences, recurring needs. Procedural memory, even if lightweight, capturing which response strategies have worked well for this user specifically — versioned prompt adjustments driven by observed outcomes, since fully automated procedural learning tooling remains immature. Multi-signal retrieval (semantic + entity + temporal) at query time, since a personal assistant will field both "what do I usually order" (semantic) and "what did we decide last Tuesday" (temporal/episodic) query types.</p></div>
+      </details>
+      <details class="qa"><summary>A user reports your agent gave them outdated information it should have already learned was wrong. How do you diagnose this?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Two distinct possible failures to separate: either the stale fact is still present in semantic memory because conflict resolution/supersede detection didn't fire when the correction was learned (a storage-layer bug), or the correct fact was retrieved and injected into context but the model didn't honor it during generation (a behavioral-layer failure many current memory systems simply assume away). Check the memory store directly first — if the current fact is there and correct, the bug is downstream in how the model uses retrieved memory, not in the memory system itself, and needs a different fix (e.g., stronger prompt-level emphasis on retrieved memory, or a verification pass).</p></div>
+      </details>
+      <details class="qa"><summary>Your enterprise agent's answers are inconsistent depending on which internal system it queries data from, even though its personal memory is accurate. What's the likely gap?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>An organizational/context memory gap — entity identity isn't resolved across the systems the agent touches, so the same real-world entity (a customer, a product) looks like a different entity depending on the source system's naming/ID conventions. The fix is an ontology or entity-resolution layer mapping identities across systems, not an upgrade to episodic or semantic memory — this is a distinct memory type from the standard CoALA four, and Snowflake's internal research found it produced a 20% accuracy improvement and 39% reduction in redundant tool calls once added.</p></div>
+      </details>
+      <details class="qa"><summary>How would you decide between building on Mem0 versus rolling your own memory pipeline?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Default to a managed system (Mem0, Zep) unless you have a specific, demonstrated need the managed options don't meet — the five-stage pipeline (extraction, integration, storage, retrieval, forgetting) is genuinely hard to get right, and reinventing memory conflict resolution and staleness management from scratch is rarely where a team's differentiation should live. Roll your own primarily when you need tight control over data residency/compliance that hosted options can't meet, or when your access patterns are unusual enough (e.g., extremely high write volume, highly specialized entity types) that general-purpose tooling underperforms — validate that with your own benchmark before committing, exactly as Topic 5 argues for any infrastructure decision.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ 17 GLOSSARY ============ -->
+  <section class="chapter" id="glossary">
+    <div class="chapter-head"><span class="chapter-num">17</span><h2 class="chapter-title">Glossary</h2></div>
+    <p class="chapter-dek">Every term used in this document.</p>
+    <div class="chapter-body">
+      <dl class="glossary-grid">
+        <div class="gterm"><dt>CoALA</dt><dd>Cognitive Architectures for Language Agents — the Princeton paper formalizing the four-type memory taxonomy for LLM agents.</dd></div>
+        <div class="gterm"><dt>Working memory</dt><dd>The active context window; everything the model directly attends to in the current turn.</dd></div>
+        <div class="gterm"><dt>Episodic memory</dt><dd>Temporally-anchored records of specific past experiences.</dd></div>
+        <div class="gterm"><dt>Semantic memory</dt><dd>Distilled, generalized facts and preferences, derived from episodes.</dd></div>
+        <div class="gterm"><dt>Procedural memory</dt><dd>Learned rules, workflows, and skills governing how an agent executes tasks.</dd></div>
+        <div class="gterm"><dt>Memory consolidation</dt><dd>The process of distilling patterns across episodic records into generalized semantic facts.</dd></div>
+        <div class="gterm"><dt>Importance scoring</dt><dd>Composite score (recency, frequency, surprise, salience, outcome) determining which episodes get promoted to long-term storage.</dd></div>
+        <div class="gterm"><dt>Ebbinghaus forgetting curve</dt><dd>Model of gradual memory-strength decay over time absent reinforcement, used in memory-decay algorithms.</dd></div>
+        <div class="gterm"><dt>Supersede detection</dt><dd>Explicitly marking an old memory as outdated when a newer, contradicting one is stored.</dd></div>
+        <div class="gterm"><dt>Bi-temporal modeling</dt><dd>Tracking both when a fact was true in the world and when the system learned it (Zep/Graphiti).</dd></div>
+        <div class="gterm"><dt>Multi-signal retrieval</dt><dd>Fusing semantic similarity, keyword/BM25, and entity matching for memory search.</dd></div>
+        <div class="gterm"><dt>Virtual memory / paging (MemGPT/Letta)</dt><dd>OS-inspired model where the agent explicitly moves information between context and external storage.</dd></div>
+        <div class="gterm"><dt>Organizational / governed memory</dt><dd>Cross-system entity identity resolution layer, distinct from the standard four CoALA types.</dd></div>
+        <div class="gterm"><dt>LongMemEval / DMR</dt><dd>Benchmarks for evaluating long-term conversational and deep memory retrieval quality.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ 18 RESOURCES ============ -->
+  <section class="chapter" id="resources">
+    <div class="chapter-head"><span class="chapter-num">18</span><h2 class="chapter-title">Resources</h2></div>
+    <p class="chapter-dek">Primary sources worth reading directly.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>CoALA — "Cognitive Architectures for Language Agents"</strong> (Princeton, arXiv:2309.02427, 2023) — the foundational taxonomy</li>
+        <li><strong>Packer et al. — "MemGPT: Towards LLMs as Operating Systems"</strong> — the original paper, now evolved into Letta</li>
+        <li><strong>Rasmussen et al. — "Zep: A Temporal Knowledge Graph Architecture for Agent Memory"</strong> (arXiv:2501.13956)</li>
+        <li><strong>Chhikara et al. — Mem0 paper</strong> — the extract-and-update production pipeline</li>
+        <li><strong>"Governed Memory: A Production Architecture for Multi-Agent Workflows"</strong> (arXiv:2603.17787, March 2026) — the organizational memory type</li>
+        <li><strong>mem0's "State of AI Agent Memory 2026" report</strong> — ecosystem-wide survey and benchmark numbers</li>
+      </ul>
+      <div class="callout">
+        <span class="callout-label">How to actually get interview-ready on this topic</span>
+        <p>Stand up Mem0 or Zep against a small synthetic multi-session conversation history, deliberately introduce a contradicting fact partway through, and watch how the system handles it — did it overwrite, supersede, or get confused? Having watched a real conflict-resolution mechanism in action is worth more in an interview than reciting the taxonomy from memory.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">Topic 9 of 10 — Memory Architectures for AI Agents. Next up: System Design &amp; Behavioral Prep — the final topic, tying every previous doc together into full end-to-end interview scenarios.</div>
+</main>
+</div>
+
+<script>
+const links = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('section.chapter');
+const map = new Map();
+links.forEach(l => map.set(l.getAttribute('href').slice(1), l));
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const link = map.get(entry.target.id);
+    if(!link) return;
+    if(entry.isIntersecting){
+      links.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, {rootMargin: '-15% 0px -70% 0px', threshold: 0});
+sections.forEach(s => io.observe(s));
+</script>
+</body>
+</html>

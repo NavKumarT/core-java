@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vector Databases &amp; Context Engineering — The Complete Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d10; --bg-raised:#12151a; --bg-card:#14181f;
+  --line:#242a33; --line-soft:#1b2028;
+  --ink:#e7e9ec; --ink-dim:#9aa3b0; --ink-faint:#5c6672;
+  --amber:#ff9f40; --amber-dim:#c97a2e; --lime:#c9f04c; --cyan:#5fd9c9; --violet:#b592ff; --rose:#ff7a8a;
+  --serif:'Source Serif 4', Georgia, serif;
+  --display:'Space Grotesk', sans-serif;
+  --mono:'JetBrains Mono', 'Courier New', monospace;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:radial-gradient(var(--line-soft) 1px, transparent 1px);
+  background-size:22px 22px; background-color:var(--bg);
+  color:var(--ink); font-family:var(--serif); font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+a{color:var(--amber); text-decoration:none;}
+::selection{background:var(--amber); color:#111;}
+.shell{display:grid; grid-template-columns:290px 1fr; min-height:100vh;}
+@media (max-width:920px){ .shell{grid-template-columns:1fr;} .side{display:none;} }
+.side{position:sticky; top:0; height:100vh; overflow-y:auto; border-right:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(18,21,26,.9), rgba(11,13,16,.9)); padding:28px 20px 60px;}
+.side::-webkit-scrollbar{width:6px;} .side::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.brand{font-family:var(--display); font-weight:700; font-size:15px; color:var(--ink); margin-bottom:2px;}
+.brand span{color:var(--amber);}
+.brand-sub{font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-bottom:24px;}
+.back-link{display:inline-block; font-family:var(--mono); font-size:11px; color:var(--cyan); margin-bottom:20px; border:1px solid var(--line); padding:5px 10px; border-radius:6px;}
+.nav-link{display:flex; align-items:baseline; gap:7px; font-family:var(--display); font-size:12.2px; color:var(--ink-dim);
+  padding:5px 7px; border-radius:6px; border-left:2px solid transparent; transition:.15s;}
+.nav-link:hover{color:var(--ink); background:var(--bg-raised);}
+.nav-link.active{color:var(--amber); border-left-color:var(--amber); background:var(--bg-raised);}
+.nav-num{font-family:var(--mono); font-size:9.5px; color:var(--ink-faint); min-width:20px;}
+.main{max-width:920px; padding:0 44px 140px; margin:0 auto;}
+@media (max-width:700px){ .main{padding:0 20px 100px;} }
+.hero{padding:76px 0 54px; border-bottom:1px solid var(--line);}
+.hero-eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--lime);
+  margin-bottom:18px; display:flex; align-items:center; gap:10px;}
+.hero-eyebrow::before{content:''; width:22px; height:1px; background:var(--lime); display:inline-block;}
+h1.title{font-family:var(--display); font-weight:700; font-size:clamp(30px,4.8vw,50px); line-height:1.08; letter-spacing:-.02em; color:var(--ink); max-width:16ch;}
+h1.title em{font-style:normal; color:var(--amber);}
+.hero-sub{font-family:var(--serif); font-size:18px; color:var(--ink-dim); max-width:62ch; margin-top:20px;}
+.tag-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:26px;}
+.tag{font-family:var(--mono); font-size:11px; padding:5px 11px; border-radius:20px; border:1px solid var(--line); color:var(--ink-dim); background:var(--bg-raised);}
+section.chapter{padding:60px 0; border-bottom:1px solid var(--line);}
+section.chapter:last-of-type{border-bottom:none;}
+.chapter-head{display:flex; align-items:flex-start; gap:16px; margin-bottom:8px;}
+.chapter-num{font-family:var(--mono); font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:20px; padding:3px 11px; margin-top:6px; white-space:nowrap;}
+h2.chapter-title{font-family:var(--display); font-weight:600; font-size:clamp(22px,3.2vw,30px); color:var(--ink); letter-spacing:-.01em;}
+.chapter-dek{font-family:var(--serif); font-style:italic; color:var(--ink-dim); font-size:16px; max-width:66ch; margin:14px 0 30px 0; padding-left:66px;}
+@media (max-width:700px){.chapter-dek{padding-left:0;}}
+.chapter-body{padding-left:66px;}
+@media (max-width:700px){.chapter-body{padding-left:0;}}
+.chapter-body h3{font-family:var(--display); font-weight:600; font-size:19px; color:var(--ink); margin:32px 0 12px;}
+.chapter-body h4{font-family:var(--display); font-weight:600; color:var(--cyan); margin:22px 0 10px; text-transform:uppercase; letter-spacing:.04em; font-size:12px;}
+.chapter-body p{color:var(--ink-dim); margin-bottom:14px; max-width:72ch;}
+.chapter-body ul, .chapter-body ol{color:var(--ink-dim); margin:0 0 16px 20px; max-width:70ch;}
+.chapter-body li{margin-bottom:7px;}
+.chapter-body strong{color:var(--ink); font-weight:600;}
+code.inline{font-family:var(--mono); font-size:.87em; background:var(--bg-raised); color:var(--lime); padding:1px 6px; border-radius:4px; border:1px solid var(--line);}
+.callout{border-left:3px solid var(--amber); background:var(--bg-card); padding:16px 18px; border-radius:0 8px 8px 0; margin:20px 0; max-width:70ch;}
+.callout p{margin-bottom:0; color:var(--ink-dim); font-size:14.5px;}
+.callout .callout-label{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--amber); margin-bottom:6px; display:block;}
+.callout.interview{border-left-color:var(--violet);} .callout.interview .callout-label{color:var(--violet);}
+.callout.pitfall{border-left-color:var(--rose);} .callout.pitfall .callout-label{color:var(--rose);}
+.callout.focus{border-left-color:var(--lime); background:#151b12;} .callout.focus .callout-label{color:var(--lime);}
+.code-wrap{background:#0a0c0f; border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:18px 0 24px;}
+.code-head{display:flex; align-items:center; justify-content:space-between; padding:9px 14px; border-bottom:1px solid var(--line); background:var(--bg-raised); font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+.code-dots{display:flex; gap:5px;} .code-dots span{width:8px; height:8px; border-radius:50%; background:var(--line);}
+pre{padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:12.6px; line-height:1.7; color:#d7dbe0;}
+.tok-kw{color:var(--violet);} .tok-str{color:var(--lime);} .tok-com{color:var(--ink-faint); font-style:italic;} .tok-fn{color:var(--cyan);} .tok-num{color:var(--amber);}
+.tbl{width:100%; border-collapse:collapse; margin:18px 0 26px; font-size:13.2px; max-width:78ch;}
+.tbl th{text-align:left; font-family:var(--mono); font-size:10.2px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); padding:10px 12px; border-bottom:1px solid var(--line);}
+.tbl td{padding:11px 12px; border-bottom:1px solid var(--line-soft); color:var(--ink-dim); vertical-align:top;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl td.k{color:var(--ink); font-family:var(--mono); font-size:12.2px; white-space:nowrap;}
+.diagram{background:var(--bg-card); border:1px solid var(--line); border-radius:12px; padding:22px; margin:20px 0 26px;}
+.diagram svg{width:100%; height:auto; display:block;}
+.qa{border:1px solid var(--line); border-radius:10px; margin-bottom:10px; background:var(--bg-card); overflow:hidden;}
+.qa summary{list-style:none; cursor:pointer; padding:15px 18px; display:flex; gap:12px; align-items:flex-start; font-family:var(--display); font-size:14px; color:var(--ink); font-weight:500;}
+.qa summary::-webkit-details-marker{display:none;}
+.qa summary::before{content:'+'; font-family:var(--mono); color:var(--amber); font-size:16px; line-height:1;}
+.qa[open] summary::before{content:'–';}
+.qa .qa-body{padding:0 18px 18px 40px; color:var(--ink-dim); font-size:14px; max-width:68ch;}
+.qa .qa-body p{margin-bottom:10px;}
+.qa-tag{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; background:var(--bg-raised); color:var(--ink-faint); padding:2px 8px; border-radius:20px; border:1px solid var(--line); margin-left:auto; white-space:nowrap; flex-shrink:0;}
+.glossary-grid{display:grid; grid-template-columns:1fr 1fr; gap:2px 28px;}
+@media (max-width:700px){.glossary-grid{grid-template-columns:1fr;}}
+.gterm{padding:14px 0; border-bottom:1px solid var(--line-soft);}
+.gterm dt{font-family:var(--mono); color:var(--cyan); font-size:13px; margin-bottom:4px;}
+.gterm dd{color:var(--ink-dim); font-size:13px; line-height:1.55;}
+.footer{padding:60px 0 20px; text-align:center; color:var(--ink-faint); font-family:var(--mono); font-size:12px;}
+.pillar{background:var(--bg-card); border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin:12px 0;}
+.pillar .ptitle{font-family:var(--display); font-weight:600; color:var(--amber); font-size:15px; margin-bottom:6px;}
+.pillar p{margin-bottom:0; font-size:13.7px;}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav class="side" id="side">
+  <a class="back-link" href="#">← Topic 12: Tool Calling</a>
+  <div class="brand">Vector DBs &amp; <span>Context Eng.</span></div>
+  <div class="brand-sub">Topic 13 of 14 — deep reference</div>
+  <a class="nav-link" href="#why-vector-db"><span class="nav-num">00</span>Why a Vector Database at All</a>
+  <a class="nav-link" href="#similarity"><span class="nav-num">01</span>Similarity Metrics</a>
+  <a class="nav-link" href="#ann-triangle"><span class="nav-num">02</span>The ANN Recall-Latency-Memory Triangle</a>
+  <a class="nav-link" href="#hnsw"><span class="nav-num">03</span>★ HNSW, Fully Explained</a>
+  <a class="nav-link" href="#ivf"><span class="nav-num">04</span>★ IVF, Fully Explained</a>
+  <a class="nav-link" href="#quantization"><span class="nav-num">05</span>Quantization: PQ, SQ, Binary</a>
+  <a class="nav-link" href="#filtered-search"><span class="nav-num">06</span>Filtered Vector Search</a>
+  <a class="nav-link" href="#db-comparison"><span class="nav-num">07</span>★ Vector DB Comparison, 2026</a>
+  <a class="nav-link" href="#decision-vdb"><span class="nav-num">08</span>Decision Framework</a>
+  <a class="nav-link" href="#context-engineering"><span class="nav-num">09</span>★ Context Engineering, Defined</a>
+  <a class="nav-link" href="#four-pillars"><span class="nav-num">10</span>★ Write / Select / Compress / Isolate</a>
+  <a class="nav-link" href="#pitfalls"><span class="nav-num">11</span>Production Pitfalls</a>
+  <a class="nav-link" href="#interview"><span class="nav-num">12</span>Interview Cheat-Sheet</a>
+  <a class="nav-link" href="#glossary"><span class="nav-num">13</span>Glossary</a>
+  <a class="nav-link" href="#resources"><span class="nav-num">14</span>Resources</a>
+</nav>
+
+<main class="main">
+  <div class="hero">
+    <div class="hero-eyebrow">Deep reference · Topic 13 of 14</div>
+    <h1 class="title">Vector Databases &amp; <em>Context Engineering</em></h1>
+    <p class="hero-sub">Two topics that turn out to be one discipline: how retrieval infrastructure actually works under the hood (HNSW, IVF, quantization, the recall-latency-memory triangle), and how to deliberately manage everything an agent sees at the moment it acts — the practice that's replaced "prompt engineering" as the real job in 2026.</p>
+    <div class="tag-row">
+      <span class="tag">HNSW</span><span class="tag">IVF</span><span class="tag">Product Quantization</span>
+      <span class="tag">Filtered ANN Search</span><span class="tag">pgvector / Qdrant / Pinecone</span>
+      <span class="tag">Context Engineering</span><span class="tag">Write-Select-Compress-Isolate</span>
+    </div>
+  </div>
+
+  <!-- ============ 00 WHY VECTOR DB ============ -->
+  <section class="chapter" id="why-vector-db">
+    <div class="chapter-head"><span class="chapter-num">00</span><h2 class="chapter-title">Why a Vector Database At All</h2></div>
+    <p class="chapter-dek">Building directly on Topic 11's embeddings — once meaning is a coordinate, retrieval becomes a search problem, and search problems have known hard tradeoffs.</p>
+    <div class="chapter-body">
+      <p>Topic 11 established that embeddings place semantically similar content near each other in a high-dimensional space. Finding "the most similar passages to this query" is therefore a <strong>nearest-neighbor search</strong> problem: given a query vector, find the k stored vectors closest to it. The naive approach — compare the query against every single stored vector — is <strong>brute-force / exact k-NN search</strong>: perfectly accurate, and computationally fine at small scale, but its cost grows linearly with the number of stored vectors. At a few thousand vectors this is instant; at tens of millions it's too slow for an interactive application.</p>
+      <p>A <strong>vector database</strong> is purpose-built infrastructure for storing embeddings and answering nearest-neighbor queries fast, at scale — the core value it adds over "just loop through every vector" is an <strong>index</strong>: a data structure built ahead of time that lets a query skip comparing against most of the stored vectors, at the cost of occasionally missing the true best answer. This trade — approximate but fast, instead of exact but slow — is called <strong>Approximate Nearest Neighbor (ANN) search</strong>, and it's the single concept every indexing algorithm in this document exists to implement well.</p>
+    </div>
+  </section>
+
+  <!-- ============ 01 SIMILARITY ============ -->
+  <section class="chapter" id="similarity">
+    <div class="chapter-head"><span class="chapter-num">01</span><h2 class="chapter-title">Similarity Metrics</h2></div>
+    <p class="chapter-dek">Before indexing, you need a precise definition of "close" — three metrics dominate, and the choice isn't arbitrary.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Metric</th><th>What it measures</th><th>When it's the right choice</th></tr>
+        <tr><td class="k">Cosine similarity</td><td>The angle between two vectors, ignoring their magnitude</td><td>The default for text embeddings — most embedding models are trained such that direction, not magnitude, carries meaning; robust to differences in text length</td></tr>
+        <tr><td class="k">Dot product</td><td>Cosine similarity scaled by both vectors' magnitudes</td><td>Equivalent to cosine similarity if all vectors are pre-normalized to unit length (common in modern embedding models) — often faster to compute since it skips the normalization step at query time</td></tr>
+        <tr><td class="k">Euclidean (L2) distance</td><td>Straight-line distance between two points</td><td>Common for image/audio embeddings and some non-text domains where absolute magnitude carries real signal, not just direction</td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">The mismatch that silently ruins retrieval quality</span>
+        <p>Using the wrong metric for how an embedding model was trained produces a working-but-degraded system — nothing crashes, results just quietly rank worse than they should. Always check your embedding provider's documentation for the metric they trained and optimized for (nearly always cosine or dot product for text) rather than defaulting to whatever your vector database ships with.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 ANN TRIANGLE ============ -->
+  <section class="chapter" id="ann-triangle">
+    <div class="chapter-head"><span class="chapter-num">02</span><h2 class="chapter-title">The ANN Recall-Latency-Memory Triangle</h2></div>
+    <p class="chapter-dek">Every indexing algorithm in this document is a different point in the same three-way trade. Hold this frame before the specifics.</p>
+    <div class="chapter-body">
+      <div class="diagram">
+        <svg viewBox="0 0 500 280" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="250,30 60,240 440,240" fill="none" stroke="#242a33" stroke-width="1.5"/>
+          <text x="250" y="20" fill="#5fd9c9" font-family="JetBrains Mono" font-size="13" text-anchor="middle">Recall (accuracy)</text>
+          <text x="45" y="258" fill="#ff9f40" font-family="JetBrains Mono" font-size="13" text-anchor="middle">Latency</text>
+          <text x="455" y="258" fill="#b592ff" font-family="JetBrains Mono" font-size="13" text-anchor="middle">Memory</text>
+          <circle cx="250" cy="90" r="5" fill="#c9f04c"/>
+          <text x="250" y="78" fill="#c9f04c" font-family="JetBrains Mono" font-size="10" text-anchor="middle">HNSW</text>
+          <circle cx="180" cy="190" r="5" fill="#ff7a8a"/>
+          <text x="150" y="205" fill="#ff7a8a" font-family="JetBrains Mono" font-size="10" text-anchor="middle">IVF+PQ</text>
+          <circle cx="320" cy="190" r="5" fill="#5fd9c9"/>
+          <text x="350" y="205" fill="#5fd9c9" font-family="JetBrains Mono" font-size="10" text-anchor="middle">IVFFlat</text>
+        </svg>
+      </div>
+      <p>Every ANN index makes a deliberate trade among three properties: <strong>recall</strong> (what fraction of the true nearest neighbors did the search actually find), <strong>latency</strong> (how fast is each query), and <strong>memory</strong> (how much RAM/disk does the index consume). No algorithm wins on all three simultaneously — HNSW leans toward recall and latency at the cost of memory; IVF with quantization leans toward memory efficiency at some cost to recall; the specific parameters you tune (covered per-algorithm below) slide your deployment along these tradeoffs.</p>
+      <div class="callout">
+        <span class="callout-label">How recall is actually measured</span>
+        <p><strong>Recall@k</strong> is computed by comparing an approximate search's top-k results against a ground-truth exact (brute-force) search's top-k results on the same query — the fraction that overlap is your recall score. This is the concrete metric behind every tuning decision in this document, and it's the same underlying idea as Topic 5's evaluation discipline, applied specifically to retrieval infrastructure rather than end-to-end agent behavior.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 HNSW ============ -->
+  <section class="chapter" id="hnsw">
+    <div class="chapter-head"><span class="chapter-num">03 ★</span><h2 class="chapter-title">HNSW, Fully Explained</h2></div>
+    <p class="chapter-dek">Hierarchical Navigable Small World — the default index for most production vector search in 2026. Worth understanding structurally, not just by name.</p>
+    <div class="chapter-body">
+      <p>HNSW builds a multi-layer graph over your vectors, where each vector is a node connected to its approximate nearest neighbors. The "hierarchical" part is the key trick: the top layer has very few nodes with long-range connections (for fast, coarse jumps across the whole space), and each layer below has progressively more nodes with shorter-range connections (for fine-grained local refinement) — search starts at the sparse top layer, takes big jumps toward the right neighborhood, then descends layer by layer, refining its position, until it reaches the bottom layer for a precise local search.</p>
+      <div class="diagram">
+        <svg viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg">
+          <text x="300" y="20" fill="#9aa3b0" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Layer 2 (sparse, long jumps)</text>
+          <circle cx="150" cy="45" r="6" fill="none" stroke="#5fd9c9" stroke-width="1.6"/>
+          <circle cx="450" cy="45" r="6" fill="none" stroke="#5fd9c9" stroke-width="1.6"/>
+          <line x1="150" y1="45" x2="450" y2="45" stroke="#5fd9c9" stroke-width="1.2"/>
+          <text x="300" y="90" fill="#9aa3b0" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Layer 1 (medium density)</text>
+          <circle cx="150" cy="115" r="6" fill="none" stroke="#ff9f40" stroke-width="1.6"/>
+          <circle cx="270" cy="115" r="6" fill="none" stroke="#ff9f40" stroke-width="1.6"/>
+          <circle cx="380" cy="115" r="6" fill="none" stroke="#ff9f40" stroke-width="1.6"/>
+          <circle cx="450" cy="115" r="6" fill="none" stroke="#ff9f40" stroke-width="1.6"/>
+          <line x1="150" y1="115" x2="270" y2="115" stroke="#ff9f40" stroke-width="1"/>
+          <line x1="270" y1="115" x2="380" y2="115" stroke="#ff9f40" stroke-width="1"/>
+          <line x1="380" y1="115" x2="450" y2="115" stroke="#ff9f40" stroke-width="1"/>
+          <text x="300" y="160" fill="#9aa3b0" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Layer 0 (all vectors, dense local links)</text>
+          <circle cx="120" cy="185" r="5" fill="none" stroke="#b592ff" stroke-width="1.4"/>
+          <circle cx="180" cy="185" r="5" fill="none" stroke="#b592ff" stroke-width="1.4"/>
+          <circle cx="240" cy="185" r="5" fill="none" stroke="#b592ff" stroke-width="1.4"/>
+          <circle cx="300" cy="185" r="5" fill="none" stroke="#b592ff" stroke-width="1.4"/>
+          <circle cx="360" cy="185" r="5" fill="none" stroke="#b592ff" stroke-width="1.4"/>
+          <circle cx="420" cy="185" r="5" fill="none" stroke="#b592ff" stroke-width="1.4"/>
+          <circle cx="480" cy="185" r="5" fill="none" stroke="#b592ff" stroke-width="1.4"/>
+          <line x1="120" y1="185" x2="480" y2="185" stroke="#b592ff" stroke-width="0.8"/>
+          <line x1="150" y1="51" x2="150" y2="109" stroke="#5c6672" stroke-width="0.8" stroke-dasharray="2 2"/>
+          <line x1="270" y1="121" x2="240" y2="179" stroke="#5c6672" stroke-width="0.8" stroke-dasharray="2 2"/>
+        </svg>
+      </div>
+      <table class="tbl">
+        <tr><th>Parameter</th><th>What it controls</th></tr>
+        <tr><td class="k">M</td><td>Max connections per node — higher M means denser graph, better recall, more memory</td></tr>
+        <tr><td class="k">efConstruction</td><td>Candidate list size during index <em>build</em> — higher values build a higher-quality graph, at the cost of slower indexing</td></tr>
+        <tr><td class="k">efSearch</td><td>Candidate pool size during <em>query</em> time — the main lever for trading query latency against recall, tunable per-query without rebuilding the index</td></tr>
+      </table>
+      <p>HNSW's real strength: excellent recall even at small efSearch values, sub-millisecond query latency at million-scale, graceful scaling to billions of vectors, and no separate training/clustering phase required before you can start inserting vectors — which is exactly why it's the default choice for most production vector search under roughly 10 million vectors with active writes.</p>
+      <div class="callout pitfall">
+        <span class="callout-label">The real weakness</span>
+        <p>HNSW's memory overhead from storing graph edges is its main cost, and its tail latency spikes when metadata filters are applied at query time, since filtering can force the graph traversal to lose its pruning power (covered in Section 06). The good news: this memory disadvantage is shrinking — techniques like binary quantization (Section 05) combined with HNSW now keep the graph small enough to fit in RAM at scales where unquantized HNSW would not.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 04 IVF ============ -->
+  <section class="chapter" id="ivf">
+    <div class="chapter-head"><span class="chapter-num">04 ★</span><h2 class="chapter-title">IVF, Fully Explained</h2></div>
+    <p class="chapter-dek">Inverted File Index — older than HNSW, simpler conceptually, and still the right choice under specific, real conditions.</p>
+    <div class="chapter-body">
+      <p>IVF's core idea is clustering: run k-means on your embeddings to find <em>nlist</em> cluster centers ("centroids"). Every stored vector gets assigned to its nearest centroid, producing a set of inverted lists — buckets of vector IDs grouped by which cluster they belong to. At query time, instead of searching the whole dataset, IVF only searches the <em>nprobe</em> clusters whose centroids are closest to the query vector — directly limiting how much of the dataset gets scanned, and giving you an explicit, tunable knob on the recall/latency trade.</p>
+      <table class="tbl">
+        <tr><th>Parameter</th><th>What it controls</th></tr>
+        <tr><td class="k">nlist</td><td>Number of clusters — for roughly 10M vectors, a reasonable starting point is around 3,000, tuned experimentally from there based on measured recall and latency</td></tr>
+        <tr><td class="k">nprobe</td><td>How many clusters to search per query — the main recall/latency lever; higher nprobe means searching more of the dataset, better recall, higher latency</td></tr>
+      </table>
+      <div class="callout">
+        <span class="callout-label">When IVF genuinely beats HNSW</span>
+        <p>IVFFlat is the right call when memory is tight, the dataset is very large (50M+) and mostly static, or index build time matters more than query latency. IVF's latency curve is also smoother under metadata filtering — HNSW's graph traversal loses pruning power when filters are applied, while IVF's cluster-scan structure degrades more gracefully. Choose IVF for tens-to-hundreds of millions of vectors under memory constraints or with heavy filtering; choose HNSW as the default otherwise.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 05 QUANTIZATION ============ -->
+  <section class="chapter" id="quantization">
+    <div class="chapter-head"><span class="chapter-num">05</span><h2 class="chapter-title">Quantization: PQ, SQ, Binary</h2></div>
+    <p class="chapter-dek">Compressing vectors to fit more of them in memory — the third lever alongside index choice.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Technique</th><th>How it works</th><th>Compression / recall cost</th></tr>
+        <tr><td class="k">Scalar Quantization (SQ8)</td><td>Each float becomes 8 bits instead of the usual 32</td><td>~4x memory reduction, minimal geometry distortion</td></tr>
+        <tr><td class="k">Product Quantization (PQ)</td><td>Split each vector into sub-vectors, encode each sub-vector with a small learned codebook</td><td>Very high compression (e.g. 64x) at the cost of more meaningful recall loss than SQ</td></tr>
+        <tr><td class="k">Binary quantization</td><td>Collapse each dimension to a single bit</td><td>Extreme compression, enabling HNSW graphs to fit in RAM at scales where the unquantized version would not, with a modest, often acceptable recall cost for RAG workloads</td></tr>
+      </table>
+      <div class="callout focus">
+        <span class="callout-label">The two-stage search pattern that makes quantization safe to use</span>
+        <p>When using quantization, the standard production pattern is a final re-rank step on higher-precision (unquantized) data — search the compressed index to quickly narrow to a candidate set, then re-score that small candidate set using the full-precision vectors for the final top-k. This preserves the speed benefit of compressed search while protecting the quality of what's actually returned — directly the same "cheap-first-pass, expensive-precise-second-pass" structure as Topic 8's reranking, applied to vector compression instead of retrieval-vs-reranking.</p>
+      </div>
+      <p>IVF-PQ combines both techniques — IVF's clustering narrows the search scope, PQ compresses the vectors within each cluster, delivering both faster search and lower memory than either technique alone. This combination is common at billion-scale deployments where neither pure HNSW nor pure IVF's memory footprint is viable.</p>
+    </div>
+  </section>
+
+  <!-- ============ 06 FILTERED SEARCH ============ -->
+  <section class="chapter" id="filtered-search">
+    <div class="chapter-head"><span class="chapter-num">06</span><h2 class="chapter-title">Filtered Vector Search</h2></div>
+    <p class="chapter-dek">Almost every real production query is "find similar vectors WHERE tenant_id = X" — combining ANN search with metadata filtering is a genuinely hard, actively-researched problem, not a solved afterthought.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Approach</th><th>Tradeoff</th></tr>
+        <tr><td class="k">Pre-filtering</td><td>Filter the metadata first, then run exact/brute-force search only within the filtered subset — accurate but loses the ANN speed advantage entirely if the filtered subset is still large</td></tr>
+        <tr><td class="k">Post-filtering</td><td>Run ANN search first, then discard results that don't match the filter — fast, but can return too few (or zero) results if the filter is restrictive and the true matches weren't in the initial candidate set</td></tr>
+        <tr><td class="k">In-graph / integrated filtering (e.g. ACORN-family)</td><td>The filter is applied during graph traversal itself, so the search only explores nodes that satisfy the filter — the modern, actively-researched approach specifically because pre- and post-filtering both degrade badly at low selectivity (a filter matching a small fraction of the dataset)</td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">Why this specifically breaks at low selectivity</span>
+        <p>At low selectivity (a filter matching, say, 0.3% of the dataset — common for per-tenant filtering in a large shared index), naive filtered HNSW search can see dramatic recall collapse, because the graph's pruning heuristics were built assuming an unfiltered search space, and most of the nodes the traversal would naturally visit get discarded by the filter. This is an active research area (e.g. RACORN-style adaptive methods reporting large recall recovery and latency improvements over naive filtered HNSW in the low-selectivity regime specifically) — not a solved, boring problem, and worth knowing by name if a system design question raises multi-tenant vector search.</p>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"You're building a multi-tenant RAG system where each query must only search one tenant's data. What goes wrong with a naive implementation?" — If tenants share one HNSW index and you apply the tenant filter as a post-filter, recall can collapse badly for tenants with a small fraction of the total data, since the graph traversal's pruning assumed an unfiltered search space. Mitigations: use a vector database with native multi-tenancy that applies filters during traversal (Qdrant's indexed payload fields, Weaviate's tenant model), or consider separate indexes/namespaces per tenant (Pinecone's namespace model) when tenant counts are manageable, trading some index-management overhead for guaranteed filter correctness.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 07 DB COMPARISON ============ -->
+  <section class="chapter" id="db-comparison">
+    <div class="chapter-head"><span class="chapter-num">07 ★</span><h2 class="chapter-title">Vector DB Comparison, 2026</h2></div>
+    <p class="chapter-dek">Five options cover the large majority of production RAG deployments. Know the honest tradeoffs, not the marketing copy.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Database</th><th>2026 positioning</th></tr>
+        <tr><td class="k">pgvector</td><td>The 2026 default for most RAG apps under ~10M vectors: zero new infrastructure if you're already on Postgres, transactional consistency, and — with HNSW indexes, half-precision storage, and binary quantization — roughly 90% of dedicated-vector-DB performance. pgvector 0.8.2 (Feb 2026) supports HNSW, IVFFlat, halfvec, sparsevec, and binary quantization on one SQL surface.</td></tr>
+        <tr><td class="k">Qdrant</td><td>The performance-focused open-source choice — its Rust implementation gives a measurable latency edge (roughly 10-25% faster than Weaviate/Milvus on common workloads in one benchmark, p99 ~12ms vs ~16-18ms at 10M vectors). Strong native multi-tenancy via indexed payload fields.</td></tr>
+        <tr><td class="k">Weaviate</td><td>The strongest choice specifically for hybrid search — built-in BM25 is a genuine, real advantage over competitors requiring you to bolt on lexical search separately. Native multi-tenancy is built into its data model.</td></tr>
+        <tr><td class="k">Pinecone</td><td>Zero-ops, fully managed, predictable serverless pricing — the right choice when you have budget and no appetite for infrastructure management. Becomes expensive enough at scale ($5,000+/month territory) that self-hosting's ops cost is often justified for teams with the capability.</td></tr>
+        <tr><td class="k">Milvus</td><td>Justified only at 100M+ vectors with a dedicated ops team — its tiered storage (RAM/NVMe/S3 with automatic promotion/demotion) is a genuine advantage at that scale, but its operational complexity exceeds Qdrant's for typical workloads and isn't worth adopting below that scale threshold.</td></tr>
+        <tr><td class="k">Chroma</td><td>Excellent for prototyping — runs in-process in Python with zero external service and zero configuration. Lacks the production operational tooling (HA, snapshots, monitoring integrations) of the dedicated options above; not a production recommendation at meaningful scale.</td></tr>
+      </table>
+      <div class="callout focus">
+        <span class="callout-label">The advice that matters more than the whole table</span>
+        <p>For most workloads, the vector store is the least interesting engineering problem — retrieval quality, chunking strategy (Topic 8), metadata schema, and the evaluation pipeline (Topic 5) matter far more than whether you chose Qdrant over Weaviate. Start with pgvector; migrate only when you have a measured reason to, and always benchmark with your own data and query patterns rather than trusting published synthetic benchmarks.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 08 DECISION ============ -->
+  <section class="chapter" id="decision-vdb">
+    <div class="chapter-head"><span class="chapter-num">08</span><h2 class="chapter-title">Decision Framework</h2></div>
+    <p class="chapter-dek">A scale-driven default path, not a feature checklist.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Scale / need</th><th>Default choice</th></tr>
+        <tr><td>&lt;500K vectors, already on Postgres</td><td>pgvector — don't over-engineer</td></tr>
+        <tr><td>Up to ~10M vectors, ~500 QPS</td><td>Still pgvector, with HNSW + quantization — closes most of the gap with dedicated vector DBs at this scale</td></tr>
+        <tr><td>10-50M+ vectors, need hybrid search or heavier filtering</td><td>Qdrant (raw speed) or Weaviate (best-in-class hybrid search)</td></tr>
+        <tr><td>Want zero ops, have budget</td><td>Pinecone Serverless</td></tr>
+        <tr><td>100M+ vectors, dedicated platform team</td><td>Milvus, for its tiered storage architecture</td></tr>
+        <tr><td>Prototyping only</td><td>Chroma or an in-memory FAISS index</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 09 CONTEXT ENGINEERING ============ -->
+  <section class="chapter" id="context-engineering">
+    <div class="chapter-head"><span class="chapter-num">09 ★</span><h2 class="chapter-title">Context Engineering, Defined</h2></div>
+    <p class="chapter-dek">The discipline that's absorbed "prompt engineering" as one of its sub-parts. Know its origin and its precise scope.</p>
+    <div class="chapter-body">
+      <p>The term was given its clearest articulation by Andrej Karpathy in June 2025, who argued "prompt engineering" understates the actual work — prompt engineering suggests crafting a single instruction, while context engineering describes the broader discipline of filling the entire context window with the right information: instructions, retrieved knowledge, memory, tool descriptions, and prior outputs, all structured so the model can actually use them effectively.</p>
+      <table class="tbl">
+        <tr><th></th><th>Prompt engineering</th><th>Context engineering</th></tr>
+        <tr><td class="k">Scope</td><td>A static artifact — the system prompt text a developer writes, reviews, and commits</td><td>A runtime pipeline — retrieval, reranking, summarization, schema injection, token budget management, and assembly logic, executing before every model call</td></tr>
+        <tr><td class="k">Ownership</td><td>Typically owned by whoever writes the system prompt</td><td>Typically owned by platform teams, living alongside API servers, data pipelines, and observability tooling</td></tr>
+        <tr><td class="k">Question it answers</td><td>"How do I ask?"</td><td>"What does the agent know, see, and remember at the moment of action?"</td></tr>
+      </table>
+      <p>This is exactly a superset relationship: prompt engineering happens <em>within</em> the context window, while context engineering determines <em>what fills that window in the first place</em>. Prompt engineering isn't obsolete — it's one tool inside the larger context-engineering toolkit.</p>
+      <div class="callout focus">
+        <span class="callout-label">Why this discipline exists at all — the actual production data</span>
+        <p>According to LangChain's 2026 State of AI Agents report, 57% of organizations now have agents in production, and quality remains the top barrier to deployment — and most quality failures trace not to model capability but to poor context management: the model had the wrong information, too much information, or stale information at the moment it needed to decide. Context engineering is the direct response to that finding.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 10 FOUR PILLARS ============ -->
+  <section class="chapter" id="four-pillars">
+    <div class="chapter-head"><span class="chapter-num">10 ★</span><h2 class="chapter-title">Write / Select / Compress / Isolate</h2></div>
+    <p class="chapter-dek">LangChain's Lance Martin formalized the discipline into this four-verb taxonomy — the framework with the most staying power, and the one worth having ready in an interview.</p>
+    <div class="chapter-body">
+      <div class="pillar">
+        <div class="ptitle">Write — persist context outside the window so it survives</div>
+        <p>A model is stateless; every call starts from nothing unless you explicitly carry information forward. "Write" covers everything baked into the system before a user interaction happens — system prompts, persona instructions, rules, guardrails — the "constitution" of the system, unchanging per request. This is the layer that overlaps most with traditional prompt engineering, and it directly connects to Topic 9's working/episodic memory writing.</p>
+      </div>
+      <div class="pillar">
+        <div class="ptitle">Select — retrieve only what's relevant, on demand</div>
+        <p>Retrieval-augmented generation is context engineering in its purest form — you're not changing the prompt, you're changing what knowledge the model has access to when it generates. The engineering challenge isn't writing the query; it's the pipeline that retrieves the right documents, ranks them, filters noise, and fits the result within budget — precisely Topic 8's entire subject, reframed as one pillar of a larger discipline. "Select" also covers tool descriptions and memory retrieval (Topic 9) — loading information on demand rather than upfront.</p>
+      </div>
+      <div class="pillar">
+        <div class="ptitle">Compress — reduce tokens while retaining what matters</div>
+        <p>Summarization, trimming old messages, chunk deduplication, LLMLingua-style compression — techniques that reduce token volume without discarding signal. This is precisely Topic 7's context compaction material and Topic 9's memory consolidation, viewed through the context-engineering lens: both exist because an ever-growing context degrades reasoning accuracy and inflates cost even when it technically still fits.</p>
+      </div>
+      <div class="pillar">
+        <div class="ptitle">Isolate — keep unrelated context separate</div>
+        <p>Split context across separate agents or components so each gets only what it needs, rather than dumping everything into one shared window — precisely Topic 3's isolation boundary concept (Anthropic's orchestrator-worker subagents getting fresh, self-contained context) and the same principle behind sandboxing raw tool output into structured, filtered results instead of injecting everything a tool returns directly into the agent's context.</p>
+      </div>
+      <div class="code-wrap">
+        <div class="code-head"><span>four_pillars_in_one_langgraph_node.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">def</span> assemble_context(state: AgentState) -> <span class="tok-kw">dict</span>:
+    <span class="tok-com"># WRITE: static system instructions, unchanging per request</span>
+    system = load_system_prompt()
+
+    <span class="tok-com"># SELECT: retrieve only what's relevant to the current turn (Topic 8's pipeline)</span>
+    query = state[<span class="tok-str">"messages"</span>][-<span class="tok-num">1</span>].content
+    retrieved_docs = hybrid_retriever.invoke(query, top_k=<span class="tok-num">5</span>)
+
+    <span class="tok-com"># COMPRESS: summarize older turns instead of keeping full history verbatim</span>
+    history = state[<span class="tok-str">"messages"</span>]
+    <span class="tok-kw">if</span> count_tokens(history) > COMPACTION_THRESHOLD:
+        history = compact_history(history)   <span class="tok-com"># Topic 7 / Topic 9's consolidation</span>
+
+    <span class="tok-com"># ISOLATE: pass a sub-agent only its own scoped slice, not the full state</span>
+    subagent_context = {<span class="tok-str">"task"</span>: state[<span class="tok-str">"current_subtask"</span>], <span class="tok-str">"docs"</span>: retrieved_docs}
+
+    <span class="tok-kw">return</span> {<span class="tok-str">"assembled_context"</span>: build_prompt(system, history, retrieved_docs)}</pre>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"Walk me through the Write/Select/Compress/Isolate framework and map each pillar onto something we've already discussed." — Write is the static system prompt layer, overlapping with traditional prompt engineering and Topic 9's memory-writing. Select is retrieval — Topic 8's entire RAG pipeline, plus tool and memory selection. Compress is Topic 7's context compaction and Topic 9's memory consolidation — reducing tokens without losing signal. Isolate is Topic 3's isolation-boundary principle for multi-agent systems, and the same logic behind sandboxing raw tool output before it enters context. A production AI agent typically uses all four simultaneously, not just one.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 11 PITFALLS ============ -->
+  <section class="chapter" id="pitfalls">
+    <div class="chapter-head"><span class="chapter-num">11</span><h2 class="chapter-title">Production Pitfalls</h2></div>
+    <p class="chapter-dek">What actually goes wrong.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Mismatched similarity metric.</strong> Using Euclidean distance on an embedding model trained/optimized for cosine similarity degrades results silently — nothing errors, ranking just gets quietly worse.</li>
+        <li><strong>Choosing a dedicated vector DB before you need one.</strong> Under ~10M vectors, pgvector with modern quantization closes most of the performance gap — a separate vector database adds real operational overhead most teams don't need yet.</li>
+        <li><strong>Naive post-filtering on a multi-tenant HNSW index.</strong> Recall can collapse badly for tenants with a small slice of a shared index — use native multi-tenancy features or separate indexes instead of filtering after the fact.</li>
+        <li><strong>Quantizing without a re-rank stage.</strong> Compressed search alone trades away real accuracy — always re-score the narrowed candidate set against full-precision vectors before returning final results.</li>
+        <li><strong>Treating "prompt engineering" as the whole job.</strong> A well-crafted system prompt with an unmanaged, ever-growing, unfiltered context window will still degrade — context engineering's Select/Compress/Isolate pillars aren't optional extras once an agent runs multi-step.</li>
+        <li><strong>Dumping raw tool output directly into context.</strong> Violates the Isolate principle — sandbox tool execution and return structured, filtered results, not an entire raw API response.</li>
+        <li><strong>Benchmarking a vector DB choice on synthetic data.</strong> Published benchmarks routinely mislead — always validate index/DB choice against your own embeddings, query patterns, and filter conditions.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 12 INTERVIEW ============ -->
+  <section class="chapter" id="interview">
+    <div class="chapter-head"><span class="chapter-num">12</span><h2 class="chapter-title">Interview Cheat-Sheet</h2></div>
+    <p class="chapter-dek">Grouped by depth.</p>
+    <div class="chapter-body">
+      <details class="qa"><summary>Explain HNSW well enough to draw it on a whiteboard.<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>A multi-layer graph where the top layer is sparse with long-range connections for fast coarse navigation, and each layer below is progressively denser with shorter connections for local refinement. Search starts at the top layer, greedily jumps toward the query's neighborhood, then descends layer by layer refining position, ending with a precise search at the dense bottom layer containing every vector. Key parameters: M (connections per node, trades memory for recall), efConstruction (build-time quality), efSearch (query-time recall/latency knob, tunable without rebuilding).</p></div>
+      </details>
+      <details class="qa"><summary>When would you choose IVF over HNSW?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>When memory is tight, the dataset is very large (50M+) and mostly static, or build time matters more than query latency — IVF's cluster-based structure is more memory-efficient than HNSW's graph edges, and combines more gracefully with quantization for extreme compression. It's also the safer choice under heavy metadata filtering, since HNSW's tail latency spikes when filters reduce the graph's effective pruning power.</p></div>
+      </details>
+      <details class="qa"><summary>Explain the two-stage search pattern used with quantized indexes.<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>Quantization compresses vectors for fast, memory-efficient search but introduces some accuracy loss. Production systems address this with a re-rank stage: run the fast approximate search over compressed vectors to narrow to a small candidate set, then re-score just that candidate set using full-precision vectors for the final top-k. This preserves most of quantization's speed and memory benefit while protecting the accuracy of what's actually returned to the user.</p></div>
+      </details>
+      <details class="qa"><summary>Why does filtered vector search break down at low selectivity, and how would you fix it for a multi-tenant system?<span class="qa-tag">architecture</span></summary>
+        <div class="qa-body"><p>Naive filtering (pre- or post-) assumes the underlying ANN index's pruning heuristics still work correctly once most candidates are excluded by the filter — at low selectivity (a filter matching a small fraction of the dataset, e.g. one tenant's slice of a large shared index), this breaks down and recall can collapse. Fixes: use a vector database with native multi-tenancy applying filters during graph traversal itself (Qdrant's indexed payload fields, Weaviate's tenant model), or maintain separate indexes/namespaces per tenant when tenant count is manageable, accepting more index-management overhead for guaranteed correctness.</p></div>
+      </details>
+      <details class="qa"><summary>A team wants to adopt Milvus for a new RAG project with 2 million documents. What's your recommendation?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Push back — Milvus earns its operational complexity only at 100M+ vectors with a dedicated platform team; at 2 million vectors, pgvector (if already on Postgres) or a lighter dedicated option like Qdrant will deliver comparable retrieval quality with far less operational overhead. The vector store is rarely the interesting engineering problem at this scale — retrieval quality, chunking, and evaluation infrastructure matter far more, and over-engineering the storage layer early is a common, avoidable mistake.</p></div>
+      </details>
+      <details class="qa"><summary>What's the actual difference between prompt engineering and context engineering?<span class="qa-tag">context-eng</span></summary>
+        <div class="qa-body"><p>Prompt engineering is a static artifact — the wording of a system prompt, reviewed and committed like code. Context engineering is a runtime pipeline — retrieval, reranking, summarization, memory selection, tool output filtering, and token budget management, executing before every model call to determine everything the model sees at the moment it acts. It's a superset relationship: prompt engineering happens within the context window; context engineering determines what fills that window.</p></div>
+      </details>
+      <details class="qa"><summary>Map the Write/Select/Compress/Isolate framework onto a real multi-agent RAG system you'd design.<span class="qa-tag">context-eng</span></summary>
+        <div class="qa-body"><p>Write: a lean, versioned system prompt per agent role, not a single bloated shared prompt. Select: a hybrid-search-plus-reranking retrieval pipeline (Topic 8) feeding only the top few relevant chunks, not a full document dump. Compress: conversation history summarized past a token threshold before it crowds out current task state (Topic 7), and episodic memory consolidated into semantic facts over time (Topic 9). Isolate: each subagent in an orchestrator-worker topology (Topic 3) gets a fresh, scoped context containing only its specific task — not the full shared history — and raw tool outputs are filtered into structured summaries before entering any agent's context at all.</p></div>
+      </details>
+      <details class="qa"><summary>Why might an agent's quality degrade even though you haven't changed the system prompt or the model?<span class="qa-tag">context-eng</span></summary>
+        <div class="qa-body"><p>Because prompt engineering alone doesn't control the rest of what fills the context window — a growing conversation history without compaction, a retrieval pipeline degrading due to stale data or index drift, or an increasingly cluttered tool-output stream can each independently erode quality with zero prompt changes. This is precisely why context engineering treats context assembly as its own runtime pipeline requiring its own observability and testing, not something a static, unchanging system prompt can account for on its own.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ 13 GLOSSARY ============ -->
+  <section class="chapter" id="glossary">
+    <div class="chapter-head"><span class="chapter-num">13</span><h2 class="chapter-title">Glossary</h2></div>
+    <p class="chapter-dek">Every term used in this document.</p>
+    <div class="chapter-body">
+      <dl class="glossary-grid">
+        <div class="gterm"><dt>ANN (Approximate Nearest Neighbor)</dt><dd>Search that trades perfect accuracy for speed via an index, as opposed to exact brute-force k-NN.</dd></div>
+        <div class="gterm"><dt>Recall@k</dt><dd>Fraction of true top-k nearest neighbors an approximate search actually finds, vs. exact search.</dd></div>
+        <div class="gterm"><dt>HNSW</dt><dd>Hierarchical Navigable Small World — a multi-layer graph ANN index, the 2026 production default under ~10M vectors.</dd></div>
+        <div class="gterm"><dt>M / efConstruction / efSearch</dt><dd>HNSW's core tuning parameters, controlling graph density, build quality, and query-time recall/latency respectively.</dd></div>
+        <div class="gterm"><dt>IVF (Inverted File Index)</dt><dd>Clustering-based ANN index; searches only the nearest clusters (nprobe of nlist) to a query.</dd></div>
+        <div class="gterm"><dt>Product Quantization (PQ)</dt><dd>Vector compression via sub-vector codebooks; high compression, moderate recall cost.</dd></div>
+        <div class="gterm"><dt>Scalar / Binary Quantization</dt><dd>Simpler compression reducing per-dimension precision; less aggressive than PQ, lower recall cost.</dd></div>
+        <div class="gterm"><dt>Filtered vector search</dt><dd>Combining ANN search with metadata filters; degrades badly at low selectivity without integrated (in-graph) filtering.</dd></div>
+        <div class="gterm"><dt>Context engineering</dt><dd>The discipline of managing everything an agent sees at the moment of action — instructions, memory, retrieved knowledge, tool outputs.</dd></div>
+        <div class="gterm"><dt>Write / Select / Compress / Isolate</dt><dd>LangChain's four-pillar taxonomy for context engineering strategies.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ 14 RESOURCES ============ -->
+  <section class="chapter" id="resources">
+    <div class="chapter-head"><span class="chapter-num">14</span><h2 class="chapter-title">Resources</h2></div>
+    <p class="chapter-dek">Primary sources worth reading directly.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Malkov &amp; Yashunin — "Efficient and robust approximate nearest neighbor search using HNSW"</strong> (2018) — the original algorithm paper</li>
+        <li><strong>pgvector documentation</strong> — the fastest hands-on way to compare HNSW vs IVFFlat on your own data via one SQL surface</li>
+        <li><strong>LangChain — "Context Engineering for Agents"</strong> blog post (Lance Martin) — the canonical Write/Select/Compress/Isolate source</li>
+        <li><strong>Andrej Karpathy's original context engineering framing</strong> (June 2025) — the term's origin</li>
+        <li><strong>Qdrant, Weaviate, Milvus documentation</strong> — each vendor's filtering and multi-tenancy implementation details, worth comparing directly</li>
+      </ul>
+      <div class="callout">
+        <span class="callout-label">How to actually solidify this</span>
+        <p>Spin up pgvector locally, load a few hundred thousand embeddings, and build both an HNSW and an IVFFlat index on the same data — measure recall@10 and query latency for each at a few different efSearch/nprobe settings. Watching the recall-latency tradeoff move in real numbers, on your own machine, is worth far more than memorizing this document's tables.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">Topic 13 of 14 — Vector Databases &amp; Context Engineering. Next up: RAG Architecture Decision Guide — GraphRAG vs KAG vs Agentic RAG.</div>
+</main>
+</div>
+
+<script>
+const links = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('section.chapter');
+const map = new Map();
+links.forEach(l => map.set(l.getAttribute('href').slice(1), l));
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const link = map.get(entry.target.id);
+    if(!link) return;
+    if(entry.isIntersecting){
+      links.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, {rootMargin: '-15% 0px -70% 0px', threshold: 0});
+sections.forEach(s => io.observe(s));
+</script>
+</body>
+</html>

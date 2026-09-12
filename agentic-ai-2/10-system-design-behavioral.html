@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Design &amp; Behavioral Mastery — The Capstone</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d10; --bg-raised:#12151a; --bg-card:#14181f;
+  --line:#242a33; --line-soft:#1b2028;
+  --ink:#e7e9ec; --ink-dim:#9aa3b0; --ink-faint:#5c6672;
+  --amber:#ff9f40; --amber-dim:#c97a2e; --lime:#c9f04c; --cyan:#5fd9c9; --violet:#b592ff; --rose:#ff7a8a;
+  --serif:'Source Serif 4', Georgia, serif;
+  --display:'Space Grotesk', sans-serif;
+  --mono:'JetBrains Mono', 'Courier New', monospace;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:radial-gradient(var(--line-soft) 1px, transparent 1px);
+  background-size:22px 22px; background-color:var(--bg);
+  color:var(--ink); font-family:var(--serif); font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+a{color:var(--amber); text-decoration:none;}
+::selection{background:var(--amber); color:#111;}
+.shell{display:grid; grid-template-columns:290px 1fr; min-height:100vh;}
+@media (max-width:920px){ .shell{grid-template-columns:1fr;} .side{display:none;} }
+.side{position:sticky; top:0; height:100vh; overflow-y:auto; border-right:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(18,21,26,.9), rgba(11,13,16,.9)); padding:28px 20px 60px;}
+.side::-webkit-scrollbar{width:6px;} .side::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.brand{font-family:var(--display); font-weight:700; font-size:15px; color:var(--ink); margin-bottom:2px;}
+.brand span{color:var(--amber);}
+.brand-sub{font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-bottom:24px;}
+.back-link{display:inline-block; font-family:var(--mono); font-size:11px; color:var(--cyan); margin-bottom:20px; border:1px solid var(--line); padding:5px 10px; border-radius:6px;}
+.nav-link{display:flex; align-items:baseline; gap:7px; font-family:var(--display); font-size:12.2px; color:var(--ink-dim);
+  padding:5px 7px; border-radius:6px; border-left:2px solid transparent; transition:.15s;}
+.nav-link:hover{color:var(--ink); background:var(--bg-raised);}
+.nav-link.active{color:var(--amber); border-left-color:var(--amber); background:var(--bg-raised);}
+.nav-num{font-family:var(--mono); font-size:9.5px; color:var(--ink-faint); min-width:20px;}
+.main{max-width:920px; padding:0 44px 140px; margin:0 auto;}
+@media (max-width:700px){ .main{padding:0 20px 100px;} }
+.hero{padding:76px 0 54px; border-bottom:1px solid var(--line);}
+.hero-eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--lime);
+  margin-bottom:18px; display:flex; align-items:center; gap:10px;}
+.hero-eyebrow::before{content:''; width:22px; height:1px; background:var(--lime); display:inline-block;}
+h1.title{font-family:var(--display); font-weight:700; font-size:clamp(30px,4.8vw,50px); line-height:1.08; letter-spacing:-.02em; color:var(--ink); max-width:15ch;}
+h1.title em{font-style:normal; color:var(--amber);}
+.hero-sub{font-family:var(--serif); font-size:18px; color:var(--ink-dim); max-width:62ch; margin-top:20px;}
+.tag-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:26px;}
+.tag{font-family:var(--mono); font-size:11px; padding:5px 11px; border-radius:20px; border:1px solid var(--line); color:var(--ink-dim); background:var(--bg-raised);}
+section.chapter{padding:60px 0; border-bottom:1px solid var(--line);}
+section.chapter:last-of-type{border-bottom:none;}
+.chapter-head{display:flex; align-items:flex-start; gap:16px; margin-bottom:8px;}
+.chapter-num{font-family:var(--mono); font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:20px; padding:3px 11px; margin-top:6px; white-space:nowrap;}
+h2.chapter-title{font-family:var(--display); font-weight:600; font-size:clamp(22px,3.2vw,30px); color:var(--ink); letter-spacing:-.01em;}
+.chapter-dek{font-family:var(--serif); font-style:italic; color:var(--ink-dim); font-size:16px; max-width:66ch; margin:14px 0 30px 0; padding-left:66px;}
+@media (max-width:700px){.chapter-dek{padding-left:0;}}
+.chapter-body{padding-left:66px;}
+@media (max-width:700px){.chapter-body{padding-left:0;}}
+.chapter-body h3{font-family:var(--display); font-weight:600; font-size:19px; color:var(--ink); margin:32px 0 12px;}
+.chapter-body h4{font-family:var(--display); font-weight:600; color:var(--cyan); margin:22px 0 10px; text-transform:uppercase; letter-spacing:.04em; font-size:12px;}
+.chapter-body p{color:var(--ink-dim); margin-bottom:14px; max-width:72ch;}
+.chapter-body ul, .chapter-body ol{color:var(--ink-dim); margin:0 0 16px 20px; max-width:70ch;}
+.chapter-body li{margin-bottom:7px;}
+.chapter-body strong{color:var(--ink); font-weight:600;}
+code.inline{font-family:var(--mono); font-size:.87em; background:var(--bg-raised); color:var(--lime); padding:1px 6px; border-radius:4px; border:1px solid var(--line);}
+.callout{border-left:3px solid var(--amber); background:var(--bg-card); padding:16px 18px; border-radius:0 8px 8px 0; margin:20px 0; max-width:70ch;}
+.callout p{margin-bottom:0; color:var(--ink-dim); font-size:14.5px;}
+.callout .callout-label{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--amber); margin-bottom:6px; display:block;}
+.callout.interview{border-left-color:var(--violet);} .callout.interview .callout-label{color:var(--violet);}
+.callout.pitfall{border-left-color:var(--rose);} .callout.pitfall .callout-label{color:var(--rose);}
+.callout.paper{border-left-color:var(--cyan);} .callout.paper .callout-label{color:var(--cyan);}
+.callout.focus{border-left-color:var(--lime); background:#151b12;} .callout.focus .callout-label{color:var(--lime);}
+.code-wrap{background:#0a0c0f; border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:18px 0 24px;}
+.code-head{display:flex; align-items:center; justify-content:space-between; padding:9px 14px; border-bottom:1px solid var(--line); background:var(--bg-raised); font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+.code-dots{display:flex; gap:5px;} .code-dots span{width:8px; height:8px; border-radius:50%; background:var(--line);}
+pre{padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:12.6px; line-height:1.7; color:#d7dbe0;}
+.tbl{width:100%; border-collapse:collapse; margin:18px 0 26px; font-size:13.2px; max-width:78ch;}
+.tbl th{text-align:left; font-family:var(--mono); font-size:10.2px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); padding:10px 12px; border-bottom:1px solid var(--line);}
+.tbl td{padding:11px 12px; border-bottom:1px solid var(--line-soft); color:var(--ink-dim); vertical-align:top;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl td.k{color:var(--ink); font-family:var(--mono); font-size:12.2px; white-space:nowrap;}
+.diagram{background:var(--bg-card); border:1px solid var(--line); border-radius:12px; padding:22px; margin:20px 0 26px;}
+.diagram svg{width:100%; height:auto; display:block;}
+.qa{border:1px solid var(--line); border-radius:10px; margin-bottom:10px; background:var(--bg-card); overflow:hidden;}
+.qa summary{list-style:none; cursor:pointer; padding:15px 18px; display:flex; gap:12px; align-items:flex-start; font-family:var(--display); font-size:14px; color:var(--ink); font-weight:500;}
+.qa summary::-webkit-details-marker{display:none;}
+.qa summary::before{content:'+'; font-family:var(--mono); color:var(--amber); font-size:16px; line-height:1;}
+.qa[open] summary::before{content:'–';}
+.qa .qa-body{padding:0 18px 18px 40px; color:var(--ink-dim); font-size:14px; max-width:68ch;}
+.qa .qa-body p{margin-bottom:10px;}
+.qa-tag{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; background:var(--bg-raised); color:var(--ink-faint); padding:2px 8px; border-radius:20px; border:1px solid var(--line); margin-left:auto; white-space:nowrap; flex-shrink:0;}
+.glossary-grid{display:grid; grid-template-columns:1fr 1fr; gap:2px 28px;}
+@media (max-width:700px){.glossary-grid{grid-template-columns:1fr;}}
+.gterm{padding:14px 0; border-bottom:1px solid var(--line-soft);}
+.gterm dt{font-family:var(--mono); color:var(--cyan); font-size:13px; margin-bottom:4px;}
+.gterm dd{color:var(--ink-dim); font-size:13px; line-height:1.55;}
+.footer{padding:60px 0 20px; text-align:center; color:var(--ink-faint); font-family:var(--mono); font-size:12px;}
+.statgrid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:20px 0 26px;}
+@media (max-width:700px){.statgrid{grid-template-columns:1fr 1fr;}}
+.statcard{background:var(--bg-card); border:1px solid var(--line); border-radius:10px; padding:16px;}
+.statcard .num{font-family:var(--display); font-weight:700; font-size:22px; color:var(--amber);}
+.statcard .lbl{font-family:var(--mono); font-size:10px; color:var(--ink-faint); margin-top:4px;}
+.company{background:var(--bg-card); border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin:10px 0;}
+.company .cname{font-family:var(--display); font-weight:600; color:var(--cyan); font-size:14px; margin-bottom:5px;}
+.company p{margin-bottom:0; font-size:13.6px; color:var(--ink-dim);}
+.crossref{background:var(--bg-card); border:1px solid var(--line); border-radius:8px; padding:10px 16px; margin:6px 0; display:flex; gap:14px; align-items:baseline;}
+.crossref .cnum{font-family:var(--mono); color:var(--amber); font-size:12px; min-width:70px;}
+.crossref p{margin:0; font-size:13.4px; color:var(--ink-dim);}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav class="side" id="side">
+  <a class="back-link" href="#">← Topic 9: Memory</a>
+  <div class="brand">System Design &amp; <span>Behavioral</span></div>
+  <div class="brand-sub">Topic 10 of 10 — the capstone</div>
+  <a class="nav-link" href="#loop-structure"><span class="nav-num">00</span>How the 2026 Loop Is Structured</a>
+  <a class="nav-link" href="#five-primitives"><span class="nav-num">01</span>★ The Five Primitives Framework</a>
+  <a class="nav-link" href="#design-framework"><span class="nav-num">02</span>The System Design Answer Framework</a>
+  <a class="nav-link" href="#decomposition"><span class="nav-num">03</span>Goal Decomposition, Precisely</a>
+  <a class="nav-link" href="#worked-1"><span class="nav-num">04</span>★ Worked Example: Customer Support Agent</a>
+  <a class="nav-link" href="#worked-2"><span class="nav-num">05</span>★ Worked Example: Deep Research Agent</a>
+  <a class="nav-link" href="#worked-3"><span class="nav-num">06</span>★ Worked Example: AI Coding Agent</a>
+  <a class="nav-link" href="#crossref-map"><span class="nav-num">07</span>Cross-Reference Map to Topics 1–9</a>
+  <a class="nav-link" href="#behavioral"><span class="nav-num">08</span>Behavioral Interview Prep, In Depth</a>
+  <a class="nav-link" href="#present-project"><span class="nav-num">09</span>The Project Presentation Format</a>
+  <a class="nav-link" href="#take-home"><span class="nav-num">10</span>Take-Home Assignments</a>
+  <a class="nav-link" href="#redflags"><span class="nav-num">11</span>Red Flags Interviewers Watch For</a>
+  <a class="nav-link" href="#interview"><span class="nav-num">12</span>Interview Cheat-Sheet</a>
+  <a class="nav-link" href="#checklist"><span class="nav-num">13</span>Master Readiness Checklist</a>
+  <a class="nav-link" href="#resources"><span class="nav-num">14</span>Resources</a>
+</nav>
+
+<main class="main">
+  <div class="hero">
+    <div class="hero-eyebrow">Deep reference · Topic 10 of 10 · The capstone</div>
+    <h1 class="title">System Design &amp; <em>Behavioral Mastery</em></h1>
+    <p class="hero-sub">Everything from the previous nine documents, assembled into the thing you actually have to do in the room: answer "design an AI agent for X" cleanly under time pressure, and present your own work with the depth a 2026 panel expects. Three fully worked system designs, the exact loop structure at OpenAI/Anthropic/Meta, and the behavioral question bank built specifically for agentic AI roles.</p>
+    <div class="tag-row">
+      <span class="tag">System Design Framework</span><span class="tag">Five Primitives</span><span class="tag">Worked Examples</span>
+      <span class="tag">STAR for AI Roles</span><span class="tag">Project Presentation</span><span class="tag">Take-Homes</span>
+      <span class="tag">Cross-Topic Synthesis</span>
+    </div>
+  </div>
+
+  <!-- ============ 00 LOOP STRUCTURE ============ -->
+  <section class="chapter" id="loop-structure">
+    <div class="chapter-head"><span class="chapter-num">00</span><h2 class="chapter-title">How the 2026 Interview Loop Is Actually Structured</h2></div>
+    <p class="chapter-dek">Know the shape of what you're walking into before you walk in.</p>
+    <div class="chapter-body">
+      <div class="statgrid">
+        <div class="statcard"><div class="num">40%</div><div class="lbl">RAG / evals / agents</div></div>
+        <div class="statcard"><div class="num">30%</div><div class="lbl">production systems</div></div>
+        <div class="statcard"><div class="num">20%</div><div class="lbl">LLM internals</div></div>
+        <div class="statcard"><div class="num">10%</div><div class="lbl">behavioral</div></div>
+      </div>
+      <p>The common 2026 interview mix for AI/agentic engineering roles breaks down roughly as above. At most companies the AI-engineering interview is a standard software or ML engineer loop with retrieval, serving, and agent questions layered in — Anthropic, OpenAI, Scale, and Sierra ask their AI infrastructure questions inside standard SWE and ML rounds rather than as a separate track, so the usual engineering fundamentals still matter alongside everything in this document.</p>
+      <h3>Company-specific formats worth knowing cold</h3>
+      <div class="company"><div class="cname">OpenAI</div><p>45-minute presentation of your most technically challenging project, to a peer engineer — a structured presentation format, not a casual behavioral chat. Tests ownership, architectural judgment, and depth.</p></div>
+      <div class="company"><div class="cname">Anthropic</div><p>25-minute presentation of a project you owned end-to-end, followed by 15-20 minutes of discussion drilling into key technical decisions.</p></div>
+      <div class="company"><div class="cname">Meta / Apple / Discord / Anduril</div><p>More conversational "tell me about your past projects" / "tell me about a recent or favorite project and the difficulties you had" — still expects real depth, less rigid format than OpenAI/Anthropic's presentation structure.</p></div>
+      <div class="company"><div class="cname">Eightfold.ai</div><p>An emerging pattern: the first round is conducted by an AI agent itself, which asks structured follow-up probes rather than a human interviewer running the first pass.</p></div>
+      <div class="callout focus">
+        <span class="callout-label">The single biggest shift from two years ago</span>
+        <p>Interviewers no longer want to hear about what agents could do — they want to know what breaks, what you've shipped, and how you think about tradeoffs when there's no perfect answer. At senior and staff levels, interviewers typically pick 3-5 questions and drill deep into failure modes, tradeoffs, and "what went wrong last time" — they expect architecture diagrams and war stories, not textbook definitions. Every worked example in this document is written in that register deliberately.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 01 FIVE PRIMITIVES ============ -->
+  <section class="chapter" id="five-primitives">
+    <div class="chapter-head"><span class="chapter-num">01 ★</span><h2 class="chapter-title">The Five Primitives Framework</h2></div>
+    <p class="chapter-dek">"Design ChatGPT," "design an AI code reviewer," and "design GitHub Copilot" start to feel like the same problem with different inputs once you have this. This is the master key to nearly every agentic system design prompt.</p>
+    <div class="chapter-body">
+      <p>Underneath every agentic system design question sit five primitives you should be able to draw and defend: <strong>RAG, model routing, guardrails, evaluation, and agentic loops.</strong> The most common prompts — design an AI chatbot, a document Q&amp;A/RAG system, an AI coding agent, a voice assistant — are all recombinations of these five, in different proportions.</p>
+      <table class="tbl">
+        <tr><th>Primitive</th><th>Covered in</th><th>The one thing to never forget to mention</th></tr>
+        <tr><td class="k">Agentic loop</td><td>Topic 1 (reasoning patterns), foundational bible (ReAct, LangGraph)</td><td>Name the specific pattern (ReAct, Plan-and-Execute, etc.) and justify why, don't just say "the agent loops"</td></tr>
+        <tr><td class="k">RAG</td><td>Topic 8 (chunking, hybrid search, reranking, contextual retrieval)</td><td>Hybrid search + reranking as the default, not dense-only</td></tr>
+        <tr><td class="k">Model routing</td><td>Topic 7 (cost stack: cache → route → compress)</td><td>State the cost/latency/quality tradeoff explicitly per routing decision</td></tr>
+        <tr><td class="k">Guardrails</td><td>Topic 6 (lethal trifecta, OWASP, defense-in-depth)</td><td>Identify the trifecta status of your specific design unprompted</td></tr>
+        <tr><td class="k">Evaluation</td><td>Topic 5 (trajectory eval, LLM-as-judge, benchmarks)</td><td>Trajectory eval, not just outcome — this is what separates senior answers</td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">Why this framework wins in the room</span>
+        <p>Rather than freezing on an unfamiliar prompt ("design a legal document review agent" — you've never built one), map it onto the five primitives you've prepared deeply: what's the agentic loop pattern, what's the retrieval architecture, how is cost/quality routed, what's the trifecta/guardrail posture, how is it evaluated. Every prompt becomes a checklist you already have answers for, recombined for the specific domain.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 DESIGN FRAMEWORK ============ -->
+  <section class="chapter" id="design-framework">
+    <div class="chapter-head"><span class="chapter-num">02</span><h2 class="chapter-title">The System Design Answer Framework</h2></div>
+    <p class="chapter-dek">The actual sequence to walk through out loud, in order, every time.</p>
+    <div class="chapter-body">
+      <div class="diagram">
+        <svg viewBox="0 0 780 140" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="sdm" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff9f40"/></marker></defs>
+          <rect x="10" y="45" width="130" height="46" rx="7" fill="none" stroke="#5fd9c9" stroke-width="1.4"/>
+          <text x="75" y="72" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Requirements</text>
+          <line x1="140" y1="68" x2="175" y2="68" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#sdm)"/>
+          <rect x="175" y="45" width="130" height="46" rx="7" fill="none" stroke="#ff9f40" stroke-width="1.4"/>
+          <text x="240" y="72" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Five primitives</text>
+          <line x1="305" y1="68" x2="340" y2="68" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#sdm)"/>
+          <rect x="340" y="45" width="130" height="46" rx="7" fill="none" stroke="#c9f04c" stroke-width="1.4"/>
+          <text x="405" y="72" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Architecture</text>
+          <line x1="470" y1="68" x2="505" y2="68" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#sdm)"/>
+          <rect x="505" y="45" width="130" height="46" rx="7" fill="none" stroke="#b592ff" stroke-width="1.4"/>
+          <text x="570" y="72" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Deep dive</text>
+          <line x1="635" y1="68" x2="670" y2="68" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#sdm)"/>
+          <rect x="670" y="45" width="100" height="46" rx="7" fill="none" stroke="#ff7a8a" stroke-width="1.4"/>
+          <text x="720" y="72" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Tradeoffs</text>
+        </svg>
+      </div>
+      <table class="tbl">
+        <tr><th>Step</th><th>What to actually say</th></tr>
+        <tr><td class="k">1. Requirements</td><td>Clarify scope out loud before designing anything: who are the users, what's the latency/cost budget, what's the failure tolerance (is this a toy internal tool or does it touch real money/data — directly invokes Topic 6's trifecta framing), what does success look like.</td></tr>
+        <tr><td class="k">2. Five primitives</td><td>State which of the five primitives are load-bearing for this specific problem and which are minimal — a simple FAQ bot barely needs agentic looping; a research agent needs all five heavily.</td></tr>
+        <tr><td class="k">3. Architecture</td><td>Draw the end-to-end flow — ingestion/retrieval, the agent loop, tool calls, memory, output — narrating it as you go rather than silently drawing then explaining after.</td></tr>
+        <tr><td class="k">4. Deep dive</td><td>The interviewer will pick one or two components to go deep on — this is where Topics 1-9's actual depth pays off. Don't over-explain everything up front; leave room to be asked.</td></tr>
+        <tr><td class="k">5. Tradeoffs</td><td>Proactively name at least one tradeoff you made and why — cost vs quality, latency vs accuracy, autonomy vs safety. This is the single most senior-signaling habit in the entire framework.</td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">The most common mistake at this stage</span>
+        <p>A common mistake is trying to solve architecture problems with more prompt engineering, or vice versa — conflating "the agent gives a bad answer" (often a prompt/retrieval problem) with "the agent's control flow is wrong" (an architecture problem). Diagnose which layer a described failure actually lives in before proposing a fix; a senior interviewer is listening specifically for that discrimination.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 DECOMPOSITION ============ -->
+  <section class="chapter" id="decomposition">
+    <div class="chapter-head"><span class="chapter-num">03</span><h2 class="chapter-title">Goal Decomposition, Precisely</h2></div>
+    <p class="chapter-dek">"How do agents break down a complex goal?" is asked constantly and answered vaguely by most candidates. Here's the precise version.</p>
+    <div class="chapter-body">
+      <p>Effective decomposition works through recursive decomposition: break the goal into subgoals, break subgoals into actionable steps, execute and adapt. The key is knowing when to stop decomposing and start acting — effective decomposition balances planning depth against action paralysis.</p>
+      <table class="tbl">
+        <tr><th>Stage</th><th>Question being answered</th></tr>
+        <tr><td class="k">Goal interpretation</td><td>What does success actually look like? What are the constraints?</td></tr>
+        <tr><td class="k">Subgoal identification</td><td>What major milestones lead to the goal? These should be verifiable states, not vague intentions.</td></tr>
+        <tr><td class="k">Action planning</td><td>For each subgoal, what concrete actions achieve it? Each action should map to an available tool.</td></tr>
+        <tr><td class="k">Dependency analysis</td><td>Which subgoals/actions depend on the outcome of others — this is exactly ReWOO's or Plan-and-Execute's planning question from Topic 1.</td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"Walk me through how an agent should decompose a complex, multi-step goal." — Name all four stages explicitly (interpretation, subgoal identification, action planning, dependency analysis), then connect it directly to Topic 1: if dependencies are unknown ahead of time, this looks like ReAct's one-step-at-a-time adaptation; if dependencies are predictable, this looks like ReWOO's or Plan-and-Execute's upfront planning. The "when to stop decomposing" question maps directly onto knowing when a subgoal is concrete enough to become a single tool call rather than needing further breakdown — over-decomposition causes action paralysis, under-decomposition causes the agent to attempt steps too large to reliably execute in one shot.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 04 WORKED EXAMPLE 1 ============ -->
+  <section class="chapter" id="worked-1">
+    <div class="chapter-head"><span class="chapter-num">04 ★</span><h2 class="chapter-title">Worked Example: Customer Support Agent with Refund Authority</h2></div>
+    <p class="chapter-dek">The full framework applied end to end — narrated the way you'd actually say it out loud.</p>
+    <div class="chapter-body">
+      <h4>Requirements</h4>
+      <p>Users are customers with support tickets; latency budget ~3-5s per turn is acceptable since this isn't a voice interface; failure tolerance is low because the agent can issue real refunds — this immediately flags Topic 6's lethal trifecta (private customer/order data, untrusted ticket text, and a real external action).</p>
+      <h4>Five primitives, scoped</h4>
+      <ul>
+        <li><strong>Agentic loop:</strong> ReAct is sufficient — each ticket is largely single-hop (look up order, decide, act), no need for Plan-and-Execute's upfront planning overhead (Topic 1).</li>
+        <li><strong>RAG:</strong> Hybrid search over the policy knowledge base (order numbers are exact-match terms — dense-only would miss them), reranked to top-5 (Topic 8).</li>
+        <li><strong>Model routing:</strong> Cascade — a cheap model classifies ticket intent first; only escalate to a frontier model for ambiguous or high-value cases (Topic 7).</li>
+        <li><strong>Guardrails:</strong> Refund tool capped at a maximum amount, human approval required above a threshold, sandboxed execution, full audit logging (Topic 6's Excessive Agency section).</li>
+        <li><strong>Evaluation:</strong> Trajectory eval specifically checking tool-call correctness (right refund amount, right order), not just "was the reply polite" (Topic 5's flat-metric trap).</li>
+      </ul>
+      <h4>Architecture</h4>
+      <p>Ticket text → intent classification (cheap model) → hybrid-search policy KB → ReAct loop with order-lookup and refund tools → interrupt_before the refund tool call if above threshold → human approval UI → resume → response to customer, all under a LangGraph checkpointer so a mid-flow crash doesn't lose ticket state (foundational bible's persistence chapter).</p>
+      <h4>Deep dive the interviewer will likely pick: "how do you prevent the refund tool from being manipulated by ticket text?"</h4>
+      <p>Name the trifecta directly: private data (order/customer info) + untrusted content (the ticket text itself, which a malicious actor could craft) + external communication (the refund is a real action) — all three legs present, so this can't be solved by detection alone (Topic 6). Mitigate architecturally: least-privilege scoping on the refund tool (capped amount, tied to the specific order only), mandatory human approval above a dollar threshold regardless of how confident the agent is, and sandboxed execution with full audit trail.</p>
+      <h4>Tradeoffs, named proactively</h4>
+      <p>The human-approval threshold trades autonomy for safety — set it too low and you've built an expensive ticket router, not an agent; set it too high and a successful injection attack has real financial impact. State the actual number you'd start with and that you'd tune it against real fraud/injection attempt data from Topic 6's red-teaming section, not guess once and leave it.</p>
+    </div>
+  </section>
+
+  <!-- ============ 05 WORKED EXAMPLE 2 ============ -->
+  <section class="chapter" id="worked-2">
+    <div class="chapter-head"><span class="chapter-num">05 ★</span><h2 class="chapter-title">Worked Example: Deep Research Agent</h2></div>
+    <p class="chapter-dek">A different shape of problem — this one leans hard on multi-agent architecture, memory, and RAG together.</p>
+    <div class="chapter-body">
+      <h4>Requirements</h4>
+      <p>Users ask broad, open-ended research questions; latency budget is generous (minutes, not seconds — users expect depth); cost budget must be justified against value, since this is inherently the highest-cost agent pattern (Topic 3's 15x token multiplier).</p>
+      <h4>Five primitives, scoped</h4>
+      <ul>
+        <li><strong>Agentic loop:</strong> Orchestrator-worker (Topic 3) — a lead agent plans and spawns parallel subagents, each with an isolated context window and a self-contained task.</li>
+        <li><strong>RAG:</strong> Agentic RAG (Topic 8's closing section) — each subagent decomposes its assigned sub-question further via Self-Ask, retrieves via hybrid search + reranking, and grades its own results CRAG-style before returning.</li>
+        <li><strong>Model routing:</strong> Strong model for the lead (planning quality matters most here), cheaper models permissible for subagents doing narrow retrieval tasks.</li>
+        <li><strong>Guardrails:</strong> Lower trifecta risk than the support agent — mostly public web content, no real-world action beyond generating a report — but still needs indirect-injection defense on retrieved web content feeding into the synthesis (Topic 6).</li>
+        <li><strong>Evaluation:</strong> LLM-as-judge rubric (factual accuracy, citation accuracy, completeness) since there's no single golden answer for open-ended research (Topic 5).</li>
+      </ul>
+      <h4>Architecture</h4>
+      <p>User query → Lead agent plans and persists strategy to memory (episodic, Topic 9) → spawns 2-10 subagents scaled to query complexity via an explicit effort-scaling rule (Topic 3's lesson from Anthropic's own research system) → each subagent does isolated agentic RAG → returns condensed findings only, not raw context (avoiding the telephone-game problem) → Lead synthesizes → CitationAgent verifies sourcing → final report.</p>
+      <h4>Deep dive the interviewer will likely pick: "how do you stop subagents from duplicating work?"</h4>
+      <p>This is directly Topic 3's documented Anthropic failure case — vague delegation ("research the semiconductor shortage") caused two subagents to redundantly investigate the same time period. The fix: explicit, self-contained task descriptions per subagent with clear boundaries, objective, output format, and tool guidance — not a vague pointer at a broad topic.</p>
+      <h4>Tradeoffs, named proactively</h4>
+      <p>Orchestrator-worker's isolation (subagents never talk to each other) trades coordination quality for parallelism and context-window scalability — name the telephone-game problem explicitly as the cost of that isolation, and that verification subagents (Topic 3) are the mitigation, not full context sharing (which would reintroduce context saturation).</p>
+    </div>
+  </section>
+
+  <!-- ============ 06 WORKED EXAMPLE 3 ============ -->
+  <section class="chapter" id="worked-3">
+    <div class="chapter-head"><span class="chapter-num">06 ★</span><h2 class="chapter-title">Worked Example: AI Coding Agent</h2></div>
+    <p class="chapter-dek">One of the most frequently asked prompts in 2026 loops specifically — and one where the "wrong" primitives are especially tempting.</p>
+    <div class="chapter-body">
+      <h4>Requirements</h4>
+      <p>Users are developers; correctness matters enormously more than in the other two examples (bad code has cascading downstream cost); the environment (a real codebase, a real filesystem, possibly a real deploy pipeline) makes this the highest-blast-radius example of the three.</p>
+      <h4>Five primitives, scoped — including the trap</h4>
+      <ul>
+        <li><strong>Agentic loop:</strong> Reflexion (Topic 1) is the standout choice here specifically because a coding agent has an unusually clean hard evaluator available — the test suite / compiler / linter — exactly the condition Reflexion needs to work well, rather than relying on an LLM judging its own code.</li>
+        <li><strong>RAG:</strong> Deliberately minimal or absent for the core loop — Topic 3's lesson that multi-agent/heavy-retrieval patterns underperform on tightly interdependent tasks applies directly here; a coding agent mostly needs direct codebase/tool access, not a document retrieval pipeline.</li>
+        <li><strong>Model routing:</strong> Frontier model throughout for the reasoning steps — correctness stakes are too high for a cascade's cheap-first-attempt risk on this task type.</li>
+        <li><strong>Guardrails:</strong> This is where sandboxing (Topic 6) is non-negotiable — any code execution happens in an isolated container, least-privilege filesystem/network access, human approval before any real deploy or destructive action (delete, force-push).</li>
+        <li><strong>Evaluation:</strong> SWE-bench-style execution-based verification (Topic 5) — does the patch pass the actual test suite, not an LLM's opinion of whether the code looks right.</li>
+      </ul>
+      <h4>The trap this prompt is specifically designed to catch</h4>
+      <p>A common mistake candidates make here: reaching for a multi-agent architecture (a "planner agent" plus a "coder agent" plus a "reviewer agent") by default because it sounds more sophisticated. Topic 3's own economics argument applies directly — coding tasks are tightly interdependent, exactly the profile multi-agent systems handle worst, and the added 15x token cost is hard to justify against a single strong agent with a tight Reflexion loop against real test feedback. The senior answer names this trap and explains why you're deliberately avoiding it, rather than defaulting to it.</p>
+      <h4>Tradeoffs, named proactively</h4>
+      <p>Reflexion's retry loop trades latency and cost (multiple attempts per task) for correctness — cap retries at a small number (3-5, per Topic 1's guidance) and escalate to a human past that point rather than looping indefinitely, tying directly into Topic 3's recursion-guard discipline even though this isn't technically a multi-agent handoff loop.</p>
+    </div>
+  </section>
+
+  <!-- ============ 07 CROSS-REFERENCE MAP ============ -->
+  <section class="chapter" id="crossref-map">
+    <div class="chapter-head"><span class="chapter-num">07</span><h2 class="chapter-title">Cross-Reference Map to Topics 1–9</h2></div>
+    <p class="chapter-dek">When a system design question surfaces a specific component, this is which document to have mentally loaded.</p>
+    <div class="chapter-body">
+      <div class="crossref"><span class="cnum">Topic 1</span><p>The agent asks "what should happen next" repeatedly and you need to justify the control-flow pattern — ReAct vs Plan-and-Execute vs Reflexion vs ToT/LATS.</p></div>
+      <div class="crossref"><span class="cnum">Topic 2</span><p>The system spans multiple independently-deployed services/frameworks and needs to talk cross-boundary — framework choice, A2A/MCP protocol design.</p></div>
+      <div class="crossref"><span class="cnum">Topic 3</span><p>More than one agent is involved — topology choice (supervisor/swarm/orchestrator-worker), state sharing, the 15x cost question.</p></div>
+      <div class="crossref"><span class="cnum">Topic 5</span><p>"How do you know it works" comes up — trajectory vs outcome eval, LLM-as-judge design and bias mitigation, benchmarks.</p></div>
+      <div class="crossref"><span class="cnum">Topic 6</span><p>The agent touches real data, real actions, or untrusted content — lethal trifecta, OWASP, sandboxing, least privilege.</p></div>
+      <div class="crossref"><span class="cnum">Topic 7</span><p>Cost, latency, or "what happens when it crashes mid-run" comes up — caching, routing, durable execution, observability.</p></div>
+      <div class="crossref"><span class="cnum">Topic 8</span><p>The agent needs to answer questions from a document/knowledge corpus — chunking, hybrid search, reranking, GraphRAG.</p></div>
+      <div class="crossref"><span class="cnum">Topic 9</span><p>The agent needs to remember something across sessions or improve over time — working/episodic/semantic/procedural memory.</p></div>
+      <div class="callout focus">
+        <span class="callout-label">Why this map matters more than any single topic</span>
+        <p>Real system design questions are never purely one topic — the three worked examples above each pulled from five or six of the previous documents simultaneously. The skill being tested is synthesis across all nine, applied to a novel scenario, not recall of any one document in isolation. Practice consciously naming which prior topic you're pulling from as you answer — it makes your reasoning legible to the interviewer.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 08 BEHAVIORAL ============ -->
+  <section class="chapter" id="behavioral">
+    <div class="chapter-head"><span class="chapter-num">08</span><h2 class="chapter-title">Behavioral Interview Prep, In Depth</h2></div>
+    <p class="chapter-dek">Behavioral rounds in AI engineering are different from standard SWE behavioral interviews — they probe specifically for ownership of AI systems, comfort with ambiguity, safety mindset, and how you keep pace with a field that changes every week.</p>
+    <div class="chapter-body">
+      <h3>The question bank, by theme</h3>
+      <table class="tbl">
+        <tr><th>Theme</th><th>Representative question</th></tr>
+        <tr><td class="k">End-to-end ownership</td><td>Walk me through an AI project you built end-to-end.</td></tr>
+        <tr><td class="k">Cost/quality judgment</td><td>Describe a time you reduced hallucinations or cost in production. (Very common in 2026.)</td></tr>
+        <tr><td class="k">Optimization under constraint</td><td>Describe a time you had to optimize an existing process or workflow for efficiency or scalability.</td></tr>
+        <tr><td class="k">Prompt/eval rigor</td><td>Describe a challenging prompt engineering problem you solved. Is there an actual eval framework behind your work, or is it vibes-based?</td></tr>
+        <tr><td class="k">Pride and depth</td><td>Tell me about a project you're most proud of, and what role you played.</td></tr>
+      </table>
+      <h3>STAR, adapted for AI-specific answers</h3>
+      <p>Standard STAR (Situation, Task, Action, Result) still applies, but AI-engineering answers need one addition every strong candidate includes: <strong>the failure mode and how you found it</strong>. "It worked" is a weak result for a probabilistic system; "it worked X% of the time, here's how I measured that, and here's what I changed when it didn't" is the answer a 2026 panel is actually listening for.</p>
+      <div class="code-wrap">
+        <div class="code-head"><span>star-ai.txt</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre>Situation: what was broken/needed, in one or two sentences
+Task: what you specifically owned (not "the team")
+Action: the actual technical decisions -- name the pattern/tool/tradeoff
+Result: the number, AND how you know it -- what eval or metric proved it
+Failure: what didn't work first, what you learned, what you'd do differently</pre>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">The "is it vibes-based" question, specifically</span>
+        <p>This exact phrasing shows up repeatedly in 2026 loops. It's a direct probe for Topic 5 discipline — have a real answer ready: what eval framework you used, what the golden set looked like, what the judge's calibration against human labels was. A candidate who has to admit "we just eyeballed outputs" on their own flagship project is a much weaker signal than one who can cite their own Spearman correlation number, however rough.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 09 PROJECT PRESENTATION ============ -->
+  <section class="chapter" id="present-project">
+    <div class="chapter-head"><span class="chapter-num">09</span><h2 class="chapter-title">The Project Presentation Format</h2></div>
+    <p class="chapter-dek">OpenAI's 45-minute and Anthropic's 25-minute-plus-discussion formats are structured presentations, not casual chats — prepare them like a talk, not an answer.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Segment</th><th>What to cover</th></tr>
+        <tr><td class="k">Problem &amp; constraints (10-15%)</td><td>What was actually broken, for whom, and under what constraints (latency, cost, safety) — set up why the design decisions that follow were necessary, not arbitrary.</td></tr>
+        <tr><td class="k">Architecture (30-35%)</td><td>The end-to-end system, narrated — this is where the five-primitives framework structures your walkthrough cleanly.</td></tr>
+        <tr><td class="k">Key decisions &amp; tradeoffs (25-30%)</td><td>Two or three decisions where you chose between real alternatives — state the alternative you didn't pick and why, this is the single highest-signal content in the whole talk.</td></tr>
+        <tr><td class="k">What broke &amp; what you learned (15-20%)</td><td>A specific failure, how you found it, what you changed — the "war story" senior interviewers are explicitly listening for.</td></tr>
+        <tr><td class="k">Results &amp; what you'd do differently (10%)</td><td>The actual measured outcome, and one honest thing you'd change with hindsight — closes the talk on judgment, not just execution.</td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">The failure mode of this format specifically</span>
+        <p>Spending the whole 25-45 minutes on architecture and running out of time before the tradeoffs and failure sections is the single most common way candidates underperform this format — those two sections are what's actually being scored most heavily. Time-box the architecture walkthrough deliberately in practice runs so it doesn't eat the rest.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 10 TAKE-HOME ============ -->
+  <section class="chapter" id="take-home">
+    <div class="chapter-head"><span class="chapter-num">10</span><h2 class="chapter-title">Take-Home Assignments</h2></div>
+    <p class="chapter-dek">Increasingly common in 2026 loops, and scored more on judgment than on raw correctness.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Common prompt type</th><th>What's actually being scored</th></tr>
+        <tr><td class="k">Build a multi-step agent (e.g. a travel-planning agent using a weather API)</td><td>Working code, trace logs of multiple runs, and a written paragraph on failure modes — the failure-modes writeup is not optional filler, it's core deliverable</td></tr>
+        <tr><td class="k">Build an eval harness from scratch given sample inputs/outputs</td><td>The harness itself, calibration against provided human labels, and a write-up on observed LLM-as-judge biases specifically — directly testing Topic 5's material</td></tr>
+      </table>
+      <p>Take-homes are commonly scored on correctness, code quality, eval rigor, and the README — and the README is frequently the most diagnostic part of the whole submission, since it's where a candidate's tradeoff thinking becomes visible independent of whether every edge case was handled perfectly.</p>
+      <div class="callout focus">
+        <span class="callout-label">The practical implication</span>
+        <p>Never submit a take-home without a README that explicitly states: what you'd do differently with more time, what failure modes you observed and didn't fully solve, and what tradeoffs you made under the time constraint. A technically weaker submission with a sharp, honest README about its own limitations reads as stronger judgment than a polished submission with no reflection at all.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 11 RED FLAGS ============ -->
+  <section class="chapter" id="redflags">
+    <div class="chapter-head"><span class="chapter-num">11</span><h2 class="chapter-title">Red Flags Interviewers Watch For</h2></div>
+    <p class="chapter-dek">Assembled directly from the failure modes named throughout this document series — this is the composite anti-pattern list.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Defaulting to multi-agent for everything.</strong> Topic 3's core lesson — proposing a multi-agent architecture without first checking whether a single well-prompted agent already clears the bar.</li>
+        <li><strong>No eval story, or "we just eyeballed it."</strong> Topic 5's central concern — the most commonly cited failure to prepare for in 2026 loops specifically.</li>
+        <li><strong>Naming a framework as universally "best."</strong> Topic 2's lesson — every framework choice is a tradeoff against specific constraints, not a popularity contest.</li>
+        <li><strong>Treating trifecta-holding systems as safe because "it's internal."</strong> Topic 6 — internal deployment doesn't remove private data, untrusted content, or external action from the risk calculus.</li>
+        <li><strong>Confusing durability with correctness.</strong> Topic 7 — a workflow that resumes perfectly after a crash can still hallucinate; conflating the two signals a gap in production experience.</li>
+        <li><strong>Reaching for GraphRAG/agentic RAG/heavy techniques before checking if a simple pipeline already works.</strong> Topic 8 — same discipline as the multi-agent point, applied to retrieval.</li>
+        <li><strong>Assuming retrieved memory is automatically honored by the model.</strong> Topic 9 — a subtle but real gap between storage-layer correctness and generation-layer behavior.</li>
+        <li><strong>No tradeoffs mentioned unprompted.</strong> The single most consistent tell across every topic in this series — senior candidates proactively name what they gave up; junior candidates only mention tradeoffs when directly asked.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 12 INTERVIEW ============ -->
+  <section class="chapter" id="interview">
+    <div class="chapter-head"><span class="chapter-num">12</span><h2 class="chapter-title">Interview Cheat-Sheet</h2></div>
+    <p class="chapter-dek">Meta-level questions about the interview process itself, plus the highest-frequency system design prompts.</p>
+    <div class="chapter-body">
+      <details class="qa"><summary>"Design an AI chatbot for customer support." Where do you start?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Clarify requirements first — what's the failure tolerance, does it take real actions (refunds, account changes) or just answer questions. Map onto the five primitives: likely ReAct-style loop, hybrid search + reranking RAG over a policy KB, a cascade for cost control, guardrails scaled to whatever real actions it can take, and trajectory-level eval. Draw the architecture, then wait for the interviewer to pick a component to go deep on rather than exhaustively explaining everything up front.</p></div>
+      </details>
+      <details class="qa"><summary>"Design GitHub Copilot" / "design an AI coding agent." What's the trap most candidates fall into?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Defaulting to a multi-agent architecture (planner + coder + reviewer) because it sounds more sophisticated, when coding tasks are exactly the tightly-interdependent task profile multi-agent systems handle worst per Topic 3's economics argument. The stronger answer is a single agent with a Reflexion-style loop against real test/compiler feedback — coding is one of the few domains with a clean, hard evaluator readily available, which is exactly Reflexion's ideal condition.</p></div>
+      </details>
+      <details class="qa"><summary>"Tell me about a project you're most proud of." What makes this answer land for an AI-specific role versus a generic SWE answer?<span class="qa-tag">behavioral</span></summary>
+        <div class="qa-body"><p>A generic SWE answer stops at "it worked, here's the impact." An AI-specific answer includes how you knew it worked — what eval, what metric, what the calibration against ground truth looked like — plus at least one specific failure mode you found and fixed, since probabilistic systems failing in interesting ways is expected, and how you diagnosed it is the actual signal being tested.</p></div>
+      </details>
+      <details class="qa"><summary>How much time should you spend on architecture versus tradeoffs/failures in a 25-45 minute project presentation?<span class="qa-tag">behavioral</span></summary>
+        <div class="qa-body"><p>Roughly a third on architecture, but closer to half the talk combined on tradeoffs and what broke — those two sections are what's actually being scored most heavily at companies using this format (OpenAI, Anthropic specifically), and running out of time before reaching them is the most common way candidates underperform. Time-box the architecture walkthrough in practice runs specifically to protect this.</p></div>
+      </details>
+      <details class="qa"><summary>What's the fastest way to convert "I don't know this specific domain" into a usable answer during a system design round?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Map the unfamiliar domain onto the five primitives (agentic loop, RAG, routing, guardrails, evaluation) you've prepared deeply regardless of domain — every agentic system design question is a recombination of the same five concerns in different proportions, so an unfamiliar prompt becomes "which of these five is load-bearing here" rather than a blank page.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ 13 CHECKLIST ============ -->
+  <section class="chapter" id="checklist">
+    <div class="chapter-head"><span class="chapter-num">13</span><h2 class="chapter-title">Master Readiness Checklist — Across All 10 Topics</h2></div>
+    <p class="chapter-dek">Go through this once, honestly, before your first real interview.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Check</th><th>Topic</th></tr>
+        <tr><td>Can you draw the ReAct loop and name three alternatives to it, with a reason to pick each?</td><td class="k">1</td></tr>
+        <tr><td>Can you defend a framework choice under pushback, and explain MCP vs A2A precisely?</td><td class="k">2</td></tr>
+        <tr><td>Can you pick a multi-agent topology for a novel scenario and justify it against the 15x cost multiplier?</td><td class="k">3</td></tr>
+        <tr><td>Do you have your own eval numbers (even rough ones) from a real project, not just textbook figures?</td><td class="k">5</td></tr>
+        <tr><td>Can you name the lethal trifecta unprompted for any agent design you're given?</td><td class="k">6</td></tr>
+        <tr><td>Can you explain when durable execution earns its complexity versus when it's overkill?</td><td class="k">7</td></tr>
+        <tr><td>Can you justify hybrid search + reranking as a default and know when to skip either?</td><td class="k">8</td></tr>
+        <tr><td>Can you name all four CoALA memory types and where each breaks in production?</td><td class="k">9</td></tr>
+        <tr><td>Have you run through all three worked examples in this document out loud, from memory?</td><td class="k">10</td></tr>
+        <tr><td>Do you have a project ready to present in both the 45-minute (OpenAI-style) and shorter conversational (Meta-style) formats?</td><td class="k">10</td></tr>
+      </table>
+      <div class="callout focus">
+        <span class="callout-label">The last thing worth saying</span>
+        <p>Every document in this series has repeated one instruction in different forms: build the thing yourself, measure it yourself, break it yourself. That's not a throwaway line — it's the actual difference between reciting these ten documents accurately and being able to defend a design under real pushback from someone who's shipped this stuff for years. The notes get you in the room prepared; only your own hands-on mistakes get you through the follow-up questions.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 14 RESOURCES ============ -->
+  <section class="chapter" id="resources">
+    <div class="chapter-head"><span class="chapter-num">14</span><h2 class="chapter-title">Resources</h2></div>
+    <p class="chapter-dek">Where to keep practicing after this series.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Practice the five-primitives framework against these exact prompts:</strong> "design ChatGPT," "design an AI code reviewer," "design GitHub Copilot," "design a document Q&amp;A system," "design a voice assistant" — they cover the large majority of real 2026 system design prompts reported across companies.</li>
+        <li><strong>Rebuild all three worked examples yourself</strong>, even as small prototypes — a support-ticket toy agent, a two-subagent research toy, a Reflexion-loop coding toy — before your first real loop.</li>
+        <li><strong>Practice the project-presentation format out loud, timed</strong>, specifically protecting time for the tradeoffs and failure sections per the timing guidance above.</li>
+      </ul>
+      <div class="callout">
+        <span class="callout-label">This closes the series</span>
+        <p>Ten documents, each built to be read on its own and to compound with the other nine. Come back to the cross-reference map in this document whenever a new, unfamiliar system design prompt shows up — it's built to route you to the right depth fast, under real interview time pressure.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">Topic 10 of 10 — System Design &amp; Behavioral Mastery. Series complete.</div>
+</main>
+</div>
+
+<script>
+const links = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('section.chapter');
+const map = new Map();
+links.forEach(l => map.set(l.getAttribute('href').slice(1), l));
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const link = map.get(entry.target.id);
+    if(!link) return;
+    if(entry.isIntersecting){
+      links.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, {rootMargin: '-15% 0px -70% 0px', threshold: 0});
+sections.forEach(s => io.observe(s));
+</script>
+</body>
+</html>

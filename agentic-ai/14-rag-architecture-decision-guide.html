@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Architecture Decision Guide — GraphRAG vs KAG vs Agentic RAG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d10; --bg-raised:#12151a; --bg-card:#14181f;
+  --line:#242a33; --line-soft:#1b2028;
+  --ink:#e7e9ec; --ink-dim:#9aa3b0; --ink-faint:#5c6672;
+  --amber:#ff9f40; --amber-dim:#c97a2e; --lime:#c9f04c; --cyan:#5fd9c9; --violet:#b592ff; --rose:#ff7a8a;
+  --serif:'Source Serif 4', Georgia, serif;
+  --display:'Space Grotesk', sans-serif;
+  --mono:'JetBrains Mono', 'Courier New', monospace;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:radial-gradient(var(--line-soft) 1px, transparent 1px);
+  background-size:22px 22px; background-color:var(--bg);
+  color:var(--ink); font-family:var(--serif); font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+a{color:var(--amber); text-decoration:none;}
+::selection{background:var(--amber); color:#111;}
+.shell{display:grid; grid-template-columns:290px 1fr; min-height:100vh;}
+@media (max-width:920px){ .shell{grid-template-columns:1fr;} .side{display:none;} }
+.side{position:sticky; top:0; height:100vh; overflow-y:auto; border-right:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(18,21,26,.9), rgba(11,13,16,.9)); padding:28px 20px 60px;}
+.side::-webkit-scrollbar{width:6px;} .side::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.brand{font-family:var(--display); font-weight:700; font-size:15px; color:var(--ink); margin-bottom:2px;}
+.brand span{color:var(--amber);}
+.brand-sub{font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-bottom:24px;}
+.back-link{display:inline-block; font-family:var(--mono); font-size:11px; color:var(--cyan); margin-bottom:20px; border:1px solid var(--line); padding:5px 10px; border-radius:6px;}
+.nav-link{display:flex; align-items:baseline; gap:7px; font-family:var(--display); font-size:12.2px; color:var(--ink-dim);
+  padding:5px 7px; border-radius:6px; border-left:2px solid transparent; transition:.15s;}
+.nav-link:hover{color:var(--ink); background:var(--bg-raised);}
+.nav-link.active{color:var(--amber); border-left-color:var(--amber); background:var(--bg-raised);}
+.nav-num{font-family:var(--mono); font-size:9.5px; color:var(--ink-faint); min-width:20px;}
+.main{max-width:920px; padding:0 44px 140px; margin:0 auto;}
+@media (max-width:700px){ .main{padding:0 20px 100px;} }
+.hero{padding:76px 0 54px; border-bottom:1px solid var(--line);}
+.hero-eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--lime);
+  margin-bottom:18px; display:flex; align-items:center; gap:10px;}
+.hero-eyebrow::before{content:''; width:22px; height:1px; background:var(--lime); display:inline-block;}
+h1.title{font-family:var(--display); font-weight:700; font-size:clamp(28px,4.6vw,48px); line-height:1.1; letter-spacing:-.02em; color:var(--ink); max-width:17ch;}
+h1.title em{font-style:normal; color:var(--amber);}
+.hero-sub{font-family:var(--serif); font-size:18px; color:var(--ink-dim); max-width:62ch; margin-top:20px;}
+.tag-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:26px;}
+.tag{font-family:var(--mono); font-size:11px; padding:5px 11px; border-radius:20px; border:1px solid var(--line); color:var(--ink-dim); background:var(--bg-raised);}
+section.chapter{padding:60px 0; border-bottom:1px solid var(--line);}
+section.chapter:last-of-type{border-bottom:none;}
+.chapter-head{display:flex; align-items:flex-start; gap:16px; margin-bottom:8px;}
+.chapter-num{font-family:var(--mono); font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:20px; padding:3px 11px; margin-top:6px; white-space:nowrap;}
+h2.chapter-title{font-family:var(--display); font-weight:600; font-size:clamp(22px,3.2vw,30px); color:var(--ink); letter-spacing:-.01em;}
+.chapter-dek{font-family:var(--serif); font-style:italic; color:var(--ink-dim); font-size:16px; max-width:66ch; margin:14px 0 30px 0; padding-left:66px;}
+@media (max-width:700px){.chapter-dek{padding-left:0;}}
+.chapter-body{padding-left:66px;}
+@media (max-width:700px){.chapter-body{padding-left:0;}}
+.chapter-body h3{font-family:var(--display); font-weight:600; font-size:19px; color:var(--ink); margin:32px 0 12px;}
+.chapter-body h4{font-family:var(--display); font-weight:600; color:var(--cyan); margin:22px 0 10px; text-transform:uppercase; letter-spacing:.04em; font-size:12px;}
+.chapter-body p{color:var(--ink-dim); margin-bottom:14px; max-width:72ch;}
+.chapter-body ul, .chapter-body ol{color:var(--ink-dim); margin:0 0 16px 20px; max-width:70ch;}
+.chapter-body li{margin-bottom:7px;}
+.chapter-body strong{color:var(--ink); font-weight:600;}
+code.inline{font-family:var(--mono); font-size:.87em; background:var(--bg-raised); color:var(--lime); padding:1px 6px; border-radius:4px; border:1px solid var(--line);}
+.callout{border-left:3px solid var(--amber); background:var(--bg-card); padding:16px 18px; border-radius:0 8px 8px 0; margin:20px 0; max-width:70ch;}
+.callout p{margin-bottom:0; color:var(--ink-dim); font-size:14.5px;}
+.callout .callout-label{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--amber); margin-bottom:6px; display:block;}
+.callout.interview{border-left-color:var(--violet);} .callout.interview .callout-label{color:var(--violet);}
+.callout.pitfall{border-left-color:var(--rose);} .callout.pitfall .callout-label{color:var(--rose);}
+.callout.paper{border-left-color:var(--cyan);} .callout.paper .callout-label{color:var(--cyan);}
+.callout.focus{border-left-color:var(--lime); background:#151b12;} .callout.focus .callout-label{color:var(--lime);}
+.code-wrap{background:#0a0c0f; border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:18px 0 24px;}
+.code-head{display:flex; align-items:center; justify-content:space-between; padding:9px 14px; border-bottom:1px solid var(--line); background:var(--bg-raised); font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+.code-dots{display:flex; gap:5px;} .code-dots span{width:8px; height:8px; border-radius:50%; background:var(--line);}
+pre{padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:12.6px; line-height:1.7; color:#d7dbe0;}
+.tbl{width:100%; border-collapse:collapse; margin:18px 0 26px; font-size:12.8px; max-width:80ch;}
+.tbl th{text-align:left; font-family:var(--mono); font-size:9.8px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-faint); padding:9px 10px; border-bottom:1px solid var(--line);}
+.tbl td{padding:9px 10px; border-bottom:1px solid var(--line-soft); color:var(--ink-dim); vertical-align:top;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl td.k{color:var(--ink); font-family:var(--mono); font-size:11.8px; white-space:nowrap;}
+.diagram{background:var(--bg-card); border:1px solid var(--line); border-radius:12px; padding:22px; margin:20px 0 26px;}
+.diagram svg{width:100%; height:auto; display:block;}
+.statgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:20px 0 26px;}
+@media (max-width:700px){.statgrid{grid-template-columns:1fr;}}
+.statcard{background:var(--bg-card); border:1px solid var(--line); border-radius:10px; padding:16px;}
+.statcard .num{font-family:var(--display); font-weight:700; font-size:22px; color:var(--amber);}
+.statcard .lbl{font-family:var(--mono); font-size:10px; color:var(--ink-faint); margin-top:4px;}
+.qa{border:1px solid var(--line); border-radius:10px; margin-bottom:10px; background:var(--bg-card); overflow:hidden;}
+.qa summary{list-style:none; cursor:pointer; padding:15px 18px; display:flex; gap:12px; align-items:flex-start; font-family:var(--display); font-size:14px; color:var(--ink); font-weight:500;}
+.qa summary::-webkit-details-marker{display:none;}
+.qa summary::before{content:'+'; font-family:var(--mono); color:var(--amber); font-size:16px; line-height:1;}
+.qa[open] summary::before{content:'–';}
+.qa .qa-body{padding:0 18px 18px 40px; color:var(--ink-dim); font-size:14px; max-width:68ch;}
+.qa .qa-body p{margin-bottom:10px;}
+.qa-tag{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; background:var(--bg-raised); color:var(--ink-faint); padding:2px 8px; border-radius:20px; border:1px solid var(--line); margin-left:auto; white-space:nowrap; flex-shrink:0;}
+.glossary-grid{display:grid; grid-template-columns:1fr 1fr; gap:2px 28px;}
+@media (max-width:700px){.glossary-grid{grid-template-columns:1fr;}}
+.gterm{padding:14px 0; border-bottom:1px solid var(--line-soft);}
+.gterm dt{font-family:var(--mono); color:var(--cyan); font-size:13px; margin-bottom:4px;}
+.gterm dd{color:var(--ink-dim); font-size:13px; line-height:1.55;}
+.footer{padding:60px 0 20px; text-align:center; color:var(--ink-faint); font-family:var(--mono); font-size:12px;}
+.pillar{background:var(--bg-card); border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin:12px 0;}
+.pillar .ptitle{font-family:var(--display); font-weight:600; color:var(--amber); font-size:15px; margin-bottom:6px;}
+.pillar p{margin-bottom:0; font-size:13.7px;}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav class="side" id="side">
+  <a class="back-link" href="#">← Topic 13: Vector DBs</a>
+  <div class="brand">RAG Architecture <span>Decision Guide</span></div>
+  <div class="brand-sub">Topic 14 of 14 — the final doc</div>
+  <a class="nav-link" href="#landscape-recap"><span class="nav-num">00</span>The Landscape, Recapped</a>
+  <a class="nav-link" href="#uncomfortable-finding"><span class="nav-num">01</span>★ GraphRAG Often Loses to Vanilla RAG</a>
+  <a class="nav-link" href="#four-levels"><span class="nav-num">02</span>★ The Four-Level Task Taxonomy</a>
+  <a class="nav-link" href="#kag"><span class="nav-num">03</span>★ KAG, Fully Explained</a>
+  <a class="nav-link" href="#graphrag-vs-kag"><span class="nav-num">04</span>GraphRAG vs KAG, Head to Head</a>
+  <a class="nav-link" href="#full-matrix"><span class="nav-num">05</span>★ The Full Architecture Matrix</a>
+  <a class="nav-link" href="#selection-pitfalls"><span class="nav-num">06</span>Architecture-Selection Pitfalls</a>
+  <a class="nav-link" href="#decision-tree"><span class="nav-num">07</span>★ The Decision Tree</a>
+  <a class="nav-link" href="#interview"><span class="nav-num">08</span>Interview Cheat-Sheet</a>
+  <a class="nav-link" href="#glossary"><span class="nav-num">09</span>Glossary</a>
+  <a class="nav-link" href="#resources"><span class="nav-num">10</span>Resources</a>
+  <a class="nav-link" href="#series-complete"><span class="nav-num">✓</span>Series Complete</a>
+</nav>
+
+<main class="main">
+  <div class="hero">
+    <div class="hero-eyebrow">Deep reference · Topic 14 of 14 · Final doc</div>
+    <h1 class="title">RAG Architecture <em>Decision Guide</em></h1>
+    <p class="hero-sub">Topic 8 taught you every RAG technique individually. This doc answers the question that actually gets asked in interviews: given a specific scenario, which architecture — and can you defend why not the "smarter-sounding" one? Includes the uncomfortable, well-documented finding that GraphRAG frequently loses to vanilla RAG, and a full deep-dive on KAG, the architecture most candidates have never heard of and most interviewers now expect you to know.</p>
+    <div class="tag-row">
+      <span class="tag">GraphRAG-Bench</span><span class="tag">KAG</span><span class="tag">OpenSPG</span>
+      <span class="tag">Logical-Form Reasoning</span><span class="tag">RAPTOR</span><span class="tag">Agentic RAG</span>
+      <span class="tag">Architecture Selection</span>
+    </div>
+  </div>
+
+  <!-- ============ 00 LANDSCAPE RECAP ============ -->
+  <section class="chapter" id="landscape-recap">
+    <div class="chapter-head"><span class="chapter-num">00</span><h2 class="chapter-title">The Landscape, Recapped</h2></div>
+    <p class="chapter-dek">Topic 8 built each of these individually. This document is about choosing between them under a real, specific scenario — the skill, not the technique list.</p>
+    <div class="chapter-body">
+      <p>Quick refresher of what Topic 8 covered in depth: naive single-pass dense retrieval, hybrid search (BM25 + dense + RRF), cross-encoder reranking, contextual retrieval and late chunking, HyDE and multi-query, Self-RAG and CRAG, GraphRAG, and RAPTOR. This document adds one more architecture (KAG) and, more importantly, builds the actual decision-making skill for choosing between all of them — which is a different, harder skill than knowing what each one does.</p>
+      <div class="callout focus">
+        <span class="callout-label">Why this document exists as its own topic</span>
+        <p>Almost every candidate who's studied RAG can define GraphRAG. Far fewer can explain when it's the wrong choice, or defend a decision <em>not</em> to use it under interviewer pushback. That specific skill — architecture selection under scrutiny, not architecture recall — is what senior RAG interviews actually probe, and it's the entire subject of this document.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 01 UNCOMFORTABLE FINDING ============ -->
+  <section class="chapter" id="uncomfortable-finding">
+    <div class="chapter-head"><span class="chapter-num">01 ★</span><h2 class="chapter-title">GraphRAG Often Loses to Vanilla RAG — Say This Directly</h2></div>
+    <p class="chapter-dek">The single most valuable, least-known fact to bring into a RAG architecture interview. Most candidates assume "more structure = better" and never question it.</p>
+    <div class="chapter-body">
+      <p>Despite its conceptual promise, recent studies report that GraphRAG frequently underperforms vanilla RAG on many real-world tasks — a finding significant enough that a dedicated 2026 benchmark, GraphRAG-Bench, was built specifically to answer "is GraphRAG really effective, and in which scenarios do graph structures provide measurable benefits?"</p>
+      <div class="callout paper">
+        <span class="callout-label">Why this happens, mechanically</span>
+        <p>Graph construction itself introduces a real failure mode: many GraphRAG pipelines build their knowledge graph using OpenIE (Open Information Extraction) — an automated process for pulling entities and relationships out of raw text — which is inherently noisy. Ambiguous entity resolution, spurious relationship extraction, and inconsistent granularity in the extracted triples all directly degrade retrieval quality, and that noise compounds through every downstream graph traversal. A flat vector index has no equivalent construction-time noise source — this is a structural, not incidental, disadvantage of naive graph-based RAG.</p>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing — the single highest-value line in this document</span>
+        <p>"Would you recommend GraphRAG for this system?" — Don't answer with GraphRAG's theoretical benefits by default. Answer: "GraphRAG frequently underperforms vanilla RAG in practice — recent benchmarking (GraphRAG-Bench, 2026) found its advantage is concentrated in specific task types, not universal. I'd want to know the task distribution first." Then walk into Section 02's taxonomy. This single response — leading with the caveat instead of the pitch — is a strong, memorable signal of real, current knowledge rather than recall of a popular technique's marketing.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 FOUR LEVELS ============ -->
+  <section class="chapter" id="four-levels">
+    <div class="chapter-head"><span class="chapter-num">02 ★</span><h2 class="chapter-title">The Four-Level Task Taxonomy</h2></div>
+    <p class="chapter-dek">GraphRAG-Bench's actual contribution — not just "GraphRAG sometimes fails," but a precise map of exactly where it wins and where it doesn't.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Level</th><th>Task type</th><th>Example</th><th>Graph structure helps?</th></tr>
+        <tr><td class="k">1</td><td>Fact retrieval</td><td>"Which region of France is Mont St. Michel located?"</td><td>Rarely — a single relevant chunk usually answers this; flat retrieval is often just as good and cheaper</td></tr>
+        <tr><td class="k">2</td><td>Complex reasoning</td><td>"How did Hinze's agreement with Felicia relate to the perception of England's rulers?"</td><td>Often yes — requires connecting multiple related entities across the corpus, exactly what graph traversal is built for</td></tr>
+        <tr><td class="k">3</td><td>Contextual summarization</td><td>Synthesize themes/patterns spanning many documents</td><td>Yes — this is GraphRAG's strongest, most defensible use case, matching Topic 8's "global questions" framing</td></tr>
+        <tr><td class="k">4</td><td>Creative generation</td><td>Generate new content informed by corpus-wide patterns</td><td>Mixed — depends heavily on implementation quality, less consistently a clear win</td></tr>
+      </table>
+      <div class="diagram">
+        <svg viewBox="0 0 700 160" xmlns="http://www.w3.org/2000/svg">
+          <line x1="40" y1="120" x2="660" y2="120" stroke="#242a33" stroke-width="1.5"/>
+          <text x="350" y="145" fill="#5c6672" font-family="JetBrains Mono" font-size="10" text-anchor="middle">task complexity / need for multi-hop synthesis →</text>
+          <circle cx="100" cy="100" r="7" fill="#5fd9c9"/><text x="100" y="80" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Fact retrieval</text>
+          <text x="100" y="60" fill="#5fd9c9" font-family="JetBrains Mono" font-size="9" text-anchor="middle">flat RAG wins</text>
+          <circle cx="300" cy="70" r="7" fill="#ff9f40"/><text x="300" y="50" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Complex reasoning</text>
+          <circle cx="480" cy="45" r="7" fill="#c9f04c"/><text x="480" y="28" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Contextual summarization</text>
+          <text x="480" y="14" fill="#c9f04c" font-family="JetBrains Mono" font-size="9" text-anchor="middle">graph's clearest win</text>
+          <circle cx="600" cy="70" r="7" fill="#b592ff"/><text x="600" y="50" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Creative generation</text>
+          <text x="600" y="98" fill="#b592ff" font-family="JetBrains Mono" font-size="9" text-anchor="middle">mixed results</text>
+        </svg>
+      </div>
+      <div class="callout">
+        <span class="callout-label">The actual takeaway to internalize</span>
+        <p>Graph structure's value is not a fixed property of GraphRAG as a technique — it's a function of task type. The correct question is never "is GraphRAG good," it's "what fraction of my query distribution is Level 2-3, versus Level 1 fact lookups a flat index already handles well." This reframing — from technique quality to task-distribution fit — is exactly the diagnostic instinct Topic 5's evaluation discipline trained you to apply everywhere else, now applied specifically to architecture choice.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 KAG ============ -->
+  <section class="chapter" id="kag">
+    <div class="chapter-head"><span class="chapter-num">03 ★</span><h2 class="chapter-title">KAG (Knowledge-Augmented Generation), Fully Explained</h2></div>
+    <p class="chapter-dek">Ant Group's logical-form-guided RAG framework — built specifically as a response to GraphRAG's noise problem, and the architecture most candidates have simply never encountered.</p>
+    <div class="chapter-body">
+      <p>KAG (arXiv:2409.13731, ACM Web Conference 2025) is a knowledge-enhanced generation framework built on Ant Group's open-source OpenSPG knowledge graph engine. Its explicit design goal: attack the noise problem that OpenIE-based approaches like GraphRAG and HippoRAG introduce, by using a schema-constrained knowledge graph with semantic alignment instead of unconstrained automated extraction.</p>
+      <h3>The three-part architecture</h3>
+      <table class="tbl">
+        <tr><th>Component</th><th>Job</th></tr>
+        <tr><td class="k">KAG-Builder</td><td>Constructs the knowledge graph — critically, against a defined schema rather than pure unconstrained OpenIE, directly reducing the entity-ambiguity and spurious-relationship noise that degrades naive GraphRAG.</td></tr>
+        <tr><td class="k">KAG-Solver</td><td>The reasoning engine — translates a natural-language question into a logical form over the schema-constrained graph, and orchestrates a hybrid reasoning process combining retrieval, KG reasoning, language reasoning, and numerical calculation as distinct operator types.</td></tr>
+        <tr><td class="k">KAG-Model</td><td>Optimizations improving the efficiency of both knowledge-graph construction and the question-answering process itself.</td></tr>
+      </table>
+      <h3>Two mechanisms worth naming precisely</h3>
+      <ul>
+        <li><strong>Mutual indexing</strong> — knowledge graph nodes and their originating source text chunks are cross-indexed, so the system can move fluidly between structured graph facts and the full original context those facts were extracted from, rather than losing that connection once extraction happens (a real information-loss problem in many GraphRAG implementations).</li>
+        <li><strong>Logical-form-guided reasoning</strong> — rather than a single embedding-similarity retrieval pass, KAG translates the question itself into a structured logical form, then executes reasoning against the graph using that form — enabling genuine multi-step logical inference (connecting facts A→B→C to answer a question none of them individually answers) rather than just retrieving topically-related passages.</li>
+      </ul>
+      <div class="diagram">
+        <svg viewBox="0 0 700 170" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="kagm" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff9f40"/></marker></defs>
+          <rect x="20" y="20" width="160" height="46" rx="7" fill="none" stroke="#5fd9c9" stroke-width="1.4"/>
+          <text x="100" y="48" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">NL question</text>
+          <line x1="180" y1="43" x2="220" y2="43" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#kagm)"/>
+          <rect x="220" y="20" width="180" height="46" rx="7" fill="none" stroke="#ff9f40" stroke-width="1.4"/>
+          <text x="310" y="42" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Translate to logical form</text>
+          <line x1="400" y1="43" x2="440" y2="43" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#kagm)"/>
+          <rect x="440" y="20" width="240" height="46" rx="7" fill="none" stroke="#c9f04c" stroke-width="1.4"/>
+          <text x="560" y="40" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Hybrid reasoning engine:</text>
+          <text x="560" y="55" fill="#9aa3b0" font-family="JetBrains Mono" font-size="9" text-anchor="middle">retrieval + KG reasoning + language reasoning + calc</text>
+          <line x1="560" y1="66" x2="560" y2="100" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#kagm)"/>
+          <rect x="440" y="100" width="240" height="46" rx="7" fill="none" stroke="#b592ff" stroke-width="1.4"/>
+          <text x="560" y="128" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Grounded, reasoned answer</text>
+        </svg>
+      </div>
+      <div class="statgrid">
+        <div class="statcard"><div class="num">+19.6%</div><div class="lbl">F1 improvement over NaiveRAG/HippoRAG on HotpotQA</div></div>
+        <div class="statcard"><div class="num">+33.5%</div><div class="lbl">F1 improvement on 2WikiMultiHopQA</div></div>
+        <div class="statcard"><div class="num">2</div><div class="lbl">real Ant Group deployments — e-government and e-health Q&amp;A</div></div>
+      </div>
+      <div class="callout pitfall">
+        <span class="callout-label">The honest cost of KAG's precision</span>
+        <p>KAG's schema-constrained graph construction is precisely what fixes GraphRAG's noise problem — and it's also KAG's biggest adoption cost. Unlike GraphRAG's largely automated, unconstrained extraction, KAG needs an explicit domain schema defined up front, which is real modeling effort a general-purpose OpenIE pipeline doesn't require. This is exactly why KAG targets professional, high-stakes domains (Ant Group's own production use is e-government and e-health) rather than general open-domain question answering — the schema investment pays off specifically where rigorous, auditable fact-grounding matters enough to justify it.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 04 GRAPHRAG VS KAG ============ -->
+  <section class="chapter" id="graphrag-vs-kag">
+    <div class="chapter-head"><span class="chapter-num">04</span><h2 class="chapter-title">GraphRAG vs KAG, Head to Head</h2></div>
+    <p class="chapter-dek">The exact comparison an interviewer is listening for if they ask about either technique by name.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th></th><th>GraphRAG</th><th>KAG</th></tr>
+        <tr><td class="k">Graph construction</td><td>Largely automated via OpenIE — fast to stand up, but inherits OpenIE's entity-ambiguity and spurious-relationship noise</td><td>Schema-constrained, semantically aligned — slower and more effort to stand up, substantially less noisy</td></tr>
+        <tr><td class="k">Reasoning style</td><td>Focuses more on retrieval and generation, with comparatively less emphasis on semantic reasoning or logical planning</td><td>Explicit logical-form-guided multi-step reasoning, combining KG reasoning, language reasoning, and numerical calculation as distinct operators</td></tr>
+        <tr><td class="k">Best domain fit</td><td>Global/thematic questions over a general-purpose or open-domain corpus (Topic 8's "global questions" framing)</td><td>Professional, high-stakes domains needing rigorous, auditable fact-grounding and multi-hop logical inference — decision-support, regulated industries</td></tr>
+        <tr><td class="k">Setup cost</td><td>Lower — closer to "point it at a corpus"</td><td>Higher — requires defining a domain schema up front</td></tr>
+        <tr><td class="k">Multi-hop QA accuracy (published)</td><td>Baseline for the comparison</td><td>+19.6% F1 (HotpotQA), +33.5% F1 (2Wiki) over NaiveRAG/HippoRAG specifically</td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"When would you pick KAG over GraphRAG?" — When the domain is professional/high-stakes enough to justify defining an explicit schema up front (e-government, healthcare, financial compliance, legal), and the query distribution genuinely needs rigorous multi-hop logical inference rather than thematic summarization. When the domain is more general-purpose, the corpus is large and heterogeneous, and standing up a rigorous schema isn't worth the effort relative to the task's stakes, GraphRAG's lighter-weight automated construction is the more practical choice — accepting its noise tradeoff as the cost of faster setup.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 05 FULL MATRIX ============ -->
+  <section class="chapter" id="full-matrix">
+    <div class="chapter-head"><span class="chapter-num">05 ★</span><h2 class="chapter-title">The Full Architecture Matrix</h2></div>
+    <p class="chapter-dek">Every RAG architecture from this series, in one table, ranked by relative cost and matched to its best-fit task type.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Architecture</th><th>Relative cost</th><th>Best-fit task</th><th>Key risk</th></tr>
+        <tr><td class="k">Naive dense RAG</td><td>Lowest</td><td>Simple fact lookup, single-hop QA on a clean, focused corpus</td><td>Misses exact-match terms, no reranking precision</td></tr>
+        <tr><td class="k">Hybrid + reranking</td><td>Low-medium</td><td>General-purpose production default — Topic 8's top recommendation</td><td>~200ms added latency; still single-hop by default</td></tr>
+        <tr><td class="k">Contextual retrieval / late chunking</td><td>Medium</td><td>Long documents, entities introduced once and referenced throughout (legal, technical docs)</td><td>LLM cost per chunk at indexing time (contextual retrieval specifically)</td></tr>
+        <tr><td class="k">Self-RAG / CRAG</td><td>Medium</td><td>Any of the above, when self-correction on weak retrieval measurably helps</td><td>Added latency from the critique/grading pass</td></tr>
+        <tr><td class="k">RAPTOR</td><td>Medium-high</td><td>Long single documents needing retrieval at variable abstraction levels</td><td>Tree-build overhead; less useful across many small independent documents</td></tr>
+        <tr><td class="k">GraphRAG</td><td>High</td><td>Level 3 contextual summarization / global questions specifically — <em>not</em> a general-purpose upgrade</td><td>OpenIE noise; frequently underperforms vanilla RAG outside its best-fit task type</td></tr>
+        <tr><td class="k">KAG</td><td>Highest setup, precise thereafter</td><td>Professional/regulated domains needing rigorous multi-hop logical inference</td><td>Requires defining a domain schema up front — real modeling effort</td></tr>
+        <tr><td class="k">Agentic RAG</td><td>Highest, variable</td><td>Multi-hop questions where the retrieval strategy can only be determined after seeing intermediate results</td><td>Cost/latency, per Topic 1's decision framework — justify against a fixed-pipeline baseline first</td></tr>
+      </table>
+      <div class="callout focus">
+        <span class="callout-label">The one-sentence version of this whole document</span>
+        <p>Cost and architectural sophistication increase roughly top-to-bottom in this table — and accuracy does <em>not</em> increase monotonically alongside them. Matching the row to your actual task distribution, not defaulting to the most sophisticated-sounding row, is the entire skill this document is teaching.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 06 SELECTION PITFALLS ============ -->
+  <section class="chapter" id="selection-pitfalls">
+    <div class="chapter-head"><span class="chapter-num">06</span><h2 class="chapter-title">Architecture-Selection Pitfalls</h2></div>
+    <p class="chapter-dek">Distinct from Topic 8's implementation pitfalls — these are mistakes in choosing between architectures, not in building any one of them correctly.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Assuming "more sophisticated" means "more accurate."</strong> The core finding of this entire document — GraphRAG-Bench found GraphRAG frequently underperforms vanilla RAG specifically because task-architecture mismatch is common, not because graphs are bad.</li>
+        <li><strong>Skipping the naive baseline entirely.</strong> Same discipline as Topic 3's multi-agent economics argument and Topic 1's pattern-selection framework — measure a simple hybrid-search-plus-rerank baseline before reaching for GraphRAG, KAG, or Agentic RAG, so any added complexity has to earn its keep against a real number.</li>
+        <li><strong>Choosing GraphRAG without checking the actual query distribution.</strong> If most real queries are Level 1 fact retrieval, graph structure is mostly wasted cost — profile the query distribution (exactly Topic 5's evaluation discipline) before committing to an architecture.</li>
+        <li><strong>Underestimating OpenIE noise in automated graph construction.</strong> A GraphRAG pipeline's accuracy ceiling is bounded by the quality of its automated entity/relationship extraction — this is a structural property, not a tuning problem you can fully engineer around without moving toward KAG's schema-constrained approach.</li>
+        <li><strong>Choosing KAG for a domain that doesn't justify the schema investment.</strong> KAG's precision comes directly from upfront schema definition — applying it to a broad, heterogeneous, low-stakes corpus spends real modeling effort for a gain the task doesn't need.</li>
+        <li><strong>Treating architecture choice as permanent.</strong> Query distributions and corpora both drift over time (the same lesson as Topic 5's closed-loop eval argument) — an architecture that was right at launch can become the wrong choice as usage patterns shift, and re-evaluating periodically is part of the job, not a one-time decision.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 07 DECISION TREE ============ -->
+  <section class="chapter" id="decision-tree">
+    <div class="chapter-head"><span class="chapter-num">07 ★</span><h2 class="chapter-title">The Decision Tree</h2></div>
+    <p class="chapter-dek">Walk this out loud in an interview, in order — it's built to route to the full architecture matrix above.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Question</th><th>If yes →</th></tr>
+        <tr><td>Does a hybrid-search-plus-reranking baseline already clear your accuracy bar on a real eval set?</td><td>Stop — ship it. Nothing below this line is justified yet.</td></tr>
+        <tr><td>Are failures concentrated on long documents with entities introduced once, referenced throughout?</td><td>Contextual retrieval or late chunking (Topic 8)</td></tr>
+        <tr><td>Are failures concentrated on global/thematic "summarize across the whole corpus" questions specifically (Level 3)?</td><td>GraphRAG — its best-documented, most defensible use case</td></tr>
+        <tr><td>Is the domain professional/regulated, and do failures involve multi-hop logical inference needing rigorous, auditable grounding?</td><td>KAG — worth the schema investment here specifically</td></tr>
+        <tr><td>Does the right retrieval strategy depend on information only available after seeing intermediate results?</td><td>Agentic RAG (Topic 1's decision framework applies directly)</td></tr>
+        <tr><td>None of the above — failures are diffuse or unclear</td><td>Don't guess an architecture — go back to Topic 5, build a proper eval set, and find out exactly where the failures cluster before choosing anything from this list</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 08 INTERVIEW ============ -->
+  <section class="chapter" id="interview">
+    <div class="chapter-head"><span class="chapter-num">08</span><h2 class="chapter-title">Interview Cheat-Sheet</h2></div>
+    <p class="chapter-dek">Grouped by depth — this section is deliberately weighted toward defending a decision under pushback, since that's the actual skill this document teaches.</p>
+    <div class="chapter-body">
+      <details class="qa"><summary>"Wouldn't GraphRAG obviously give better answers since it understands relationships?" How do you respond to this pushback?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>Not necessarily — GraphRAG-Bench, a 2026 benchmark built specifically to test this assumption, found GraphRAG frequently underperforms vanilla RAG on real-world tasks. The advantage is concentrated in specific task types (complex multi-hop reasoning and corpus-wide contextual summarization) and doesn't reliably hold for simpler fact-retrieval queries, which most production query distributions are dominated by. The right move is checking the actual task distribution against GraphRAG-Bench's four-level taxonomy before assuming the "understands relationships" pitch translates into measured accuracy gains.</p></div>
+      </details>
+      <details class="qa"><summary>Explain KAG's core mechanism and what specific problem it was built to solve.<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>KAG was built specifically to fix the noise problem in OpenIE-based graph construction that affects GraphRAG and similar approaches — automated entity/relationship extraction from raw text is inherently noisy (ambiguous entities, spurious relationships). KAG uses a schema-constrained knowledge graph with semantic alignment instead, plus logical-form-guided reasoning: the question itself gets translated into a structured logical form, and a hybrid reasoning engine (retrieval, KG reasoning, language reasoning, numerical calculation as distinct operators) executes genuine multi-step inference against the graph, rather than relying on embedding-similarity retrieval alone.</p></div>
+      </details>
+      <details class="qa"><summary>What's the actual mechanism by which OpenIE-based graph construction hurts retrieval quality?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>OpenIE automatically extracts entities and relationships from raw text with no schema constraining what's valid — this produces ambiguous entity resolution (is "Apple" the company or the fruit in this context), spurious or overly generic relationship extraction, and inconsistent granularity across extracted triples. This noise doesn't stay contained — it compounds through every downstream graph traversal that touches a noisy node or edge, degrading retrieval quality in ways a flat vector index, which has no equivalent construction-time extraction step, doesn't suffer from.</p></div>
+      </details>
+      <details class="qa"><summary>Design the RAG architecture for a healthcare decision-support system requiring auditable, rigorous fact-grounding across multi-hop clinical reasoning.<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>This is close to a textbook KAG use case — professional, regulated domain, genuine need for multi-hop logical inference, and auditability requirements that favor KAG's explicit logical-form reasoning over black-box embedding similarity. Justify the upfront schema-definition cost against the domain's stakes (this is exactly the kind of domain, like Ant Group's own e-health deployment, KAG was built for) rather than defaulting to GraphRAG's faster but noisier automated construction, given the accuracy and auditability requirements at hand.</p></div>
+      </details>
+      <details class="qa"><summary>Design the RAG architecture for an internal company wiki search tool, mostly single-topic articles, occasional cross-referencing.<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Start with hybrid search plus reranking as the baseline — most wiki queries are Level 1 fact retrieval, exactly where flat retrieval already performs well per GraphRAG-Bench's taxonomy, and graph construction overhead isn't justified by the task profile. Only escalate toward GraphRAG if evaluation specifically surfaces a meaningful fraction of Level 3 "summarize across many articles" queries in real usage — don't build graph infrastructure preemptively for a query type that may not actually be common in this corpus.</p></div>
+      </details>
+      <details class="qa"><summary>How would you communicate to a non-technical stakeholder why you're not using the "more advanced" GraphRAG for their project?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Frame it around evidence, not opinion: recent research specifically built to test this question found GraphRAG often performs worse than simpler retrieval on typical queries, with its real advantage concentrated in a narrow set of complex, corpus-wide summarization questions. Offer to measure the actual query distribution against a simpler baseline first — if the numbers show a real gap on the tasks that matter to them, escalating to GraphRAG becomes an evidence-backed decision instead of a default; if not, the simpler system is genuinely the better choice, not a shortcut.</p></div>
+      </details>
+      <details class="qa"><summary>You've measured your query distribution and it's roughly 70% fact lookup, 30% complex multi-hop reasoning. What architecture do you recommend?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>A hybrid architecture rather than a single global choice: route via query classification (similar to Topic 8's Adaptive RAG pattern) — simple fact-lookup queries go through the cheap hybrid-search-plus-rerank pipeline, while queries classified as complex/multi-hop route to GraphRAG or an agentic RAG loop depending on whether the multi-hop structure is more thematic (favoring GraphRAG) or genuinely dependent on intermediate results (favoring an agentic approach). Paying the graph/agentic cost only on the 30% that needs it, rather than applying it universally, is both cheaper and avoids GraphRAG's demonstrated weakness on the 70% fact-lookup majority.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ 09 GLOSSARY ============ -->
+  <section class="chapter" id="glossary">
+    <div class="chapter-head"><span class="chapter-num">09</span><h2 class="chapter-title">Glossary</h2></div>
+    <p class="chapter-dek">Terms new to this document (see Topic 8 for the broader RAG glossary).</p>
+    <div class="chapter-body">
+      <dl class="glossary-grid">
+        <div class="gterm"><dt>GraphRAG-Bench</dt><dd>2026 benchmark (ICLR'26) specifically testing when graph structures measurably help RAG, across a four-level task taxonomy.</dd></div>
+        <div class="gterm"><dt>Four-level task taxonomy</dt><dd>Fact retrieval, complex reasoning, contextual summarization, creative generation — GraphRAG-Bench's framework for where graph structure helps.</dd></div>
+        <div class="gterm"><dt>OpenIE</dt><dd>Open Information Extraction — automated, schema-free entity/relationship extraction; the noise source in naive GraphRAG construction.</dd></div>
+        <div class="gterm"><dt>KAG</dt><dd>Knowledge-Augmented Generation — Ant Group's schema-constrained, logical-form-guided RAG framework built on OpenSPG.</dd></div>
+        <div class="gterm"><dt>OpenSPG</dt><dd>The open-source knowledge graph engine KAG is built on.</dd></div>
+        <div class="gterm"><dt>KAG-Builder / Solver / Model</dt><dd>KAG's three components: schema-constrained graph construction, logical-form reasoning engine, and efficiency optimizations respectively.</dd></div>
+        <div class="gterm"><dt>Mutual indexing</dt><dd>KAG's cross-indexing between knowledge graph nodes and their originating source text chunks.</dd></div>
+        <div class="gterm"><dt>Logical-form-guided reasoning</dt><dd>Translating a natural-language question into a structured logical form before executing graph reasoning against it.</dd></div>
+        <div class="gterm"><dt>Hybrid reasoning engine (KAG)</dt><dd>Orchestration across four operator types: retrieval, KG reasoning, language reasoning, numerical calculation.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ 10 RESOURCES ============ -->
+  <section class="chapter" id="resources">
+    <div class="chapter-head"><span class="chapter-num">10</span><h2 class="chapter-title">Resources</h2></div>
+    <p class="chapter-dek">Primary sources worth reading directly.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Xiang et al. — "When to use Graphs in RAG: A Comprehensive Analysis for Graph Retrieval-Augmented Generation"</strong> (arXiv:2506.05690, ICLR'26) — the GraphRAG-Bench paper, the single most important source in this document</li>
+        <li><strong>Liang et al. — "KAG: Boosting LLMs in Professional Domains via Knowledge Augmented Generation"</strong> (arXiv:2409.13731, ACM Web Conf 2025)</li>
+        <li><strong>OpenSPG/KAG GitHub repository</strong> — github.com/OpenSPG/KAG, the reference implementation</li>
+        <li><strong>GraphRAG-Bench repository</strong> — github.com/GraphRAG-Bench/GraphRAG-Benchmark, for hands-on benchmark exploration</li>
+      </ul>
+      <div class="callout">
+        <span class="callout-label">How to actually get interview-ready on this topic</span>
+        <p>Take a RAG system you've built (even from Topic 8's exercises), classify a sample of real or synthetic queries against GraphRAG-Bench's four-level taxonomy, and see what the actual distribution looks like. Having your own answer to "what fraction of my queries would even benefit from a graph" is worth more than any amount of reciting this document's tables.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SERIES COMPLETE ============ -->
+  <section class="chapter" id="series-complete">
+    <div class="chapter-head"><span class="chapter-num">✓</span><h2 class="chapter-title">Series Complete — 14 Documents</h2></div>
+    <p class="chapter-dek">The full reference library, assembled.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Doc</th><th>Topic</th></tr>
+        <tr><td class="k">0</td><td>The Agentic Engineer's Bible — ReAct, LangGraph, checkpointing, human-in-the-loop, time travel</td></tr>
+        <tr><td class="k">1</td><td>Agent Reasoning Patterns Beyond ReAct</td></tr>
+        <tr><td class="k">2</td><td>Framework Landscape &amp; A2A Interop (LangGraph ↔ Google ADK)</td></tr>
+        <tr><td class="k">3</td><td>Multi-Agent Architectures</td></tr>
+        <tr><td class="k">5</td><td>Agent Evaluation, Fully Mapped</td></tr>
+        <tr><td class="k">6</td><td>Agent Security &amp; Guardrails</td></tr>
+        <tr><td class="k">7</td><td>Production System Design for AI Agents</td></tr>
+        <tr><td class="k">8</td><td>RAG, One Level Deeper</td></tr>
+        <tr><td class="k">9</td><td>Memory Architectures for AI Agents</td></tr>
+        <tr><td class="k">10</td><td>System Design &amp; Behavioral Mastery</td></tr>
+        <tr><td class="k">11</td><td>LLM Fundamentals, From the Ground Up</td></tr>
+        <tr><td class="k">12</td><td>Tool Calling, Structured Outputs &amp; Pydantic AI</td></tr>
+        <tr><td class="k">13</td><td>Vector Databases &amp; Context Engineering</td></tr>
+        <tr><td class="k">14</td><td>RAG Architecture Decision Guide (this document)</td></tr>
+      </table>
+      <div class="callout focus">
+        <span class="callout-label">The thing worth remembering above every individual fact in this series</span>
+        <p>Nearly every document in this series converges on the same underlying discipline, applied to a different layer: measure before you build, question the sophisticated-sounding default, name the tradeoff you're making explicitly, and never let a technique's reputation substitute for your own numbers on your own data. That instinct — not any individual algorithm name — is what fourteen documents of depth were actually building toward.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">Topic 14 of 14 — RAG Architecture Decision Guide. Series complete.</div>
+</main>
+</div>
+
+<script>
+const links = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('section.chapter');
+const map = new Map();
+links.forEach(l => map.set(l.getAttribute('href').slice(1), l));
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const link = map.get(entry.target.id);
+    if(!link) return;
+    if(entry.isIntersecting){
+      links.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, {rootMargin: '-15% 0px -70% 0px', threshold: 0});
+sections.forEach(s => io.observe(s));
+</script>
+</body>
+</html>

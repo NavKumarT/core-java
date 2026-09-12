@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Classical ML Fundamentals for AI Engineering Interviews</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d10; --bg-raised:#12151a; --bg-card:#14181f;
+  --line:#242a33; --line-soft:#1b2028;
+  --ink:#e7e9ec; --ink-dim:#9aa3b0; --ink-faint:#5c6672;
+  --amber:#ff9f40; --amber-dim:#c97a2e; --lime:#c9f04c; --cyan:#5fd9c9; --violet:#b592ff; --rose:#ff7a8a;
+  --serif:'Source Serif 4', Georgia, serif;
+  --display:'Space Grotesk', sans-serif;
+  --mono:'JetBrains Mono', 'Courier New', monospace;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:radial-gradient(var(--line-soft) 1px, transparent 1px);
+  background-size:22px 22px; background-color:var(--bg);
+  color:var(--ink); font-family:var(--serif); font-size:16px; line-height:1.68; -webkit-font-smoothing:antialiased;
+}
+a{color:var(--amber); text-decoration:none;}
+::selection{background:var(--amber); color:#111;}
+.shell{display:grid; grid-template-columns:290px 1fr; min-height:100vh;}
+@media (max-width:920px){ .shell{grid-template-columns:1fr;} .side{display:none;} }
+.side{position:sticky; top:0; height:100vh; overflow-y:auto; border-right:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(18,21,26,.9), rgba(11,13,16,.9)); padding:28px 20px 60px;}
+.side::-webkit-scrollbar{width:6px;} .side::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.brand{font-family:var(--display); font-weight:700; font-size:15px; color:var(--ink); margin-bottom:2px;}
+.brand span{color:var(--amber);}
+.brand-sub{font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-bottom:24px;}
+.back-link{display:inline-block; font-family:var(--mono); font-size:11px; color:var(--cyan); margin-bottom:20px; border:1px solid var(--line); padding:5px 10px; border-radius:6px;}
+.nav-link{display:flex; align-items:baseline; gap:7px; font-family:var(--display); font-size:12.2px; color:var(--ink-dim);
+  padding:5px 7px; border-radius:6px; border-left:2px solid transparent; transition:.15s;}
+.nav-link:hover{color:var(--ink); background:var(--bg-raised);}
+.nav-link.active{color:var(--amber); border-left-color:var(--amber); background:var(--bg-raised);}
+.nav-num{font-family:var(--mono); font-size:9.5px; color:var(--ink-faint); min-width:20px;}
+.main{max-width:920px; padding:0 44px 140px; margin:0 auto;}
+@media (max-width:700px){ .main{padding:0 20px 100px;} }
+.hero{padding:76px 0 54px; border-bottom:1px solid var(--line);}
+.hero-eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--lime);
+  margin-bottom:18px; display:flex; align-items:center; gap:10px;}
+.hero-eyebrow::before{content:''; width:22px; height:1px; background:var(--lime); display:inline-block;}
+h1.title{font-family:var(--display); font-weight:700; font-size:clamp(28px,4.6vw,48px); line-height:1.1; letter-spacing:-.02em; color:var(--ink); max-width:17ch;}
+h1.title em{font-style:normal; color:var(--amber);}
+.hero-sub{font-family:var(--serif); font-size:18px; color:var(--ink-dim); max-width:62ch; margin-top:20px;}
+.tag-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:26px;}
+.tag{font-family:var(--mono); font-size:11px; padding:5px 11px; border-radius:20px; border:1px solid var(--line); color:var(--ink-dim); background:var(--bg-raised);}
+section.chapter{padding:60px 0; border-bottom:1px solid var(--line);}
+section.chapter:last-of-type{border-bottom:none;}
+.chapter-head{display:flex; align-items:flex-start; gap:16px; margin-bottom:8px;}
+.chapter-num{font-family:var(--mono); font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:20px; padding:3px 11px; margin-top:6px; white-space:nowrap;}
+h2.chapter-title{font-family:var(--display); font-weight:600; font-size:clamp(22px,3.2vw,30px); color:var(--ink); letter-spacing:-.01em;}
+.chapter-dek{font-family:var(--serif); font-style:italic; color:var(--ink-dim); font-size:16px; max-width:66ch; margin:14px 0 30px 0; padding-left:66px;}
+@media (max-width:700px){.chapter-dek{padding-left:0;}}
+.chapter-body{padding-left:66px;}
+@media (max-width:700px){.chapter-body{padding-left:0;}}
+.chapter-body h3{font-family:var(--display); font-weight:600; font-size:19px; color:var(--ink); margin:32px 0 12px;}
+.chapter-body h4{font-family:var(--display); font-weight:600; color:var(--cyan); margin:22px 0 10px; text-transform:uppercase; letter-spacing:.04em; font-size:12px;}
+.chapter-body p{color:var(--ink-dim); margin-bottom:14px; max-width:72ch;}
+.chapter-body ul, .chapter-body ol{color:var(--ink-dim); margin:0 0 16px 20px; max-width:70ch;}
+.chapter-body li{margin-bottom:7px;}
+.chapter-body strong{color:var(--ink); font-weight:600;}
+code.inline{font-family:var(--mono); font-size:.87em; background:var(--bg-raised); color:var(--lime); padding:1px 6px; border-radius:4px; border:1px solid var(--line);}
+.callout{border-left:3px solid var(--amber); background:var(--bg-card); padding:16px 18px; border-radius:0 8px 8px 0; margin:20px 0; max-width:70ch;}
+.callout p{margin-bottom:0; color:var(--ink-dim); font-size:14.5px;}
+.callout .callout-label{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--amber); margin-bottom:6px; display:block;}
+.callout.interview{border-left-color:var(--violet);} .callout.interview .callout-label{color:var(--violet);}
+.callout.pitfall{border-left-color:var(--rose);} .callout.pitfall .callout-label{color:var(--rose);}
+.callout.analogy{border-left-color:var(--lime); background:#151b12;} .callout.analogy .callout-label{color:var(--lime);}
+.callout.check{border-left-color:var(--cyan);} .callout.check .callout-label{color:var(--cyan);}
+.code-wrap{background:#0a0c0f; border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:18px 0 24px;}
+.code-head{display:flex; align-items:center; justify-content:space-between; padding:9px 14px; border-bottom:1px solid var(--line); background:var(--bg-raised); font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+.code-dots{display:flex; gap:5px;} .code-dots span{width:8px; height:8px; border-radius:50%; background:var(--line);}
+pre{padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:12.6px; line-height:1.75; color:#d7dbe0;}
+.tok-kw{color:var(--violet);} .tok-str{color:var(--lime);} .tok-com{color:var(--ink-faint); font-style:italic;} .tok-fn{color:var(--cyan);} .tok-num{color:var(--amber);}
+.tbl{width:100%; border-collapse:collapse; margin:18px 0 26px; font-size:13.2px; max-width:78ch;}
+.tbl th{text-align:left; font-family:var(--mono); font-size:10.2px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); padding:10px 12px; border-bottom:1px solid var(--line);}
+.tbl td{padding:11px 12px; border-bottom:1px solid var(--line-soft); color:var(--ink-dim); vertical-align:top;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl td.k{color:var(--ink); font-family:var(--mono); font-size:12.2px; white-space:nowrap;}
+.diagram{background:var(--bg-card); border:1px solid var(--line); border-radius:12px; padding:22px; margin:20px 0 26px;}
+.diagram svg{width:100%; height:auto; display:block;}
+.qa{border:1px solid var(--line); border-radius:10px; margin-bottom:10px; background:var(--bg-card); overflow:hidden;}
+.qa summary{list-style:none; cursor:pointer; padding:15px 18px; display:flex; gap:12px; align-items:flex-start; font-family:var(--display); font-size:14px; color:var(--ink); font-weight:500;}
+.qa summary::-webkit-details-marker{display:none;}
+.qa summary::before{content:'+'; font-family:var(--mono); color:var(--amber); font-size:16px; line-height:1;}
+.qa[open] summary::before{content:'–';}
+.qa .qa-body{padding:0 18px 18px 40px; color:var(--ink-dim); font-size:14px; max-width:68ch;}
+.qa .qa-body p{margin-bottom:10px;}
+.qa-tag{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; background:var(--bg-raised); color:var(--ink-faint); padding:2px 8px; border-radius:20px; border:1px solid var(--line); margin-left:auto; white-space:nowrap; flex-shrink:0;}
+.glossary-grid{display:grid; grid-template-columns:1fr 1fr; gap:2px 28px;}
+@media (max-width:700px){.glossary-grid{grid-template-columns:1fr;}}
+.gterm{padding:14px 0; border-bottom:1px solid var(--line-soft);}
+.gterm dt{font-family:var(--mono); color:var(--cyan); font-size:13px; margin-bottom:4px;}
+.gterm dd{color:var(--ink-dim); font-size:13px; line-height:1.55;}
+.footer{padding:60px 0 20px; text-align:center; color:var(--ink-faint); font-family:var(--mono); font-size:12px;}
+.company{background:var(--bg-card); border:1px solid var(--line); border-radius:8px; padding:10px 16px; margin:6px 0; display:flex; gap:14px; align-items:baseline;}
+.company .cname{font-family:var(--mono); color:var(--amber); font-size:12px; min-width:80px;}
+.company p{margin:0; font-size:13.4px; color:var(--ink-dim);}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav class="side" id="side">
+  <a class="back-link" href="#">← Doc 16: Model Serving</a>
+  <div class="brand">Classical ML <span>Fundamentals</span></div>
+  <div class="brand-sub">Doc 17 — final gap, plugged</div>
+  <a class="nav-link" href="#why-still-asked"><span class="nav-num">00</span>Why This Still Gets Asked in 2026</a>
+  <a class="nav-link" href="#bias-variance"><span class="nav-num">01</span>★ Bias-Variance Tradeoff, Built Up Slowly</a>
+  <a class="nav-link" href="#overfitting"><span class="nav-num">02</span>Overfitting, Underfitting &amp; Regularization</a>
+  <a class="nav-link" href="#metrics"><span class="nav-num">03</span>★ Evaluation Metrics, Precisely</a>
+  <a class="nav-link" href="#gradient-descent"><span class="nav-num">04</span>Gradient Descent &amp; Optimizers</a>
+  <a class="nav-link" href="#cross-validation"><span class="nav-num">05</span>Cross-Validation &amp; Data Leakage</a>
+  <a class="nav-link" href="#imbalance"><span class="nav-num">06</span>Class Imbalance</a>
+  <a class="nav-link" href="#ensembles"><span class="nav-num">07</span>Bagging vs Boosting</a>
+  <a class="nav-link" href="#curse"><span class="nav-num">08</span>The Curse of Dimensionality</a>
+  <a class="nav-link" href="#production-ml"><span class="nav-num">09</span>★ Production ML: Drift &amp; Debugging</a>
+  <a class="nav-link" href="#company-patterns"><span class="nav-num">10</span>Real Company Question Patterns</a>
+  <a class="nav-link" href="#interview"><span class="nav-num">11</span>Interview Cheat-Sheet</a>
+  <a class="nav-link" href="#glossary"><span class="nav-num">12</span>Glossary</a>
+  <a class="nav-link" href="#resources"><span class="nav-num">13</span>Resources</a>
+</nav>
+
+<main class="main">
+  <div class="hero">
+    <div class="hero-eyebrow">Deep reference · Doc 17 · Final gap-plugging doc</div>
+    <h1 class="title">Classical ML Fundamentals <em>for AI Engineering Interviews</em></h1>
+    <p class="hero-sub">LLMs didn't remove classical ML from interviews. The bias-variance tradeoff, precision/recall, gradient descent, and "debug a model quietly degrading in production" still show up across nearly every AI/ML engineering loop in 2026 — including at OpenAI, Anthropic, Google, and Meta. Not a full ML course — just the specific concepts that get tested, built with the same patient, ground-up approach as Topic 11.</p>
+    <div class="tag-row">
+      <span class="tag">Bias-Variance</span><span class="tag">Precision / Recall / F1</span><span class="tag">ROC-AUC vs PR-AUC</span>
+      <span class="tag">Gradient Descent</span><span class="tag">Cross-Validation</span><span class="tag">Class Imbalance</span>
+      <span class="tag">Bagging vs Boosting</span><span class="tag">Model Drift</span>
+    </div>
+  </div>
+
+  <!-- ============ 00 WHY STILL ASKED ============ -->
+  <section class="chapter" id="why-still-asked">
+    <div class="chapter-head"><span class="chapter-num">00</span><h2 class="chapter-title">Why This Still Gets Asked in 2026</h2></div>
+    <p class="chapter-dek">A quick reality check before diving in — this isn't legacy content, it's actively tested.</p>
+    <div class="chapter-body">
+      <p>Many production problems are still classification, ranking, regression, forecasting, retrieval, anomaly detection, or recommendation problems — LLMs sit on top of this foundation, they don't replace it. Strong interview loops may still test bias-variance, gradient boosting, class imbalance, calibration, experimentation, and data leakage, even for roles titled around agents, RAG, or LLM engineering specifically. Real, named examples worth knowing: OpenAI asks candidates to explain gradient descent; Google asks linear vs. logistic regression; Pinterest asks about overfitting; Meta has asked candidates to design an evaluation framework for ads ranking.</p>
+      <div class="callout focus">
+        <span class="callout-label">The failure mode this document exists to prevent</span>
+        <p>Candidates study RAG, agents, embeddings, prompting, and fine-tuning (exactly Docs 1-16 of this series), but forget that strong interview loops may still test bias-variance, gradient boosting, class imbalance, calibration, and data leakage. This document is the deliberate counterweight — the classical-ML floor underneath everything else in this series.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 01 BIAS VARIANCE ============ -->
+  <section class="chapter" id="bias-variance">
+    <div class="chapter-head"><span class="chapter-num">01 ★</span><h2 class="chapter-title">Bias-Variance Tradeoff, Built Up Slowly</h2></div>
+    <p class="chapter-dek">The single most-asked concept on this entire list. Every source consulted for this document flags it. Get the full decomposition, not just the one-liner.</p>
+    <div class="chapter-body">
+      <p>Imagine training the same type of model many times, each time on a slightly different random sample of training data drawn from the same underlying population. A model's total prediction error on new data decomposes into three distinct sources: <strong>bias</strong> — error from the model being too simple to capture the real underlying pattern, causing it to systematically miss in the same direction regardless of which training sample it saw; <strong>variance</strong> — error from the model being so flexible that it fits the noise specific to whichever training sample it happened to see, so its predictions swing wildly from one training run to the next; and <strong>irreducible error</strong> — noise inherent to the problem itself that no model can eliminate.</p>
+      <table class="tbl">
+        <tr><th></th><th>High bias (underfitting)</th><th>High variance (overfitting)</th></tr>
+        <tr><td class="k">Training performance</td><td>Poor — the model is too simple to even fit the training data well</td><td>Excellent — the model has essentially memorized the training data</td></tr>
+        <tr><td class="k">Validation performance</td><td>Poor — same systematic error persists on new data</td><td>Poor — patterns learned don't generalize beyond the specific training sample</td></tr>
+        <tr><td class="k">Classic example</td><td>Linear regression fit to genuinely non-linear data</td><td>A deep, fully-grown, unpruned decision tree</td></tr>
+        <tr><td class="k">Fix direction</td><td>Increase model capacity, add features, reduce regularization</td><td>Decrease model capacity, add regularization, get more training data</td></tr>
+      </table>
+      <div class="callout analogy">
+        <span class="callout-label">A concrete way to hold both terms in your head at once</span>
+        <p>Think of firing arrows at a target across several separate attempts. High bias is arrows clustered tightly together but consistently off-center — precise but wrong, every time, in the same direction. High variance is arrows scattered widely around the bullseye — the average position might be roughly correct, but any individual shot is unpredictable. The goal isn't zero bias or zero variance in isolation — it's minimizing their sum, because pushing one down usually pushes the other up.</p>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"Explain the bias-variance tradeoff." — Give a precise definition first, then a concrete example — interviewers are checking whether you actually understand the concept or have just memorized the term. Define both terms, explain that total error decomposes into bias, variance, and irreducible error, then give one high-bias example (linear regression on non-linear data) and one high-variance example (a deep, unpruned decision tree) to show you can apply the concept, not just recite it.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 OVERFITTING ============ -->
+  <section class="chapter" id="overfitting">
+    <div class="chapter-head"><span class="chapter-num">02</span><h2 class="chapter-title">Overfitting, Underfitting &amp; Regularization</h2></div>
+    <p class="chapter-dek">The practical, symptom-and-fix version of Section 01 — how you'd actually diagnose and treat this in a real training run.</p>
+    <div class="chapter-body">
+      <p>Overfitting is when your model memorizes training data instead of learning patterns that generalize — you spot it when training loss keeps dropping while validation loss climbs or plateaus. Diagnose the signal first before applying any solution: an underfitting model needs more capacity or less regularization; an overfitting model needs the opposite. Applying the wrong fix (e.g., adding regularization to an already-underfitting model) makes things worse, not better.</p>
+      <table class="tbl">
+        <tr><th>Technique</th><th>Mechanism</th></tr>
+        <tr><td class="k">L1 (Lasso) regularization</td><td>Adds a penalty proportional to the sum of absolute weight values — tends to produce sparse models by driving some weights to exactly zero, effectively performing feature selection as a side effect</td></tr>
+        <tr><td class="k">L2 (Ridge) regularization</td><td>Adds a penalty proportional to the sum of squared weight values — shrinks all coefficients more evenly toward zero without necessarily eliminating any</td></tr>
+        <tr><td class="k">Dropout</td><td>Randomly deactivates a fraction of neurons during each training step, preventing the network from over-relying on any single pathway — analogous in spirit to bagging's "train on different subsets" idea, but applied inside a single network</td></tr>
+        <tr><td class="k">Early stopping</td><td>Halt training once validation loss stops improving, even if training loss would keep dropping further — a simple, cheap, and effective regularizer</td></tr>
+      </table>
+      <div class="callout check">
+        <span class="callout-label">Check your understanding</span>
+        <p>Every regularization technique here is doing the same conceptual thing: deliberately constraining the model's capacity to fit noise, trading a small amount of training-set fit for better generalization — this is bias-variance tradeoff in action, applied as an engineering lever rather than just an observed phenomenon.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 METRICS ============ -->
+  <section class="chapter" id="metrics">
+    <div class="chapter-head"><span class="chapter-num">03 ★</span><h2 class="chapter-title">Evaluation Metrics, Precisely</h2></div>
+    <p class="chapter-dek">Precision vs. recall shows up across nearly every ML interview loop. Get the confusion matrix mechanically right, then layer the business framing on top.</p>
+    <div class="chapter-body">
+      <div class="diagram">
+        <svg viewBox="0 0 500 220" xmlns="http://www.w3.org/2000/svg">
+          <rect x="100" y="30" width="150" height="80" fill="none" stroke="#5fd9c9" stroke-width="1.4"/>
+          <text x="175" y="55" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">True Positive</text>
+          <text x="175" y="72" fill="#9aa3b0" font-family="JetBrains Mono" font-size="9" text-anchor="middle">predicted yes, actually yes</text>
+          <text x="175" y="94" fill="#5fd9c9" font-family="JetBrains Mono" font-size="10" text-anchor="middle">(correct catch)</text>
+          <rect x="250" y="30" width="150" height="80" fill="none" stroke="#ff7a8a" stroke-width="1.4"/>
+          <text x="325" y="55" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">False Positive</text>
+          <text x="325" y="72" fill="#9aa3b0" font-family="JetBrains Mono" font-size="9" text-anchor="middle">predicted yes, actually no</text>
+          <text x="325" y="94" fill="#ff7a8a" font-family="JetBrains Mono" font-size="10" text-anchor="middle">(false alarm)</text>
+          <rect x="100" y="110" width="150" height="80" fill="none" stroke="#ff9f40" stroke-width="1.4"/>
+          <text x="175" y="135" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">False Negative</text>
+          <text x="175" y="152" fill="#9aa3b0" font-family="JetBrains Mono" font-size="9" text-anchor="middle">predicted no, actually yes</text>
+          <text x="175" y="174" fill="#ff9f40" font-family="JetBrains Mono" font-size="10" text-anchor="middle">(missed it)</text>
+          <rect x="250" y="110" width="150" height="80" fill="none" stroke="#5c6672" stroke-width="1.4"/>
+          <text x="325" y="135" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">True Negative</text>
+          <text x="325" y="152" fill="#9aa3b0" font-family="JetBrains Mono" font-size="9" text-anchor="middle">predicted no, actually no</text>
+          <text x="325" y="174" fill="#5c6672" font-family="JetBrains Mono" font-size="10" text-anchor="middle">(correct pass)</text>
+        </svg>
+      </div>
+      <table class="tbl">
+        <tr><th>Metric</th><th>Formula</th><th>Answers the question</th></tr>
+        <tr><td class="k">Precision</td><td>TP / (TP + FP)</td><td>Of everything I flagged as positive, how much was actually positive? Matters when a false positive is expensive (spam filtering, healthcare)</td></tr>
+        <tr><td class="k">Recall</td><td>TP / (TP + FN)</td><td>Of everything actually positive, how much did I catch? Matters when a miss is expensive (disease detection, fraud)</td></tr>
+        <tr><td class="k">F1</td><td>Harmonic mean of precision and recall</td><td>A single balanced number, useful specifically on imbalanced datasets where accuracy alone is misleading</td></tr>
+      </table>
+      <div class="callout analogy">
+        <span class="callout-label">The framing that actually lands in an interview</span>
+        <p>Precision and recall are two different kinds of mistake, and the "right" metric depends entirely on which mistake is more expensive for the specific business problem — not on which metric sounds more rigorous. A spam filter with low precision annoys users by burying real emails in spam (expensive false positives); a cancer-screening model with low recall misses real cases (expensive false negatives). Naming this tradeoff explicitly, with a concrete example, is what separates a memorized definition from real understanding.</p>
+      </div>
+      <h3>ROC-AUC vs PR-AUC — the distinction most candidates blur</h3>
+      <table class="tbl">
+        <tr><th></th><th>ROC-AUC</th><th>PR-AUC</th></tr>
+        <tr><td class="k">Plots</td><td>True positive rate vs. false positive rate across thresholds</td><td>Precision vs. recall across thresholds</td></tr>
+        <tr><td class="k">Behavior on imbalanced data</td><td>Can look deceptively good — the large number of true negatives dominates and inflates the score</td><td>More informative on imbalanced data specifically, since it ignores true negatives entirely and focuses on how well the model handles the rare positive class</td></tr>
+        <tr><td class="k">Use when</td><td>Classes are roughly balanced, or both error types matter symmetrically</td><td>The positive class is rare and what you actually care about (fraud, disease, rare-event detection)</td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"Your fraud-detection model has 99.5% accuracy. Should you be happy?" — Not necessarily — if fraud is rare (say 0.5% of transactions), a model that predicts "not fraud" on everything scores 99.5% accuracy while catching zero actual fraud. Check precision, recall, and specifically PR-AUC rather than accuracy or even ROC-AUC alone, since PR-AUC won't be inflated by the large true-negative count the way ROC-AUC can be on this kind of imbalanced problem.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 04 GRADIENT DESCENT ============ -->
+  <section class="chapter" id="gradient-descent">
+    <div class="chapter-head"><span class="chapter-num">04</span><h2 class="chapter-title">Gradient Descent &amp; Optimizers</h2></div>
+    <p class="chapter-dek">The mechanism behind every training run in Topic 11 and Doc 15 — here's the classical-ML-interview version of the same idea.</p>
+    <div class="chapter-body">
+      <p>Gradient descent is an optimization algorithm that moves a model's weights in the direction that reduces the loss function — computing the gradient (the direction of steepest increase) and stepping in the opposite direction, repeatedly, until the loss stops meaningfully decreasing.</p>
+      <table class="tbl">
+        <tr><th>Variant</th><th>How it differs</th></tr>
+        <tr><td class="k">Batch gradient descent</td><td>Computes the gradient using the entire training set for every single update — accurate but slow, and often infeasible for large datasets</td></tr>
+        <tr><td class="k">Stochastic gradient descent (SGD)</td><td>Shuffles the data and updates on very small batches (or single examples), trading smoothness for speed — noisier updates, but far more updates per unit time</td></tr>
+        <tr><td class="k">Mini-batch gradient descent</td><td>Balances speed and stability by updating on modest-sized batches — what production pipelines use by default</td></tr>
+        <tr><td class="k">Adam</td><td>Combines momentum (an exponentially decaying average of past gradients) with an adaptive per-parameter learning rate (based on an exponentially decaying average of past squared gradients) — adapts to the geometry of the loss surface more effectively than plain SGD, especially with sparse or noisy gradients, and is the default optimizer for most modern deep learning including LLM training and fine-tuning.</td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">The learning rate question, answered precisely</span>
+        <p>Too large a learning rate and the model overshoots the minimum, potentially diverging entirely rather than converging. Too small and training stalls, requiring far more steps to converge, or getting stuck in a poor local region of the loss surface. This is exactly why feature scaling matters too — it will take longer for gradient descent to reach a good minimum when features aren't normalized, since unscaled features distort the loss surface's geometry and make a single learning rate work well for one dimension but poorly for another.</p>
+      </div>
+      <div class="callout check">
+        <span class="callout-label">The direct link back to Topic 11</span>
+        <p>This is the exact same mechanism behind pretraining, SFT, and RLHF/DPO from Topic 11 — every stage of LLM training is gradient descent (almost always via Adam or a variant like AdamW) on a different loss function and different data. Nothing new is happening architecturally between "classical ML training" and "LLM training" at this level — the optimizer is the same, only the model and objective change.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 05 CROSS VALIDATION ============ -->
+  <section class="chapter" id="cross-validation">
+    <div class="chapter-head"><span class="chapter-num">05</span><h2 class="chapter-title">Cross-Validation &amp; Data Leakage</h2></div>
+    <p class="chapter-dek">How you get an honest read on generalization — and the single most common way that read quietly becomes dishonest.</p>
+    <div class="chapter-body">
+      <p>A single train-test split gives you one performance estimate tied to one particular data division — potentially lucky or unlucky depending on which examples ended up on which side. K-fold cross-validation rotates through k subsets, training on k-1 folds and validating on the remaining one each time, then averages the results — giving a lower-variance, more honest measure of generalization. When data is limited, cross-validation is not optional — a single split's noise matters proportionally more with less data.</p>
+      <div class="callout pitfall">
+        <span class="callout-label">Data leakage — the failure mode that inflates every metric silently</span>
+        <p>Data leakage is when information from outside the training set (often, inadvertently, from the validation or test set) influences model training — producing validation metrics that look excellent but don't hold up in production, because the model learned something it won't actually have access to at real inference time. Common sources: normalizing/scaling features using statistics computed across the entire dataset before splitting (leaking test-set statistics into training), or engineering a feature that indirectly encodes the target (e.g., a "days until cancellation" feature when predicting churn). Always fit any data-dependent transformation (scalers, imputers, encoders) on the training fold only, then apply it to validation/test — never the reverse.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 06 IMBALANCE ============ -->
+  <section class="chapter" id="imbalance">
+    <div class="chapter-head"><span class="chapter-num">06</span><h2 class="chapter-title">Class Imbalance</h2></div>
+    <p class="chapter-dek">Directly connects to Section 03's PR-AUC discussion — the practical toolkit for when the positive class is rare.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Technique</th><th>Mechanism</th></tr>
+        <tr><td class="k">SMOTE</td><td>Generates synthetic minority-class examples by interpolating between existing minority examples, rather than simply duplicating them — increases minority representation without pure duplication's overfitting risk</td></tr>
+        <tr><td class="k">Class weighting</td><td>Weights the loss function to penalize errors on the minority class more heavily, without changing the dataset itself</td></tr>
+        <tr><td class="k">Threshold adjustment</td><td>Move the classification decision threshold away from the default 0.5 to trade precision for recall (or vice versa) based on which error type is more costly for the specific use case</td></tr>
+      </table>
+      <p>Your choice among these depends on the cost of a missed positive in your specific use case — there's no universally correct technique, only the one matched to the actual business cost asymmetry, echoing Section 03's precision/recall framing directly.</p>
+    </div>
+  </section>
+
+  <!-- ============ 07 ENSEMBLES ============ -->
+  <section class="chapter" id="ensembles">
+    <div class="chapter-head"><span class="chapter-num">07</span><h2 class="chapter-title">Bagging vs Boosting</h2></div>
+    <p class="chapter-dek">Two ensemble philosophies, solving two different problems from Section 01.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th></th><th>Bagging (e.g. Random Forest)</th><th>Boosting (e.g. AdaBoost, XGBoost)</th></tr>
+        <tr><td class="k">Training</td><td>Many trees trained independently and in parallel, each on a bootstrapped (random-with-replacement) sample and random feature subset</td><td>Trees trained sequentially, each one fitted specifically to correct the current ensemble's errors</td></tr>
+        <tr><td class="k">Combination</td><td>Average (regression) or majority vote (classification) across all trees</td><td>Weighted sum, with later trees focusing on previously misclassified examples</td></tr>
+        <tr><td class="k">Primarily reduces</td><td>Variance — averaging many independently-noisy models cancels out much of the noise</td><td>Bias — each sequential model specifically targets the previous ensemble's systematic errors</td></tr>
+        <tr><td class="k">Practical character</td><td>Robust, relatively easy to tune, less sensitive to individual noisy observations</td><td>Often higher peak accuracy, but more prone to overfitting if not carefully regularized (tree depth, learning rate, early stopping)</td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"Why does bagging reduce variance while boosting reduces bias?" — Bagging trains many independent, high-variance models (deep, unpruned trees) on different random samples — since their errors are largely uncorrelated, averaging cancels much of that variance out while leaving each tree's low bias intact. Boosting starts from high-bias, weak learners (shallow trees) and sequentially adds models specifically targeting the ensemble's current errors, directly attacking the systematic (bias) component each round — this is precisely why boosting can drive bias down further than a single weak learner ever could, at the cost of needing careful regularization to avoid re-introducing variance through overfitting to training-set-specific error patterns.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 08 CURSE ============ -->
+  <section class="chapter" id="curse">
+    <div class="chapter-head"><span class="chapter-num">08</span><h2 class="chapter-title">The Curse of Dimensionality</h2></div>
+    <p class="chapter-dek">A classical ML concept that connects directly back to Topic 13's vector search material — not a coincidence.</p>
+    <div class="chapter-body">
+      <p>As the number of features (dimensions) grows, the data needed to maintain the same density of coverage across that space grows exponentially — most algorithms rely on Euclidean or cosine distance between data points, and in very high dimensions, distances between points tend to become less discriminative: points that should be "close" and points that should be "far" start to look more similar in relative distance than intuition from low dimensions suggests. Feature scaling matters directly because of this too — if feature values vary greatly in scale, results skew heavily toward whichever feature happens to have the largest numeric range, unless features are normalized first.</p>
+      <div class="callout check">
+        <span class="callout-label">The direct connection to Topic 13</span>
+        <p>This is precisely why Topic 13 spent real depth on similarity metrics and embedding dimensionality — modern embedding models are specifically trained to keep high-dimensional vector spaces meaningfully discriminative (via massive training data and contrastive objectives), which is exactly the classical curse-of-dimensionality problem being engineered around at scale. The classical concept and the modern embedding-search problem are the same underlying phenomenon, viewed at different points in ML's history.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 09 PRODUCTION ML ============ -->
+  <section class="chapter" id="production-ml">
+    <div class="chapter-head"><span class="chapter-num">09 ★</span><h2 class="chapter-title">Production ML: Drift &amp; Debugging</h2></div>
+    <p class="chapter-dek">The question that separates textbook recall from real judgment — and stronger interviews increasingly weight this over pure theory.</p>
+    <div class="chapter-body">
+      <p>Machine learning interviews reward applied judgment as much as textbook recall — if you can explain the bias-variance tradeoff but freeze when asked how you'd ship a model that's quietly degrading in production, you'll struggle. In stronger interviews, especially for mid-level or senior roles, interviewers ask about production issues like data drift, monitoring, and debugging a model after deployment specifically because this is where real-world ML engineering actually lives.</p>
+      <table class="tbl">
+        <tr><th>Concept</th><th>What to know</th></tr>
+        <tr><td class="k">Data drift</td><td>The input feature distribution in production shifts away from what the model was trained on — the model itself hasn't changed, but the world feeding it has</td></tr>
+        <tr><td class="k">Concept drift</td><td>The actual relationship between features and target shifts — even with identical inputs, the correct output has changed (e.g., customer behavior shifting after a market event)</td></tr>
+        <tr><td class="k">Calibration</td><td>Whether a model's predicted probabilities match real-world frequencies — a model that says "70% confident" should be right roughly 70% of the time it says that, not just rank-order correctly</td></tr>
+        <tr><td class="k">Monitoring</td><td>Tracking prediction distributions, feature distributions, and (where available) ground-truth outcomes over time, not just a single point-in-time validation score</td></tr>
+      </table>
+      <div class="callout paper">
+        <span class="callout-label">A real, worth-knowing anecdote</span>
+        <p>A candidate who went through Anthropic's entry-level ML engineer loop described a panel built as a real-world simulation: a conversational AI model that produced overconfident but factually wrong answers in high-risk contexts, with three interviewers focused separately on model misuse, alignment, and data privacy. This is a direct, practical convergence of this document's classical ML material (calibration — overconfident wrong answers) with Topic 6's security material and Topic 5's evaluation material — a reminder that in 2026, these aren't separate tracks so much as one integrated judgment being tested from different angles.</p>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"A production model's accuracy has quietly dropped over the last month with no code changes. Walk through your debugging process." — Check for data drift first — compare recent input feature distributions against the training distribution; a shift here means the model is seeing genuinely different data than it learned on. If input distributions look stable, check for concept drift — has the real relationship between inputs and outputs changed in the world, independent of what the model sees. Cross-check calibration, not just accuracy, since a model can remain well-ranked while becoming poorly calibrated. Only after ruling these out would a pipeline or data-quality bug (missing values, schema changes upstream) become the next suspect.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 10 COMPANY PATTERNS ============ -->
+  <section class="chapter" id="company-patterns">
+    <div class="chapter-head"><span class="chapter-num">10</span><h2 class="chapter-title">Real Company Question Patterns</h2></div>
+    <p class="chapter-dek">Named examples worth having ready — knowing that a question has actually been asked somewhere real changes how you prepare for it.</p>
+    <div class="chapter-body">
+      <div class="company"><span class="cname">OpenAI</span><p>Explain gradient descent.</p></div>
+      <div class="company"><span class="cname">Google</span><p>Explain linear vs. logistic regression.</p></div>
+      <div class="company"><span class="cname">Pinterest</span><p>What is overfitting, and how do you avoid it?</p></div>
+      <div class="company"><span class="cname">Meta</span><p>Design an evaluation framework for ads ranking.</p></div>
+      <div class="company"><span class="cname">Spotify</span><p>Design a recommendation system for Spotify.</p></div>
+      <div class="company"><span class="cname">Anthropic</span><p>Design an inference batching system for a single GPU (directly Doc 16's material) — plus the real-world-simulation panel format described in Section 09.</p></div>
+      <div class="company"><span class="cname">Nvidia</span><p>Explain the architecture of a CNN.</p></div>
+      <div class="callout">
+        <span class="callout-label">The pattern across all of them</span>
+        <p>Notice none of these are pure trivia — each pairs a classical concept with either a real system (ads ranking, Spotify recommendations, GPU batching) or a request to apply the concept, not just define it. Prepare accordingly: for every concept in this document, have a concrete example or a mini system-design application ready, not just the definition.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 11 INTERVIEW ============ -->
+  <section class="chapter" id="interview">
+    <div class="chapter-head"><span class="chapter-num">11</span><h2 class="chapter-title">Interview Cheat-Sheet</h2></div>
+    <p class="chapter-dek">Additional questions beyond the ones already embedded in each section above.</p>
+    <div class="chapter-body">
+      <details class="qa"><summary>What's the difference between L1 and L2 regularization, mechanically?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>L1 (Lasso) penalizes the sum of absolute weight values, which tends to drive some weights to exactly zero — producing sparse models that effectively perform feature selection. L2 (Ridge) penalizes the sum of squared weight values, which shrinks all coefficients toward zero more evenly without eliminating any outright. Choose L1 when you suspect many features are irrelevant and want automatic feature selection; choose L2 when you believe most features contribute at least a little and want to prevent any single one from dominating.</p></div>
+      </details>
+      <details class="qa"><summary>Why does Adam generally outperform plain SGD for training deep networks, including LLMs?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>Adam combines momentum (smoothing updates using an exponentially decaying average of past gradients) with an adaptive, per-parameter learning rate (based on an exponentially decaying average of past squared gradients) — this lets it adapt to the geometry of the loss surface more effectively than a single global learning rate in plain SGD, especially valuable with sparse or noisy gradients, which are common in large models with many parameters receiving very different gradient signal frequencies.</p></div>
+      </details>
+      <details class="qa"><summary>Explain data leakage with a concrete example and how to prevent it.<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>Data leakage happens when information that wouldn't be available at real inference time leaks into training, inflating validation metrics dishonestly. Classic example: normalizing/scaling all features using statistics (mean, std) computed across the full dataset before splitting into train/validation — this leaks validation-set information into the training-time transformation. Prevention: always fit any data-dependent transformation exclusively on the training fold, then apply that already-fitted transformation to validation and test data, never recomputing statistics on the combined or held-out data.</p></div>
+      </details>
+      <details class="qa"><summary>When would you use PR-AUC instead of ROC-AUC?<span class="qa-tag">metrics</span></summary>
+        <div class="qa-body"><p>When the positive class is rare and is specifically what you care about — fraud detection, disease screening, rare-event detection. ROC-AUC can look deceptively strong on imbalanced data because it's calculated using the true negative rate, and a large true-negative count (common when positives are rare) inflates the score even for a model that's mediocre at actually catching positives. PR-AUC ignores true negatives entirely, focusing on precision and recall specifically, making it a more honest signal in exactly this scenario.</p></div>
+      </details>
+      <details class="qa"><summary>Design an evaluation framework for a ranking system (e.g. ads ranking, a feed algorithm).<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Start with offline ranking metrics (e.g. NDCG, precision@k) on held-out historical data, cross-validated rather than a single split given how much ranking quality can vary by query/user segment. Layer in calibration checks specifically if predicted scores feed into a downstream auction or threshold (ads ranking is a strong example) — a well-ranked but poorly calibrated model can still misprice. Move to online A/B testing before full rollout, since offline metrics don't always predict real user behavior changes. Explicitly watch for data leakage in feature engineering — ranking systems are especially prone to leaking future information (e.g., using engagement signals that wouldn't exist at serving time) into training features.</p></div>
+      </details>
+      <details class="qa"><summary>How would you handle a dataset with 2% positive class and 98% negative class?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>First, abandon accuracy as the primary metric — a trivial always-negative classifier scores 98% accuracy while being useless. Use precision, recall, F1, and PR-AUC instead, matched to the actual cost of a false positive vs. false negative for the use case. For the modeling approach: apply class weighting in the loss function as a low-effort first attempt, escalate to SMOTE-style synthetic oversampling if weighting alone isn't sufficient, and tune the decision threshold post-training based on the real-world cost asymmetry rather than defaulting to 0.5.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ 12 GLOSSARY ============ -->
+  <section class="chapter" id="glossary">
+    <div class="chapter-head"><span class="chapter-num">12</span><h2 class="chapter-title">Glossary</h2></div>
+    <p class="chapter-dek">Every term used in this document.</p>
+    <div class="chapter-body">
+      <dl class="glossary-grid">
+        <div class="gterm"><dt>Bias</dt><dd>Systematic error from a model too simple to capture the true underlying pattern.</dd></div>
+        <div class="gterm"><dt>Variance</dt><dd>Error from a model too sensitive to the specific training sample, failing to generalize.</dd></div>
+        <div class="gterm"><dt>Irreducible error</dt><dd>Inherent noise in the problem that no model can eliminate.</dd></div>
+        <div class="gterm"><dt>L1 / L2 regularization</dt><dd>Penalty terms on absolute (L1) or squared (L2) weight values, discouraging overfitting.</dd></div>
+        <div class="gterm"><dt>Dropout</dt><dd>Randomly deactivating neurons during training to prevent over-reliance on specific pathways.</dd></div>
+        <div class="gterm"><dt>Confusion matrix</dt><dd>Table of true/false positive/negative counts underlying precision, recall, and F1.</dd></div>
+        <div class="gterm"><dt>Precision</dt><dd>TP / (TP + FP) — of predicted positives, how many were correct.</dd></div>
+        <div class="gterm"><dt>Recall</dt><dd>TP / (TP + FN) — of actual positives, how many were caught.</dd></div>
+        <div class="gterm"><dt>ROC-AUC / PR-AUC</dt><dd>Area under the ROC or precision-recall curve; PR-AUC more informative on imbalanced data.</dd></div>
+        <div class="gterm"><dt>Adam</dt><dd>Optimizer combining momentum and adaptive per-parameter learning rates.</dd></div>
+        <div class="gterm"><dt>K-fold cross-validation</dt><dd>Rotating through k train/validation splits and averaging results for a lower-variance generalization estimate.</dd></div>
+        <div class="gterm"><dt>Data leakage</dt><dd>Information from outside the legitimate training set inflating validation/test performance dishonestly.</dd></div>
+        <div class="gterm"><dt>SMOTE</dt><dd>Synthetic minority oversampling by interpolating between existing minority-class examples.</dd></div>
+        <div class="gterm"><dt>Bagging</dt><dd>Parallel ensemble of independently-trained models on bootstrapped samples, reducing variance.</dd></div>
+        <div class="gterm"><dt>Boosting</dt><dd>Sequential ensemble where each model corrects the previous ensemble's errors, reducing bias.</dd></div>
+        <div class="gterm"><dt>Curse of dimensionality</dt><dd>Distance-based algorithms lose discriminative power as feature dimensionality grows.</dd></div>
+        <div class="gterm"><dt>Data drift / concept drift</dt><dd>Shift in input feature distribution vs. shift in the actual input-output relationship, respectively.</dd></div>
+        <div class="gterm"><dt>Calibration</dt><dd>Whether predicted probabilities match real-world outcome frequencies.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ 13 RESOURCES ============ -->
+  <section class="chapter" id="resources">
+    <div class="chapter-head"><span class="chapter-num">13</span><h2 class="chapter-title">Resources</h2></div>
+    <p class="chapter-dek">Where to go for hands-on practice.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>An Introduction to Statistical Learning (ISLR)</strong> — the standard, accessible reference for everything in Sections 01-07</li>
+        <li><strong>scikit-learn documentation</strong> — the fastest way to actually run cross-validation, regularization, and ensemble methods on real data</li>
+        <li><strong>Evidently AI / Fiddler AI blogs</strong> — practical, current writing on production monitoring, drift detection, and calibration</li>
+      </ul>
+      <div class="callout">
+        <span class="callout-label">How to actually get interview-ready on this topic</span>
+        <p>Take a small tabular dataset (even a classic one like Titanic or a Kaggle imbalanced-fraud dataset), deliberately overfit a decision tree to it, then apply regularization/pruning and watch validation accuracy improve while training accuracy drops — then compute precision, recall, and PR-AUC by hand from the confusion matrix. Having watched the bias-variance tradeoff move in real numbers, on real data, is worth more than any amount of reciting this document's tables.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">Doc 17 — Classical ML Fundamentals for AI Engineering Interviews. Gap-plugging series complete.</div>
+</main>
+</div>
+
+<script>
+const links = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('section.chapter');
+const map = new Map();
+links.forEach(l => map.set(l.getAttribute('href').slice(1), l));
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const link = map.get(entry.target.id);
+    if(!link) return;
+    if(entry.isIntersecting){
+      links.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, {rootMargin: '-15% 0px -70% 0px', threshold: 0});
+sections.forEach(s => io.observe(s));
+</script>
+</body>
+</html>

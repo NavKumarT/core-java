@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Agentic Engineer's Bible — LangChain · LangGraph · ReAct</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d10;
+  --bg-raised:#12151a;
+  --bg-card:#14181f;
+  --line:#242a33;
+  --line-soft:#1b2028;
+  --ink:#e7e9ec;
+  --ink-dim:#9aa3b0;
+  --ink-faint:#5c6672;
+  --amber:#ff9f40;
+  --amber-dim:#c97a2e;
+  --lime:#c9f04c;
+  --cyan:#5fd9c9;
+  --violet:#b592ff;
+  --rose:#ff7a8a;
+  --serif:'Source Serif 4', Georgia, serif;
+  --display:'Space Grotesk', 'Space Grotesk Fallback', sans-serif;
+  --mono:'JetBrains Mono', 'Courier New', monospace;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:
+    radial-gradient(var(--line-soft) 1px, transparent 1px);
+  background-size:22px 22px;
+  background-color:var(--bg);
+  color:var(--ink);
+  font-family:var(--serif);
+  font-size:16px;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--amber); text-decoration:none;}
+::selection{background:var(--amber); color:#111;}
+
+/* ===== layout shell ===== */
+.shell{display:grid; grid-template-columns:280px 1fr; min-height:100vh;}
+@media (max-width:920px){ .shell{grid-template-columns:1fr;} .side{display:none;} }
+
+/* ===== sidebar ===== */
+.side{
+  position:sticky; top:0; height:100vh; overflow-y:auto;
+  border-right:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(18,21,26,.9), rgba(11,13,16,.9));
+  padding:28px 22px 60px;
+}
+.side::-webkit-scrollbar{width:6px;}
+.side::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.brand{
+  font-family:var(--display); font-weight:700; font-size:15px; letter-spacing:.02em;
+  color:var(--ink); margin-bottom:2px;
+}
+.brand span{color:var(--amber);}
+.brand-sub{font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-bottom:26px; letter-spacing:.03em;}
+.nav-group{margin-bottom:6px;}
+.nav-label{
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--ink-faint); margin:20px 0 8px;
+}
+.nav-link{
+  display:flex; align-items:baseline; gap:8px;
+  font-family:var(--display); font-size:13.5px; color:var(--ink-dim);
+  padding:6px 8px; border-radius:6px; border-left:2px solid transparent;
+  transition:.15s;
+}
+.nav-link:hover{color:var(--ink); background:var(--bg-raised);}
+.nav-link.active{color:var(--amber); border-left-color:var(--amber); background:var(--bg-raised);}
+.nav-num{font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); min-width:18px;}
+
+/* ===== main ===== */
+.main{max-width:900px; padding:0 44px 140px; margin:0 auto;}
+@media (max-width:700px){ .main{padding:0 20px 100px;} }
+
+/* hero */
+.hero{padding:76px 0 54px; border-bottom:1px solid var(--line);}
+.hero-eyebrow{
+  font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--lime); margin-bottom:18px; display:flex; align-items:center; gap:10px;
+}
+.hero-eyebrow::before{content:''; width:22px; height:1px; background:var(--lime); display:inline-block;}
+h1.title{
+  font-family:var(--display); font-weight:700; font-size:clamp(34px,5.2vw,58px);
+  line-height:1.05; letter-spacing:-.02em; color:var(--ink); max-width:11ch;
+}
+h1.title em{font-style:normal; color:var(--amber);}
+.hero-sub{
+  font-family:var(--serif); font-size:18px; color:var(--ink-dim); max-width:56ch; margin-top:20px;
+}
+.hero-meta{
+  margin-top:34px; display:flex; gap:28px; flex-wrap:wrap;
+  font-family:var(--mono); font-size:11.5px; color:var(--ink-faint);
+}
+.hero-meta b{color:var(--ink-dim); display:block; font-size:15px; font-family:var(--display); margin-bottom:2px;}
+
+/* sections */
+section.chapter{padding:64px 0; border-bottom:1px solid var(--line);}
+section.chapter:last-of-type{border-bottom:none;}
+.chapter-head{display:flex; align-items:flex-start; gap:16px; margin-bottom:8px;}
+.chapter-num{
+  font-family:var(--mono); font-size:13px; color:var(--amber); border:1px solid var(--amber-dim);
+  border-radius:20px; padding:3px 11px; margin-top:6px; white-space:nowrap;
+}
+h2.chapter-title{
+  font-family:var(--display); font-weight:600; font-size:clamp(24px,3.4vw,32px); color:var(--ink);
+  letter-spacing:-.01em;
+}
+.chapter-dek{
+  font-family:var(--serif); font-style:italic; color:var(--ink-dim); font-size:16.5px;
+  max-width:64ch; margin:14px 0 32px 0; padding-left:66px;
+}
+@media (max-width:700px){.chapter-dek{padding-left:0;}}
+.chapter-body{padding-left:66px;}
+@media (max-width:700px){.chapter-body{padding-left:0;}}
+.chapter-body h3{
+  font-family:var(--display); font-weight:600; font-size:19px; color:var(--ink); margin:34px 0 12px;
+}
+.chapter-body h4{
+  font-family:var(--display); font-weight:600; font-size:15px; color:var(--cyan); margin:24px 0 10px;
+  text-transform:uppercase; letter-spacing:.04em; font-size:12.5px;
+}
+.chapter-body p{color:var(--ink-dim); margin-bottom:14px; max-width:70ch;}
+.chapter-body ul, .chapter-body ol{color:var(--ink-dim); margin:0 0 16px 20px; max-width:68ch;}
+.chapter-body li{margin-bottom:7px;}
+.chapter-body strong{color:var(--ink); font-weight:600;}
+code.inline{
+  font-family:var(--mono); font-size:.87em; background:var(--bg-raised); color:var(--lime);
+  padding:1px 6px; border-radius:4px; border:1px solid var(--line);
+}
+
+/* callouts */
+.callout{
+  border-left:3px solid var(--amber); background:var(--bg-card); padding:16px 18px;
+  border-radius:0 8px 8px 0; margin:20px 0; max-width:68ch;
+}
+.callout p{margin-bottom:0; color:var(--ink-dim); font-size:14.5px;}
+.callout .callout-label{
+  font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.1em;
+  color:var(--amber); margin-bottom:6px; display:block;
+}
+.callout.interview{border-left-color:var(--violet);}
+.callout.interview .callout-label{color:var(--violet);}
+.callout.pitfall{border-left-color:var(--rose);}
+.callout.pitfall .callout-label{color:var(--rose);}
+
+/* code blocks */
+.code-wrap{
+  background:#0a0c0f; border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:18px 0 24px;
+}
+.code-head{
+  display:flex; align-items:center; justify-content:space-between; padding:9px 14px;
+  border-bottom:1px solid var(--line); background:var(--bg-raised);
+  font-family:var(--mono); font-size:11px; color:var(--ink-faint); letter-spacing:.03em;
+}
+.code-dots{display:flex; gap:5px;}
+.code-dots span{width:8px; height:8px; border-radius:50%; background:var(--line);}
+pre{
+  padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:13px; line-height:1.7;
+  color:#d7dbe0;
+}
+pre::-webkit-scrollbar{height:6px;}
+pre::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.tok-kw{color:var(--violet);}
+.tok-str{color:var(--lime);}
+.tok-com{color:var(--ink-faint); font-style:italic;}
+.tok-fn{color:var(--cyan);}
+.tok-num{color:var(--amber);}
+
+/* tables */
+.tbl{width:100%; border-collapse:collapse; margin:18px 0 26px; font-size:14px; max-width:72ch;}
+.tbl th{
+  text-align:left; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em;
+  color:var(--ink-faint); padding:10px 14px; border-bottom:1px solid var(--line);
+}
+.tbl td{padding:11px 14px; border-bottom:1px solid var(--line-soft); color:var(--ink-dim); vertical-align:top;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl td.k{color:var(--ink); font-family:var(--mono); font-size:13px; white-space:nowrap;}
+
+/* diagram card */
+.diagram{
+  background:var(--bg-card); border:1px solid var(--line); border-radius:12px; padding:24px;
+  margin:22px 0 28px;
+}
+.diagram svg{width:100%; height:auto; display:block;}
+
+/* interview accordion */
+.qa{border:1px solid var(--line); border-radius:10px; margin-bottom:10px; background:var(--bg-card); overflow:hidden;}
+.qa summary{
+  list-style:none; cursor:pointer; padding:15px 18px; display:flex; gap:12px; align-items:flex-start;
+  font-family:var(--display); font-size:14.5px; color:var(--ink); font-weight:500;
+}
+.qa summary::-webkit-details-marker{display:none;}
+.qa summary::before{content:'+'; font-family:var(--mono); color:var(--amber); font-size:16px; line-height:1;}
+.qa[open] summary::before{content:'–';}
+.qa .qa-body{padding:0 18px 18px 40px; color:var(--ink-dim); font-size:14.5px; max-width:66ch;}
+.qa .qa-body p{margin-bottom:10px;}
+.qa-tag{
+  font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.08em;
+  background:var(--bg-raised); color:var(--ink-faint); padding:2px 8px; border-radius:20px; border:1px solid var(--line);
+  margin-left:auto; white-space:nowrap; flex-shrink:0;
+}
+
+/* pill list for glossary */
+.glossary-grid{display:grid; grid-template-columns:1fr 1fr; gap:2px 28px;}
+@media (max-width:700px){.glossary-grid{grid-template-columns:1fr;}}
+.gterm{padding:14px 0; border-bottom:1px solid var(--line-soft);}
+.gterm dt{font-family:var(--mono); color:var(--cyan); font-size:13.5px; margin-bottom:4px;}
+.gterm dd{color:var(--ink-dim); font-size:13.5px; line-height:1.55;}
+
+/* roadmap */
+.roadmap{position:relative; margin-left:10px; padding-left:30px; border-left:2px solid var(--line);}
+.rstep{position:relative; padding-bottom:28px;}
+.rstep::before{
+  content:''; position:absolute; left:-37px; top:2px; width:12px; height:12px; border-radius:50%;
+  background:var(--bg); border:2px solid var(--amber);
+}
+.rstep h4{margin:0 0 4px; text-transform:none; letter-spacing:0; font-size:15px; color:var(--ink);}
+.rstep p{color:var(--ink-dim); font-size:14px; margin:0;}
+
+/* footer */
+.footer{
+  padding:60px 0 20px; text-align:center; color:var(--ink-faint); font-family:var(--mono); font-size:12px;
+}
+
+/* badges row in hero */
+.tag-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:26px;}
+.tag{
+  font-family:var(--mono); font-size:11px; padding:5px 11px; border-radius:20px; border:1px solid var(--line);
+  color:var(--ink-dim); background:var(--bg-raised);
+}
+
+/* signature react loop mini legend */
+.legend{display:flex; gap:18px; flex-wrap:wrap; margin-top:14px; font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+.legend span{display:inline-flex; align-items:center; gap:6px;}
+.legend i{width:9px; height:9px; border-radius:2px; display:inline-block;}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ================= SIDEBAR ================= -->
+<nav class="side" id="side">
+  <div class="brand">The Agentic <span>Bible</span></div>
+  <div class="brand-sub">LangChain · LangGraph · ReAct — from notebook to offer letter</div>
+
+  <div class="nav-group">
+    <a class="nav-link" href="#foundations"><span class="nav-num">01</span>Agentic Foundations</a>
+    <a class="nav-link" href="#react"><span class="nav-num">02</span>The ReAct Loop</a>
+    <a class="nav-link" href="#langchain"><span class="nav-num">03</span>LangChain Primitives</a>
+    <a class="nav-link" href="#langgraph"><span class="nav-num">04</span>LangGraph Anatomy</a>
+    <a class="nav-link" href="#state"><span class="nav-num">05</span>Agent State</a>
+    <a class="nav-link" href="#build"><span class="nav-num">06</span>Building the Agent</a>
+    <a class="nav-link" href="#persistence"><span class="nav-num">07</span>Persistence &amp; Checkpoints</a>
+    <a class="nav-link" href="#streaming"><span class="nav-num">08</span>Streaming</a>
+    <a class="nav-link" href="#hitl"><span class="nav-num">09</span>Human‑in‑the‑Loop</a>
+    <a class="nav-link" href="#timetravel"><span class="nav-num">10</span>Time Travel</a>
+    <a class="nav-link" href="#rag"><span class="nav-num">11</span>Agentic Search / RAG</a>
+    <a class="nav-link" href="#pitfalls"><span class="nav-num">12</span>Production Pitfalls</a>
+    <a class="nav-link" href="#interview"><span class="nav-num">13</span>Interview Cheat‑Sheet</a>
+    <a class="nav-link" href="#glossary"><span class="nav-num">14</span>Glossary</a>
+    <a class="nav-link" href="#roadmap"><span class="nav-num">15</span>90‑Day Roadmap</a>
+  </div>
+</nav>
+
+<!-- ================= MAIN ================= -->
+<main class="main">
+
+  <div class="hero">
+    <div class="hero-eyebrow">Compiled from handwritten notes → interview‑ready reference</div>
+    <h1 class="title">The Agentic <em>Engineer's</em> Bible</h1>
+    <p class="hero-sub">Everything in your notebook — ReAct, LangChain primitives, LangGraph state machines, checkpointing, human‑in‑the‑loop, time travel, agentic RAG — reorganized into one dense reference, with the gaps your notes left filled in and the interview questions attached.</p>
+    <div class="tag-row">
+      <span class="tag">ReAct</span><span class="tag">LangChain</span><span class="tag">LangGraph</span>
+      <span class="tag">StateGraph</span><span class="tag">Checkpointers</span><span class="tag">Tool Calling</span>
+      <span class="tag">Agentic RAG</span><span class="tag">Human‑in‑the‑Loop</span>
+    </div>
+    <div class="hero-meta">
+      <div><b>15</b>chapters</div>
+      <div><b>40+</b>interview Q&amp;As</div>
+      <div><b>1</b>reference architecture</div>
+      <div><b>0</b>fluff</div>
+    </div>
+  </div>
+
+  <!-- ============ 01 FOUNDATIONS ============ -->
+  <section class="chapter" id="foundations">
+    <div class="chapter-head">
+      <span class="chapter-num">01</span>
+      <h2 class="chapter-title">Agentic Foundations — What Makes Something "Agentic"</h2>
+    </div>
+    <p class="chapter-dek">Your notes jump straight into ReAct and LangGraph — this is the ten‑second definition that ties it all together, because every interviewer opens with it.</p>
+    <div class="chapter-body">
+      <p>A plain LLM call is <strong>one shot</strong>: prompt in, text out. An <strong>agent</strong> is an LLM wrapped in a loop that lets it decide, on its own, what to do next — call a tool, read the result, and decide again — until it thinks it has enough to answer. The loop is the whole idea. Everything else (tools, state, memory, graphs) exists to make that loop reliable, inspectable, and steerable.</p>
+      <p>Your note captured this precisely: <strong>"LLM + everything around it is called the runtime."</strong> The model itself never changes at inference time — its weights are frozen. What makes it "agentic" is the scaffolding: the system prompt, the tools it can call, the state it can read and write, and the control flow that decides when to stop.</p>
+      <table class="tbl">
+        <tr><th>Layer</th><th>Job</th><th>Typical tool</th></tr>
+        <tr><td class="k">Reasoning</td><td>Decide what to do next given the conversation so far</td><td>The LLM itself (GPT‑4o, Claude, etc.)</td></tr>
+        <tr><td class="k">Acting</td><td>Execute a decision against the real world</td><td>Tools / function calls (search, code exec, APIs)</td></tr>
+        <tr><td class="k">Memory</td><td>Carry information across turns and across sessions</td><td>AgentState + Checkpointer</td></tr>
+        <tr><td class="k">Control flow</td><td>Route between reasoning, acting, and stopping</td><td>LangGraph's StateGraph</td></tr>
+        <tr><td class="k">Oversight</td><td>Let a human approve, edit, or rewind a step</td><td>interrupt_before / update_state</td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">Likely interview framing</span>
+        <p>"What's the difference between a chatbot and an agent?" — A chatbot maps input → output through the model once per turn. An agent can take zero, one, or many actions per turn, inspecting the result of each action before deciding on the next, and it stops only when a condition (like "no more tool calls") is met.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 REACT ============ -->
+  <section class="chapter" id="react">
+    <div class="chapter-head">
+      <span class="chapter-num">02</span>
+      <h2 class="chapter-title">ReAct — Reasoning + Acting</h2>
+    </div>
+    <p class="chapter-dek">Straight from your notes: the LLM first "thinks," then takes an action; the action runs in an environment and returns an observation; the LLM looks at the observation and repeats.</p>
+    <div class="chapter-body">
+      <p>ReAct (Yao et al., 2022) is the pattern almost every agent framework — LangGraph included — is built on top of. It interleaves two things the model was previously asked to do separately:</p>
+      <ul>
+        <li><strong>Reasoning traces</strong> — free‑text "thoughts" that let the model plan, decompose the task, and notice when a previous action failed.</li>
+        <li><strong>Actions</strong> — structured calls into an environment (a search API, a calculator, a database) that ground the model's reasoning in real, current information instead of its frozen training data.</li>
+      </ul>
+      <div class="diagram">
+        <svg viewBox="0 0 760 360" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff9f40"/></marker>
+          </defs>
+          <!-- boxes -->
+          <rect x="300" y="10" width="160" height="42" rx="8" fill="none" stroke="#5fd9c9" stroke-width="1.5"/>
+          <text x="380" y="36" fill="#e7e9ec" font-family="JetBrains Mono" font-size="13" text-anchor="middle">System + User Prompt</text>
+          <line x1="380" y1="52" x2="380" y2="82" stroke="#ff9f40" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+          <circle cx="380" cy="118" r="36" fill="none" stroke="#ff9f40" stroke-width="1.5"/>
+          <text x="380" y="123" fill="#ff9f40" font-family="Space Grotesk" font-weight="700" font-size="14" text-anchor="middle">LLM</text>
+          <line x1="380" y1="154" x2="380" y2="184" stroke="#ff9f40" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+          <rect x="290" y="184" width="180" height="52" rx="8" fill="none" stroke="#b592ff" stroke-width="1.5"/>
+          <text x="380" y="206" fill="#e7e9ec" font-family="JetBrains Mono" font-size="13" text-anchor="middle">Thought</text>
+          <text x="380" y="224" fill="#e7e9ec" font-family="JetBrains Mono" font-size="13" text-anchor="middle">+ Action</text>
+          <line x1="380" y1="236" x2="380" y2="262" stroke="#ff9f40" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+          <polygon points="380,262 420,290 380,318 340,290" fill="none" stroke="#c9f04c" stroke-width="1.5"/>
+          <text x="380" y="294" fill="#c9f04c" font-family="JetBrains Mono" font-size="11" text-anchor="middle">tool?</text>
+
+          <line x1="340" y1="290" x2="230" y2="336" stroke="#ff7a8a" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <text x="200" y="352" fill="#ff7a8a" font-family="JetBrains Mono" font-size="12" text-anchor="middle">RETURN</text>
+
+          <line x1="420" y1="290" x2="530" y2="290" stroke="#ff9f40" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <text x="475" y="282" fill="#ff9f40" font-family="JetBrains Mono" font-size="11" text-anchor="middle">action</text>
+          <rect x="530" y="264" width="130" height="52" rx="26" fill="none" stroke="#ff9f40" stroke-width="1.5"/>
+          <text x="595" y="295" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">call the tool</text>
+
+          <line x1="660" y1="290" x2="700" y2="290" stroke="#ff9f40" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <rect x="640" y="140" width="100" height="42" rx="8" fill="none" stroke="#5fd9c9" stroke-width="1.5"/>
+          <text x="690" y="165" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">Observation</text>
+          <path d="M690,140 L690,60 L470,60" fill="none" stroke="#5fd9c9" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <path d="M700,290 L720,290 L720,161 L740,161" fill="none" stroke="#ff9f40" stroke-width="1.5"/>
+        </svg>
+        <div class="legend">
+          <span><i style="background:#5fd9c9"></i>prompt / observation</span>
+          <span><i style="background:#ff9f40"></i>control flow</span>
+          <span><i style="background:#c9f04c"></i>decision</span>
+          <span><i style="background:#ff7a8a"></i>terminal state</span>
+        </div>
+      </div>
+      <p>Read the loop as: <strong>User prompt → LLM → (Thought + Action) → does the action need a tool?</strong> If yes, call the tool, get an <strong>Observation</strong>, append it back into the prompt, and go around again. If no — the model produced a final answer with no tool calls — <strong>return</strong> it to the user. That "does the action need a tool" diamond is, in LangGraph terms, a <strong>conditional edge</strong>, and it's the single most important piece of control flow in the whole framework.</p>
+      <div class="callout">
+        <span class="callout-label">Why ReAct over plain chain-of-thought</span>
+        <p>Chain-of-thought alone lets a model reason step by step, but every fact it uses still comes from frozen training data — it can hallucinate a statistic and reason flawlessly from the wrong number. ReAct grounds each reasoning step in a real, freshly-fetched observation, so errors get corrected mid-trajectory instead of compounding.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 LANGCHAIN ============ -->
+  <section class="chapter" id="langchain">
+    <div class="chapter-head">
+      <span class="chapter-num">03</span>
+      <h2 class="chapter-title">LangChain Primitives</h2>
+    </div>
+    <p class="chapter-dek">Prompt templates, the LangChain Hub, and tools — the three building blocks your notes call out before graphs enter the picture.</p>
+    <div class="chapter-body">
+      <h3>Prompt Templates</h3>
+      <p>A <code class="inline">PromptTemplate</code> turns a plain string with placeholders into a reusable, parameterized prompt object — separating the fixed wording (the prompt engineer's job) from the runtime values (filled in per‑call).</p>
+      <div class="code-wrap">
+        <div class="code-head"><span>prompt_template.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> langchain.prompts <span class="tok-kw">import</span> PromptTemplate
+
+prompt_template = PromptTemplate.from_template(
+    <span class="tok-str">"Tell me about {subject}"</span>
+)
+
+<span class="tok-com"># Or pull a battle-tested prompt from the community hub</span>
+<span class="tok-kw">from</span> langchain <span class="tok-kw">import</span> hub
+prompt = hub.pull(<span class="tok-str">"hwchase17/react"</span>)</pre>
+      </div>
+      <p><strong>The LangChain Hub</strong> (<code class="inline">hub.pull(...)</code>) is a registry of shared, versioned prompts — pulling <code class="inline">hwchase17/react</code> gets you the canonical ReAct prompt template so you don't hand‑roll the "Thought / Action / Observation" formatting yourself.</p>
+
+      <h3>Tools</h3>
+      <p>A tool is just a function the model is allowed to call, described to it in a schema (name, description, argument types) so the model can decide when and how to invoke it. <code class="inline">TavilySearchResults</code> from <code class="inline">langchain-community</code> is the search tool your notes reach for repeatedly.</p>
+      <div class="code-wrap">
+        <div class="code-head"><span>tools.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> langchain_community.tools.tavily_search <span class="tok-kw">import</span> TavilySearchResults
+
+tool = TavilySearchResults(max_results=<span class="tok-num">2</span>)
+
+<span class="tok-com"># Registering tools on an agent: name -> tool lookup table</span>
+self.tools = {t.name: t <span class="tok-kw">for</span> t <span class="tok-kw">in</span> tools}
+
+<span class="tok-com"># Binding tells the LLM what functions it may call and their schemas</span>
+self.model = model.bind_tools(tools)</pre>
+      </div>
+      <div class="callout">
+        <span class="callout-label">bind_tools, demystified</span>
+        <p><code class="inline">model.bind_tools([...])</code> doesn't change the model — it attaches a JSON‑schema description of each tool to every request, so the provider's API can return a structured <code class="inline">tool_calls</code> field instead of (or alongside) plain text. Your agent code then reads <code class="inline">message.tool_calls</code> to decide what to execute.</p>
+      </div>
+
+      <h3>LangChain vs LangGraph — when your notes shift gears</h3>
+      <p>Your notes flag this transition explicitly: <strong>"New in LangGraph → cyclic graphs, persistence, human in the loop — an extension of LangChain that supports graphs."</strong> LangChain's original agent abstraction (<code class="inline">AgentExecutor</code>) is a fixed loop you can't easily customize. LangGraph replaces it with an explicit, inspectable graph.</p>
+      <table class="tbl">
+        <tr><th></th><th>LangChain (AgentExecutor)</th><th>LangGraph (StateGraph)</th></tr>
+        <tr><td class="k">Control flow</td><td>Hidden inside the executor</td><td>Explicit nodes + edges you define</td></tr>
+        <tr><td class="k">Cycles</td><td>Hard / hacky</td><td>Native — graphs can loop</td></tr>
+        <tr><td class="k">State</td><td>Implicit, hard to inspect</td><td>Typed <code class="inline">AgentState</code>, inspectable at every step</td></tr>
+        <tr><td class="k">Persistence</td><td>None built‑in</td><td>Checkpointers (Sqlite, Postgres, in‑memory)</td></tr>
+        <tr><td class="k">Human‑in‑the‑loop</td><td>Not supported</td><td><code class="inline">interrupt_before</code>, <code class="inline">update_state</code></td></tr>
+        <tr><td class="k">Time travel</td><td>Not supported</td><td><code class="inline">get_state_history</code>, replay/branch from any checkpoint</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 04 LANGGRAPH ANATOMY ============ -->
+  <section class="chapter" id="langgraph">
+    <div class="chapter-head">
+      <span class="chapter-num">04</span>
+      <h2 class="chapter-title">LangGraph Anatomy — Nodes, Edges, Conditional Edges</h2>
+    </div>
+    <p class="chapter-dek">Your notes summarize it in three lines. Here's what each line actually compiles to.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Concept</th><th>Your note</th><th>What it is</th></tr>
+        <tr><td class="k">Nodes</td><td>"Agents or functions"</td><td>A Python function <code class="inline">(state) -&gt; dict</code> — receives the current state, returns a partial update to merge in.</td></tr>
+        <tr><td class="k">Edges</td><td>"Connect nodes"</td><td>An unconditional hop: after node A finishes, always run node B.</td></tr>
+        <tr><td class="k">Conditional edges</td><td>"Decisions"</td><td>A router function reads the state and returns a key; that key is looked up in a dict mapping to the next node (or <code class="inline">END</code>).</td></tr>
+      </table>
+      <div class="code-wrap">
+        <div class="code-head"><span>graph_skeleton.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> langgraph.graph <span class="tok-kw">import</span> StateGraph, END
+
+graph = StateGraph(AgentState)
+graph.add_node(<span class="tok-str">"llm"</span>, self.call_openai)
+graph.add_node(<span class="tok-str">"action"</span>, self.take_action)
+
+graph.add_conditional_edges(
+    <span class="tok-str">"llm"</span>,
+    self.exists_action,               <span class="tok-com"># router function</span>
+    {<span class="tok-kw">True</span>: <span class="tok-str">"action"</span>, <span class="tok-kw">False</span>: END}
+)
+graph.add_edge(<span class="tok-str">"action"</span>, <span class="tok-str">"llm"</span>)   <span class="tok-com"># unconditional edge back = the loop</span>
+graph.set_entry_point(<span class="tok-str">"llm"</span>)
+
+self.graph = graph.compile()</pre>
+      </div>
+      <p>Notice the cycle: <code class="inline">llm → action → llm → action → …</code> This is exactly what a plain function‑call chain <em>can't</em> express cleanly — LangGraph's whole reason to exist is making that back‑edge a first‑class, compileable thing instead of a manually written <code class="inline">while</code> loop.</p>
+      <div class="callout interview">
+        <span class="callout-label">Interview trap</span>
+        <p>"Why not just write a while loop calling the LLM and a tool?" — You can, for a toy agent. It stops scaling once you need persistence across process restarts, mid‑run human approval, replaying from an arbitrary past step, or parallel branches — all of which require the run to be a graph of discrete, resumable steps rather than one live Python call stack.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 05 AGENT STATE ============ -->
+  <section class="chapter" id="state">
+    <div class="chapter-head">
+      <span class="chapter-num">05</span>
+      <h2 class="chapter-title">Agent State</h2>
+    </div>
+    <p class="chapter-dek">"Accessible to all parts of the graph. Local to the graph. Can be stored in a persistence layer." — your three-line definition, unpacked.</p>
+    <div class="chapter-body">
+      <p>State is a typed dictionary (<code class="inline">TypedDict</code>) that every node reads from and writes back to. It's the single shared blackboard the whole graph works against — nodes never talk to each other directly, only through state.</p>
+      <h3>Simple state</h3>
+      <div class="code-wrap">
+        <div class="code-head"><span>state_simple.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">class</span> AgentState(TypedDict):
+    messages: Annotated[Sequence[BaseMessage], operator.add]</pre>
+      </div>
+      <p><code class="inline">Annotated[..., operator.add]</code> is the key idea: it's a <strong>reducer</strong>. Without it, a node returning <code class="inline">{"messages": [...]}</code> would <em>overwrite</em> the whole messages list. With <code class="inline">operator.add</code>, LangGraph appends the new messages to the existing list instead — so every node's output accumulates rather than replaces.</p>
+      <h3>Complex state</h3>
+      <div class="code-wrap">
+        <div class="code-head"><span>state_complex.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">class</span> AgentState(TypedDict):
+    input: str                                              <span class="tok-com"># overwrites</span>
+    chat_history: list[BaseMessage]                         <span class="tok-com"># overwrites</span>
+    agent_outcome: Union[AgentAction, AgentOutcome, <span class="tok-kw">None</span>]  <span class="tok-com"># overwrites</span>
+    intermediate_steps: Annotated[
+        list[tuple[AgentAction, str]], operator.add
+    ]                                                        <span class="tok-com"># adds / appends</span></pre>
+      </div>
+      <p>Every field without an <code class="inline">Annotated</code> reducer simply gets <strong>overwritten</strong> on each update (your notes label this "overrides"); every field wrapped with a reducer like <code class="inline">operator.add</code> gets <strong>merged</strong> (your notes label this "adds a new update"). Choosing the wrong one is a classic bug: overwrite a running message history and you silently lose context every step.</p>
+      <div class="callout pitfall">
+        <span class="callout-label">Real bug from the later lesson</span>
+        <p>The default <code class="inline">operator.add</code> reducer always <em>appends</em>. That breaks the moment you want to <em>replace</em> a message with the same id (e.g. after a human edits one mid-run). The fix in your notes is a custom reducer, <code class="inline">reduce_messages</code>, that assigns each message a uuid, then merges by id — replacing on match, appending otherwise:</p>
+      </div>
+      <div class="code-wrap">
+        <div class="code-head"><span>custom_reducer.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">def</span> reduce_messages(left: list[AnyMessage], right: list[AnyMessage]) -&gt; list[AnyMessage]:
+    <span class="tok-kw">for</span> message <span class="tok-kw">in</span> right:
+        <span class="tok-kw">if not</span> message.id:
+            message.id = str(uuid4())
+    merged = left.copy()
+    <span class="tok-kw">for</span> message <span class="tok-kw">in</span> right:
+        <span class="tok-kw">for</span> i, existing <span class="tok-kw">in</span> enumerate(merged):
+            <span class="tok-kw">if</span> existing.id == message.id:
+                merged[i] = message
+                <span class="tok-kw">break</span>
+        <span class="tok-kw">else</span>:
+            merged.append(message)
+    <span class="tok-kw">return</span> merged
+
+<span class="tok-kw">class</span> AgentState(TypedDict):
+    messages: Annotated[list[AnyMessage], reduce_messages]</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 06 BUILD ============ -->
+  <section class="chapter" id="build">
+    <div class="chapter-head">
+      <span class="chapter-num">06</span>
+      <h2 class="chapter-title">Building the Agent — Full Walkthrough</h2>
+    </div>
+    <p class="chapter-dek">The exact <code class="inline">Agent</code> class from your notebook, annotated line by line.</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>agent.py — full class</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">class</span> Agent:
+    <span class="tok-kw">def</span> __init__(self, model, tools, system=<span class="tok-str">""</span>):
+        self.system = system
+        graph = StateGraph(AgentState)
+        graph.add_node(<span class="tok-str">"llm"</span>, self.call_openai)
+        graph.add_node(<span class="tok-str">"action"</span>, self.take_action)
+        graph.add_conditional_edges(
+            <span class="tok-str">"llm"</span>, self.exists_action, {<span class="tok-kw">True</span>: <span class="tok-str">"action"</span>, <span class="tok-kw">False</span>: END}
+        )
+        graph.add_edge(<span class="tok-str">"action"</span>, <span class="tok-str">"llm"</span>)
+        graph.set_entry_point(<span class="tok-str">"llm"</span>)
+        self.graph = graph.compile()
+        self.tools = {t.name: t <span class="tok-kw">for</span> t <span class="tok-kw">in</span> tools}
+        self.model = model.bind_tools(tools)
+
+    <span class="tok-kw">def</span> exists_action(self, state: AgentState):
+        result = state[<span class="tok-str">'messages'</span>][-<span class="tok-num">1</span>]
+        <span class="tok-kw">return</span> len(result.tool_calls) &gt; <span class="tok-num">0</span>
+
+    <span class="tok-kw">def</span> call_openai(self, state: AgentState):
+        messages = state[<span class="tok-str">'messages'</span>]
+        <span class="tok-kw">if</span> self.system:
+            messages = [SystemMessage(content=self.system)] + messages
+        message = self.model.invoke(messages)
+        <span class="tok-kw">return</span> {<span class="tok-str">'messages'</span>: [message]}
+
+    <span class="tok-kw">def</span> take_action(self, state: AgentState):
+        tool_calls = state[<span class="tok-str">'messages'</span>][-<span class="tok-num">1</span>].tool_calls
+        results = []
+        <span class="tok-kw">for</span> t <span class="tok-kw">in</span> tool_calls:
+            <span class="tok-kw">if not</span> t[<span class="tok-str">'name'</span>] <span class="tok-kw">in</span> self.tools:
+                result = <span class="tok-str">"bad tool name, retry"</span>   <span class="tok-com"># self-correcting loop</span>
+            <span class="tok-kw">else</span>:
+                result = self.tools[t[<span class="tok-str">'name'</span>]].invoke(t[<span class="tok-str">'args'</span>])
+            results.append(ToolMessage(tool_call_id=t[<span class="tok-str">'id'</span>], name=t[<span class="tok-str">'name'</span>], content=str(result)))
+        <span class="tok-kw">return</span> {<span class="tok-str">'messages'</span>: results}</pre>
+      </div>
+      <p>Three functions, three jobs:</p>
+      <ul>
+        <li><strong><code class="inline">exists_action</code></strong> — the router for the conditional edge. It looks at the <em>last</em> message only and checks whether the model asked for a tool call.</li>
+        <li><strong><code class="inline">call_openai</code></strong> — the "llm" node. Prepends the system prompt (if any), invokes the model on the full message history, and returns the new AI message wrapped in a list so the <code class="inline">operator.add</code> reducer appends it.</li>
+        <li><strong><code class="inline">take_action</code></strong> — the "action" node. Loops over every tool call the model requested (a single turn can request several in parallel), executes each, and wraps each result in a <code class="inline">ToolMessage</code> tied back to its <code class="inline">tool_call_id</code> so the model can match observations to the calls that produced them.</li>
+      </ul>
+      <div class="callout">
+        <span class="callout-label">Notice the self-correction</span>
+        <p><code class="inline">"bad tool name, retry"</code> isn't an exception — it's fed back to the model as if it were a normal observation. The next LLM turn sees its own mistake and can retry with a corrected tool name. This is a small but real example of an agent recovering from its own error without any human intervening.</p>
+      </div>
+      <div class="code-wrap">
+        <div class="code-head"><span>run.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre>prompt = <span class="tok-str">"""You are a smart research assistant. Use the search engine to look up information.
+You are allowed to make multiple calls (either together or in sequence).
+Only look up information when you are sure of what you want."""</span>
+
+model = ChatOpenAI(model=<span class="tok-str">"gpt-4o"</span>)
+abot = Agent(model, [tool], system=prompt)
+
+messages = [HumanMessage(content=<span class="tok-str">"What is the weather in sf?"</span>)]
+result = abot.graph.invoke({<span class="tok-str">"messages"</span>: messages})
+result[<span class="tok-str">'messages'</span>][-<span class="tok-num">1</span>].content</pre>
+      </div>
+      <p><strong>Model choice matters for tool-use quality.</strong> Your notes flag this directly: a multi-hop question ("who won the Super Bowl, what state is the team from, what's that state's GDP") needed <code class="inline">gpt-4o</code> instead of <code class="inline">gpt-3.5-turbo</code> — weaker models plan multi-step tool chains less reliably.</p>
+    </div>
+  </section>
+
+  <!-- ============ 07 PERSISTENCE ============ -->
+  <section class="chapter" id="persistence">
+    <div class="chapter-head">
+      <span class="chapter-num">07</span>
+      <h2 class="chapter-title">Persistence &amp; Checkpointing</h2>
+    </div>
+    <p class="chapter-dek">"Checkpoints — a concept from LangGraph." This is what turns a stateless function call into a resumable, multi-day conversation.</p>
+    <div class="chapter-body">
+      <p>A <strong>checkpointer</strong> saves a snapshot of the full <code class="inline">AgentState</code> after every node executes. Snapshots are keyed by a <strong>thread_id</strong> — think of a thread as one persistent conversation. Reuse the same thread_id and the graph picks up exactly where it left off; use a new one and you start clean.</p>
+      <div class="code-wrap">
+        <div class="code-head"><span>persistence.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> langgraph.checkpoint.sqlite <span class="tok-kw">import</span> SqliteSaver
+memory = SqliteSaver.from_conn_string(<span class="tok-str">":memory:"</span>)
+
+<span class="tok-com"># compiled with a checkpointer</span>
+self.graph = graph.compile(checkpointer=checkpointer)
+
+thread = {<span class="tok-str">"configurable"</span>: {<span class="tok-str">"thread_id"</span>: <span class="tok-str">"1"</span>}}
+<span class="tok-kw">for</span> event <span class="tok-kw">in</span> abot.graph.stream({<span class="tok-str">"messages"</span>: messages}, thread):
+    <span class="tok-kw">for</span> v <span class="tok-kw">in</span> event.values():
+        print(v[<span class="tok-str">'messages'</span>])</pre>
+      </div>
+      <table class="tbl">
+        <tr><th>Backend</th><th>When to use it</th></tr>
+        <tr><td class="k">MemorySaver / <code class="inline">":memory:"</code></td><td>Local dev, notebooks, unit tests — gone on process exit</td></tr>
+        <tr><td class="k">SqliteSaver</td><td>Single-process apps, prototypes, small deployments</td></tr>
+        <tr><td class="k">AsyncSqliteSaver</td><td>Same, but for async/streaming code paths</td></tr>
+        <tr><td class="k">PostgresSaver</td><td>Production — multi-process, durable, concurrent threads</td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"How does LangGraph give an agent memory across sessions?" — Not via a vector store by default (that's semantic memory for RAG). Short-term conversational memory is the checkpointer: every super-step's state is persisted keyed by thread_id, so <code class="inline">graph.invoke(None, thread)</code> — passing no new input — resumes exactly where the last run stopped.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 08 STREAMING ============ -->
+  <section class="chapter" id="streaming">
+    <div class="chapter-head">
+      <span class="chapter-num">08</span>
+      <h2 class="chapter-title">Streaming</h2>
+    </div>
+    <p class="chapter-dek">Two different things people mean by "streaming" — your notes cover both.</p>
+    <div class="chapter-body">
+      <h3>Streaming graph steps</h3>
+      <p><code class="inline">graph.stream(...)</code> yields one event per <strong>node completion</strong> — useful for showing "🔍 searching…" / "🤖 thinking…" progress in a UI.</p>
+      <h3>Streaming model tokens</h3>
+      <p><code class="inline">graph.astream_events(..., version="v1")</code> goes one level deeper and yields individual <strong>LLM tokens</strong> as they're generated, via the <code class="inline">on_chat_model_stream</code> event kind:</p>
+      <div class="code-wrap">
+        <div class="code-head"><span>token_stream.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> langgraph.checkpoint.aiosqlite <span class="tok-kw">import</span> AsyncSqliteSaver
+
+memory = AsyncSqliteSaver.from_conn_string(<span class="tok-str">":memory:"</span>)
+abot = Agent(model, [tool], system=prompt, checkpointer=memory)
+
+thread = {<span class="tok-str">"configurable"</span>: {<span class="tok-str">"thread_id"</span>: <span class="tok-str">"4"</span>}}
+<span class="tok-kw">async for</span> event <span class="tok-kw">in</span> abot.graph.astream_events({<span class="tok-str">"messages"</span>: messages}, thread, version=<span class="tok-str">"v1"</span>):
+    kind = event[<span class="tok-str">"event"</span>]
+    <span class="tok-kw">if</span> kind == <span class="tok-str">"on_chat_model_stream"</span>:
+        content = event[<span class="tok-str">"data"</span>][<span class="tok-str">"chunk"</span>].content
+        <span class="tok-kw">if</span> content:   <span class="tok-com"># empty content = model is requesting a tool call, not text</span>
+            print(content, end=<span class="tok-str">"|"</span>)</pre>
+      </div>
+      <p>Your note nails the gotcha: <strong>empty content in a chunk means the model is mid‑way through requesting a tool call</strong>, not producing user‑facing text — filter those out or the UI flickers with blank tokens.</p>
+    </div>
+  </section>
+
+  <!-- ============ 09 HITL ============ -->
+  <section class="chapter" id="hitl">
+    <div class="chapter-head">
+      <span class="chapter-num">09</span>
+      <h2 class="chapter-title">Human‑in‑the‑Loop</h2>
+    </div>
+    <p class="chapter-dek">"Add a break before a node takes place — humans can approve or deny specific actions." The mechanism is interrupt_before + get_state + update_state.</p>
+    <div class="chapter-body">
+      <h3>Pause before a risky node</h3>
+      <div class="code-wrap">
+        <div class="code-head"><span>interrupt.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre>self.graph = graph.compile(
+    checkpointer=checkpointer,
+    interrupt_before=[<span class="tok-str">"action"</span>]   <span class="tok-com"># pause right before tool execution</span>
+)</pre>
+      </div>
+      <p>Run the graph and it will execute the <code class="inline">"llm"</code> node, then <strong>stop</strong> before <code class="inline">"action"</code> ever runs — nothing has actually been executed yet. Inspect what it's about to do:</p>
+      <div class="code-wrap">
+        <div class="code-head"><span>inspect_and_approve.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre>state = abot.graph.get_state(thread)
+state.values[<span class="tok-str">'messages'</span>][-<span class="tok-num">1</span>].tool_calls   <span class="tok-com"># see the pending tool call(s)</span>
+state.next                                    <span class="tok-com"># -&gt; ('action',) what runs next</span>
+
+<span class="tok-com"># approve: resume with no new input</span>
+<span class="tok-kw">for</span> event <span class="tok-kw">in</span> abot.graph.stream(<span class="tok-kw">None</span>, thread):
+    print(event)</pre>
+      </div>
+      <h3>Edit state before resuming</h3>
+      <p>You're not limited to yes/no — <code class="inline">update_state</code> lets you rewrite the pending action entirely (e.g. correct a search query) before letting it run:</p>
+      <div class="code-wrap">
+        <div class="code-head"><span>edit_before_resume.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre>current_values = abot.graph.get_state(thread)
+_id = current_values.values[<span class="tok-str">'messages'</span>][-<span class="tok-num">1</span>].tool_calls[<span class="tok-num">0</span>][<span class="tok-str">'id'</span>]
+current_values.values[<span class="tok-str">'messages'</span>][-<span class="tok-num">1</span>].tool_calls = [{
+    <span class="tok-str">'name'</span>: <span class="tok-str">'tavily_search_results_json'</span>,
+    <span class="tok-str">'args'</span>: {<span class="tok-str">'query'</span>: <span class="tok-str">'current weather in Louisiana'</span>},  <span class="tok-com"># edited</span>
+    <span class="tok-str">'id'</span>: _id
+}]
+abot.graph.update_state(thread, current_values.values)</pre>
+      </div>
+      <table class="tbl">
+        <tr><th>Method</th><th>Purpose</th></tr>
+        <tr><td class="k"><code class="inline">interrupt_before=[node]</code></td><td>Pause the graph right before a specific node runs</td></tr>
+        <tr><td class="k"><code class="inline">graph.get_state(thread)</code></td><td>Read the current snapshot + what node runs next</td></tr>
+        <tr><td class="k"><code class="inline">graph.get_state_history(thread)</code></td><td>Every past snapshot for the thread, newest first</td></tr>
+        <tr><td class="k"><code class="inline">graph.update_state(thread, values)</code></td><td>Overwrite part of the state, then continue from there</td></tr>
+        <tr><td class="k"><code class="inline">graph.stream(None, thread)</code></td><td>Resume from wherever the thread paused (no new input)</td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"How would you build an approval step before an agent sends an email / runs a payment / deletes something?" — Compile with <code class="inline">interrupt_before=["that_node"]</code>, surface <code class="inline">get_state(thread).values</code> to a human reviewer UI, and only call <code class="inline">stream(None, thread)</code> once they click approve. Deny → don't resume, or <code class="inline">update_state</code> to redirect the graph elsewhere entirely.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 10 TIME TRAVEL ============ -->
+  <section class="chapter" id="timetravel">
+    <div class="chapter-head">
+      <span class="chapter-num">10</span>
+      <h2 class="chapter-title">Time Travel</h2>
+    </div>
+    <p class="chapter-dek">Because every super-step is checkpointed, "go back in time" is just: pick an old checkpoint, optionally edit it, and invoke from there.</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>time_travel.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre>states = []
+<span class="tok-kw">for</span> state <span class="tok-kw">in</span> abot.graph.get_state_history(thread):
+    states.append(state)
+
+to_replay = states[-<span class="tok-num">3</span>]   <span class="tok-com"># an arbitrary earlier snapshot</span>
+
+<span class="tok-com"># A) replay unchanged — deterministic re-run from that point</span>
+<span class="tok-kw">for</span> event <span class="tok-kw">in</span> abot.graph.stream(<span class="tok-kw">None</span>, to_replay.config):
+    print(event)
+
+<span class="tok-com"># B) branch — edit the snapshot, then continue down a new path</span>
+to_replay.values[<span class="tok-str">'messages'</span>][-<span class="tok-num">1</span>].tool_calls = [{
+    <span class="tok-str">'name'</span>: <span class="tok-str">'tavily_search_results_json'</span>,
+    <span class="tok-str">'args'</span>: {<span class="tok-str">'query'</span>: <span class="tok-str">'current weather in LA, accuweather'</span>},
+    <span class="tok-str">'id'</span>: _id
+}]
+branch_state = abot.graph.update_state(to_replay.config, to_replay.values)
+<span class="tok-kw">for</span> event <span class="tok-kw">in</span> abot.graph.stream(<span class="tok-kw">None</span>, branch_state):
+    print(event)
+
+<span class="tok-com"># C) inject a fabricated observation at a past point, as if a node produced it</span>
+state_update = {<span class="tok-str">"messages"</span>: [ToolMessage(tool_call_id=_id, name=<span class="tok-str">"tavily_search_results_json"</span>, content=<span class="tok-str">"54 degree celcius"</span>)]}
+branch_and_add = abot.graph.update_state(to_replay.config, state_update, as_node=<span class="tok-str">"action"</span>)</pre>
+      </div>
+      <p>Three distinct capabilities, easy to blur together — keep them separate for an interview answer:</p>
+      <ol>
+        <li><strong>Replay</strong> — re-run a past checkpoint exactly as it happened (deterministic debugging: "what did the agent see at step 3?").</li>
+        <li><strong>Branch</strong> — edit the snapshot's values and continue from there, creating a new path in state history without touching the original run ("what if it had searched a different query?").</li>
+        <li><strong>Inject as a node</strong> — <code class="inline">as_node="action"</code> tells LangGraph to treat your manually-written update as if that node produced it, so the graph correctly computes what runs next (usually back to <code class="inline">"llm"</code>).</li>
+      </ol>
+      <div class="callout">
+        <span class="callout-label">operator.add gotcha, revisited</span>
+        <p>Your note about count fields: because <code class="inline">count</code> used <code class="inline">operator.add</code>, setting <code class="inline">save_state.values["count"] = -3</code> and calling <code class="inline">update_state</code> doesn't <em>set</em> count to -3 — it <strong>adds</strong> -3 to whatever the current value already is. Reducers apply on every write, including the writes you make by hand during time travel.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 11 RAG ============ -->
+  <section class="chapter" id="rag">
+    <div class="chapter-head">
+      <span class="chapter-num">11</span>
+      <h2 class="chapter-title">Agentic Search &amp; Multi‑Hop RAG</h2>
+    </div>
+    <p class="chapter-dek">"In a two-shot [zero-shot] setting, an agent will receive a prompt and produce an answer based on static weights of the model." Your diagram of query → subquery → retrieve → rank is agentic RAG in miniature.</p>
+    <div class="chapter-body">
+      <p>Plain RAG is a single retrieve‑then‑generate hop: embed the query, pull the top‑k chunks, stuff them in context, answer. It breaks on questions that need <strong>multiple, dependent lookups</strong> — the Super Bowl example from your notes ("who won → what state is that team from → what's that state's GDP") needs three sequential facts, each depending on the last.</p>
+      <div class="diagram">
+        <svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="a2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#5fd9c9"/></marker></defs>
+          <rect x="10" y="100" width="90" height="46" rx="8" fill="none" stroke="#5fd9c9" stroke-width="1.5"/>
+          <text x="55" y="128" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">Query</text>
+          <line x1="100" y1="123" x2="150" y2="123" stroke="#5fd9c9" stroke-width="1.5" marker-end="url(#a2)"/>
+
+          <rect x="150" y="90" width="110" height="66" rx="8" fill="none" stroke="#ff9f40" stroke-width="1.5"/>
+          <text x="205" y="128" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">Subqueries</text>
+          <line x1="260" y1="123" x2="320" y2="123" stroke="#5fd9c9" stroke-width="1.5" marker-end="url(#a2)"/>
+
+          <rect x="320" y="98" width="120" height="50" rx="8" fill="none" stroke="#c9f04c" stroke-width="1.5"/>
+          <text x="380" y="128" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">Retrieve</text>
+          <ellipse cx="380" cy="30" rx="46" ry="20" fill="none" stroke="#b592ff" stroke-width="1.5"/>
+          <text x="380" y="35" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Sources</text>
+          <line x1="380" y1="50" x2="380" y2="98" stroke="#b592ff" stroke-width="1.5" marker-end="url(#a2)"/>
+
+          <line x1="440" y1="123" x2="500" y2="123" stroke="#5fd9c9" stroke-width="1.5" marker-end="url(#a2)"/>
+          <rect x="500" y="90" width="130" height="66" rx="8" fill="none" stroke="#ff7a8a" stroke-width="1.5"/>
+          <text x="565" y="118" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">Rank &amp;</text>
+          <text x="565" y="136" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">re-rank</text>
+
+          <line x1="630" y1="123" x2="690" y2="123" stroke="#5fd9c9" stroke-width="1.5" marker-end="url(#a2)"/>
+          <text x="715" y="118" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">Top-K</text>
+          <text x="715" y="134" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">chunks</text>
+
+          <rect x="150" y="190" width="480" height="55" rx="8" fill="none" stroke="#5c6672" stroke-width="1" stroke-dasharray="4 3"/>
+          <text x="390" y="222" fill="#9aa3b0" font-family="JetBrains Mono" font-size="11" text-anchor="middle">each subquery independently chunks its source(s) and selects its own top-K before merging</text>
+        </svg>
+      </div>
+      <table class="tbl">
+        <tr><th></th><th>Zero/one-shot RAG</th><th>Agentic RAG</th></tr>
+        <tr><td class="k">Retrieval steps</td><td>Exactly one</td><td>As many as the agent decides it needs</td></tr>
+        <tr><td class="k">Query</td><td>Used verbatim</td><td>Decomposed into subqueries the model plans itself</td></tr>
+        <tr><td class="k">Self-correction</td><td>None — bad retrieval = bad answer</td><td>Agent can notice weak results and retrieve again differently</td></tr>
+        <tr><td class="k">Cost / latency</td><td>Low, predictable</td><td>Higher, variable — worth it for genuinely multi-hop questions</td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"When would you reach for agentic RAG instead of plain RAG?" — When a single query can't be answered by one retrieval pass: comparisons across sources, chained facts, or questions where the right search terms only become clear after seeing the first result. If one embed-and-retrieve reliably answers the question, agentic RAG is pure overhead.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 12 PITFALLS ============ -->
+  <section class="chapter" id="pitfalls">
+    <div class="chapter-head">
+      <span class="chapter-num">12</span>
+      <h2 class="chapter-title">Production Pitfalls</h2>
+    </div>
+    <p class="chapter-dek">Things that go wrong the first time you take this off a notebook and onto a server — mostly implicit in your notes, made explicit here.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Infinite loops.</strong> A conditional edge that never resolves to <code class="inline">END</code> (e.g. a tool that always fails and always triggers a retry) will loop forever. Cap it with a step counter in state and a max-steps check in the router.</li>
+        <li><strong>Unbounded tool_calls.</strong> Nothing in the base pattern stops a model from requesting 20 parallel tool calls. Validate/limit them in <code class="inline">take_action</code> before executing.</li>
+        <li><strong>Reducer mismatch.</strong> Forgetting <code class="inline">operator.add</code> on a messages field silently drops history every turn instead of erroring loudly — always test state growth, not just the final answer.</li>
+        <li><strong>SqliteSaver in production.</strong> Fine for a demo; a single-writer SQLite file will bottleneck or corrupt under concurrent threads. Move to <code class="inline">PostgresSaver</code> once you have real traffic.</li>
+        <li><strong>Weaker models on multi-hop tasks.</strong> Your own notebook hit this — <code class="inline">gpt-3.5-turbo</code> handled single-hop weather lookups but needed <code class="inline">gpt-4o</code> for the three-hop Super Bowl question. Benchmark tool-planning quality per model, not just cost.</li>
+        <li><strong>Silent tool failures.</strong> A tool that raises inside <code class="inline">take_action</code> without a try/except kills the whole run. Catch exceptions and feed the error back as an observation, the same way the "bad tool name, retry" pattern does.</li>
+        <li><strong>No human checkpoint on irreversible actions.</strong> Anything that sends, deletes, pays, or publishes should sit behind <code class="inline">interrupt_before</code> until you trust the agent's track record.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 13 INTERVIEW ============ -->
+  <section class="chapter" id="interview">
+    <div class="chapter-head">
+      <span class="chapter-num">13</span>
+      <h2 class="chapter-title">Interview Cheat‑Sheet</h2>
+    </div>
+    <p class="chapter-dek">Grouped by theme. Tap to expand — answer out loud before reading the model answer.</p>
+    <div class="chapter-body">
+
+      <h4>Concepts</h4>
+      <details class="qa"><summary>What is ReAct and why interleave reasoning with acting?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>ReAct interleaves free-text reasoning ("thoughts") with structured tool calls ("actions"), feeding each tool's result back as an "observation" before the next reasoning step. Interleaving matters because it grounds each reasoning step in fresh, real information rather than letting the model reason for many steps purely from its frozen training data, where early errors compound unchecked.</p></div>
+      </details>
+      <details class="qa"><summary>What's the difference between an agent and a workflow/chain?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>A chain has a fixed, developer-defined sequence of steps. An agent has the model itself decide, at runtime, which steps to take and in what order — including whether to loop, which tool to call, and when to stop. The control flow is data (the model's output), not code.</p></div>
+      </details>
+      <details class="qa"><summary>Explain LangGraph's state, nodes, and edges in one breath.<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>State is a typed shared blackboard every node reads and writes. Nodes are functions that take state and return a partial update. Edges connect nodes — unconditional edges always route the same way, conditional edges call a router function on the current state to pick the next node dynamically, including possibly looping back to a node already visited.</p></div>
+      </details>
+
+      <h4>State &amp; reducers</h4>
+      <details class="qa"><summary>What does Annotated[list, operator.add] actually change?<span class="qa-tag">state</span></summary>
+        <div class="qa-body"><p>Without it, a node's returned value for that key overwrites the field entirely. With it, LangGraph merges the new value into the existing one using the given reducer function — <code class="inline">operator.add</code> concatenates lists (or adds numbers), so successive node outputs accumulate instead of replacing each other.</p></div>
+      </details>
+      <details class="qa"><summary>When would you write a custom reducer instead of operator.add?<span class="qa-tag">state</span></summary>
+        <div class="qa-body"><p>When "append everything" is wrong for your use case — e.g. you need to replace a message by id (after a human edits it) rather than duplicate it. A custom reducer like <code class="inline">reduce_messages</code> merges by identity: replace on matching id, append otherwise.</p></div>
+      </details>
+
+      <h4>Persistence &amp; resumability</h4>
+      <details class="qa"><summary>How does a checkpointer give an agent memory?<span class="qa-tag">persistence</span></summary>
+        <div class="qa-body"><p>It snapshots the full AgentState after every super-step, keyed by thread_id. Resuming a thread — even in a new process — is just invoking the graph with the same thread_id and no new input; LangGraph loads the last snapshot and continues from there.</p></div>
+      </details>
+      <details class="qa"><summary>SqliteSaver vs PostgresSaver — how do you choose?<span class="qa-tag">persistence</span></summary>
+        <div class="qa-body"><p>SqliteSaver is fine for single-process prototypes and local dev. Once you have concurrent users/threads and need durability across deploys, PostgresSaver is the production choice — SQLite's single-writer model doesn't hold up under real concurrent load.</p></div>
+      </details>
+
+      <h4>Human‑in‑the‑loop &amp; time travel</h4>
+      <details class="qa"><summary>Walk through adding an approval step before a risky tool call.<span class="qa-tag">hitl</span></summary>
+        <div class="qa-body"><p>Compile the graph with <code class="inline">interrupt_before=["action"]</code>. The run stops right before that node executes. Call <code class="inline">get_state(thread)</code> to show the pending tool call to a human. On approval, call <code class="inline">stream(None, thread)</code> to resume unchanged; to modify it first, call <code class="inline">update_state(thread, edited_values)</code> before resuming.</p></div>
+      </details>
+      <details class="qa"><summary>What's the difference between replaying and branching a past state?<span class="qa-tag">hitl</span></summary>
+        <div class="qa-body"><p>Replaying re-runs a past checkpoint unchanged — deterministic, for debugging. Branching edits the snapshot's values (or injects one via <code class="inline">update_state(..., as_node=...)</code>) before continuing, producing a new path in state history that diverges from the original run without altering it.</p></div>
+      </details>
+      <details class="qa"><summary>Why does update_state on a reducer-backed field sometimes not do what you expect?<span class="qa-tag">hitl</span></summary>
+        <div class="qa-body"><p>Because reducers apply on every write, including manual ones. Setting a field to a value doesn't set it — the reducer combines it with the existing value. For <code class="inline">operator.add</code> on a counter, "setting" it to -3 actually subtracts 3 from whatever it already was.</p></div>
+      </details>
+
+      <h4>Tools &amp; models</h4>
+      <details class="qa"><summary>What does model.bind_tools() actually send to the API?<span class="qa-tag">tools</span></summary>
+        <div class="qa-body"><p>A JSON-schema description of each tool's name, description, and parameters, attached to every request. The provider's API can then return a structured tool_calls field pointing at one of those schemas instead of only free text, which your code reads to decide what to execute.</p></div>
+      </details>
+      <details class="qa"><summary>How would you make an agent recover from calling a tool that doesn't exist?<span class="qa-tag">tools</span></summary>
+        <div class="qa-body"><p>Don't crash — return a ToolMessage observation like "bad tool name, retry" from the action node. The model sees that as normal feedback on its next turn and can self-correct, the same way it would react to any other observation.</p></div>
+      </details>
+      <details class="qa"><summary>Why might a multi-hop tool-use task fail on a cheaper model but pass on a stronger one?<span class="qa-tag">tools</span></summary>
+        <div class="qa-body"><p>Multi-hop tasks require planning a chain of dependent tool calls and correctly using each result to form the next query. Weaker models are more prone to skipping steps, misreading intermediate results, or terminating early — tool-planning quality scales with model capability more than single-hop retrieval does.</p></div>
+      </details>
+
+      <h4>System design</h4>
+      <details class="qa"><summary>Design an agent that drafts an email and requires human approval before sending.<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Nodes: llm (drafts) → conditional edge to "send" if the model calls the send-tool. Compile with <code class="inline">interrupt_before=["send"]</code> and a checkpointer so the paused thread survives a page reload. Surface the draft via <code class="inline">get_state</code>; on edit, <code class="inline">update_state</code> with the corrected body; on approve, <code class="inline">stream(None, thread)</code>; on reject, end the thread without resuming.</p></div>
+      </details>
+      <details class="qa"><summary>How would you prevent an agent from looping forever?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Add a step counter to state (a plain int field, overwritten each time with the incremented value). The router function checks it against a max before routing back into the loop, forcing END once the limit is hit — independent of whether the model "thinks" it still needs another tool call.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ 14 GLOSSARY ============ -->
+  <section class="chapter" id="glossary">
+    <div class="chapter-head">
+      <span class="chapter-num">14</span>
+      <h2 class="chapter-title">Glossary</h2>
+    </div>
+    <p class="chapter-dek">Every term from your notes, one line each.</p>
+    <div class="chapter-body">
+      <dl class="glossary-grid">
+        <div class="gterm"><dt>Runtime</dt><dd>The LLM plus everything wrapped around it — prompts, tools, state, control flow.</dd></div>
+        <div class="gterm"><dt>Observation</dt><dd>The result returned to the model after it executes an action / tool call.</dd></div>
+        <div class="gterm"><dt>StateGraph</dt><dd>LangGraph's core object: a graph of nodes and edges operating over a shared typed state.</dd></div>
+        <div class="gterm"><dt>Node</dt><dd>A function <code class="inline">(state) -&gt; partial update</code>, representing one agent or one step.</dd></div>
+        <div class="gterm"><dt>Edge</dt><dd>An unconditional connection: after node A, always run node B.</dd></div>
+        <div class="gterm"><dt>Conditional edge</dt><dd>A router function reads state and returns a key that maps to the next node.</dd></div>
+        <div class="gterm"><dt>Reducer</dt><dd>The function (e.g. <code class="inline">operator.add</code>) LangGraph uses to merge a node's returned value into existing state.</dd></div>
+        <div class="gterm"><dt>Checkpointer</dt><dd>Persists a snapshot of state after every step, keyed by thread_id.</dd></div>
+        <div class="gterm"><dt>Thread</dt><dd>One persistent, resumable conversation/run, identified by thread_id.</dd></div>
+        <div class="gterm"><dt>interrupt_before</dt><dd>Compile-time option that pauses execution just before a named node runs.</dd></div>
+        <div class="gterm"><dt>Time travel</dt><dd>Replaying or branching from any past checkpoint in a thread's history.</dd></div>
+        <div class="gterm"><dt>bind_tools</dt><dd>Attaches tool schemas to a model so it can return structured tool_calls.</dd></div>
+        <div class="gterm"><dt>Agentic search</dt><dd>Multi-hop retrieval where the agent plans subqueries instead of retrieving once.</dd></div>
+        <div class="gterm"><dt>PromptTemplate</dt><dd>A parameterized prompt string with placeholders filled in at call time.</dd></div>
+        <div class="gterm"><dt>LangChain Hub</dt><dd>A registry of shared, versioned community prompts (<code class="inline">hub.pull(...)</code>).</dd></div>
+        <div class="gterm"><dt>AgentState</dt><dd>The TypedDict schema describing everything the graph tracks across steps.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ 15 ROADMAP ============ -->
+  <section class="chapter" id="roadmap">
+    <div class="chapter-head">
+      <span class="chapter-num">15</span>
+      <h2 class="chapter-title">90‑Day Roadmap to Interview‑Ready</h2>
+    </div>
+    <p class="chapter-dek">A concrete order to actually build the things above, so the theory sticks.</p>
+    <div class="chapter-body">
+      <div class="roadmap">
+        <div class="rstep"><h4>Weeks 1–2 — Rebuild the notebook agent from scratch</h4><p>No copy-paste: write the Agent class, the three node functions, and the conditional edge yourself against a single tool (Tavily search). Break it on purpose — remove the reducer, watch history vanish.</p></div>
+        <div class="rstep"><h4>Weeks 3–4 — Add persistence and streaming</h4><p>Swap in SqliteSaver, run the same thread across two separate script invocations, then add astream_events token streaming to a tiny CLI or Flask endpoint.</p></div>
+        <div class="rstep"><h4>Weeks 5–6 — Human-in-the-loop</h4><p>Add interrupt_before on your tool node. Build a minimal approve/edit/deny flow — even just a CLI prompt — before the tool actually executes.</p></div>
+        <div class="rstep"><h4>Weeks 7–8 — Time travel &amp; debugging</h4><p>Practice get_state_history, replay an old checkpoint, and branch it with a modified tool call. This is the part almost no candidate can speak to fluently — it's a strong differentiator.</p></div>
+        <div class="rstep"><h4>Weeks 9–10 — Multi-tool, multi-hop agent</h4><p>Add a second and third tool (calculator, a second API). Ask it a genuinely multi-hop question and compare gpt-3.5 vs gpt-4-class model behavior directly, like your notes did.</p></div>
+        <div class="rstep"><h4>Weeks 11–12 — Ship one end-to-end project</h4><p>Wrap everything into one real project with a UI, persistence, and a human-approval step on at least one irreversible action. This is your portfolio piece and your best interview story.</p></div>
+        <div class="rstep"><h4>Ongoing — Mock the cheat-sheet out loud</h4><p>Once a week, answer every question in Chapter 13 out loud without looking, timing yourself to under 90 seconds per answer.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">Compiled from your own notes — keep this file, keep updating it as you learn more. Every gap you find is the next thing to go deep on.</div>
+
+</main>
+</div>
+
+<script>
+// active nav highlighting
+const links = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('section.chapter');
+const map = new Map();
+links.forEach(l => map.set(l.getAttribute('href').slice(1), l));
+
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const link = map.get(entry.target.id);
+    if(!link) return;
+    if(entry.isIntersecting){
+      links.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, {rootMargin: '-15% 0px -70% 0px', threshold: 0});
+
+sections.forEach(s => io.observe(s));
+</script>
+</body>
+</html>

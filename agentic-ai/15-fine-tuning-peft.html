@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fine-Tuning, PEFT &amp; Model Customization — The Complete Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d10; --bg-raised:#12151a; --bg-card:#14181f;
+  --line:#242a33; --line-soft:#1b2028;
+  --ink:#e7e9ec; --ink-dim:#9aa3b0; --ink-faint:#5c6672;
+  --amber:#ff9f40; --amber-dim:#c97a2e; --lime:#c9f04c; --cyan:#5fd9c9; --violet:#b592ff; --rose:#ff7a8a;
+  --serif:'Source Serif 4', Georgia, serif;
+  --display:'Space Grotesk', sans-serif;
+  --mono:'JetBrains Mono', 'Courier New', monospace;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:radial-gradient(var(--line-soft) 1px, transparent 1px);
+  background-size:22px 22px; background-color:var(--bg);
+  color:var(--ink); font-family:var(--serif); font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+a{color:var(--amber); text-decoration:none;}
+::selection{background:var(--amber); color:#111;}
+.shell{display:grid; grid-template-columns:290px 1fr; min-height:100vh;}
+@media (max-width:920px){ .shell{grid-template-columns:1fr;} .side{display:none;} }
+.side{position:sticky; top:0; height:100vh; overflow-y:auto; border-right:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(18,21,26,.9), rgba(11,13,16,.9)); padding:28px 20px 60px;}
+.side::-webkit-scrollbar{width:6px;} .side::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.brand{font-family:var(--display); font-weight:700; font-size:15px; color:var(--ink); margin-bottom:2px;}
+.brand span{color:var(--amber);}
+.brand-sub{font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-bottom:24px;}
+.back-link{display:inline-block; font-family:var(--mono); font-size:11px; color:var(--cyan); margin-bottom:20px; border:1px solid var(--line); padding:5px 10px; border-radius:6px;}
+.nav-link{display:flex; align-items:baseline; gap:7px; font-family:var(--display); font-size:12.2px; color:var(--ink-dim);
+  padding:5px 7px; border-radius:6px; border-left:2px solid transparent; transition:.15s;}
+.nav-link:hover{color:var(--ink); background:var(--bg-raised);}
+.nav-link.active{color:var(--amber); border-left-color:var(--amber); background:var(--bg-raised);}
+.nav-num{font-family:var(--mono); font-size:9.5px; color:var(--ink-faint); min-width:20px;}
+.main{max-width:920px; padding:0 44px 140px; margin:0 auto;}
+@media (max-width:700px){ .main{padding:0 20px 100px;} }
+.hero{padding:76px 0 54px; border-bottom:1px solid var(--line);}
+.hero-eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--lime);
+  margin-bottom:18px; display:flex; align-items:center; gap:10px;}
+.hero-eyebrow::before{content:''; width:22px; height:1px; background:var(--lime); display:inline-block;}
+h1.title{font-family:var(--display); font-weight:700; font-size:clamp(28px,4.6vw,48px); line-height:1.1; letter-spacing:-.02em; color:var(--ink); max-width:17ch;}
+h1.title em{font-style:normal; color:var(--amber);}
+.hero-sub{font-family:var(--serif); font-size:18px; color:var(--ink-dim); max-width:62ch; margin-top:20px;}
+.tag-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:26px;}
+.tag{font-family:var(--mono); font-size:11px; padding:5px 11px; border-radius:20px; border:1px solid var(--line); color:var(--ink-dim); background:var(--bg-raised);}
+section.chapter{padding:60px 0; border-bottom:1px solid var(--line);}
+section.chapter:last-of-type{border-bottom:none;}
+.chapter-head{display:flex; align-items:flex-start; gap:16px; margin-bottom:8px;}
+.chapter-num{font-family:var(--mono); font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:20px; padding:3px 11px; margin-top:6px; white-space:nowrap;}
+h2.chapter-title{font-family:var(--display); font-weight:600; font-size:clamp(22px,3.2vw,30px); color:var(--ink); letter-spacing:-.01em;}
+.chapter-dek{font-family:var(--serif); font-style:italic; color:var(--ink-dim); font-size:16px; max-width:66ch; margin:14px 0 30px 0; padding-left:66px;}
+@media (max-width:700px){.chapter-dek{padding-left:0;}}
+.chapter-body{padding-left:66px;}
+@media (max-width:700px){.chapter-body{padding-left:0;}}
+.chapter-body h3{font-family:var(--display); font-weight:600; font-size:19px; color:var(--ink); margin:32px 0 12px;}
+.chapter-body h4{font-family:var(--display); font-weight:600; color:var(--cyan); margin:22px 0 10px; text-transform:uppercase; letter-spacing:.04em; font-size:12px;}
+.chapter-body p{color:var(--ink-dim); margin-bottom:14px; max-width:72ch;}
+.chapter-body ul, .chapter-body ol{color:var(--ink-dim); margin:0 0 16px 20px; max-width:70ch;}
+.chapter-body li{margin-bottom:7px;}
+.chapter-body strong{color:var(--ink); font-weight:600;}
+code.inline{font-family:var(--mono); font-size:.87em; background:var(--bg-raised); color:var(--lime); padding:1px 6px; border-radius:4px; border:1px solid var(--line);}
+.callout{border-left:3px solid var(--amber); background:var(--bg-card); padding:16px 18px; border-radius:0 8px 8px 0; margin:20px 0; max-width:70ch;}
+.callout p{margin-bottom:0; color:var(--ink-dim); font-size:14.5px;}
+.callout .callout-label{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--amber); margin-bottom:6px; display:block;}
+.callout.interview{border-left-color:var(--violet);} .callout.interview .callout-label{color:var(--violet);}
+.callout.pitfall{border-left-color:var(--rose);} .callout.pitfall .callout-label{color:var(--rose);}
+.callout.paper{border-left-color:var(--cyan);} .callout.paper .callout-label{color:var(--cyan);}
+.callout.focus{border-left-color:var(--lime); background:#151b12;} .callout.focus .callout-label{color:var(--lime);}
+.code-wrap{background:#0a0c0f; border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:18px 0 24px;}
+.code-head{display:flex; align-items:center; justify-content:space-between; padding:9px 14px; border-bottom:1px solid var(--line); background:var(--bg-raised); font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+.code-dots{display:flex; gap:5px;} .code-dots span{width:8px; height:8px; border-radius:50%; background:var(--line);}
+pre{padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:12.6px; line-height:1.7; color:#d7dbe0;}
+.tok-kw{color:var(--violet);} .tok-str{color:var(--lime);} .tok-com{color:var(--ink-faint); font-style:italic;} .tok-fn{color:var(--cyan);} .tok-num{color:var(--amber);}
+.tbl{width:100%; border-collapse:collapse; margin:18px 0 26px; font-size:13px; max-width:80ch;}
+.tbl th{text-align:left; font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-faint); padding:9px 10px; border-bottom:1px solid var(--line);}
+.tbl td{padding:9px 10px; border-bottom:1px solid var(--line-soft); color:var(--ink-dim); vertical-align:top;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl td.k{color:var(--ink); font-family:var(--mono); font-size:11.8px; white-space:nowrap;}
+.diagram{background:var(--bg-card); border:1px solid var(--line); border-radius:12px; padding:22px; margin:20px 0 26px;}
+.diagram svg{width:100%; height:auto; display:block;}
+.statgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:20px 0 26px;}
+@media (max-width:700px){.statgrid{grid-template-columns:1fr;}}
+.statcard{background:var(--bg-card); border:1px solid var(--line); border-radius:10px; padding:16px;}
+.statcard .num{font-family:var(--display); font-weight:700; font-size:22px; color:var(--amber);}
+.statcard .lbl{font-family:var(--mono); font-size:10px; color:var(--ink-faint); margin-top:4px;}
+.qa{border:1px solid var(--line); border-radius:10px; margin-bottom:10px; background:var(--bg-card); overflow:hidden;}
+.qa summary{list-style:none; cursor:pointer; padding:15px 18px; display:flex; gap:12px; align-items:flex-start; font-family:var(--display); font-size:14px; color:var(--ink); font-weight:500;}
+.qa summary::-webkit-details-marker{display:none;}
+.qa summary::before{content:'+'; font-family:var(--mono); color:var(--amber); font-size:16px; line-height:1;}
+.qa[open] summary::before{content:'–';}
+.qa .qa-body{padding:0 18px 18px 40px; color:var(--ink-dim); font-size:14px; max-width:68ch;}
+.qa .qa-body p{margin-bottom:10px;}
+.qa-tag{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; background:var(--bg-raised); color:var(--ink-faint); padding:2px 8px; border-radius:20px; border:1px solid var(--line); margin-left:auto; white-space:nowrap; flex-shrink:0;}
+.glossary-grid{display:grid; grid-template-columns:1fr 1fr; gap:2px 28px;}
+@media (max-width:700px){.glossary-grid{grid-template-columns:1fr;}}
+.gterm{padding:14px 0; border-bottom:1px solid var(--line-soft);}
+.gterm dt{font-family:var(--mono); color:var(--cyan); font-size:13px; margin-bottom:4px;}
+.gterm dd{color:var(--ink-dim); font-size:13px; line-height:1.55;}
+.footer{padding:60px 0 20px; text-align:center; color:var(--ink-faint); font-family:var(--mono); font-size:12px;}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav class="side" id="side">
+  <a class="back-link" href="#">← Topic 14: RAG Decision Guide</a>
+  <div class="brand">Fine-Tuning <span>&amp; PEFT</span></div>
+  <div class="brand-sub">Doc 15 — plugging the gap</div>
+  <a class="nav-link" href="#canonical-sequence"><span class="nav-num">00</span>★ Prompt → RAG → Fine-tune → Distill</a>
+  <a class="nav-link" href="#form-vs-facts"><span class="nav-num">01</span>★ Form vs Facts — the Decision Rule</a>
+  <a class="nav-link" href="#full-vs-peft"><span class="nav-num">02</span>Full Fine-Tuning vs PEFT</a>
+  <a class="nav-link" href="#lora"><span class="nav-num">03</span>★ LoRA, Mechanically</a>
+  <a class="nav-link" href="#qlora"><span class="nav-num">04</span>★ QLoRA — Quantization + LoRA</a>
+  <a class="nav-link" href="#peft-zoo"><span class="nav-num">05</span>The PEFT Zoo: DoRA, AdaLoRA, VeRA &amp; More</a>
+  <a class="nav-link" href="#forgetting"><span class="nav-num">06</span>Catastrophic Forgetting &amp; the Reversal Curse</a>
+  <a class="nav-link" href="#rag-vs-ft"><span class="nav-num">07</span>RAG vs Fine-Tuning, With Evidence</a>
+  <a class="nav-link" href="#rft"><span class="nav-num">08</span>Reinforcement Fine-Tuning (RFT)</a>
+  <a class="nav-link" href="#dataset-curation"><span class="nav-num">09</span>★ Dataset Curation &amp; Synthetic Data</a>
+  <a class="nav-link" href="#distillation"><span class="nav-num">10</span>★ Knowledge Distillation</a>
+  <a class="nav-link" href="#evaluating"><span class="nav-num">11</span>Evaluating a Fine-Tuned Model</a>
+  <a class="nav-link" href="#costs"><span class="nav-num">12</span>Real Cost Numbers</a>
+  <a class="nav-link" href="#pitfalls"><span class="nav-num">13</span>Production Pitfalls</a>
+  <a class="nav-link" href="#interview"><span class="nav-num">14</span>Interview Cheat-Sheet</a>
+  <a class="nav-link" href="#glossary"><span class="nav-num">15</span>Glossary</a>
+  <a class="nav-link" href="#resources"><span class="nav-num">16</span>Resources</a>
+</nav>
+
+<main class="main">
+  <div class="hero">
+    <div class="hero-eyebrow">Deep reference · Doc 15 · Gap-plugging series</div>
+    <h1 class="title">Fine-Tuning, PEFT &amp; <em>Model Customization</em></h1>
+    <p class="hero-sub">The most commonly asked question this whole series hasn't answered yet: "when would you fine-tune instead of using RAG?" Full mechanics of LoRA and QLoRA, the Form-vs-Facts decision rule, catastrophic forgetting, dataset curation with real filtering pipelines, knowledge distillation, and the 2026 addition of reinforcement fine-tuning — with real cost numbers throughout.</p>
+    <div class="tag-row">
+      <span class="tag">LoRA / QLoRA</span><span class="tag">PEFT</span><span class="tag">Catastrophic Forgetting</span>
+      <span class="tag">RAG vs Fine-Tune</span><span class="tag">Reinforcement Fine-Tuning</span><span class="tag">Synthetic Data</span>
+      <span class="tag">Knowledge Distillation</span>
+    </div>
+  </div>
+
+  <!-- ============ 00 CANONICAL SEQUENCE ============ -->
+  <section class="chapter" id="canonical-sequence">
+    <div class="chapter-head"><span class="chapter-num">00 ★</span><h2 class="chapter-title">Prompt → RAG → Fine-tune → Distill</h2></div>
+    <p class="chapter-dek">The single framework to lead every fine-tuning conversation with. Memorize this sequence before anything else in this document.</p>
+    <div class="chapter-body">
+      <p>The canonical 2026 sequence is Prompt, then RAG, then Fine-tune, then Distill — you don't jump to the right end because it sounds serious. The healthy way to move along it is left to right, only as far as you actually need.</p>
+      <div class="diagram">
+        <svg viewBox="0 0 720 120" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="csm" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff9f40"/></marker></defs>
+          <rect x="10" y="30" width="150" height="46" rx="8" fill="none" stroke="#5fd9c9" stroke-width="1.5"/>
+          <text x="85" y="58" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">Prompt</text>
+          <line x1="160" y1="53" x2="200" y2="53" stroke="#ff9f40" stroke-width="1.5" marker-end="url(#csm)"/>
+          <rect x="200" y="30" width="150" height="46" rx="8" fill="none" stroke="#c9f04c" stroke-width="1.5"/>
+          <text x="275" y="58" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">RAG</text>
+          <line x1="350" y1="53" x2="390" y2="53" stroke="#ff9f40" stroke-width="1.5" marker-end="url(#csm)"/>
+          <rect x="390" y="30" width="150" height="46" rx="8" fill="none" stroke="#b592ff" stroke-width="1.5"/>
+          <text x="465" y="58" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">Fine-tune</text>
+          <line x1="540" y1="53" x2="580" y2="53" stroke="#ff9f40" stroke-width="1.5" marker-end="url(#csm)"/>
+          <rect x="580" y="30" width="130" height="46" rx="8" fill="none" stroke="#ff7a8a" stroke-width="1.5"/>
+          <text x="645" y="58" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">Distill</text>
+          <text x="360" y="105" fill="#5c6672" font-family="JetBrains Mono" font-size="10" text-anchor="middle">move right only as far as you actually need — each step has a real, non-trivial cost</text>
+        </svg>
+      </div>
+      <table class="tbl">
+        <tr><th>Step</th><th>What it's for</th></tr>
+        <tr><td class="k">Prompt</td><td>Exploring task definition, behavior that still changes week to week — you don't yet have a stable target worth locking in</td></tr>
+        <tr><td class="k">RAG</td><td>Facts and knowledge that change — Topics 8, 13, and 14's entire subject</td></tr>
+        <tr><td class="k">Fine-tune</td><td>Stable, behavior-bound properties — form, tone, structured output reliability — that prompting can't reliably hold</td></tr>
+        <tr><td class="k">Distill</td><td>Cost/latency compression once you already have a working large-model pipeline you want to shrink</td></tr>
+      </table>
+      <div class="callout focus">
+        <span class="callout-label">Why this ordering, not any other</span>
+        <p>Each step to the right costs meaningfully more in engineering effort, ongoing maintenance, and organizational complexity than the step before it — a fine-tuned model is a new artifact that must be versioned, evaluated, deployed, and monitored, categorically more complex than managing a prompt. The framework isn't "fine-tuning is bad" — it's "prove you need it by exhausting the cheaper options first," exactly the same measure-before-you-build discipline from Topics 3, 5, and 14.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 01 FORM VS FACTS ============ -->
+  <section class="chapter" id="form-vs-facts">
+    <div class="chapter-head"><span class="chapter-num">01 ★</span><h2 class="chapter-title">Form vs Facts — the Decision Rule</h2></div>
+    <p class="chapter-dek">One distinction does most of the work in deciding fine-tune vs RAG. Get this exactly right — it's the single most-tested concept in this document.</p>
+    <div class="chapter-body">
+      <p>Form means behavior: tone, structure, output schema, refusal patterns, reasoning style — "sound like our brand, not a generic assistant." Facts means knowledge: product details, policies, last week's pricing, the contents of your docs. Facts that change belong in retrieval, not in weights.</p>
+      <table class="tbl">
+        <tr><th></th><th>Facts (→ RAG)</th><th>Form (→ Fine-tune, if stable)</th></tr>
+        <tr><td class="k">Nature</td><td>Changes over time, needs attribution/sourcing</td><td>Stable behavior you've genuinely decided on</td></tr>
+        <tr><td class="k">Example</td><td>"What's our current refund policy?"</td><td>"Every response must be valid JSON matching this schema"</td></tr>
+        <tr><td class="k">Wrong tool's failure mode</td><td>Baking facts into weights produces stale, unverifiable answers and erodes general capability through catastrophic forgetting</td><td>Prompting alone for complex stable behavior wastes context budget every single call and gets overridden under pressure from conflicting instructions elsewhere in the prompt</td></tr>
+      </table>
+      <div class="callout paper">
+        <span class="callout-label">The evidence behind "facts belong in retrieval, not weights"</span>
+        <p>Ovadia et al. (arXiv:2312.05934) showed that RAG consistently outperforms fine-tuning for factual recall. This isn't a minor implementation detail — it's the single most load-bearing empirical finding behind the entire Form/Facts framework, and worth citing by name if a system design question challenges why you're not "just fine-tuning in the knowledge."</p>
+      </div>
+      <p>A second, useful sub-distinction: <strong>behavior-bound and stable</strong> (every response in a specific JSON schema, every refusal phrased the same way — properties that don't churn week to week) is where fine-tuning earns its keep. <strong>Behavior-bound and volatile</strong> ("we keep changing how we want the model to respond") means you don't have a stable target yet — prompt engineering is more honest than locking a still-changing preference into weights you'll have to retrain again next month.</p>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"Your RAG chatbot's tone is inconsistent and it sometimes ignores your formatting instructions under load. Fine-tune or fix the prompt?" — Diagnose first: is this a Form problem (tone/schema consistency) or a Facts problem (wrong information)? If the underlying facts are correct but presentation is inconsistent, and you've already tried tightening the prompt without success, this is exactly the behavior-bound-and-stable case fine-tuning is built for — a thin LoRA adapter trained on examples of the correct tone/format, layered on top of the existing RAG pipeline rather than replacing it.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 FULL VS PEFT ============ -->
+  <section class="chapter" id="full-vs-peft">
+    <div class="chapter-head"><span class="chapter-num">02</span><h2 class="chapter-title">Full Fine-Tuning vs PEFT</h2></div>
+    <p class="chapter-dek">Once you've decided fine-tuning is the right move, this is the next fork — and it's a much easier call in 2026 than it used to be.</p>
+    <div class="chapter-body">
+      <p>Full fine-tuning updates all the parameters. In 2026, this is almost never the right call for a product team — it's expensive (clusters of high-end GPUs for days), risks catastrophic forgetting, and chains you to one base-model checkpoint; when a better base model ships next quarter, you start over. Parameter-Efficient Fine-Tuning (PEFT) trains a small set of additional parameters while freezing the base model, dramatically lowering cost while preserving general language knowledge.</p>
+      <table class="tbl">
+        <tr><th></th><th>Full fine-tuning</th><th>PEFT (LoRA and variants)</th></tr>
+        <tr><td class="k">Trainable parameters</td><td>100% of the model</td><td>Typically &lt;1%</td></tr>
+        <tr><td class="k">Compute cost</td><td>Clusters of high-end GPUs, days</td><td>Often a single consumer/prosumer GPU, hours</td></tr>
+        <tr><td class="k">Catastrophic forgetting risk</td><td>High — gets better at your task and worse at everything else</td><td>Substantially lower — general knowledge stays frozen in the base model</td></tr>
+        <tr><td class="k">Base-model portability</td><td>None — locked to one checkpoint</td><td>Adapters can be swapped, stacked, or retrained against a new base independently</td></tr>
+        <tr><td class="k">When it's still justified</td><td>Reserve for situations where PEFT methods genuinely can't achieve your performance targets — rare</td><td>The 2026 default for essentially every product team's fine-tuning need</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 03 LORA ============ -->
+  <section class="chapter" id="lora">
+    <div class="chapter-head"><span class="chapter-num">03 ★</span><h2 class="chapter-title">LoRA, Mechanically</h2></div>
+    <p class="chapter-dek">Building on Topic 11's transformer internals — LoRA doesn't change the architecture, it changes what gets trained.</p>
+    <div class="chapter-body">
+      <p>LoRA is built on a hypothesis: the weight updates needed to adapt a large pretrained model to a new task have a low "intrinsic rank" — meaning the actual change needed can be well-approximated by a much smaller matrix than the full weight matrix itself. Concretely: LoRA freezes the pretrained weight matrix <code class="inline">W₀</code> entirely, and instead injects two small trainable matrices <code class="inline">A</code> and <code class="inline">B</code> whose product approximates the needed update. For a weight matrix of size <code class="inline">d × k</code>, instead of training <code class="inline">d × k</code> parameters directly, LoRA trains a rank-<code class="inline">r</code> decomposition — two matrices of size <code class="inline">d × r</code> and <code class="inline">r × k</code>, where <code class="inline">r</code> is chosen to be far smaller than <code class="inline">d</code> or <code class="inline">k</code> (often 8, 16, or 64).</p>
+      <div class="code-wrap">
+        <div class="code-head"><span>lora_math.txt</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre>h = W₀x + ΔWx = W₀x + BAx
+
+<span class="tok-com"># W₀: frozen pretrained weights, shape (d, k) -- NEVER updated</span>
+<span class="tok-com"># A:  trainable, shape (r, k)  -- initialized randomly</span>
+<span class="tok-com"># B:  trainable, shape (d, r)  -- initialized to ZERO, so ΔW=0 at the start of training</span>
+<span class="tok-com"># r << d, k    -- e.g. r=16 when d=k=4096 is a huge parameter reduction</span></pre>
+      </div>
+      <div class="callout">
+        <span class="callout-label">Why B is initialized to zero — a small but real detail worth knowing</span>
+        <p>Initializing <code class="inline">B</code> to zero means <code class="inline">ΔW = BA = 0</code> at the very start of training, so the adapted model behaves identically to the base model before any training happens — training then gradually learns a useful, small perturbation rather than starting from a randomly-perturbed, initially-broken model.</p>
+      </div>
+      <p>After training, LoRA's adapter can be <strong>fused</strong> directly into the base weights (<code class="inline">W_new = W₀ + BA</code>) for zero-overhead deployment — the fine-tuned model can be deployed without extra inference cost, since the low-rank matrices merge into the pretrained weights. Alternatively, adapters can be kept separate and swapped at runtime, letting one base model serve many different fine-tuned "skill packs" without duplicating the full model per task.</p>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"Why does LoRA work despite training far fewer parameters than full fine-tuning?" — Because the actual behavioral change needed to adapt a large pretrained model to a new, narrower task tends to have low intrinsic rank — the update doesn't need the full expressiveness of the entire weight matrix. LoRA exploits this directly by constraining the trainable update to a low-rank decomposition, which in practice performs close to full fine-tuning on most tasks while training under 1% of the parameters.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 04 QLORA ============ -->
+  <section class="chapter" id="qlora">
+    <div class="chapter-head"><span class="chapter-num">04 ★</span><h2 class="chapter-title">QLoRA — Quantization + LoRA</h2></div>
+    <p class="chapter-dek">The technique that made fine-tuning a 65B-parameter model feasible on a single GPU. Two ideas combined, precisely.</p>
+    <div class="chapter-body">
+      <p>QLoRA combines two techniques: it first quantizes the frozen base model into a 4-bit NormalFloat (NF4) data type — a data type specifically designed to be information-theoretically optimal for normally-distributed weights, which neural network weights typically approximate — and then fine-tunes LoRA adapter weights on top of this quantized model. The base weights are stored at 4-bit precision (a 4x memory reduction versus 16-bit) while the small LoRA adapters are still trained at higher precision (BF16), preserving most of the accuracy full-precision fine-tuning would achieve.</p>
+      <div class="code-wrap">
+        <div class="code-head"><span>qlora_forward_pass.txt</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre>Y = X · dequantize(W_NF4) + X · B · A
+
+<span class="tok-com"># W is stored in memory as 4-bit NF4 -- massive memory savings</span>
+<span class="tok-com"># dequantized ("double dequantization") on the fly during the forward pass</span>
+<span class="tok-com"># B, A (the LoRA adapters) train normally in higher precision (BF16)</span></pre>
+      </div>
+      <div class="callout pitfall">
+        <span class="callout-label">The nuance that trips people up — trainable parameter count ≠ memory efficiency</span>
+        <p>QLoRA reduces the base model's static weight-storage memory dramatically, but its <em>activation</em> memory (needed for backpropagation) can still be substantial — in addition to standard forward activations, QLoRA must retain quantization states and effectively a copy of the quantized model to compute input gradients. The number of trainable parameters does not directly correlate with total runtime memory efficiency — activation memory, not parameter count, is often the dominant cost during training, which is exactly why newer methods (LoRA-FA and similar) specifically target activation-memory reduction as a distinct problem from parameter-count reduction.</p>
+      </div>
+      <div class="statgrid">
+        <div class="statcard"><div class="num">4x</div><div class="lbl">memory reduction from NF4 quantization vs 16-bit precision</div></div>
+        <div class="statcard"><div class="num">1 GPU</div><div class="lbl">QLoRA makes fine-tuning large models feasible on a single consumer/prosumer GPU</div></div>
+        <div class="statcard"><div class="num">~no loss</div><div class="lbl">QLoRA reduces fine-tuning memory without meaningful performance degradation vs full-precision fine-tuning</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 05 PEFT ZOO ============ -->
+  <section class="chapter" id="peft-zoo">
+    <div class="chapter-head"><span class="chapter-num">05</span><h2 class="chapter-title">The PEFT Zoo: DoRA, AdaLoRA, VeRA &amp; More</h2></div>
+    <p class="chapter-dek">You don't need to implement all of these — you need to recognize the names and know roughly what problem each one is solving.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Method</th><th>What it changes vs vanilla LoRA</th></tr>
+        <tr><td class="k">DoRA</td><td>Decomposes the weight update into separate magnitude and direction components, often improving quality closer to full fine-tuning at the same parameter budget</td></tr>
+        <tr><td class="k">AdaLoRA</td><td>Adaptively allocates rank across layers during training — spends more capacity where the model needs it most, instead of a fixed rank everywhere</td></tr>
+        <tr><td class="k">VeRA</td><td>Uses shared, frozen random low-rank matrices across layers with only small trainable scaling vectors — even fewer trainable parameters than standard LoRA</td></tr>
+        <tr><td class="k">LoRA-FA</td><td>Specifically targets activation memory (not just parameter count), addressing the QLoRA nuance above directly — reports the largest memory savings among current PEFT variants in controlled benchmarks</td></tr>
+        <tr><td class="k">Prefix-tuning / Prompt-tuning</td><td>Instead of modifying weight matrices at all, learns a small set of trainable "virtual tokens" prepended to the input — even lighter-weight than LoRA, but generally less expressive for complex behavior changes</td></tr>
+        <tr><td class="k">BitFit</td><td>Trains only the model's bias terms — extremely parameter-efficient, generally weaker than LoRA on more demanding tasks</td></tr>
+      </table>
+      <div class="callout">
+        <span class="callout-label">Practical guidance</span>
+        <p>Standard LoRA or QLoRA remains the default starting point for most teams in 2026 — it's the best-understood, most tooled (Hugging Face PEFT, Unsloth, TRL all support it natively), and performs close to full fine-tuning on the large majority of tasks. Reach for a specific variant (DoRA for quality, VeRA for extreme parameter efficiency, LoRA-FA for activation-memory-constrained environments) only once you've identified a specific bottleneck standard LoRA doesn't solve.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 06 FORGETTING ============ -->
+  <section class="chapter" id="forgetting">
+    <div class="chapter-head"><span class="chapter-num">06</span><h2 class="chapter-title">Catastrophic Forgetting &amp; the Reversal Curse</h2></div>
+    <p class="chapter-dek">The central risk every fine-tuning decision has to weigh against its benefit.</p>
+    <div class="chapter-body">
+      <p>Catastrophic forgetting is when a model loses previously learned capabilities during fine-tuning — a model fine-tuned aggressively on legal documents might suddenly struggle with basic conversation or forget how to format code. This risk scales with how much of the model gets updated and how far the fine-tuning data's distribution sits from the base model's original training distribution.</p>
+      <table class="tbl">
+        <tr><th>Mitigation</th><th>Mechanism</th></tr>
+        <tr><td class="k">Use PEFT instead of full fine-tuning</td><td>Freezing the base model's weights entirely is the single biggest lever — general knowledge simply can't be overwritten if it's never touched</td></tr>
+        <tr><td class="k">Lower learning rates</td><td>Smaller update steps reduce how aggressively the fine-tuning data's patterns overwrite existing behavior</td></tr>
+        <tr><td class="k">Mix original training data with fine-tuning data</td><td>Periodically re-exposing the model to general-purpose examples during fine-tuning counteracts drift toward the narrow task</td></tr>
+        <tr><td class="k">Regularization</td><td>Constrains how far fine-tuned weights (or LoRA deltas) can drift from their starting point</td></tr>
+        <tr><td class="k">Monitor general-capability benchmarks throughout training</td><td>Not just task-specific loss — track performance on broad benchmarks (MMLU-style) alongside your target task to catch forgetting before it ships</td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">The Reversal Curse — a subtler, related failure mode</span>
+        <p>A documented phenomenon where a model fine-tuned on the fact "A is B" often fails to infer "B is A" — knowledge baked into weights via fine-tuning doesn't generalize symmetrically the way in-context information does. This specific failure does not occur when the same knowledge is presented in-context (i.e., via RAG) instead — another concrete piece of evidence, alongside Ovadia et al.'s findings, for why facts belong in retrieval rather than weights.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 07 RAG VS FT ============ -->
+  <section class="chapter" id="rag-vs-ft">
+    <div class="chapter-head"><span class="chapter-num">07</span><h2 class="chapter-title">RAG vs Fine-Tuning, With Evidence</h2></div>
+    <p class="chapter-dek">Not a philosophical debate — there's a specific, citable body of evidence behind this, and a specific production pattern that wins.</p>
+    <div class="chapter-body">
+      <p>RAG is the correct first choice for roughly 80% of enterprise LLM applications because it lets you change the source data without retraining, attribute answers to documents, and switch base models freely. RAG keeps the model the same and changes what the model sees; fine-tuning changes the model weights themselves so the new behavior is baked in — RAG is for knowledge that changes, fine-tuning is for behavior that should not change.</p>
+      <div class="callout focus">
+        <span class="callout-label">The pattern that actually wins in production</span>
+        <p>Most production systems end up as a hybrid: RAG for facts, light fine-tuning for tone and format. The common shape is: fine-tune a smaller open-source model for cost/latency, paired with retrieval rather than replacing it — the highest-ROI fine-tuning in 2026 is a thin LoRA/QLoRA adapter on top of a strong base model, used <em>alongside</em> RAG, not instead of it.</p>
+      </div>
+      <table class="tbl">
+        <tr><th>Where fine-tuning genuinely moves the needle</th><th>Where it's the wrong tool (use RAG instead)</th></tr>
+        <tr><td>Structured output reliability when prompt-only solutions still hallucinate fields</td><td>Knowledge injection — "the model doesn't know our docs"</td></tr>
+        <tr><td>Domain vocabulary or jargon that base models hedge on</td><td>Any fact that changes on a timescale shorter than your retraining cadence</td></tr>
+        <tr><td>Refusal and tone control where prompt instructions get overridden</td><td>Anything requiring source attribution or verifiability</td></tr>
+        <tr><td>Cost compression through small-model distillation from a working large-model pipeline</td><td>Anything where you need to switch base models freely without re-baking knowledge</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 08 RFT ============ -->
+  <section class="chapter" id="rft">
+    <div class="chapter-head"><span class="chapter-num">08</span><h2 class="chapter-title">Reinforcement Fine-Tuning (RFT)</h2></div>
+    <p class="chapter-dek">The genuinely new 2026 addition to the fine-tuning toolkit — worth knowing by name even if narrowly scoped today.</p>
+    <div class="chapter-body">
+      <p>OpenAI's Reinforcement Fine-Tuning (RFT) is now generally available on o-series reasoning models. Unlike SFT (which trains on labeled input-output demonstrations) or DPO (which trains on preference pairs, per Topic 11's coverage), RFT trains against a programmatic grader that scores the model's actual outputs on a task — closer in spirit to RLHF's reward-model-driven optimization, but scoped to a specific, well-defined task with an automatable success signal rather than broad human preference alignment.</p>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"How does Reinforcement Fine-Tuning differ from SFT and DPO?" — SFT trains on direct demonstrations (do it like this example). DPO trains on relative preferences (this response is better than that one). RFT trains against a programmatic grader that scores task outcomes directly — closer to full RL, but applied narrowly to fine-tuning a model on a specific task with an automatable, verifiable success criterion, rather than the broad preference-alignment goal RLHF/DPO target in the base training pipeline (Topic 11).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 09 DATASET CURATION ============ -->
+  <section class="chapter" id="dataset-curation">
+    <div class="chapter-head"><span class="chapter-num">09 ★</span><h2 class="chapter-title">Dataset Curation &amp; Synthetic Data</h2></div>
+    <p class="chapter-dek">The unglamorous majority of real fine-tuning work — and the part every credible 2026 source agrees is more expensive than the GPU time.</p>
+    <div class="chapter-body">
+      <div class="callout pitfall">
+        <span class="callout-label">The cost most people forget to budget</span>
+        <p>The hidden cost is data: producing a clean, labelled, deduplicated training set of even 1,000 examples often takes a senior engineer one to two weeks — far more expensive than the GPU time itself. Any fine-tuning cost estimate that only accounts for compute is missing the majority of the real cost.</p>
+      </div>
+      <h3>A real, current synthetic-data filtering pipeline</h3>
+      <p>Synthetic data is the default scaling primitive for LLM fine-tuning in 2026 — the recipe is consistent: small real seed, frontier teacher model, structured generation, judge filter, structured output into a training framework. A representative filtering pipeline, starting from 100,000 raw generated examples:</p>
+      <div class="code-wrap">
+        <div class="code-head"><span>synthetic_data_pipeline.txt</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre>Raw generated examples (100,000)
+  → Exact deduplication            (remove ~5%)
+  → Semantic deduplication         (remove ~20%)
+  → Length filtering                (remove ~10%)
+  → Language identification         (remove ~5%)
+  → IFD scoring, keep top 30%       (remove ~65% of remainder)
+  → LLM judge scoring, keep ≥3.5    (remove ~20% of remainder)
+  → Diversity selection             (target final size)
+Final: ~2,000-5,000 high-quality examples</pre>
+      </div>
+      <div class="callout">
+        <span class="callout-label">The single most important step in that pipeline</span>
+        <p>The judge filter is the single most important step; an unfiltered synthetic dataset is worse than a smaller filtered one. This is the same principle as Topic 5's evaluation discipline applied one layer upstream — quality gating on training data, not just on model outputs.</p>
+      </div>
+      <h3>The risk unique to synthetic data: model collapse</h3>
+      <p>Model collapse is the most important and most misunderstood risk in synthetic data fine-tuning. Recursively training on model-generated data causes irreversible defects in the resulting models — specifically, the tails of the original data distribution disappear, and the model loses the ability to generate rare but important outputs, including edge cases. Mitigation: always anchor synthetic generation to a small, real, human-written seed set, and mix in real data rather than training purely on multiple generations of synthetic-on-synthetic output.</p>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"Walk me through how you'd build a fine-tuning dataset for a narrow domain task with limited labeled data." — Start with 50-100 hand-written gold examples as a real seed. Use a strong frontier model (e.g. via Self-Instruct or Evol-Instruct style prompting) to generate a much larger raw synthetic set from that seed. Run it through a filtering pipeline: deduplication, length/language filtering, an instruction-following-difficulty (IFD) score to prioritize informative examples, then an LLM-as-judge quality filter, ending with diversity selection for the final set. Budget real engineer time for manual spot-review of a random sample before training — the judge filter is the single highest-leverage step in the whole pipeline, and skipping it typically produces a worse dataset than a smaller, properly filtered one.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 10 DISTILLATION ============ -->
+  <section class="chapter" id="distillation">
+    <div class="chapter-head"><span class="chapter-num">10 ★</span><h2 class="chapter-title">Knowledge Distillation</h2></div>
+    <p class="chapter-dek">The rightmost step in the canonical sequence — compressing a working large-model pipeline into something smaller and cheaper to serve.</p>
+    <div class="chapter-body">
+      <p>Distillation transfers knowledge from a larger, more capable teacher model into a smaller, more efficient student model. Two distinct mechanisms are both called "distillation" in practice, and it's worth being able to distinguish them:</p>
+      <table class="tbl">
+        <tr><th>Mechanism</th><th>How it works</th></tr>
+        <tr><td class="k">Classic logit-based distillation</td><td>Train the student on the teacher's soft output probabilities (logits), not just hard labels, combining a KL-divergence loss on soft targets with a standard cross-entropy loss on true labels — a temperature parameter (typically 2-5) softens the teacher's logits for better gradient flow.</td></tr>
+        <tr><td class="k">Trajectory / reasoning-trace distillation</td><td>Generate (input, full reasoning trace, output) triples from a frontier teacher, then fine-tune a smaller base model on those triples via standard SFT — the technique behind the 2025-2026 wave of small-but-strong reasoning models (DeepSeek-R1 distillations, Qwen distillations, Llama distillations).</td></tr>
+      </table>
+      <div class="code-wrap">
+        <div class="code-head"><span>distillation_loss.txt</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre>L = α · CrossEntropy(student_hard, true_label)
+  + β · KL_divergence(student_soft(T), teacher_soft(T))
+
+<span class="tok-com"># T (temperature) typically 2-5 -- softens both distributions for better gradient signal</span>
+<span class="tok-com"># common starting point: α = 0.5, β = 0.5, then tune on validation performance</span>
+<span class="tok-com"># noisier datasets: weight the soft (teacher-derived) loss more heavily</span></pre>
+      </div>
+      <div class="statgrid">
+        <div class="statcard"><div class="num">1-2%</div><div class="lbl">typical absolute accuracy lost while cutting inference time in half</div></div>
+        <div class="statcard"><div class="num">multi-teacher</div><div class="lbl">ensembling several teachers avoids biasing the student toward one model's specific failure modes</div></div>
+      </div>
+      <div class="callout pitfall">
+        <span class="callout-label">A subtlety worth having ready: the strongest teacher isn't always the best teacher</span>
+        <p>Many pipelines default to using the single strongest available model as the teacher, implicitly treating teacher performance as a proxy for training-data quality — but the best teacher for a given student depends on which of the teacher's correct answers are actually learnable and useful for that specific, smaller student's capacity, not just which answers are correct in isolation. Student-aware teacher/answer selection is an active area of research precisely because "just use the biggest model as teacher" is a weaker heuristic than it first appears.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 11 EVALUATING ============ -->
+  <section class="chapter" id="evaluating">
+    <div class="chapter-head"><span class="chapter-num">11</span><h2 class="chapter-title">Evaluating a Fine-Tuned Model</h2></div>
+    <p class="chapter-dek">A direct application of Topic 5's discipline — a fine-tuned model needs the same rigor as any other production system change.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Held-out test set, never seen during training or dataset curation</strong> — the same golden-dataset discipline from Topic 5, applied to fine-tuning specifically.</li>
+        <li><strong>Task-specific metric, not just training loss</strong> — a shrinking loss curve doesn't guarantee the model is actually better at the target task; always evaluate against the real success criterion.</li>
+        <li><strong>General-capability regression check</strong> — run the fine-tuned model against broad benchmarks (not just the narrow target task) to catch catastrophic forgetting before shipping.</li>
+        <li><strong>A/B or canary comparison against the pre-fine-tune baseline</strong> — exactly Topic 7's canary deployment pattern, applied to a model swap instead of a prompt change.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 12 COSTS ============ -->
+  <section class="chapter" id="costs">
+    <div class="chapter-head"><span class="chapter-num">12</span><h2 class="chapter-title">Real Cost Numbers</h2></div>
+    <p class="chapter-dek">Concrete figures worth having ready, so a cost conversation doesn't stay abstract.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Item</th><th>Typical cost</th></tr>
+        <tr><td class="k">LoRA fine-tune, 7-13B open-source model, single A100</td><td>$50-$500 in compute for a few thousand examples</td></tr>
+        <tr><td class="k">OpenAI GPT-4o-mini fine-tune</td><td>$10-$200 in training cost, depending on dataset size</td></tr>
+        <tr><td class="k">Producing a clean, curated 1,000-example dataset</td><td>1-2 weeks of a senior engineer's time — usually exceeds the GPU cost</td></tr>
+        <tr><td class="k">Synthetic dataset generation + filtering (small team, narrow domain)</td><td>$50-$200 in API/GPU costs, roughly one week start to finish</td></tr>
+      </table>
+      <div class="callout">
+        <span class="callout-label">The number that actually matters in a budget conversation</span>
+        <p>Compute is cheap; data is expensive. Any fine-tuning proposal that quotes only GPU cost and omits the data curation timeline is understating the real cost by a wide margin — this is the single most useful cost-framing fact to bring into a planning conversation.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 13 PITFALLS ============ -->
+  <section class="chapter" id="pitfalls">
+    <div class="chapter-head"><span class="chapter-num">13</span><h2 class="chapter-title">Production Pitfalls</h2></div>
+    <p class="chapter-dek">What actually goes wrong.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Fine-tuning to inject knowledge instead of using RAG.</strong> The single most common and most costly architecture mistake in this space — produces stale, unverifiable answers and real catastrophic-forgetting risk for a problem RAG solves better and more cheaply.</li>
+        <li><strong>Full fine-tuning when PEFT would suffice.</strong> Locks you to one base-model checkpoint and multiplies both cost and forgetting risk for little to no accuracy benefit on most tasks.</li>
+        <li><strong>Fine-tuning on a behavior that's still volatile.</strong> If the target behavior is still changing week to week, you're locking in a moving target — prompt engineering is the more honest tool until the behavior stabilizes.</li>
+        <li><strong>Training purely on synthetic-on-synthetic data with no real anchor.</strong> Real, documented model-collapse risk — the tails of the distribution disappear, and rare-but-important outputs quietly stop being generated.</li>
+        <li><strong>Skipping the judge filter on synthetic data.</strong> An unfiltered synthetic dataset is worse than a smaller filtered one — quality gating on training data is not optional.</li>
+        <li><strong>Budgeting only for GPU compute, not data curation time.</strong> The dominant real cost of most fine-tuning projects is engineer time spent curating a clean dataset, not compute.</li>
+        <li><strong>Defaulting to the strongest available model as a distillation teacher without checking learnability.</strong> The strongest teacher is not always the best teacher for a given, smaller student — student-aware selection matters.</li>
+        <li><strong>No general-capability regression check before shipping a fine-tuned model.</strong> Task-specific accuracy can improve while broader capability quietly degrades — catastrophic forgetting caught only after deployment is expensive to unwind.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 14 INTERVIEW ============ -->
+  <section class="chapter" id="interview">
+    <div class="chapter-head"><span class="chapter-num">14</span><h2 class="chapter-title">Interview Cheat-Sheet</h2></div>
+    <p class="chapter-dek">Grouped by depth.</p>
+    <div class="chapter-body">
+      <details class="qa"><summary>"When would you fine-tune instead of using RAG?" — give the complete answer.<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>Apply the Form vs Facts distinction: fine-tune for stable behavioral properties (tone, structured output schema, refusal patterns, domain vocabulary) that prompting can't reliably hold; use RAG for knowledge that changes and needs attribution. Ovadia et al. showed RAG consistently outperforms fine-tuning for factual recall specifically, so knowledge injection is the wrong use case for fine-tuning regardless of how it's framed. In production, the two are usually combined — RAG for facts, a thin LoRA adapter for tone/format — rather than treated as mutually exclusive choices.</p></div>
+      </details>
+      <details class="qa"><summary>Explain LoRA's low-rank hypothesis and why B is initialized to zero.<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>LoRA assumes the weight update needed to adapt a pretrained model to a new task has low intrinsic rank — it can be well-approximated by a much smaller matrix than the full weight matrix, so training a rank-r decomposition (two small matrices A and B) captures most of the useful update while training far fewer parameters. B is initialized to zero so that ΔW = BA = 0 at the start of training — the adapted model starts out behaviorally identical to the base model, and training gradually learns a useful perturbation rather than starting from an already-corrupted random state.</p></div>
+      </details>
+      <details class="qa"><summary>What does QLoRA actually add on top of LoRA, and what's the nuance about memory efficiency people often miss?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>QLoRA quantizes the frozen base model to 4-bit NormalFloat (NF4) precision before applying standard LoRA adapters on top, reducing base-model storage memory by roughly 4x versus 16-bit. The nuance: trainable parameter count doesn't directly correlate with total runtime memory efficiency — activation memory (needed for backpropagation, including quantization states) can still dominate total memory cost, which is why some QLoRA setups still hit memory limits despite the base model itself being heavily compressed.</p></div>
+      </details>
+      <details class="qa"><summary>What is catastrophic forgetting, and name three concrete mitigations.<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>Catastrophic forgetting is the loss of previously learned general capabilities during fine-tuning on a narrow task — a model fine-tuned aggressively on one domain can degrade on unrelated tasks it previously handled well. Mitigations: use PEFT instead of full fine-tuning (freezing most weights is the single biggest lever), use lower learning rates to reduce how aggressively updates overwrite existing behavior, and mix original/general-purpose data into the fine-tuning set so the model isn't exclusively exposed to the narrow target distribution.</p></div>
+      </details>
+      <details class="qa"><summary>Explain the Reversal Curse and what it implies about knowledge storage.<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>A model fine-tuned on "A is B" often fails to correctly infer "B is A" — fine-tuned knowledge doesn't generalize symmetrically the way information presented in-context does. This failure specifically doesn't occur when the same fact is presented via retrieval/in-context rather than baked into weights, making it another concrete piece of evidence, alongside Ovadia et al.'s findings, that facts belong in RAG rather than fine-tuning.</p></div>
+      </details>
+      <details class="qa"><summary>Design a fine-tuning approach for a customer support bot that needs consistent, brand-specific tone across all responses, on top of an existing RAG pipeline.<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>This is a textbook Form problem layered on an existing Facts (RAG) system — don't replace the RAG pipeline, add a thin LoRA or QLoRA adapter trained specifically on example responses demonstrating the target tone and format, applied on top of the existing retrieval-augmented generation flow. Curate a few hundred to a few thousand high-quality (query, retrieved context, ideal-tone response) examples — real examples if available, synthetic-with-judge-filtering if not — evaluate against a held-out set specifically for tone/format consistency (not factual accuracy, which the RAG layer already handles), and check for general-capability regression before shipping.</p></div>
+      </details>
+      <details class="qa"><summary>A stakeholder wants to fine-tune a model on the company's entire internal wiki so it "knows everything." How do you respond?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Push back with the Form/Facts framework directly: a wiki is exactly Facts — content that changes, needs attribution, and where staleness is a real risk. Fine-tuning it in would produce a model whose "knowledge" is frozen at training time, unverifiable (no source citation), and expensive to keep current as the wiki changes, plus real catastrophic-forgetting risk from training on such a broad, heterogeneous corpus. Recommend RAG instead — it solves exactly this problem, lets the underlying wiki update independently of any model retraining, and Ovadia et al.'s findings back this up directly as the evidence-based default for knowledge injection.</p></div>
+      </details>
+      <details class="qa"><summary>How would you decide whether to distill a large-model pipeline into a smaller model?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Distillation is the rightmost step in the canonical sequence — only reach for it once you already have a working, validated large-model pipeline and the driver is specifically cost/latency compression, not capability gaps. Check the tradeoff explicitly: typical distillation costs roughly 1-2% absolute accuracy for often halving inference time, which is a good trade for high-volume, latency-sensitive production traffic but a bad one if the task is low-volume or accuracy-critical enough that the 1-2% loss matters. Choose the teacher carefully — the strongest available model isn't automatically the best teacher for a smaller student's actual capacity, and consider multi-teacher ensembling to avoid inheriting one model's specific failure modes.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ 15 GLOSSARY ============ -->
+  <section class="chapter" id="glossary">
+    <div class="chapter-head"><span class="chapter-num">15</span><h2 class="chapter-title">Glossary</h2></div>
+    <p class="chapter-dek">Every term used in this document.</p>
+    <div class="chapter-body">
+      <dl class="glossary-grid">
+        <div class="gterm"><dt>PEFT</dt><dd>Parameter-Efficient Fine-Tuning — training a small subset of parameters while freezing the base model.</dd></div>
+        <div class="gterm"><dt>LoRA</dt><dd>Low-Rank Adaptation — injects trainable low-rank matrices approximating the needed weight update, freezing the base model entirely.</dd></div>
+        <div class="gterm"><dt>QLoRA</dt><dd>LoRA applied on top of a 4-bit quantized (NF4) frozen base model, for large memory savings.</dd></div>
+        <div class="gterm"><dt>Intrinsic rank</dt><dd>LoRA's core hypothesis: the weight update needed for task adaptation can be well-approximated by a low-rank matrix.</dd></div>
+        <div class="gterm"><dt>Catastrophic forgetting</dt><dd>Loss of previously learned general capability during fine-tuning on a narrow task.</dd></div>
+        <div class="gterm"><dt>Reversal Curse</dt><dd>Fine-tuned knowledge ("A is B") failing to generalize symmetrically ("B is A"), unlike in-context knowledge.</dd></div>
+        <div class="gterm"><dt>Form vs Facts</dt><dd>The core decision heuristic: stable behavior → fine-tune; changing knowledge → RAG.</dd></div>
+        <div class="gterm"><dt>Reinforcement Fine-Tuning (RFT)</dt><dd>Fine-tuning against a programmatic grader scoring task outcomes, distinct from SFT and DPO.</dd></div>
+        <div class="gterm"><dt>IFD scoring</dt><dd>Instruction-Following-Difficulty scoring, used to prioritize informative synthetic training examples during filtering.</dd></div>
+        <div class="gterm"><dt>Model collapse</dt><dd>Distributional degradation from recursively training on model-generated (synthetic) data with no real anchor.</dd></div>
+        <div class="gterm"><dt>Knowledge distillation</dt><dd>Transferring a larger teacher model's behavior into a smaller, cheaper student model.</dd></div>
+        <div class="gterm"><dt>Temperature (distillation)</dt><dd>Parameter softening teacher/student logit distributions for better gradient flow during distillation training.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ 16 RESOURCES ============ -->
+  <section class="chapter" id="resources">
+    <div class="chapter-head"><span class="chapter-num">16</span><h2 class="chapter-title">Resources</h2></div>
+    <p class="chapter-dek">Primary sources worth reading directly.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Hu et al. — "LoRA: Low-Rank Adaptation of Large Language Models"</strong> (2021) — the original paper</li>
+        <li><strong>Dettmers et al. — "QLoRA: Efficient Finetuning of Quantized LLMs"</strong> (2023)</li>
+        <li><strong>Ovadia et al.</strong> (arXiv:2312.05934) — "Fine-Tuning or Retrieval? Comparing Knowledge Injection in LLMs" — the empirical backbone of the RAG-vs-fine-tuning argument in this document</li>
+        <li><strong>Hugging Face PEFT library documentation</strong> — the standard tooling for LoRA, QLoRA, and most PEFT variants covered here</li>
+        <li><strong>Hinton et al. — "Distilling the Knowledge in a Neural Network"</strong> (2015) — the foundational distillation paper</li>
+      </ul>
+      <div class="callout">
+        <span class="callout-label">How to actually get interview-ready on this topic</span>
+        <p>Run a small LoRA fine-tune yourself on a 7-8B open model using Hugging Face PEFT or Unsloth, on a narrow, well-defined task with a few hundred examples — watch the loss curve, then evaluate the result on both your target task and a general-capability check. Having personally watched a model's behavior shift from a real fine-tune, however small, is worth more in an interview than reciting this document's numbers.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">Doc 15 — Fine-Tuning, PEFT &amp; Model Customization. Next: Model Serving &amp; Inference Optimization.</div>
+</main>
+</div>
+
+<script>
+const links = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('section.chapter');
+const map = new Map();
+links.forEach(l => map.set(l.getAttribute('href').slice(1), l));
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const link = map.get(entry.target.id);
+    if(!link) return;
+    if(entry.isIntersecting){
+      links.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, {rootMargin: '-15% 0px -70% 0px', threshold: 0});
+sections.forEach(s => io.observe(s));
+</script>
+</body>
+</html>

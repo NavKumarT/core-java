@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM Fundamentals &amp; Prompting — Built From the Ground Up</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d10; --bg-raised:#12151a; --bg-card:#14181f;
+  --line:#242a33; --line-soft:#1b2028;
+  --ink:#e7e9ec; --ink-dim:#9aa3b0; --ink-faint:#5c6672;
+  --amber:#ff9f40; --amber-dim:#c97a2e; --lime:#c9f04c; --cyan:#5fd9c9; --violet:#b592ff; --rose:#ff7a8a;
+  --serif:'Source Serif 4', Georgia, serif;
+  --display:'Space Grotesk', sans-serif;
+  --mono:'JetBrains Mono', 'Courier New', monospace;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:radial-gradient(var(--line-soft) 1px, transparent 1px);
+  background-size:22px 22px; background-color:var(--bg);
+  color:var(--ink); font-family:var(--serif); font-size:16px; line-height:1.68; -webkit-font-smoothing:antialiased;
+}
+a{color:var(--amber); text-decoration:none;}
+::selection{background:var(--amber); color:#111;}
+.shell{display:grid; grid-template-columns:290px 1fr; min-height:100vh;}
+@media (max-width:920px){ .shell{grid-template-columns:1fr;} .side{display:none;} }
+.side{position:sticky; top:0; height:100vh; overflow-y:auto; border-right:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(18,21,26,.9), rgba(11,13,16,.9)); padding:28px 20px 60px;}
+.side::-webkit-scrollbar{width:6px;} .side::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.brand{font-family:var(--display); font-weight:700; font-size:15px; color:var(--ink); margin-bottom:2px;}
+.brand span{color:var(--amber);}
+.brand-sub{font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-bottom:24px;}
+.back-link{display:inline-block; font-family:var(--mono); font-size:11px; color:var(--cyan); margin-bottom:20px; border:1px solid var(--line); padding:5px 10px; border-radius:6px;}
+.nav-link{display:flex; align-items:baseline; gap:7px; font-family:var(--display); font-size:12.2px; color:var(--ink-dim);
+  padding:5px 7px; border-radius:6px; border-left:2px solid transparent; transition:.15s;}
+.nav-link:hover{color:var(--ink); background:var(--bg-raised);}
+.nav-link.active{color:var(--amber); border-left-color:var(--amber); background:var(--bg-raised);}
+.nav-num{font-family:var(--mono); font-size:9.5px; color:var(--ink-faint); min-width:20px;}
+.main{max-width:920px; padding:0 44px 140px; margin:0 auto;}
+@media (max-width:700px){ .main{padding:0 20px 100px;} }
+.hero{padding:76px 0 54px; border-bottom:1px solid var(--line);}
+.hero-eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--lime);
+  margin-bottom:18px; display:flex; align-items:center; gap:10px;}
+.hero-eyebrow::before{content:''; width:22px; height:1px; background:var(--lime); display:inline-block;}
+h1.title{font-family:var(--display); font-weight:700; font-size:clamp(30px,4.8vw,50px); line-height:1.08; letter-spacing:-.02em; color:var(--ink); max-width:16ch;}
+h1.title em{font-style:normal; color:var(--amber);}
+.hero-sub{font-family:var(--serif); font-size:18px; color:var(--ink-dim); max-width:62ch; margin-top:20px;}
+.tag-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:26px;}
+.tag{font-family:var(--mono); font-size:11px; padding:5px 11px; border-radius:20px; border:1px solid var(--line); color:var(--ink-dim); background:var(--bg-raised);}
+section.chapter{padding:60px 0; border-bottom:1px solid var(--line);}
+section.chapter:last-of-type{border-bottom:none;}
+.chapter-head{display:flex; align-items:flex-start; gap:16px; margin-bottom:8px;}
+.chapter-num{font-family:var(--mono); font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:20px; padding:3px 11px; margin-top:6px; white-space:nowrap;}
+h2.chapter-title{font-family:var(--display); font-weight:600; font-size:clamp(22px,3.2vw,30px); color:var(--ink); letter-spacing:-.01em;}
+.chapter-dek{font-family:var(--serif); font-style:italic; color:var(--ink-dim); font-size:16px; max-width:66ch; margin:14px 0 30px 0; padding-left:66px;}
+@media (max-width:700px){.chapter-dek{padding-left:0;}}
+.chapter-body{padding-left:66px;}
+@media (max-width:700px){.chapter-body{padding-left:0;}}
+.chapter-body h3{font-family:var(--display); font-weight:600; font-size:19px; color:var(--ink); margin:32px 0 12px;}
+.chapter-body h4{font-family:var(--display); font-weight:600; color:var(--cyan); margin:22px 0 10px; text-transform:uppercase; letter-spacing:.04em; font-size:12px;}
+.chapter-body p{color:var(--ink-dim); margin-bottom:14px; max-width:72ch;}
+.chapter-body ul, .chapter-body ol{color:var(--ink-dim); margin:0 0 16px 20px; max-width:70ch;}
+.chapter-body li{margin-bottom:7px;}
+.chapter-body strong{color:var(--ink); font-weight:600;}
+code.inline{font-family:var(--mono); font-size:.87em; background:var(--bg-raised); color:var(--lime); padding:1px 6px; border-radius:4px; border:1px solid var(--line);}
+.callout{border-left:3px solid var(--amber); background:var(--bg-card); padding:16px 18px; border-radius:0 8px 8px 0; margin:20px 0; max-width:70ch;}
+.callout p{margin-bottom:0; color:var(--ink-dim); font-size:14.5px;}
+.callout .callout-label{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--amber); margin-bottom:6px; display:block;}
+.callout.interview{border-left-color:var(--violet);} .callout.interview .callout-label{color:var(--violet);}
+.callout.pitfall{border-left-color:var(--rose);} .callout.pitfall .callout-label{color:var(--rose);}
+.callout.analogy{border-left-color:var(--lime); background:#151b12;} .callout.analogy .callout-label{color:var(--lime);}
+.callout.check{border-left-color:var(--cyan);} .callout.check .callout-label{color:var(--cyan);}
+.code-wrap{background:#0a0c0f; border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:18px 0 24px;}
+.code-head{display:flex; align-items:center; justify-content:space-between; padding:9px 14px; border-bottom:1px solid var(--line); background:var(--bg-raised); font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+.code-dots{display:flex; gap:5px;} .code-dots span{width:8px; height:8px; border-radius:50%; background:var(--line);}
+pre{padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:12.8px; line-height:1.75; color:#d7dbe0;}
+.tok-kw{color:var(--violet);} .tok-str{color:var(--lime);} .tok-com{color:var(--ink-faint); font-style:italic;} .tok-fn{color:var(--cyan);} .tok-num{color:var(--amber);}
+.tbl{width:100%; border-collapse:collapse; margin:18px 0 26px; font-size:13.2px; max-width:78ch;}
+.tbl th{text-align:left; font-family:var(--mono); font-size:10.2px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); padding:10px 12px; border-bottom:1px solid var(--line);}
+.tbl td{padding:11px 12px; border-bottom:1px solid var(--line-soft); color:var(--ink-dim); vertical-align:top;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl td.k{color:var(--ink); font-family:var(--mono); font-size:12.2px; white-space:nowrap;}
+.diagram{background:var(--bg-card); border:1px solid var(--line); border-radius:12px; padding:22px; margin:20px 0 26px;}
+.diagram svg{width:100%; height:auto; display:block;}
+.legend{display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; font-family:var(--mono); font-size:10.5px; color:var(--ink-faint);}
+.legend span{display:inline-flex; align-items:center; gap:6px;} .legend i{width:9px; height:9px; border-radius:2px; display:inline-block;}
+.qa{border:1px solid var(--line); border-radius:10px; margin-bottom:10px; background:var(--bg-card); overflow:hidden;}
+.qa summary{list-style:none; cursor:pointer; padding:15px 18px; display:flex; gap:12px; align-items:flex-start; font-family:var(--display); font-size:14px; color:var(--ink); font-weight:500;}
+.qa summary::-webkit-details-marker{display:none;}
+.qa summary::before{content:'+'; font-family:var(--mono); color:var(--amber); font-size:16px; line-height:1;}
+.qa[open] summary::before{content:'–';}
+.qa .qa-body{padding:0 18px 18px 40px; color:var(--ink-dim); font-size:14px; max-width:68ch;}
+.qa .qa-body p{margin-bottom:10px;}
+.qa-tag{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; background:var(--bg-raised); color:var(--ink-faint); padding:2px 8px; border-radius:20px; border:1px solid var(--line); margin-left:auto; white-space:nowrap; flex-shrink:0;}
+.glossary-grid{display:grid; grid-template-columns:1fr 1fr; gap:2px 28px;}
+@media (max-width:700px){.glossary-grid{grid-template-columns:1fr;}}
+.gterm{padding:14px 0; border-bottom:1px solid var(--line-soft);}
+.gterm dt{font-family:var(--mono); color:var(--cyan); font-size:13px; margin-bottom:4px;}
+.gterm dd{color:var(--ink-dim); font-size:13px; line-height:1.55;}
+.footer{padding:60px 0 20px; text-align:center; color:var(--ink-faint); font-family:var(--mono); font-size:12px;}
+.stepnum{display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%;
+  background:var(--bg-raised); border:1px solid var(--amber); color:var(--amber); font-family:var(--mono); font-size:11px; margin-right:8px;}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav class="side" id="side">
+  <a class="back-link" href="#">← Topic 10: System Design</a>
+  <div class="brand">LLM <span>Fundamentals</span></div>
+  <div class="brand-sub">Topic 11 of 14 — built from zero</div>
+  <a class="nav-link" href="#big-picture"><span class="nav-num">00</span>The Big Picture</a>
+  <a class="nav-link" href="#tokens"><span class="nav-num">01</span>★ Tokens &amp; Tokenization</a>
+  <a class="nav-link" href="#embeddings"><span class="nav-num">02</span>★ Embeddings &amp; Vector Space</a>
+  <a class="nav-link" href="#attention"><span class="nav-num">03</span>★ Attention, Built Up Slowly</a>
+  <a class="nav-link" href="#transformer"><span class="nav-num">04</span>The Transformer, Assembled</a>
+  <a class="nav-link" href="#training"><span class="nav-num">05</span>★ Training: Pretrain → SFT → RLHF/DPO</a>
+  <a class="nav-link" href="#context-window"><span class="nav-num">06</span>Context Windows &amp; Position</a>
+  <a class="nav-link" href="#sampling"><span class="nav-num">07</span>★ Sampling: Temperature, Top-p, Top-k</a>
+  <a class="nav-link" href="#prompting"><span class="nav-num">08</span>Prompting Fundamentals</a>
+  <a class="nav-link" href="#full-lifecycle"><span class="nav-num">09</span>One API Call, Start to Finish</a>
+  <a class="nav-link" href="#misconceptions"><span class="nav-num">10</span>Common Misconceptions, Corrected</a>
+  <a class="nav-link" href="#interview"><span class="nav-num">11</span>Interview Cheat-Sheet</a>
+  <a class="nav-link" href="#glossary"><span class="nav-num">12</span>Glossary</a>
+  <a class="nav-link" href="#resources"><span class="nav-num">13</span>Resources</a>
+</nav>
+
+<main class="main">
+  <div class="hero">
+    <div class="hero-eyebrow">Deep reference · Topic 11 of 14 · Foundations, built patiently</div>
+    <h1 class="title">LLM Fundamentals, <em>From the Ground Up</em></h1>
+    <p class="hero-sub">Every agentic pattern in Topics 1-10 assumes you already understand what's happening inside the box. This document doesn't assume that. It builds tokens → embeddings → attention → the full transformer → the training pipeline → sampling → prompting, each concept motivated before it's named, so the intuition actually sticks — not just the vocabulary.</p>
+    <div class="tag-row">
+      <span class="tag">Tokenization</span><span class="tag">Embeddings</span><span class="tag">Attention</span>
+      <span class="tag">Transformer Architecture</span><span class="tag">Pretraining</span><span class="tag">SFT</span>
+      <span class="tag">RLHF / DPO</span><span class="tag">Sampling</span><span class="tag">Prompting</span>
+    </div>
+  </div>
+
+  <!-- ============ 00 BIG PICTURE ============ -->
+  <section class="chapter" id="big-picture">
+    <div class="chapter-head"><span class="chapter-num">00</span><h2 class="chapter-title">The Big Picture — What Is a Language Model Actually Doing?</h2></div>
+    <p class="chapter-dek">One sentence, then we spend the rest of this document unpacking it properly.</p>
+    <div class="chapter-body">
+      <p>A large language model does exactly one job, over and over: given some text so far, <strong>predict what token comes next.</strong> That's it. Not "understand," not "know" — predict the next small piece of text, based on everything it saw during training. Every capability you've ever seen an LLM demonstrate — writing code, answering questions, calling tools, reasoning step by step — is this same mechanism, repeated one token at a time, at a scale and with a quality that makes it feel like understanding.</p>
+      <div class="callout analogy">
+        <span class="callout-label">A concrete mental model before any jargon</span>
+        <p>Imagine an extremely well-read friend playing a guessing game: you show them a sentence with the last word blanked out, and they guess what comes next, based on every book, article, and conversation they've ever absorbed. Now imagine they play that game not once, but again on the sentence-plus-their-guess, then again, then again — each time appending their own last guess and predicting the next one. Do that a few hundred times in a row, and you get a paragraph. That loop — predict one piece, append it, predict the next piece — is literally what's happening every time you get a response from ChatGPT, Claude, or any other LLM.</p>
+      </div>
+      <p>The rest of this document answers four questions, in order, because each one depends on the last: <strong>What is a "piece" of text, exactly</strong> (tokens)? <strong>How does the model represent meaning internally</strong> (embeddings)? <strong>How does it decide which earlier words matter most for predicting the next one</strong> (attention)? <strong>How did it learn to do any of this in the first place</strong> (training)?</p>
+    </div>
+  </section>
+
+  <!-- ============ 01 TOKENS ============ -->
+  <section class="chapter" id="tokens">
+    <div class="chapter-head"><span class="chapter-num">01 ★</span><h2 class="chapter-title">Tokens &amp; Tokenization</h2></div>
+    <p class="chapter-dek">The single most common wrong assumption beginners carry: that an LLM reads words, or even letters. It reads neither.</p>
+    <div class="chapter-body">
+      <p>A model can't process raw text directly — text is just a sequence of characters, and there's no clean mathematical operation for "add two letters together." So before anything else happens, text gets chopped into <strong>tokens</strong> — chunks that are sometimes whole words, sometimes parts of words, sometimes single characters or punctuation marks. Each unique token in the model's vocabulary gets assigned a number, and from that point on, the model only ever sees numbers.</p>
+      <div class="code-wrap">
+        <div class="code-head"><span>how a sentence actually gets tokenized</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-str">"I love agentic engineering"</span>
+
+<span class="tok-com"># roughly becomes something like:</span>
+[<span class="tok-str">"I"</span>, <span class="tok-str">" love"</span>, <span class="tok-str">" agent"</span>, <span class="tok-str">"ic"</span>, <span class="tok-str">" engineering"</span>]
+
+<span class="tok-com"># which becomes token IDs the model actually processes:</span>
+[40, 3021, 8479, 291, 8140]</pre>
+      </div>
+      <p>Notice <code class="inline">"agentic"</code> split into two pieces, <code class="inline">" agent"</code> and <code class="inline">"ic"</code> — the word wasn't common enough in training data to earn its own single token, but "agent" was. This is the essence of the standard tokenization algorithm, <strong>Byte-Pair Encoding (BPE)</strong>: start with individual characters, then repeatedly merge the most frequently co-occurring pairs into a single token, building up a vocabulary of the most useful chunks — common words become single tokens, rare words get split into meaningful sub-pieces, and truly novel strings can always fall back to individual characters or bytes, so nothing is ever un-tokenizable.</p>
+      <h3>Why this matters far beyond trivia</h3>
+      <table class="tbl">
+        <tr><th>Consequence</th><th>Why it happens</th></tr>
+        <tr><td class="k">"How many letters in strawberry?" fails</td><td>The model never sees the letters <code class="inline">s-t-r-a-w-b-e-r-r-y</code> individually — it sees maybe 2-3 tokens representing chunks of that word. Counting letters requires reasoning about sub-token structure the model was never directly trained to do well.</td></tr>
+        <tr><td class="k">Pricing and context limits are token-based, not word-based</td><td>Every cost and context-window number in Topics 5-9 (e.g. "512-1024 token chunks") is counting these units, not words — roughly 0.75 words per token in English on average, so a 1,000-word document is roughly 1,300 tokens.</td></tr>
+        <tr><td class="k">Non-English languages often cost more per "word"</td><td>Tokenizers are built from training-data frequency, and English dominates most training corpora — a language underrepresented in training data gets split into more, smaller tokens per word, directly increasing cost and consuming more of the context window for the same meaning.</td></tr>
+        <tr><td class="k">Whitespace and casing are part of the token</td><td>Notice <code class="inline">" love"</code> above includes the leading space as part of the token, and <code class="inline">"Love"</code> vs <code class="inline">"love"</code> can be entirely different tokens — this is why prompt formatting (extra spaces, inconsistent casing) can subtly change model behavior.</td></tr>
+      </table>
+      <div class="callout check">
+        <span class="callout-label">Check your understanding</span>
+        <p>If someone asks "why can't GPT-4 reliably count the r's in strawberry," the correct answer references tokenization specifically — the model isn't "bad at counting," it's reasoning over sub-word chunks that don't preserve individual-letter structure, so a task that seems trivial to a human (who sees individual letters) requires the model to do something closer to inference about its own internal representation.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 EMBEDDINGS ============ -->
+  <section class="chapter" id="embeddings">
+    <div class="chapter-head"><span class="chapter-num">02 ★</span><h2 class="chapter-title">Embeddings &amp; Vector Space</h2></div>
+    <p class="chapter-dek">A token ID (like 8479 for "agent") is just an arbitrary label — it carries no meaning by itself. Embeddings are how meaning enters the picture.</p>
+    <div class="chapter-body">
+      <p>The number 8479 tells the model nothing about what "agent" means, or that it's related to "assistant" or "actor." So the very first thing that happens inside the model is a lookup: every token ID gets converted into a long list of numbers — a <strong>vector</strong>, typically hundreds to thousands of numbers long — called its <strong>embedding</strong>. These numbers aren't arbitrary; they're learned during training such that tokens with related meanings end up with similar vectors.</p>
+      <div class="callout analogy">
+        <span class="callout-label">The map analogy</span>
+        <p>Think of embedding space as an enormous, high-dimensional map where every word/token gets a coordinate. Words used in similar contexts during training end up near each other on this map — "king" and "queen" are close together; "king" and "banana" are far apart. Famously, the relationships between coordinates can themselves be meaningful: the direction and distance from "king" to "queen" is roughly the same as from "man" to "woman" — the vector arithmetic <code class="inline">king - man + woman ≈ queen</code> actually works reasonably well in real embedding spaces. The model isn't storing a dictionary definition anywhere — meaning <em>is</em> position on this map.</p>
+      </div>
+      <p>This is exactly the same underlying concept as the embeddings used for retrieval in Topic 8 — when you "embed a chunk" for a vector database, you're using this same idea, just applied to a whole passage of text (usually by combining/pooling the embeddings of its tokens) rather than a single token, so that semantically similar passages end up near each other and can be found via nearest-neighbor search.</p>
+      <table class="tbl">
+        <tr><th>Term</th><th>Plain meaning</th></tr>
+        <tr><td class="k">Embedding</td><td>A vector (list of numbers) representing a token or passage's meaning as a position in space</td></tr>
+        <tr><td class="k">Dimensionality</td><td>How many numbers are in that vector — common sizes range from a few hundred to a few thousand; more dimensions can capture finer distinctions of meaning at the cost of storage/compute</td></tr>
+        <tr><td class="k">Cosine similarity</td><td>The standard way to measure "how close are two points on this map" — the metric behind nearly every vector search in Topic 8</td></tr>
+      </table>
+      <div class="callout check">
+        <span class="callout-label">Check your understanding</span>
+        <p>An embedding is not a summary and not a compressed version of the text's characters — it's a learned coordinate reflecting meaning-in-context. Two totally different-looking strings ("physician" and "doctor") can have nearly identical embeddings; two similar-looking strings ("bark" the tree covering vs. "bark" the dog sound) can have very different embeddings depending on context, because modern embeddings (via attention, next section) are context-sensitive, not fixed per word.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 ATTENTION ============ -->
+  <section class="chapter" id="attention">
+    <div class="chapter-head"><span class="chapter-num">03 ★</span><h2 class="chapter-title">Attention, Built Up Slowly</h2></div>
+    <p class="chapter-dek">The mechanism that made modern LLMs possible. Take this section slowly — everything else in the transformer is comparatively simple once this clicks.</p>
+    <div class="chapter-body">
+      <h3>The problem attention solves</h3>
+      <p>Consider the sentence: <em>"The trophy didn't fit in the suitcase because it was too big."</em> What does "it" refer to — the trophy or the suitcase? A human resolves this instantly using context from elsewhere in the sentence. But if you process words strictly one at a time in isolation, "it" is just a pronoun with no inherent meaning — you need a mechanism that lets the model, while processing the word "it," <strong>look back at every other word in the sentence and decide how much each one matters</strong> for understanding "it" right now. That mechanism is attention.</p>
+      <h3>Query, Key, Value — the analogy that actually works</h3>
+      <div class="callout analogy">
+        <span class="callout-label">The library search analogy</span>
+        <p>Imagine a library where every word in the sentence is a book on a shelf. Each book has a <strong>Key</strong> — a short label describing what the book is about. When the model is processing a particular word (say, "it"), that word generates a <strong>Query</strong> — a description of what it's looking for ("something that could be the subject that's 'too big'"). The model compares this Query against every book's Key to compute a relevance score for each word in the sentence. Words with high relevance ("trophy," "suitcase") get weighted heavily; words with low relevance ("the," "in") get weighted lightly. Then the model gathers each word's actual content — its <strong>Value</strong> — weighted by those relevance scores, and blends them together. The result: "it"'s representation now contains a weighted blend of "trophy" and "suitcase," with the balance tipped by whatever in the sentence actually helps disambiguate it (here, "too big" makes "trophy" the more relevant referent).</p>
+      </div>
+      <div class="diagram">
+        <svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="atm" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff9f40"/></marker></defs>
+          <text x="350" y="24" fill="#9aa3b0" font-family="JetBrains Mono" font-size="11" text-anchor="middle">processing the word "it" — attention scores to every other word</text>
+          <rect x="30" y="60" width="70" height="34" rx="6" fill="none" stroke="#5c6672" stroke-width="1.2"/>
+          <text x="65" y="82" fill="#9aa3b0" font-family="JetBrains Mono" font-size="11" text-anchor="middle">The</text>
+          <rect x="120" y="60" width="90" height="34" rx="6" fill="none" stroke="#c9f04c" stroke-width="1.8"/>
+          <text x="165" y="82" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">trophy</text>
+          <rect x="230" y="60" width="110" height="34" rx="6" fill="none" stroke="#5c6672" stroke-width="1.2"/>
+          <text x="285" y="82" fill="#9aa3b0" font-family="JetBrains Mono" font-size="11" text-anchor="middle">didn't fit</text>
+          <rect x="360" y="60" width="60" height="34" rx="6" fill="none" stroke="#5c6672" stroke-width="1.2"/>
+          <text x="390" y="82" fill="#9aa3b0" font-family="JetBrains Mono" font-size="11" text-anchor="middle">in</text>
+          <rect x="440" y="60" width="90" height="34" rx="6" fill="none" stroke="#ff9f40" stroke-width="1.6"/>
+          <text x="485" y="82" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">suitcase</text>
+          <rect x="270" y="160" width="50" height="34" rx="6" fill="none" stroke="#b592ff" stroke-width="1.8"/>
+          <text x="295" y="182" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">it</text>
+          <line x1="295" y1="160" x2="165" y2="94" stroke="#c9f04c" stroke-width="2.2" marker-end="url(#atm)"/>
+          <line x1="295" y1="160" x2="485" y2="94" stroke="#ff9f40" stroke-width="1.1" marker-end="url(#atm)"/>
+          <line x1="295" y1="160" x2="65" y2="94" stroke="#5c6672" stroke-width="0.6" marker-end="url(#atm)"/>
+          <text x="200" y="120" fill="#c9f04c" font-family="JetBrains Mono" font-size="10" text-anchor="middle">high weight</text>
+          <text x="420" y="130" fill="#ff9f40" font-family="JetBrains Mono" font-size="10" text-anchor="middle">low weight</text>
+        </svg>
+      </div>
+      <h3>Self-attention and multi-head attention, briefly</h3>
+      <p>This is called <strong>self-attention</strong> because every word in a sentence does this Query/Key/Value process against every other word in the <em>same</em> sentence — the sentence attends to itself, building context-aware representations for every position simultaneously (not one at a time in sequence, which is a huge part of why transformers train efficiently on modern hardware). <strong>Multi-head attention</strong> simply runs several of these attention processes in parallel, each potentially learning to track a different kind of relationship (one head might specialize in pronoun resolution, another in verb-subject agreement, another in something no human would easily name) — their results are combined afterward.</p>
+      <div class="callout check">
+        <span class="callout-label">Check your understanding</span>
+        <p>Attention is why embeddings are context-sensitive (Section 02's note) — the raw embedding for "it" is generic, but after a layer of self-attention, "it"'s representation has absorbed information from "trophy" specifically, for this sentence. Change the sentence to "...because it was too small" and the same word "it" would attend more toward "suitcase" instead — same starting embedding, different contextualized result, because attention recomputes these weights fresh for every input.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 04 TRANSFORMER ============ -->
+  <section class="chapter" id="transformer">
+    <div class="chapter-head"><span class="chapter-num">04</span><h2 class="chapter-title">The Transformer, Assembled</h2></div>
+    <p class="chapter-dek">Now that tokens, embeddings, and attention are each individually clear, here's how they stack into the actual architecture nearly every modern LLM uses.</p>
+    <div class="chapter-body">
+      <div class="diagram">
+        <svg viewBox="0 0 400 340" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="trm" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff9f40"/></marker></defs>
+          <rect x="60" y="10" width="280" height="36" rx="6" fill="none" stroke="#5fd9c9" stroke-width="1.4"/>
+          <text x="200" y="33" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Input text → tokens → token IDs</text>
+          <line x1="200" y1="46" x2="200" y2="66" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#trm)"/>
+          <rect x="60" y="66" width="280" height="36" rx="6" fill="none" stroke="#c9f04c" stroke-width="1.4"/>
+          <text x="200" y="89" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Embedding lookup + positional info</text>
+          <line x1="200" y1="102" x2="200" y2="122" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#trm)"/>
+          <rect x="40" y="122" width="320" height="150" rx="8" fill="none" stroke="#ff9f40" stroke-width="1.6" stroke-dasharray="5 3"/>
+          <text x="200" y="140" fill="#ff9f40" font-family="JetBrains Mono" font-size="10" text-anchor="middle">repeated N times ("layers")</text>
+          <rect x="70" y="150" width="260" height="36" rx="6" fill="none" stroke="#b592ff" stroke-width="1.4"/>
+          <text x="200" y="173" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Multi-head self-attention</text>
+          <line x1="200" y1="186" x2="200" y2="200" stroke="#ff9f40" stroke-width="1.2" marker-end="url(#trm)"/>
+          <rect x="70" y="200" width="260" height="36" rx="6" fill="none" stroke="#5fd9c9" stroke-width="1.4"/>
+          <text x="200" y="223" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Feed-forward network</text>
+          <line x1="200" y1="272" x2="200" y2="292" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#trm)"/>
+          <rect x="60" y="292" width="280" height="36" rx="6" fill="none" stroke="#ff7a8a" stroke-width="1.4"/>
+          <text x="200" y="315" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Predict probability over next token</text>
+        </svg>
+      </div>
+      <table class="tbl">
+        <tr><th>Component</th><th>What it does, in plain terms</th></tr>
+        <tr><td class="k">Positional encoding</td><td>Attention alone has no sense of word order — "dog bites man" and "man bites dog" would look identical to pure attention. Positional information is injected so the model knows which token came first, second, third.</td></tr>
+        <tr><td class="k">Multi-head self-attention</td><td>Section 03 — builds context-aware representations by letting each token look at every other token.</td></tr>
+        <tr><td class="k">Feed-forward network</td><td>A simpler transformation applied to each token's representation independently after attention — widely believed to be where much of the model's factual/pattern "knowledge" is actually stored.</td></tr>
+        <tr><td class="k">Layers</td><td>The attention + feed-forward block repeats many times (tens to over a hundred in large models) — each layer refines the representation further, building progressively more abstract understanding.</td></tr>
+        <tr><td class="k">Output layer</td><td>After the final layer, the model produces a probability distribution over every possible next token in its vocabulary — this is the actual, literal output of a forward pass: not a word, a probability for every word.</td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">The single most important reframe in this whole document</span>
+        <p>An LLM does not "decide" the next word the way a person does. It computes a probability distribution — a list like <code class="inline">{"the": 0.31, "a": 0.22, "an": 0.05, ...}</code> across its entire vocabulary — and then a separate, simple process (sampling, covered in Section 07) picks one. The model itself never commits to an answer; it only ever produces likelihoods. This single fact explains temperature, top-p, non-determinism, and hallucination all at once, and is worth having crystal clear before moving on.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 05 TRAINING ============ -->
+  <section class="chapter" id="training">
+    <div class="chapter-head"><span class="chapter-num">05 ★</span><h2 class="chapter-title">Training: Pretraining → SFT → RLHF / DPO</h2></div>
+    <p class="chapter-dek">Three stages, each fixing a specific gap the previous stage leaves behind. This is the part interviewers most often probe for actual understanding, not memorized names.</p>
+    <div class="chapter-body">
+      <p>Modern LLM training typically follows a three-stage pipeline: pretraining, supervised fine-tuning, and preference alignment. Each stage has a genuinely distinct job — knowing what each one fixes (not just its name) is the actual signal interviewers listen for.</p>
+      <h3>Stage 1 — Pretraining</h3>
+      <p>The model is trained on a massive corpus of text (a large fraction of the public internet, books, code, and more) with one task, repeated trillions of times: given the text so far, predict the next token. There's no human labeling involved — the "correct answer" for training is just whatever token actually came next in the real text. This single, simple objective, applied at enormous scale, is what teaches the model grammar, facts, reasoning patterns, and world knowledge — pretraining encodes knowledge.</p>
+      <div class="callout pitfall">
+        <span class="callout-label">Why a freshly pretrained model is a bad chatbot</span>
+        <p>A pretrained model has learned to <em>continue text plausibly</em>, not to <em>follow instructions</em> or <em>be helpful</em>. Ask a raw pretrained model "What's the capital of France?" and it might just as easily continue with more quiz questions ("What's the capital of Germany?") rather than answering — because that's a plausible continuation of text that looks like a quiz, and nothing in pretraining taught it "when you see a question, answer it directly." That's exactly the gap the next stage closes.</p>
+      </div>
+      <h3>Stage 2 — Supervised Fine-Tuning (SFT)</h3>
+      <p>The pretrained model is further trained on a much smaller, curated dataset of high-quality demonstrations — actual (instruction, ideal response) pairs written or curated by humans. This teaches the model the <em>format</em> of being an assistant: answer the question that was asked, follow instructions, adopt a helpful and conversational tone — SFT aligns question-answer format and instruction-following, using the exact same next-token-prediction mechanism as pretraining, just on different (much higher-quality, much smaller) data.</p>
+      <h3>Stage 3 — Preference Alignment (RLHF or DPO)</h3>
+      <p>Even after SFT, a model can follow instructions in a technically correct but unhelpful, unsafe, or poorly-judged way — SFT alone can't easily teach "of these two technically-correct responses, prefer this one because it's more helpful/honest/safe," since that's a comparative judgment, not a single demonstrated example. This final stage closes that gap using human <em>preference</em> data instead of demonstrations.</p>
+      <table class="tbl">
+        <tr><th>Method</th><th>Mechanism</th></tr>
+        <tr><td class="k">RLHF (classic)</td><td>A separate reward model is trained on human comparisons ("response A is better than response B"), learning to predict a quality score for any response. The main model is then optimized via reinforcement learning (typically PPO) to maximize that reward model's score, with a penalty added to keep it from drifting too far from the SFT model.</td></tr>
+        <tr><td class="k">DPO (Direct Preference Optimization)</td><td>Skips the separate reward model entirely — it reformulates the same preference-learning goal as a direct, supervised-learning-style objective on preference pairs, making the model more likely to produce the preferred response and less likely to produce the rejected one, in a single training step. DPO achieves similar alignment results to RLHF without training a separate reward model, and behaves much like SFT, so it's typically easier to stabilize than full RLHF, whose reinforcement learning stage is sensitive to hyperparameters and can suffer from reward-model exploitation.</td></tr>
+      </table>
+      <div class="callout">
+        <span class="callout-label">Which is actually used in 2026 production pipelines</span>
+        <p>The paradigm remains SFT plus preference optimization — what's changed is that DPO and its variants (KTO, SimPO, and others) have become a strong default for many teams because they're simpler and more stable to train, while classic PPO-based RLHF still offers a stronger performance ceiling for teams willing to invest in the added complexity. Most production alignment pipelines still start with SFT, then add one preference-optimization method or another — the three-stage shape (pretrain → SFT → preference alignment) is the stable part; which specific algorithm powers stage three is the part that keeps evolving.</p>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"What does RLHF actually fix that SFT doesn't?" — SFT teaches the model to imitate specific high-quality demonstrations, one example at a time; it has no direct mechanism for learning from a relative judgment ("this response is better than that one, even though both are individually reasonable"). RLHF/DPO specifically train on comparative preference data, closing the gap on subjective qualities like helpfulness, safety nuance, and tone that are much easier for humans to judge comparatively than to write a single "correct" demonstration for.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 06 CONTEXT WINDOW ============ -->
+  <section class="chapter" id="context-window">
+    <div class="chapter-head"><span class="chapter-num">06</span><h2 class="chapter-title">Context Windows &amp; Position</h2></div>
+    <p class="chapter-dek">The practical constraint every topic from Topic 7 onward keeps bumping into — here's what it actually is.</p>
+    <div class="chapter-body">
+      <p>The <strong>context window</strong> is the maximum number of tokens (input plus output combined, for most providers) a model can process in a single call. Everything the model "knows" about the current conversation — system prompt, conversation history, retrieved documents, tool results — has to fit inside this budget, measured in tokens (Section 01), not words or characters.</p>
+      <table class="tbl">
+        <tr><th>Concept</th><th>Plain explanation</th></tr>
+        <tr><td class="k">Why there's a limit at all</td><td>Self-attention (Section 03) compares every token against every other token — computational cost grows roughly with the square of the sequence length, so doubling the context window can roughly quadruple the attention computation, before architectural optimizations. Longer context windows require real engineering work, not just "turning a dial."</td></tr>
+        <tr><td class="k">Positional encoding, revisited</td><td>The mechanism from Section 04 that tells the model token order also determines how well a model generalizes to longer sequences than it was trained on — modern models use encoding schemes (like RoPE) specifically designed to extrapolate more gracefully to longer contexts.</td></tr>
+        <tr><td class="k">"Lost in the middle"</td><td>A well-documented phenomenon where models attend less reliably to information placed in the middle of a very long context, compared to the beginning or end — directly relevant to how you structure long prompts, and part of why Topic 7's context compaction and Topic 8's reranking (surfacing the most relevant content, not just any relevant content) matter in practice.</td></tr>
+      </table>
+      <div class="callout check">
+        <span class="callout-label">Check your understanding</span>
+        <p>A "128k context window" doesn't mean the model reads and remembers 128,000 tokens equally well — it means that's the maximum it can technically process in one call, with retrieval quality for content within that window still varying by position and by how much competing information is present. This is the direct, practical reason Topic 8's retrieval techniques (don't just dump everything into context — retrieve, rank, and place the most relevant content deliberately) matter even when a model's raw context window is large enough to theoretically fit everything.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 07 SAMPLING ============ -->
+  <section class="chapter" id="sampling">
+    <div class="chapter-head"><span class="chapter-num">07 ★</span><h2 class="chapter-title">Sampling: Temperature, Top-p, Top-k</h2></div>
+    <p class="chapter-dek">Picks up exactly where Section 04 left off — the model outputs a probability distribution, and these parameters control how a single token gets chosen from it.</p>
+    <div class="chapter-body">
+      <p>Recall: after a forward pass, the model has produced a probability for every token in its vocabulary being the next one. <strong>Sampling</strong> is the separate step that turns that distribution into one actual chosen token — and it's controlled by parameters you set on every API call.</p>
+      <table class="tbl">
+        <tr><th>Parameter</th><th>What it actually does</th></tr>
+        <tr><td class="k">Temperature</td><td>Reshapes the probability distribution before sampling. Low temperature (near 0) sharpens the distribution, making the most likely token overwhelmingly likely to be picked — closer to "always pick the top choice." High temperature flattens the distribution, giving lower-probability tokens a real chance of being picked — more variety, more "creativity," but also more risk of an odd or off-topic choice.</td></tr>
+        <tr><td class="k">Top-p (nucleus sampling)</td><td>Instead of considering the entire vocabulary, only consider the smallest set of top tokens whose combined probability adds up to p (e.g. 0.9) — then sample from just that narrowed set. This adapts to context: when the model is very confident, the "top 90%" might be just 2-3 tokens; when it's uncertain, it might be dozens.</td></tr>
+        <tr><td class="k">Top-k</td><td>Simpler and less commonly tuned directly — only consider the k most likely tokens, regardless of their combined probability, then sample from that fixed-size set.</td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">"Why does my model still give different answers at temperature=0?"</span>
+        <p>This confuses almost everyone with weak fundamentals, and it's a great interview answer to have ready. Even at temperature 0 (which should deterministically pick the single highest-probability token every time), you can still see variation across identical calls, for reasons that have nothing to do with the sampling parameters themselves: floating-point, non-associative math on GPUs can produce tiny numerical differences depending on batching and hardware scheduling, which can occasionally flip which token has the (very narrowly) highest probability; some providers also route requests across different hardware or apply internal optimizations that aren't perfectly bit-identical run to run. Temperature 0 makes the model <em>far</em> more deterministic, not <em>perfectly</em> deterministic in practice.</p>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"When would you use a low temperature versus a high one?" — Low temperature (0 to ~0.3) for tasks with a single correct or clearly-best answer: classification, structured data extraction, code generation, factual Q&amp;A — you want the model's best guess, not variety. Higher temperature (0.7+) for open-ended generation where diversity has real value: creative writing, brainstorming multiple options, generating varied synthetic training examples. For agentic tool-calling specifically, low temperature is almost always preferred — you want the model reliably picking the correct tool and arguments, not creatively exploring alternatives.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 08 PROMPTING ============ -->
+  <section class="chapter" id="prompting">
+    <div class="chapter-head"><span class="chapter-num">08</span><h2 class="chapter-title">Prompting Fundamentals</h2></div>
+    <p class="chapter-dek">Now that you know what's actually happening mechanically, prompting techniques stop being "magic incantations" and start being obvious levers on that mechanism.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Technique</th><th>What it is, and why it works given everything above</th></tr>
+        <tr><td class="k">Zero-shot</td><td>Just ask directly, no examples. Works because SFT and preference alignment (Section 05) specifically trained the model to follow direct instructions without needing examples.</td></tr>
+        <tr><td class="k">Few-shot</td><td>Include a handful of example (input, ideal output) pairs directly in the prompt before the real request. This works because attention (Section 03) lets the model use those examples as extremely relevant context when predicting the format/style/reasoning pattern for the real request — it's not "learning" in the training sense, it's in-context pattern matching against examples that are now part of its immediate context.</td></tr>
+        <tr><td class="k">Chain-of-thought (CoT)</td><td>Ask the model to "think step by step" before giving a final answer. Works because of the autoregressive nature covered in Section 00 — each generated token becomes part of the input for predicting the next one, so intermediate reasoning tokens genuinely give the model more relevant context to condition its final answer on, rather than jumping straight to an answer with no scratch space.</td></tr>
+        <tr><td class="k">System vs. user role</td><td>Most chat-tuned models are trained (during SFT, Section 05) to treat system-role text as higher-priority framing/instructions and user-role text as the actual request — this is a learned behavioral convention from training data structure, not a hard technical firewall (which is exactly why Topic 6's prompt injection material exists — that convention can be manipulated, not just followed).</td></tr>
+      </table>
+      <div class="callout check">
+        <span class="callout-label">Check your understanding — the connection to Topic 1</span>
+        <p>Chain-of-thought prompting is the direct ancestor of ReAct and every reasoning pattern in Topic 1 — "think step by step" is CoT applied to plain reasoning; ReAct is the same core idea (generate intermediate tokens that become context for the next step) extended to include actual tool calls and observations mixed into that intermediate reasoning. If CoT makes sense to you now, Topic 1's entire pattern family is the same mechanism scaled up with actions and environments in the loop.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 09 FULL LIFECYCLE ============ -->
+  <section class="chapter" id="full-lifecycle">
+    <div class="chapter-head"><span class="chapter-num">09</span><h2 class="chapter-title">One API Call, Start to Finish</h2></div>
+    <p class="chapter-dek">Every concept in this document, assembled into the single sequence that happens every time you call an LLM.</p>
+    <div class="chapter-body">
+      <ol>
+        <li><span class="stepnum">1</span><strong>Your prompt text</strong> (system + conversation history + user message) arrives as a string.</li>
+        <li><span class="stepnum">2</span><strong>Tokenization</strong> (Section 01) splits it into tokens and converts each to its numeric ID.</li>
+        <li><span class="stepnum">3</span><strong>Embedding lookup</strong> (Section 02) converts each token ID into its vector representation, and positional information (Section 06) is added.</li>
+        <li><span class="stepnum">4</span>These vectors pass through <strong>many transformer layers</strong> (Section 04) — self-attention lets every token gather context from every other token, then a feed-forward step refines each token's representation, repeated per layer.</li>
+        <li><span class="stepnum">5</span>After the final layer, the model produces a <strong>probability distribution</strong> over every possible next token.</li>
+        <li><span class="stepnum">6</span><strong>Sampling</strong> (Section 07) — governed by your temperature/top-p settings — picks one actual token from that distribution.</li>
+        <li><span class="stepnum">7</span>That chosen token is <strong>appended</strong> to the sequence, and the entire process (steps 2-6) repeats to generate the next token — this is the autoregressive loop from Section 00, now fully mechanically explained.</li>
+        <li><span class="stepnum">8</span>Generation stops when the model produces a special "end of sequence" token, or hits a length/stop-sequence limit you configured.</li>
+      </ol>
+      <div class="callout focus" style="border-left-color:var(--lime); background:#151b12;">
+        <span class="callout-label" style="color:var(--lime);">Why this matters for everything in Topics 1-10</span>
+        <p>Every "why does this agent behave this way" question in the first ten documents traces back to some step in this exact loop — non-determinism (step 6), context window limits (step 3-4's computational cost), why tool-calling needs structured formatting (the model is still just predicting tokens, and structured output means predicting tokens that happen to form valid JSON), why prompt caching works (steps 2-4 for a repeated prefix produce the same intermediate results, so they can be reused rather than recomputed). You now have the mechanical grounding underneath the entire rest of this series.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 10 MISCONCEPTIONS ============ -->
+  <section class="chapter" id="misconceptions">
+    <div class="chapter-head"><span class="chapter-num">10</span><h2 class="chapter-title">Common Misconceptions, Corrected</h2></div>
+    <p class="chapter-dek">Written directly for someone rebuilding their fundamentals — these are the specific wrong mental models that cause the most confusion downstream.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Misconception</th><th>Correction</th></tr>
+        <tr><td>"The model reads word by word, like a person."</td><td>It reads tokens (Section 01) — sub-word chunks — and processes the entire input sequence's attention relationships together, not strictly left-to-right in the way a person's eyes move.</td></tr>
+        <tr><td>"The model looks things up in a database of facts."</td><td>There's no database — factual knowledge is encoded as patterns in billions of learned parameters (weights) inside the feed-forward layers (Section 04), compressed and generalized during pretraining, not stored and retrieved like a lookup table. This is exactly why hallucination happens and why RAG (Topic 8) exists as a separate, explicit retrieval mechanism.</td></tr>
+        <tr><td>"Temperature 0 means the model will always give the exact same answer."</td><td>Nearly, but not guaranteed in practice — see Section 07's floating-point/hardware note.</td></tr>
+        <tr><td>"A bigger context window means the model remembers everything in it equally well."</td><td>Not necessarily — see Section 06's "lost in the middle" note; position and competing information both affect retrieval quality within a technically-fitting context.</td></tr>
+        <tr><td>"RLHF/DPO teaches the model new facts or capabilities."</td><td>No — pretraining (Section 05, stage 1) is where knowledge and capability come from. RLHF/DPO shapes <em>how</em> the model expresses and applies what it already learned — tone, helpfulness, safety, format — not what it fundamentally knows.</td></tr>
+        <tr><td>"Prompt engineering is unprincipled trial and error."</td><td>Section 08 reframes it: every effective prompting technique has a mechanical reason it works, rooted in tokenization, attention, and how the model was trained — it's an engineering discipline with real underlying mechanisms, not superstition.</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 11 INTERVIEW ============ -->
+  <section class="chapter" id="interview">
+    <div class="chapter-head"><span class="chapter-num">11</span><h2 class="chapter-title">Interview Cheat-Sheet</h2></div>
+    <p class="chapter-dek">The fundamentals questions that open ~20% of 2026 AI engineering loops, per Topic 10's interview-mix breakdown.</p>
+    <div class="chapter-body">
+      <details class="qa"><summary>Explain how a transformer processes a sentence, end to end, to a non-technical audience.<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>The sentence is broken into small chunks (tokens), each converted into a list of numbers representing its meaning (embeddings). Then, for every chunk, the model looks at every other chunk in the sentence and decides how relevant each one is to understanding this one right now — that's attention, and it's how the model resolves things like which noun a pronoun refers to. This happens many times in a row, each pass refining the understanding further, and at the end, the model produces a ranked list of guesses for what word should come next. It repeats this whole process one word at a time to generate a full response.</p></div>
+      </details>
+      <details class="qa"><summary>Why can't LLMs reliably count letters in a word?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>Because they don't process text letter by letter — they process tokens, which are often multi-letter chunks. A word like "strawberry" might be represented as two or three tokens, none of which preserve individual letter identity in an easily countable way. Letter-counting requires the model to reason about sub-token character structure it was never directly optimized to track, which is why it's an unusually weak spot relative to tasks that operate at the token or word level.</p></div>
+      </details>
+      <details class="qa"><summary>Walk through the three-stage training pipeline and what each stage specifically fixes.<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>Pretraining, on massive unlabeled text via next-token prediction, is where the model acquires knowledge and general language ability — but a purely pretrained model just continues text plausibly, it doesn't reliably follow instructions. Supervised fine-tuning, on a smaller curated set of (instruction, ideal response) pairs, teaches instruction-following format and behavior. Preference alignment (RLHF or DPO), on human comparison data, closes the remaining gap on subjective qualities — helpfulness, safety, tone — that are easier for humans to judge comparatively than to demonstrate with a single correct example.</p></div>
+      </details>
+      <details class="qa"><summary>DPO vs RLHF — what's the actual mechanical difference, and why does it matter?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>Classic RLHF trains a separate reward model on human preference comparisons, then uses reinforcement learning (typically PPO) to optimize the main model against that reward model's scores, with a penalty to prevent drifting too far from the SFT baseline. DPO skips the separate reward model — it reformulates preference learning as a direct, more stable, SFT-like supervised objective on the preference pairs themselves. DPO is simpler and easier to stabilize; RLHF has a higher performance ceiling for teams willing to invest in its added complexity and instability.</p></div>
+      </details>
+      <details class="qa"><summary>Why does temperature=0 not guarantee perfectly identical outputs across repeated calls?<span class="qa-tag">sampling</span></summary>
+        <div class="qa-body"><p>Temperature 0 should deterministically select the single highest-probability token every time, but floating-point arithmetic on GPUs isn't perfectly associative — tiny numerical differences from batching or hardware scheduling can occasionally flip which token has the (very narrowly) highest computed probability, and some providers route requests across different hardware. Temperature 0 makes output far more deterministic, not perfectly deterministic, in practice.</p></div>
+      </details>
+      <details class="qa"><summary>Explain the connection between chain-of-thought prompting and the ReAct pattern.<span class="qa-tag">connection</span></summary>
+        <div class="qa-body"><p>Both exploit the same underlying mechanism: because generation is autoregressive, every token the model produces becomes part of the context available for predicting the next one. Chain-of-thought uses this to let the model "think out loud" before answering, giving itself more relevant context to condition a final answer on. ReAct extends the identical idea by interleaving actual tool calls and their real-world results into that same growing context — reasoning and observations both become additional context feeding every subsequent generation step.</p></div>
+      </details>
+      <details class="qa"><summary>Why does a large context window not eliminate the need for retrieval (RAG)?<span class="qa-tag">connection</span></summary>
+        <div class="qa-body"><p>Two separate reasons: cost and compute scale poorly with sequence length since attention compares every token against every other token, so stuffing everything into context is expensive even when it technically fits; and retrieval quality within a long context isn't uniform — the "lost in the middle" effect means content buried in the middle of a very long prompt is attended to less reliably than content near the start or end. Retrieval (Topic 8) exists specifically to surface the most relevant content and place it deliberately, rather than relying on a large context window to compensate for unfocused input.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ 12 GLOSSARY ============ -->
+  <section class="chapter" id="glossary">
+    <div class="chapter-head"><span class="chapter-num">12</span><h2 class="chapter-title">Glossary</h2></div>
+    <p class="chapter-dek">Every term used in this document, in one line each.</p>
+    <div class="chapter-body">
+      <dl class="glossary-grid">
+        <div class="gterm"><dt>Token</dt><dd>A sub-word chunk of text — the actual unit an LLM processes, produced by algorithms like BPE.</dd></div>
+        <div class="gterm"><dt>Byte-Pair Encoding (BPE)</dt><dd>Tokenization algorithm that builds a vocabulary by repeatedly merging the most frequent adjacent character/token pairs.</dd></div>
+        <div class="gterm"><dt>Embedding</dt><dd>A learned vector representing a token or passage's meaning as a position in high-dimensional space.</dd></div>
+        <div class="gterm"><dt>Cosine similarity</dt><dd>Standard metric for measuring closeness between two embedding vectors.</dd></div>
+        <div class="gterm"><dt>Self-attention</dt><dd>Mechanism letting every token in a sequence weigh and incorporate information from every other token.</dd></div>
+        <div class="gterm"><dt>Query / Key / Value</dt><dd>The three learned projections attention uses to compute relevance scores and blend information between tokens.</dd></div>
+        <div class="gterm"><dt>Multi-head attention</dt><dd>Running several attention processes in parallel, each potentially specializing in a different kind of relationship.</dd></div>
+        <div class="gterm"><dt>Positional encoding</dt><dd>Information injected into token representations so the model knows sequence order, since attention alone is order-agnostic.</dd></div>
+        <div class="gterm"><dt>Feed-forward network</dt><dd>Per-token transformation applied after attention in each transformer layer; believed to store much of a model's factual knowledge.</dd></div>
+        <div class="gterm"><dt>Autoregressive generation</dt><dd>Generating one token at a time, each new token appended to context before predicting the next.</dd></div>
+        <div class="gterm"><dt>Pretraining</dt><dd>Stage 1 of training: next-token prediction over massive unlabeled text, the source of knowledge and capability.</dd></div>
+        <div class="gterm"><dt>Supervised Fine-Tuning (SFT)</dt><dd>Stage 2: training on curated (instruction, ideal response) demonstrations, teaching instruction-following format.</dd></div>
+        <div class="gterm"><dt>RLHF</dt><dd>Reinforcement Learning from Human Feedback — preference alignment via a trained reward model plus RL (typically PPO).</dd></div>
+        <div class="gterm"><dt>DPO</dt><dd>Direct Preference Optimization — a simpler, reward-model-free alternative to RLHF for preference alignment.</dd></div>
+        <div class="gterm"><dt>Context window</dt><dd>Maximum number of tokens (input + output) a model can process in a single call.</dd></div>
+        <div class="gterm"><dt>Temperature</dt><dd>Sampling parameter controlling how sharply peaked or flat the next-token probability distribution is before sampling.</dd></div>
+        <div class="gterm"><dt>Top-p / nucleus sampling</dt><dd>Sampling only from the smallest set of top tokens whose combined probability reaches threshold p.</dd></div>
+        <div class="gterm"><dt>Top-k sampling</dt><dd>Sampling only from the k most likely next tokens, a fixed-size candidate set.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ 13 RESOURCES ============ -->
+  <section class="chapter" id="resources">
+    <div class="chapter-head"><span class="chapter-num">13</span><h2 class="chapter-title">Resources</h2></div>
+    <p class="chapter-dek">Where to go deeper once these fundamentals are solid.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Vaswani et al. — "Attention Is All You Need"</strong> (2017) — the original transformer paper; read it now that Section 03-04 have prepared the intuition</li>
+        <li><strong>Ouyang et al. — "Training language models to follow instructions with human feedback"</strong> (InstructGPT, 2022) — the canonical SFT + RLHF pipeline paper</li>
+        <li><strong>Rafailov et al. — "Direct Preference Optimization"</strong> (2023) — the DPO paper</li>
+        <li><strong>Jay Alammar — "The Illustrated Transformer"</strong> — the best visual walkthrough available for building attention intuition further</li>
+        <li><strong>Andrej Karpathy — "Let's build GPT from scratch"</strong> (video) — genuinely the fastest path from reading about tokens/attention to feeling how they work, by implementing a tiny one yourself</li>
+      </ul>
+      <div class="callout">
+        <span class="callout-label">How to actually solidify this before moving on</span>
+        <p>Open a tokenizer playground (e.g. the OpenAI or Anthropic tokenizer visualizer) and paste in a few sentences — watch words you'd expect to be one token split into two or three, and notice how a leading space changes the token. Then run the same prompt through an API at temperature 0 versus temperature 1 a few times and watch the outputs diverge. Five minutes of direct observation will cement Sections 01 and 07 far better than re-reading them.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">Topic 11 of 14 — LLM Fundamentals &amp; Prompting. Next up: Tool Calling, Structured Outputs &amp; Pydantic AI.</div>
+</main>
+</div>
+
+<script>
+const links = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('section.chapter');
+const map = new Map();
+links.forEach(l => map.set(l.getAttribute('href').slice(1), l));
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const link = map.get(entry.target.id);
+    if(!link) return;
+    if(entry.isIntersecting){
+      links.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, {rootMargin: '-15% 0px -70% 0px', threshold: 0});
+sections.forEach(s => io.observe(s));
+</script>
+</body>
+</html>

@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FastAPI &amp; Backend Engineering for AI Services — The Capstone</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d10; --bg-raised:#12151a; --bg-card:#14181f;
+  --line:#242a33; --line-soft:#1b2028;
+  --ink:#e7e9ec; --ink-dim:#9aa3b0; --ink-faint:#5c6672;
+  --amber:#ff9f40; --amber-dim:#c97a2e; --lime:#c9f04c; --cyan:#5fd9c9; --violet:#b592ff; --rose:#ff7a8a;
+  --serif:'Source Serif 4', Georgia, serif;
+  --display:'Space Grotesk', sans-serif;
+  --mono:'JetBrains Mono', 'Courier New', monospace;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:radial-gradient(var(--line-soft) 1px, transparent 1px);
+  background-size:22px 22px; background-color:var(--bg);
+  color:var(--ink); font-family:var(--serif); font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+a{color:var(--amber); text-decoration:none;}
+::selection{background:var(--amber); color:#111;}
+.shell{display:grid; grid-template-columns:290px 1fr; min-height:100vh;}
+@media (max-width:920px){ .shell{grid-template-columns:1fr;} .side{display:none;} }
+.side{position:sticky; top:0; height:100vh; overflow-y:auto; border-right:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(18,21,26,.9), rgba(11,13,16,.9)); padding:26px 18px 60px;}
+.side::-webkit-scrollbar{width:6px;} .side::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.brand{font-family:var(--display); font-weight:700; font-size:14.5px; color:var(--ink); margin-bottom:2px;}
+.brand span{color:var(--amber);}
+.brand-sub{font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); margin-bottom:22px;}
+.back-link{display:inline-block; font-family:var(--mono); font-size:10.5px; color:var(--cyan); margin-bottom:18px; border:1px solid var(--line); padding:5px 10px; border-radius:6px;}
+.nav-link{display:flex; align-items:baseline; gap:6px; font-family:var(--display); font-size:11.5px; color:var(--ink-dim);
+  padding:4px 6px; border-radius:6px; border-left:2px solid transparent; transition:.15s;}
+.nav-link:hover{color:var(--ink); background:var(--bg-raised);}
+.nav-link.active{color:var(--amber); border-left-color:var(--amber); background:var(--bg-raised);}
+.nav-num{font-family:var(--mono); font-size:9px; color:var(--ink-faint); min-width:18px;}
+.main{max-width:920px; padding:0 44px 140px; margin:0 auto;}
+@media (max-width:700px){ .main{padding:0 20px 100px;} }
+.hero{padding:76px 0 54px; border-bottom:1px solid var(--line);}
+.hero-eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--lime);
+  margin-bottom:18px; display:flex; align-items:center; gap:10px;}
+.hero-eyebrow::before{content:''; width:22px; height:1px; background:var(--lime); display:inline-block;}
+h1.title{font-family:var(--display); font-weight:700; font-size:clamp(28px,4.6vw,46px); line-height:1.1; letter-spacing:-.02em; color:var(--ink); max-width:18ch;}
+h1.title em{font-style:normal; color:var(--amber);}
+.hero-sub{font-family:var(--serif); font-size:18px; color:var(--ink-dim); max-width:62ch; margin-top:20px;}
+.tag-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:26px;}
+.tag{font-family:var(--mono); font-size:11px; padding:5px 11px; border-radius:20px; border:1px solid var(--line); color:var(--ink-dim); background:var(--bg-raised);}
+section.chapter{padding:52px 0; border-bottom:1px solid var(--line);}
+section.chapter:last-of-type{border-bottom:none;}
+.chapter-head{display:flex; align-items:flex-start; gap:16px; margin-bottom:8px;}
+.chapter-num{font-family:var(--mono); font-size:12.5px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:20px; padding:3px 11px; margin-top:6px; white-space:nowrap;}
+h2.chapter-title{font-family:var(--display); font-weight:600; font-size:clamp(20px,2.9vw,27px); color:var(--ink); letter-spacing:-.01em;}
+.chapter-dek{font-family:var(--serif); font-style:italic; color:var(--ink-dim); font-size:15px; max-width:66ch; margin:14px 0 26px 0; padding-left:64px;}
+@media (max-width:700px){.chapter-dek{padding-left:0;}}
+.chapter-body{padding-left:64px;}
+@media (max-width:700px){.chapter-body{padding-left:0;}}
+.chapter-body h3{font-family:var(--display); font-weight:600; font-size:17.5px; color:var(--ink); margin:26px 0 12px;}
+.chapter-body h4{font-family:var(--display); font-weight:600; color:var(--cyan); margin:20px 0 10px; text-transform:uppercase; letter-spacing:.04em; font-size:11.2px;}
+.chapter-body p{color:var(--ink-dim); margin-bottom:14px; max-width:72ch;}
+.chapter-body ul, .chapter-body ol{color:var(--ink-dim); margin:0 0 16px 20px; max-width:70ch;}
+.chapter-body li{margin-bottom:6px;}
+.chapter-body strong{color:var(--ink); font-weight:600;}
+code.inline{font-family:var(--mono); font-size:.87em; background:var(--bg-raised); color:var(--lime); padding:1px 6px; border-radius:4px; border:1px solid var(--line);}
+.callout{border-left:3px solid var(--amber); background:var(--bg-card); padding:15px 18px; border-radius:0 8px 8px 0; margin:18px 0; max-width:70ch;}
+.callout p{margin-bottom:0; color:var(--ink-dim); font-size:14px;}
+.callout .callout-label{font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:var(--amber); margin-bottom:6px; display:block;}
+.callout.interview{border-left-color:var(--violet);} .callout.interview .callout-label{color:var(--violet);}
+.callout.pitfall{border-left-color:var(--rose);} .callout.pitfall .callout-label{color:var(--rose);}
+.callout.focus{border-left-color:var(--lime); background:#151b12;} .callout.focus .callout-label{color:var(--lime);}
+.code-wrap{background:#0a0c0f; border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:16px 0 22px;}
+.code-head{display:flex; align-items:center; justify-content:space-between; padding:9px 14px; border-bottom:1px solid var(--line); background:var(--bg-raised); font-family:var(--mono); font-size:10.5px; color:var(--ink-faint);}
+.code-dots{display:flex; gap:5px;} .code-dots span{width:8px; height:8px; border-radius:50%; background:var(--line);}
+pre{padding:15px 18px; overflow-x:auto; font-family:var(--mono); font-size:12.2px; line-height:1.65; color:#d7dbe0;}
+.tok-kw{color:var(--violet);} .tok-str{color:var(--lime);} .tok-com{color:var(--ink-faint); font-style:italic;} .tok-fn{color:var(--cyan);} .tok-num{color:var(--amber);}
+.tbl{width:100%; border-collapse:collapse; margin:16px 0 24px; font-size:12.6px; max-width:78ch;}
+.tbl th{text-align:left; font-family:var(--mono); font-size:9.6px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-faint); padding:8px 10px; border-bottom:1px solid var(--line);}
+.tbl td{padding:8px 10px; border-bottom:1px solid var(--line-soft); color:var(--ink-dim); vertical-align:top;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl td.k{color:var(--ink); font-family:var(--mono); font-size:11.4px; white-space:nowrap;}
+.diagram{background:var(--bg-card); border:1px solid var(--line); border-radius:12px; padding:20px; margin:18px 0 24px;}
+.diagram svg{width:100%; height:auto; display:block;}
+.qa{border:1px solid var(--line); border-radius:10px; margin-bottom:10px; background:var(--bg-card); overflow:hidden;}
+.qa summary{list-style:none; cursor:pointer; padding:13px 18px; display:flex; gap:12px; align-items:flex-start; font-family:var(--display); font-size:13.2px; color:var(--ink); font-weight:500;}
+.qa summary::-webkit-details-marker{display:none;}
+.qa summary::before{content:'+'; font-family:var(--mono); color:var(--amber); font-size:16px; line-height:1;}
+.qa[open] summary::before{content:'–';}
+.qa .qa-body{padding:0 18px 15px 40px; color:var(--ink-dim); font-size:13.2px; max-width:68ch;}
+.qa .qa-body p{margin-bottom:10px;}
+.qa-tag{font-family:var(--mono); font-size:9.2px; text-transform:uppercase; letter-spacing:.08em; background:var(--bg-raised); color:var(--ink-faint); padding:2px 8px; border-radius:20px; border:1px solid var(--line); margin-left:auto; white-space:nowrap; flex-shrink:0;}
+.glossary-grid{display:grid; grid-template-columns:1fr 1fr; gap:2px 28px;}
+@media (max-width:700px){.glossary-grid{grid-template-columns:1fr;}}
+.gterm{padding:11px 0; border-bottom:1px solid var(--line-soft);}
+.gterm dt{font-family:var(--mono); color:var(--cyan); font-size:12px; margin-bottom:4px;}
+.gterm dd{color:var(--ink-dim); font-size:12px; line-height:1.5;}
+.footer{padding:60px 0 20px; text-align:center; color:var(--ink-faint); font-family:var(--mono); font-size:12px;}
+.seal{background:linear-gradient(135deg, #151b12, #12151a); border:1px solid var(--lime); border-radius:14px; padding:28px 30px; margin:20px 0;}
+.seal .stitle{font-family:var(--display); font-weight:700; color:var(--lime); font-size:16px; margin-bottom:10px;}
+.seal p{color:var(--ink-dim); font-size:14.5px; margin-bottom:0;}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav class="side" id="side">
+  <a class="back-link" href="#">← Doc 18: Python for AI Eng.</a>
+  <div class="brand">FastAPI &amp; <span>Backend Eng.</span></div>
+  <div class="brand-sub">Doc 19 — the capstone, sealing the course</div>
+  <a class="nav-link" href="#fundamentals"><span class="nav-num">00</span>Backend Fundamentals</a>
+  <a class="nav-link" href="#http"><span class="nav-num">01</span>HTTP Deep Dive</a>
+  <a class="nav-link" href="#rest-design"><span class="nav-num">02</span>REST API Design</a>
+  <a class="nav-link" href="#fastapi-fundamentals"><span class="nav-num">03</span>★ FastAPI Fundamentals</a>
+  <a class="nav-link" href="#dependency-injection"><span class="nav-num">04</span>★ Dependency Injection</a>
+  <a class="nav-link" href="#validation"><span class="nav-num">05</span>Request/Response Validation</a>
+  <a class="nav-link" href="#async-fastapi"><span class="nav-num">06</span>★★ Async FastAPI</a>
+  <a class="nav-link" href="#middleware"><span class="nav-num">07</span>Middleware &amp; Request Lifecycle</a>
+  <a class="nav-link" href="#error-handling"><span class="nav-num">08</span>Error Handling</a>
+  <a class="nav-link" href="#auth"><span class="nav-num">09</span>Authentication &amp; Authorization</a>
+  <a class="nav-link" href="#databases"><span class="nav-num">10</span>Databases &amp; FastAPI</a>
+  <a class="nav-link" href="#redis"><span class="nav-num">11</span>Redis &amp; Caching</a>
+  <a class="nav-link" href="#ai-apis"><span class="nav-num">12</span>★★★ AI/LLM APIs with FastAPI</a>
+  <a class="nav-link" href="#streaming"><span class="nav-num">13</span>★★ Streaming AI Responses</a>
+  <a class="nav-link" href="#background-jobs"><span class="nav-num">14</span>★ Background Tasks &amp; Job Queues</a>
+  <a class="nav-link" href="#rate-limiting"><span class="nav-num">15</span>Rate Limiting &amp; Quotas</a>
+  <a class="nav-link" href="#reliability"><span class="nav-num">16</span>Reliability Engineering</a>
+  <a class="nav-link" href="#observability"><span class="nav-num">17</span>Observability</a>
+  <a class="nav-link" href="#security"><span class="nav-num">18</span>Security</a>
+  <a class="nav-link" href="#testing"><span class="nav-num">19</span>API Testing</a>
+  <a class="nav-link" href="#performance"><span class="nav-num">20</span>API Performance</a>
+  <a class="nav-link" href="#deployment"><span class="nav-num">21</span>Deployment</a>
+  <a class="nav-link" href="#production-architecture"><span class="nav-num">22</span>Production Architecture</a>
+  <a class="nav-link" href="#system-design"><span class="nav-num">23</span>★★★ AI Backend System Design</a>
+  <a class="nav-link" href="#interview"><span class="nav-num">24</span>Interview Cheat-Sheet</a>
+  <a class="nav-link" href="#glossary"><span class="nav-num">25</span>Glossary</a>
+  <a class="nav-link" href="#resources"><span class="nav-num">26</span>Resources</a>
+  <a class="nav-link" href="#seal"><span class="nav-num">✓</span>Course Sealed — 19 Docs</a>
+</nav>
+
+<main class="main">
+  <div class="hero">
+    <div class="hero-eyebrow">Deep reference · Doc 19 · The capstone</div>
+    <h1 class="title">FastAPI &amp; Backend Engineering <em>for AI Services</em></h1>
+    <p class="hero-sub">The question this document answers is not "do you know FastAPI syntax" — it's "can you build and productionize an AI service." Everything from a bare <code class="inline">@app.post</code> route to a full streaming, queued, rate-limited, observable, secured agent backend — with every AI-specific section built out in real depth and cross-referenced into the full 18-document series behind it.</p>
+    <div class="tag-row">
+      <span class="tag">FastAPI</span><span class="tag">Dependency Injection</span><span class="tag">Async Endpoints</span>
+      <span class="tag">SSE / WebSockets</span><span class="tag">Job Queues</span><span class="tag">Rate Limiting</span>
+      <span class="tag">Reliability Engineering</span><span class="tag">AI Backend System Design</span>
+    </div>
+  </div>
+
+  <!-- ============ 00 FUNDAMENTALS ============ -->
+  <section class="chapter" id="fundamentals">
+    <div class="chapter-head"><span class="chapter-num">00</span><h2 class="chapter-title">Backend Engineering Fundamentals</h2></div>
+    <p class="chapter-dek">The vocabulary everything else in this document assumes.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Concept</th><th>Definition</th></tr>
+        <tr><td class="k">Client-server</td><td>A client (browser, mobile app, another service) sends a request; a server processes it and returns a response — the model underneath every API in this document</td></tr>
+        <tr><td class="k">Stateless service</td><td>Each request contains everything needed to process it — no server-side session memory between requests. This is why LangGraph's checkpointer (foundational bible) exists: the *service* is stateless, but conversation *state* is explicitly persisted and reloaded per request via a thread_id, not held in server memory</td></tr>
+        <tr><td class="k">REST</td><td>An architectural style: resources identified by URLs, manipulated via standard HTTP methods, typically exchanging JSON</td></tr>
+        <tr><td class="k">Monolith vs microservices</td><td>One deployable unit containing all logic, vs many independently deployable services — Section 22 covers where an AI backend actually lands on this spectrum in practice</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 01 HTTP ============ -->
+  <section class="chapter" id="http">
+    <div class="chapter-head"><span class="chapter-num">01</span><h2 class="chapter-title">HTTP Deep Dive</h2></div>
+    <p class="chapter-dek">Fast, dense reference — the mechanics every FastAPI route sits on top of.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Method</th><th>Semantics</th><th>Idempotent?</th></tr>
+        <tr><td class="k">GET</td><td>Retrieve a resource, no side effects</td><td>Yes</td></tr>
+        <tr><td class="k">POST</td><td>Create a resource, or trigger a non-idempotent action</td><td>No</td></tr>
+        <tr><td class="k">PUT</td><td>Replace a resource entirely</td><td>Yes</td></tr>
+        <tr><td class="k">PATCH</td><td>Partially update a resource</td><td>Not necessarily</td></tr>
+        <tr><td class="k">DELETE</td><td>Remove a resource</td><td>Yes (deleting twice = same end state)</td></tr>
+      </table>
+      <table class="tbl">
+        <tr><th>Status code</th><th>Meaning</th></tr>
+        <tr><td class="k">400</td><td>Bad request — malformed input, client's fault</td></tr>
+        <tr><td class="k">401</td><td>Unauthenticated — no valid credentials provided at all</td></tr>
+        <tr><td class="k">403</td><td>Unauthorized — credentials valid, but lack permission for this specific action</td></tr>
+        <tr><td class="k">422</td><td>Validation error — FastAPI's default for a Pydantic validation failure</td></tr>
+        <tr><td class="k">429</td><td>Rate limited — tied directly to Section 15</td></tr>
+        <tr><td class="k">502</td><td>Bad gateway — an upstream service (e.g. the LLM provider) returned an invalid response</td></tr>
+        <tr><td class="k">503</td><td>Service unavailable — the server itself is overloaded or down, often temporary</td></tr>
+      </table>
+      <div class="callout">
+        <span class="callout-label">Idempotency, precisely — and why it matters more here than in typical REST APIs</span>
+        <p>An idempotent operation produces the same end state no matter how many times it's applied. This is the exact same concept as Topic 7's idempotency-key material for tool calls — a <code class="inline">POST /agent/refund</code> endpoint retried by a flaky client (or an agent's own retry logic) must not double-refund, which means the endpoint needs an idempotency key even though POST is not idempotent by HTTP's own definition.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 REST DESIGN ============ -->
+  <section class="chapter" id="rest-design">
+    <div class="chapter-head"><span class="chapter-num">02</span><h2 class="chapter-title">REST API Design</h2></div>
+    <p class="chapter-dek">The design decisions that separate a usable API from an unusable one.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Principle</th><th>Applied</th></tr>
+        <tr><td class="k">Resource-oriented naming</td><td><code class="inline">POST /conversations/{id}/messages</code>, not <code class="inline">POST /sendMessage</code> — nouns, not verbs, in the URL</td></tr>
+        <tr><td class="k">Pagination</td><td>Cursor-based (opaque token pointing to "next page") over offset-based for any dataset that mutates while being paginated — offset pagination silently skips or duplicates rows under concurrent writes</td></tr>
+        <tr><td class="k">Versioning</td><td><code class="inline">/v1/...</code> in the URL path is the simplest, most explicit approach — critical for an AI API specifically, since prompt/model changes behind an endpoint are real behavioral changes (Topic 7's canary deployment material) that consumers need a stable contract to depend on across</td></tr>
+        <tr><td class="k">Consistent error schema</td><td>Every error response, across every endpoint, should share one shape (Section 08) — inconsistent error formats are one of the most common real API usability complaints</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 03 FASTAPI FUNDAMENTALS ============ -->
+  <section class="chapter" id="fastapi-fundamentals">
+    <div class="chapter-head"><span class="chapter-num">03 ★</span><h2 class="chapter-title">FastAPI Fundamentals</h2></div>
+    <p class="chapter-dek">The framework's core value proposition: your Pydantic models (Doc 18 §05) become your request validation, your response schema, AND your auto-generated API documentation, from one source of truth.</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>main.py — a real minimal AI service route</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> fastapi <span class="tok-kw">import</span> FastAPI
+<span class="tok-kw">from</span> pydantic <span class="tok-kw">import</span> BaseModel, Field
+
+app = FastAPI(title=<span class="tok-str">"Agent Service"</span>, version=<span class="tok-str">"1.0.0"</span>)
+
+<span class="tok-kw">class</span> ChatRequest(BaseModel):
+    message: str = Field(min_length=<span class="tok-num">1</span>, max_length=<span class="tok-num">4000</span>)
+    thread_id: str | <span class="tok-kw">None</span> = <span class="tok-kw">None</span>       <span class="tok-com"># maps directly to LangGraph's thread_id</span>
+
+<span class="tok-kw">class</span> ChatResponse(BaseModel):
+    reply: str
+    thread_id: str
+
+<span class="tok-kw">@app.post</span>(<span class="tok-str">"/v1/chat"</span>, response_model=ChatResponse)      <span class="tok-com"># response_model both validates AND filters the output</span>
+<span class="tok-kw">async def</span> chat(req: ChatRequest) -> ChatResponse:
+    thread_id = req.thread_id <span class="tok-kw">or</span> new_thread_id()
+    result = <span class="tok-kw">await</span> agent_graph.ainvoke(
+        {<span class="tok-str">"messages"</span>: [{<span class="tok-str">"role"</span>: <span class="tok-str">"user"</span>, <span class="tok-str">"content"</span>: req.message}]},
+        {<span class="tok-str">"configurable"</span>: {<span class="tok-str">"thread_id"</span>: thread_id}},
+    )
+    <span class="tok-kw">return</span> ChatResponse(reply=result[<span class="tok-str">"messages"</span>][-<span class="tok-num">1</span>].content, thread_id=thread_id)</pre>
+      </div>
+      <p>Every FastAPI app automatically serves an OpenAPI schema (<code class="inline">/openapi.json</code>) generated directly from your route type hints and Pydantic models, plus interactive docs at <code class="inline">/docs</code> (Swagger UI) and <code class="inline">/redoc</code> — zero extra code required. This is the same core insight as Topic 12's tool schemas: type hints and Pydantic models aren't decoration, they're the literal source of a machine-readable contract, whether that contract is consumed by an LLM (a tool schema) or by API clients (an OpenAPI spec).</p>
+      <div class="callout focus">
+        <span class="callout-label">response_model does two jobs at once — a subtle, important point</span>
+        <p><code class="inline">response_model</code> both validates your return value against the schema (catching a bug where your handler accidentally returns an extra internal field) and filters the output to exactly that schema's fields — meaning even if your handler's returned object has extra attributes (e.g. an internal debug field), only the declared fields are ever serialized to the client. This is a real security-relevant behavior, not just a convenience: it's your last line of defense against accidentally leaking an internal field to an external caller.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 04 DEPENDENCY INJECTION ============ -->
+  <section class="chapter" id="dependency-injection">
+    <div class="chapter-head"><span class="chapter-num">04 ★</span><h2 class="chapter-title">Dependency Injection</h2></div>
+    <p class="chapter-dek">FastAPI's <code class="inline">Depends</code> system is the direct application-layer parallel to Pydantic AI's <code class="inline">RunContext</code> from Topic 12 — shared resources, injected, never global state.</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>dependencies.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> fastapi <span class="tok-kw">import</span> Depends, HTTPException, Header
+
+<span class="tok-com"># a shared, connection-pooled resource -- constructed once per request, injected everywhere it's needed</span>
+<span class="tok-kw">async def</span> get_db_session():
+    <span class="tok-kw">async with</span> async_session_factory() <span class="tok-kw">as</span> session:
+        <span class="tok-kw">yield</span> session                     <span class="tok-com"># yield-based dependency: cleanup runs after the request, like a context manager</span>
+
+<span class="tok-com"># authentication as a dependency -- reusable across every protected route</span>
+<span class="tok-kw">async def</span> get_current_user(authorization: str = Header(...)) -> User:
+    token = authorization.removeprefix(<span class="tok-str">"Bearer "</span>)
+    user = <span class="tok-kw">await</span> verify_jwt(token)
+    <span class="tok-kw">if</span> <span class="tok-kw">not</span> user:
+        <span class="tok-kw">raise</span> HTTPException(status_code=<span class="tok-num">401</span>, detail=<span class="tok-str">"Invalid or expired token"</span>)
+    <span class="tok-kw">return</span> user
+
+<span class="tok-com"># composing dependencies -- this route gets a validated user AND a DB session, for free</span>
+<span class="tok-kw">@app.get</span>(<span class="tok-str">"/v1/conversations"</span>)
+<span class="tok-kw">async def</span> list_conversations(
+    user: User = Depends(get_current_user),
+    db = Depends(get_db_session),
+):
+    <span class="tok-kw">return</span> <span class="tok-kw">await</span> db.get_conversations(user.id)</pre>
+      </div>
+      <div class="callout">
+        <span class="callout-label">Why this matters for testing (ties directly to Section 19)</span>
+        <p>FastAPI lets you override any dependency in tests via <code class="inline">app.dependency_overrides[get_current_user] = lambda: fake_user</code> — swap in a fake authenticated user or a fake DB session without touching route code at all. This is the same "mock the boundary" discipline as Doc 18's testing section, applied at the API layer instead of the model-client layer.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 05 VALIDATION ============ -->
+  <section class="chapter" id="validation">
+    <div class="chapter-head"><span class="chapter-num">05</span><h2 class="chapter-title">Request/Response Validation</h2></div>
+    <p class="chapter-dek">Directly inherits from Doc 18 §05's Pydantic material — this section is the FastAPI-specific wiring on top of it.</p>
+    <div class="chapter-body">
+      <p>Path parameters, query parameters, and request bodies are all just Pydantic-validated inputs in FastAPI — declared via type hints, validated automatically before your handler ever runs, and rejected with a structured <code class="inline">422</code> response (field path + error message) on failure with zero manual validation code.</p>
+      <div class="code-wrap">
+        <div class="code-head"><span>validation_shapes.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> fastapi <span class="tok-kw">import</span> Query, Path
+
+<span class="tok-kw">@app.get</span>(<span class="tok-str">"/v1/conversations/{conv_id}/messages"</span>)
+<span class="tok-kw">async def</span> get_messages(
+    conv_id: str = Path(..., description=<span class="tok-str">"Conversation ID"</span>),
+    limit: <span class="tok-kw">int</span> = Query(<span class="tok-num">20</span>, ge=<span class="tok-num">1</span>, le=<span class="tok-num">100</span>),     <span class="tok-com"># bounded pagination, enforced automatically</span>
+    cursor: str | <span class="tok-kw">None</span> = Query(<span class="tok-kw">None</span>),
+): ...</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 06 ASYNC FASTAPI ============ -->
+  <section class="chapter" id="async-fastapi">
+    <div class="chapter-head"><span class="chapter-num">06 ★★</span><h2 class="chapter-title">Async FastAPI</h2></div>
+    <p class="chapter-dek">This section exists to answer one specific, near-universal interview question with total confidence.</p>
+    <div class="chapter-body">
+      <div class="callout interview">
+        <span class="callout-label">"What happens if you call a blocking function inside an async FastAPI endpoint?" — the complete answer</span>
+        <p>FastAPI runs each <code class="inline">async def</code> endpoint as a coroutine on the single event loop. If that coroutine calls a <strong>blocking</strong> (synchronous, CPU- or I/O-blocking) function directly — a synchronous DB driver call, a synchronous <code class="inline">requests.get()</code>, <code class="inline">time.sleep()</code> — that call blocks the entire event loop for its duration, not just the current request. Every other concurrent request being served by that worker process stalls until the blocking call finishes, silently destroying the concurrency the async model was supposed to provide. The server doesn't crash and no error is raised — it just gets quietly, catastrophically slower under load, which is exactly what makes this bug dangerous: it's invisible in local single-request testing and only shows up under real concurrent traffic.</p>
+      </div>
+      <table class="tbl">
+        <tr><th>Fix</th><th>When to use it</th></tr>
+        <tr><td class="k">Use an async-native library</td><td>Always the first choice — async DB drivers (asyncpg via SQLAlchemy's async engine), httpx/aiohttp instead of requests, async model clients (<code class="inline">model.ainvoke</code> from Topic 12/Doc 18)</td></tr>
+        <tr><td class="k">Run the blocking call in a thread pool</td><td>When no async version exists — <code class="inline">await run_in_threadpool(blocking_fn, *args)</code> (FastAPI's built-in helper) offloads it to a worker thread so the event loop keeps serving other requests</td></tr>
+        <tr><td class="k">Define the route as plain <code class="inline">def</code>, not <code class="inline">async def</code></td><td>FastAPI automatically runs synchronous (<code class="inline">def</code>) route handlers in a thread pool already — a legitimate option specifically for routes that are inherently CPU-bound or fully synchronous, but it forfeits the concurrency benefit for anything that could otherwise be async</td></tr>
+      </table>
+      <div class="code-wrap">
+        <div class="code-head"><span>the_bug_and_the_fix.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-com"># WRONG -- blocks the entire event loop for every concurrent request during this call</span>
+<span class="tok-kw">@app.post</span>(<span class="tok-str">"/v1/legacy-lookup"</span>)
+<span class="tok-kw">async def</span> legacy_lookup(query: str):
+    result = requests.get(f<span class="tok-str">"https://legacy-api/search?q={query}"</span>)   <span class="tok-com"># sync call inside async def!</span>
+    <span class="tok-kw">return</span> result.json()
+
+<span class="tok-com"># FIX 1 -- use the async client (Doc 18 §11)</span>
+<span class="tok-kw">@app.post</span>(<span class="tok-str">"/v1/lookup"</span>)
+<span class="tok-kw">async def</span> lookup(query: str):
+    resp = <span class="tok-kw">await</span> http_client.get(f<span class="tok-str">"https://api/search?q={query}"</span>)   <span class="tok-com"># httpx.AsyncClient</span>
+    <span class="tok-kw">return</span> resp.json()
+
+<span class="tok-com"># FIX 2 -- no async version exists, offload to a thread instead</span>
+<span class="tok-kw">from</span> fastapi.concurrency <span class="tok-kw">import</span> run_in_threadpool
+
+<span class="tok-kw">@app.post</span>(<span class="tok-str">"/v1/legacy-lookup"</span>)
+<span class="tok-kw">async def</span> legacy_lookup(query: str):
+    result = <span class="tok-kw">await</span> run_in_threadpool(requests.get, f<span class="tok-str">"https://legacy-api/search?q={query}"</span>)
+    <span class="tok-kw">return</span> result.json()</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 07 MIDDLEWARE ============ -->
+  <section class="chapter" id="middleware">
+    <div class="chapter-head"><span class="chapter-num">07</span><h2 class="chapter-title">Middleware &amp; Request Lifecycle</h2></div>
+    <p class="chapter-dek">Code that runs around every request, regardless of which route handles it — the natural home for cross-cutting concerns.</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>middleware.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">import</span> time, uuid
+<span class="tok-kw">from</span> starlette.middleware.base <span class="tok-kw">import</span> BaseHTTPMiddleware
+
+<span class="tok-kw">class</span> RequestContextMiddleware(BaseHTTPMiddleware):
+    <span class="tok-str">"""Attaches a request ID and timing to every request -- feeds Doc 18 §13's</span>
+<span class="tok-str">    structured logging and Section 17's tracing directly."""</span>
+    <span class="tok-kw">async def</span> dispatch(self, request, call_next):
+        request_id = str(uuid.uuid4())
+        request_id_var.set(request_id)               <span class="tok-com"># the contextvar from Doc 18 §13</span>
+        start = time.monotonic()
+        response = <span class="tok-kw">await</span> call_next(request)
+        response.headers[<span class="tok-str">"X-Request-ID"</span>] = request_id
+        response.headers[<span class="tok-str">"X-Response-Time"</span>] = f<span class="tok-str">"{time.monotonic() - start:.3f}"</span>
+        <span class="tok-kw">return</span> response
+
+app.add_middleware(RequestContextMiddleware)</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 08 ERROR HANDLING ============ -->
+  <section class="chapter" id="error-handling">
+    <div class="chapter-head"><span class="chapter-num">08</span><h2 class="chapter-title">Error Handling</h2></div>
+    <p class="chapter-dek">Consistent error shape everywhere, and never leak internals to the client.</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>error_handlers.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> fastapi <span class="tok-kw">import</span> Request
+<span class="tok-kw">from</span> fastapi.responses <span class="tok-kw">import</span> JSONResponse
+
+<span class="tok-kw">class</span> AgentError(Exception):                     <span class="tok-com"># from Doc 18 §06's exception hierarchy</span>
+    <span class="tok-kw">def</span> __init__(self, message: str, code: str):
+        self.message, self.code = message, code
+
+<span class="tok-kw">@app.exception_handler</span>(AgentError)
+<span class="tok-kw">async def</span> handle_agent_error(request: Request, exc: AgentError):
+    logger.error(f<span class="tok-str">"AgentError: {exc.code}"</span>, extra={<span class="tok-str">"request_id"</span>: request_id_var.get()})
+    <span class="tok-kw">return</span> JSONResponse(status_code=<span class="tok-num">502</span>, content={
+        <span class="tok-str">"error"</span>: {<span class="tok-str">"code"</span>: exc.code, <span class="tok-str">"message"</span>: exc.message, <span class="tok-str">"request_id"</span>: request_id_var.get()}
+    })
+
+<span class="tok-kw">@app.exception_handler</span>(Exception)      <span class="tok-com"># catch-all: NEVER return a raw traceback/exception string to the client</span>
+<span class="tok-kw">async def</span> handle_unexpected(request: Request, exc: Exception):
+    logger.exception(<span class="tok-str">"Unhandled exception"</span>)
+    <span class="tok-kw">return</span> JSONResponse(status_code=<span class="tok-num">500</span>, content={
+        <span class="tok-str">"error"</span>: {<span class="tok-str">"code"</span>: <span class="tok-str">"internal_error"</span>, <span class="tok-str">"message"</span>: <span class="tok-str">"An unexpected error occurred."</span>}
+    })</pre>
+      </div>
+      <div class="callout pitfall">
+        <span class="callout-label">Information leakage — a real, common vulnerability class</span>
+        <p>Returning a raw stack trace, an internal exception message, or a database error string to an external client leaks implementation details an attacker can use (library versions, internal file paths, query structure). Always map internal exceptions to a small, deliberate set of external-facing error codes and generic messages — log the full detail server-side, return the minimum necessary externally. This is a direct instance of Topic 6's least-privilege principle applied to error responses.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 09 AUTH ============ -->
+  <section class="chapter" id="auth">
+    <div class="chapter-head"><span class="chapter-num">09</span><h2 class="chapter-title">Authentication &amp; Authorization</h2></div>
+    <p class="chapter-dek">Who are you (authentication) vs what are you allowed to do (authorization) — the same distinction from Topic 6's OWASP material, now at the API layer.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Mechanism</th><th>Best for</th></tr>
+        <tr><td class="k">API keys</td><td>Service-to-service auth, simple B2B integrations — easy to issue/revoke, no built-in expiry semantics</td></tr>
+        <tr><td class="k">JWT (JSON Web Tokens)</td><td>Stateless user sessions — the token itself carries claims (user ID, roles), verifiable without a DB round-trip; use short-lived access tokens plus a longer-lived refresh token</td></tr>
+        <tr><td class="k">OAuth2</td><td>Delegated authorization — "let this app act on my behalf" — the standard for third-party integrations</td></tr>
+        <tr><td class="k">RBAC (Role-Based Access Control)</td><td>Coarse-grained authorization — a user's role (admin, member, viewer) determines what endpoints/actions they can reach</td></tr>
+      </table>
+      <div class="callout focus">
+        <span class="callout-label">The direct link to Topic 6's Excessive Agency material</span>
+        <p>An agent backend introduces a specific authorization wrinkle beyond typical CRUD APIs: the agent acts <em>on behalf of</em> a user, and its tool calls need to inherit that user's actual permission scope — not a blanket service-level credential. This is Topic 6's least-privilege principle applied concretely: a support agent's refund tool should be scoped to the authenticated user's own account/permissions, not a superuser API key the agent process happens to hold.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 10 DATABASES ============ -->
+  <section class="chapter" id="databases">
+    <div class="chapter-head"><span class="chapter-num">10</span><h2 class="chapter-title">Databases &amp; FastAPI</h2></div>
+    <p class="chapter-dek">SQLAlchemy's async engine, and the one query-pattern bug that shows up in nearly every real backend eventually.</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>async_sqlalchemy.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> sqlalchemy.ext.asyncio <span class="tok-kw">import</span> create_async_engine, async_sessionmaker
+<span class="tok-kw">from</span> sqlalchemy.orm <span class="tok-kw">import</span> selectinload
+
+engine = create_async_engine(<span class="tok-str">"postgresql+asyncpg://..."</span>, pool_size=<span class="tok-num">20</span>, max_overflow=<span class="tok-num">10</span>)
+async_session_factory = async_sessionmaker(engine, expire_on_commit=<span class="tok-kw">False</span>)
+
+<span class="tok-com"># N+1 query problem: looping and querying per-item instead of one batched query</span>
+<span class="tok-com"># BAD:</span>
+<span class="tok-kw">for</span> conv <span class="tok-kw">in</span> conversations:
+    messages = <span class="tok-kw">await</span> db.execute(select(Message).where(Message.conv_id == conv.id))  <span class="tok-com"># N extra queries!</span>
+
+<span class="tok-com"># GOOD -- eager-load the relationship in the original query</span>
+result = <span class="tok-kw">await</span> db.execute(
+    select(Conversation).options(selectinload(Conversation.messages))
+)</pre>
+      </div>
+      <div class="callout">
+        <span class="callout-label">Connection pooling, sized correctly</span>
+        <p>The pool must be sized against your actual concurrency, not guessed — too small and requests queue waiting for a connection under load; too large and you can exhaust the database's own max-connections limit. Since agent requests can be long-running (a multi-step trajectory holding a connection across several LLM calls), size pools conservatively and prefer opening a connection only for the specific DB operation, not for the full duration of an agent run.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 11 REDIS ============ -->
+  <section class="chapter" id="redis">
+    <div class="chapter-head"><span class="chapter-num">11</span><h2 class="chapter-title">Redis &amp; Caching</h2></div>
+    <p class="chapter-dek">The implementation layer underneath Topic 7's caching material.</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>semantic_cache_redis.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">import</span> redis.asyncio <span class="tok-kw">as</span> redis, hashlib, json
+
+r = redis.Redis(host=<span class="tok-str">"localhost"</span>, decode_responses=<span class="tok-kw">True</span>)
+
+<span class="tok-kw">async def</span> cache_aside_get_or_generate(prompt: str, ttl_seconds: <span class="tok-kw">int</span> = <span class="tok-num">3600</span>) -> str:
+    <span class="tok-str">"""Cache-aside pattern: check cache, miss -> generate, then populate cache."""</span>
+    key = f<span class="tok-str">"llm:exact:{hashlib.sha256(prompt.encode()).hexdigest()}"</span>
+    cached = <span class="tok-kw">await</span> r.get(key)
+    <span class="tok-kw">if</span> cached:
+        <span class="tok-kw">return</span> cached
+    result = <span class="tok-kw">await</span> model.ainvoke(prompt)
+    <span class="tok-kw">await</span> r.set(key, result.content, ex=ttl_seconds)     <span class="tok-com"># ex= sets TTL directly</span>
+    <span class="tok-kw">return</span> result.content</pre>
+      </div>
+      <table class="tbl">
+        <tr><th>Redis use case</th><th>In an AI backend specifically</th></tr>
+        <tr><td class="k">Session storage</td><td>Short-term conversation state cache, fast-read layer in front of the durable Postgres store</td></tr>
+        <tr><td class="k">Rate limiting</td><td>Section 15's token-bucket counters — Redis's atomic increment operations make this safe under concurrency</td></tr>
+        <tr><td class="k">Distributed locks</td><td>Preventing two workers from processing the same queued job twice (Section 14)</td></tr>
+        <tr><td class="k">Pub/sub</td><td>Broadcasting streaming tokens from a worker process to a connected client's SSE/WebSocket handler in a different process</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 12 AI/LLM APIs ============ -->
+  <section class="chapter" id="ai-apis">
+    <div class="chapter-head"><span class="chapter-num">12 ★★★</span><h2 class="chapter-title">AI/LLM APIs with FastAPI</h2></div>
+    <p class="chapter-dek">The differentiator section — this is what your target role is actually about. Every prior section in this document exists to make this one buildable.</p>
+    <div class="chapter-body">
+      <div class="diagram">
+        <svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="aim" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff9f40"/></marker></defs>
+          <rect x="280" y="10" width="140" height="40" rx="7" fill="none" stroke="#5fd9c9" stroke-width="1.4"/>
+          <text x="350" y="35" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">Client</text>
+          <line x1="350" y1="50" x2="350" y2="80" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#aim)"/>
+          <rect x="260" y="80" width="180" height="40" rx="7" fill="none" stroke="#ff9f40" stroke-width="1.4"/>
+          <text x="350" y="105" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">FastAPI</text>
+          <line x1="350" y1="120" x2="350" y2="150" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#aim)"/>
+          <rect x="200" y="150" width="300" height="40" rx="7" fill="none" stroke="#c9f04c" stroke-width="1.4"/>
+          <text x="350" y="175" fill="#e7e9ec" font-family="JetBrains Mono" font-size="12" text-anchor="middle">AI Service Layer</text>
+          <rect x="60" y="210" width="120" height="34" rx="6" fill="none" stroke="#b592ff" stroke-width="1.2"/>
+          <text x="120" y="232" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">LLM</text>
+          <rect x="195" y="210" width="120" height="34" rx="6" fill="none" stroke="#b592ff" stroke-width="1.2"/>
+          <text x="255" y="232" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">RAG</text>
+          <rect x="330" y="210" width="120" height="34" rx="6" fill="none" stroke="#b592ff" stroke-width="1.2"/>
+          <text x="390" y="232" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Tools</text>
+          <rect x="465" y="210" width="120" height="34" rx="6" fill="none" stroke="#b592ff" stroke-width="1.2"/>
+          <text x="525" y="232" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Memory</text>
+          <line x1="350" y1="190" x2="120" y2="210" stroke="#5c6672" stroke-width="1"/>
+          <line x1="350" y1="190" x2="255" y2="210" stroke="#5c6672" stroke-width="1"/>
+          <line x1="350" y1="190" x2="390" y2="210" stroke="#5c6672" stroke-width="1"/>
+          <line x1="350" y1="190" x2="525" y2="210" stroke="#5c6672" stroke-width="1"/>
+        </svg>
+      </div>
+      <table class="tbl">
+        <tr><th>Endpoint shape</th><th>What it's actually doing</th></tr>
+        <tr><td class="k">POST /v1/chat</td><td>Single-turn or multi-turn synchronous chat — the ChatRequest/ChatResponse shape from Section 03</td></tr>
+        <tr><td class="k">POST /v1/generate</td><td>Raw completion, no conversation framing — closer to a direct model passthrough</td></tr>
+        <tr><td class="k">POST /v1/embed</td><td>Text → embedding vector, typically batched (Topic 13's embedding material)</td></tr>
+        <tr><td class="k">POST /v1/retrieve</td><td>Query → ranked chunks, exposing Topic 8's retrieval pipeline as its own callable endpoint — useful for clients that want retrieval without generation</td></tr>
+        <tr><td class="k">POST /v1/agent</td><td>Full agentic loop — plans, calls tools, returns a final result (or streams, per Section 13)</td></tr>
+        <tr><td class="k">GET /v1/agent/{run_id}/state</td><td>Inspect an in-flight or completed agent run's state — directly exposes the foundational bible's <code class="inline">get_state</code> over HTTP</td></tr>
+      </table>
+      <div class="code-wrap">
+        <div class="code-head"><span>agent_endpoint.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">class</span> AgentRunRequest(BaseModel):
+    task: str
+    thread_id: str | <span class="tok-kw">None</span> = <span class="tok-kw">None</span>
+    tool_allowlist: <span class="tok-kw">list</span>[str] | <span class="tok-kw">None</span> = <span class="tok-kw">None</span>    <span class="tok-com"># Topic 6: least-privilege, scoped per-request</span>
+
+<span class="tok-kw">class</span> AgentRunResponse(BaseModel):
+    run_id: str
+    status: <span class="tok-kw">Literal</span>[<span class="tok-str">"completed"</span>, <span class="tok-str">"requires_approval"</span>]
+    result: str | <span class="tok-kw">None</span> = <span class="tok-kw">None</span>
+    pending_action: <span class="tok-kw">dict</span> | <span class="tok-kw">None</span> = <span class="tok-kw">None</span>          <span class="tok-com"># foundational bible: interrupt_before payload</span>
+
+<span class="tok-kw">@app.post</span>(<span class="tok-str">"/v1/agent"</span>, response_model=AgentRunResponse)
+<span class="tok-kw">async def</span> run_agent(req: AgentRunRequest, user: User = Depends(get_current_user)):
+    thread_id = req.thread_id <span class="tok-kw">or</span> str(uuid.uuid4())
+    thread = {<span class="tok-str">"configurable"</span>: {<span class="tok-str">"thread_id"</span>: thread_id}}
+    result = <span class="tok-kw">await</span> agent_graph.ainvoke(
+        {<span class="tok-str">"messages"</span>: [{<span class="tok-str">"role"</span>: <span class="tok-str">"user"</span>, <span class="tok-str">"content"</span>: req.task}], <span class="tok-str">"user_id"</span>: user.id},
+        thread,
+    )
+    state = <span class="tok-kw">await</span> agent_graph.aget_state(thread)
+    <span class="tok-kw">if</span> state.next:                              <span class="tok-com"># graph paused -- interrupt_before fired, needs human approval</span>
+        <span class="tok-kw">return</span> AgentRunResponse(run_id=thread_id, status=<span class="tok-str">"requires_approval"</span>,
+                                pending_action=state.values[<span class="tok-str">"messages"</span>][-<span class="tok-num">1</span>].tool_calls[<span class="tok-num">0</span>])
+    <span class="tok-kw">return</span> AgentRunResponse(run_id=thread_id, status=<span class="tok-str">"completed"</span>,
+                            result=result[<span class="tok-str">"messages"</span>][-<span class="tok-num">1</span>].content)</pre>
+      </div>
+      <div class="callout focus">
+        <span class="callout-label">This is the moment the whole series converges</span>
+        <p>That single endpoint touches nearly every prior document: the foundational bible's checkpointer and <code class="inline">interrupt_before</code>, Topic 6's tool allowlisting, Topic 12's structured request/response, Doc 18's async patterns, and this document's dependency injection and error handling — all in about twenty lines. This is what "productionizing an AI service" actually looks like: not new concepts, but every prior concept wired together correctly at the API boundary.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 13 STREAMING ============ -->
+  <section class="chapter" id="streaming">
+    <div class="chapter-head"><span class="chapter-num">13 ★★</span><h2 class="chapter-title">Streaming AI Responses</h2></div>
+    <p class="chapter-dek">Directly implementing the foundational bible's streaming chapter and Topic 7's TTFT material as real HTTP endpoints.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th></th><th>Server-Sent Events (SSE)</th><th>WebSockets</th></tr>
+        <tr><td class="k">Direction</td><td>One-way, server → client</td><td>Bidirectional</td></tr>
+        <tr><td class="k">Protocol</td><td>Plain HTTP, works through most proxies/load balancers without special config</td><td>A protocol upgrade from HTTP — needs explicit infra support (proxies, load balancers must support the upgrade)</td></tr>
+        <tr><td class="k">Best for</td><td>Streaming tokens/events to the client — the large majority of LLM streaming use cases, since the client rarely needs to send data mid-stream</td><td>Truly bidirectional cases — a voice agent needing simultaneous audio in and out, or a collaborative multi-client session</td></tr>
+      </table>
+      <div class="code-wrap">
+        <div class="code-head"><span>sse_streaming_endpoint.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> fastapi.responses <span class="tok-kw">import</span> StreamingResponse
+<span class="tok-kw">import</span> json
+
+<span class="tok-kw">async def</span> event_generator(task: str, thread: <span class="tok-kw">dict</span>):
+    <span class="tok-kw">try</span>:
+        <span class="tok-kw">async for</span> event <span class="tok-kw">in</span> agent_graph.astream_events(
+            {<span class="tok-str">"messages"</span>: [{<span class="tok-str">"role"</span>: <span class="tok-str">"user"</span>, <span class="tok-str">"content"</span>: task}]}, thread, version=<span class="tok-str">"v1"</span>
+        ):
+            <span class="tok-kw">if</span> event[<span class="tok-str">"event"</span>] == <span class="tok-str">"on_chat_model_stream"</span>:
+                content = event[<span class="tok-str">"data"</span>][<span class="tok-str">"chunk"</span>].content
+                <span class="tok-kw">if</span> content:                            <span class="tok-com"># the foundational bible's empty-content gotcha</span>
+                    <span class="tok-kw">yield</span> f<span class="tok-str">"data: {json.dumps({'type': 'token', 'content': content})}\n\n"</span>
+            <span class="tok-kw">elif</span> event[<span class="tok-str">"event"</span>] == <span class="tok-str">"on_tool_start"</span>:
+                <span class="tok-kw">yield</span> f<span class="tok-str">"data: {json.dumps({'type': 'tool_call', 'name': event['name']})}\n\n"</span>
+    <span class="tok-kw">except</span> asyncio.CancelledError:
+        <span class="tok-com"># client disconnected mid-stream -- clean up, don't let the agent run orphaned</span>
+        logger.info(<span class="tok-str">"Client disconnected, stopping stream"</span>)
+        <span class="tok-kw">raise</span>
+    <span class="tok-kw">finally</span>:
+        <span class="tok-kw">yield</span> f<span class="tok-str">"data: {json.dumps({'type': 'done'})}\n\n"</span>
+
+<span class="tok-kw">@app.post</span>(<span class="tok-str">"/v1/agent/stream"</span>)
+<span class="tok-kw">async def</span> stream_agent(req: AgentRunRequest):
+    thread = {<span class="tok-str">"configurable"</span>: {<span class="tok-str">"thread_id"</span>: req.thread_id <span class="tok-kw">or</span> str(uuid.uuid4())}}
+    <span class="tok-kw">return</span> StreamingResponse(event_generator(req.task, thread), media_type=<span class="tok-str">"text/event-stream"</span>)</pre>
+      </div>
+      <div class="callout pitfall">
+        <span class="callout-label">Client disconnects — the failure mode most streaming endpoints get wrong</span>
+        <p>If a client closes the connection mid-stream (closed browser tab, network drop) and your generator doesn't handle <code class="inline">asyncio.CancelledError</code>, the underlying agent run can keep executing tool calls and burning tokens for a response nobody will ever receive. Always catch cancellation explicitly and stop the underlying agent invocation — this is a real, silent cost leak in production streaming endpoints that don't handle it.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 14 BACKGROUND JOBS ============ -->
+  <section class="chapter" id="background-jobs">
+    <div class="chapter-head"><span class="chapter-num">14 ★</span><h2 class="chapter-title">Background Tasks &amp; Job Queues</h2></div>
+    <p class="chapter-dek">The pattern for anything too slow to hold an HTTP connection open for — exactly Topic 3's deep-research-agent latency profile.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Tool</th><th>When it's enough / not enough</th></tr>
+        <tr><td class="k">FastAPI BackgroundTasks</td><td>Fine for lightweight, fire-and-forget work within the same process (send a notification email after responding) — insufficient for anything long-running, since it dies with the worker process and has no retry/persistence</td></tr>
+        <tr><td class="k">Celery / Redis queues / SQS</td><td>The real answer for long-running AI jobs — durable, persisted across process restarts, retryable, horizontally scalable across many worker processes</td></tr>
+      </table>
+      <div class="diagram">
+        <svg viewBox="0 0 700 130" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="jqm" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff9f40"/></marker></defs>
+          <rect x="10" y="20" width="120" height="40" rx="6" fill="none" stroke="#5fd9c9" stroke-width="1.3"/>
+          <text x="70" y="45" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">POST /research</text>
+          <line x1="130" y1="40" x2="180" y2="40" stroke="#ff9f40" stroke-width="1.3" marker-end="url(#jqm)"/>
+          <rect x="180" y="20" width="90" height="40" rx="6" fill="none" stroke="#ff9f40" stroke-width="1.3"/>
+          <text x="225" y="45" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Queue</text>
+          <line x1="270" y1="40" x2="320" y2="40" stroke="#ff9f40" stroke-width="1.3" marker-end="url(#jqm)"/>
+          <rect x="320" y="20" width="90" height="40" rx="6" fill="none" stroke="#c9f04c" stroke-width="1.3"/>
+          <text x="365" y="45" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Worker</text>
+          <line x1="410" y1="40" x2="460" y2="40" stroke="#ff9f40" stroke-width="1.3" marker-end="url(#jqm)"/>
+          <rect x="460" y="20" width="90" height="40" rx="6" fill="none" stroke="#b592ff" stroke-width="1.3"/>
+          <text x="505" y="45" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Agent</text>
+          <line x1="550" y1="40" x2="600" y2="40" stroke="#ff9f40" stroke-width="1.3" marker-end="url(#jqm)"/>
+          <rect x="600" y="20" width="90" height="40" rx="6" fill="none" stroke="#ff7a8a" stroke-width="1.3"/>
+          <text x="645" y="45" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">DB</text>
+          <text x="225" y="100" fill="#5c6672" font-family="JetBrains Mono" font-size="10" text-anchor="middle">GET /research/{id} → poll job status, stored by the worker in the DB above</text>
+        </svg>
+      </div>
+      <div class="code-wrap">
+        <div class="code-head"><span>job_endpoints.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">@app.post</span>(<span class="tok-str">"/v1/research"</span>, status_code=<span class="tok-num">202</span>)     <span class="tok-com"># 202 Accepted -- work queued, not yet done</span>
+<span class="tok-kw">async def</span> start_research(req: ResearchRequest) -> <span class="tok-kw">dict</span>:
+    job_id = str(uuid.uuid4())
+    <span class="tok-kw">await</span> job_store.create(job_id, status=<span class="tok-str">"queued"</span>)
+    <span class="tok-kw">await</span> queue.enqueue(<span class="tok-str">"run_research_agent"</span>, job_id=job_id, query=req.query)
+    <span class="tok-kw">return</span> {<span class="tok-str">"job_id"</span>: job_id, <span class="tok-str">"status_url"</span>: f<span class="tok-str">"/v1/research/{job_id}"</span>}
+
+<span class="tok-kw">@app.get</span>(<span class="tok-str">"/v1/research/{job_id}"</span>)
+<span class="tok-kw">async def</span> get_research_status(job_id: str) -> <span class="tok-kw">dict</span>:
+    job = <span class="tok-kw">await</span> job_store.get(job_id)
+    <span class="tok-kw">if not</span> job:
+        <span class="tok-kw">raise</span> HTTPException(<span class="tok-num">404</span>, <span class="tok-str">"job not found"</span>)
+    <span class="tok-kw">return</span> {<span class="tok-str">"status"</span>: job.status, <span class="tok-str">"result"</span>: job.result <span class="tok-kw">if</span> job.status == <span class="tok-str">"completed"</span> <span class="tok-kw">else</span> <span class="tok-kw">None</span>}</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 15 RATE LIMITING ============ -->
+  <section class="chapter" id="rate-limiting">
+    <div class="chapter-head"><span class="chapter-num">15</span><h2 class="chapter-title">Rate Limiting &amp; Quotas</h2></div>
+    <p class="chapter-dek">Doc 18's token-bucket limiter, now made distributed via Redis so it works correctly across multiple server processes.</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>redis_rate_limit_dependency.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">async def</span> rate_limit(user: User = Depends(get_current_user)):
+    key = f<span class="tok-str">"ratelimit:{user.id}"</span>
+    <span class="tok-com"># atomic INCR + conditional EXPIRE -- correct even under concurrent requests</span>
+    <span class="tok-com"># from the SAME user hitting DIFFERENT server processes simultaneously</span>
+    count = <span class="tok-kw">await</span> r.incr(key)
+    <span class="tok-kw">if</span> count == <span class="tok-num">1</span>:
+        <span class="tok-kw">await</span> r.expire(key, <span class="tok-num">60</span>)              <span class="tok-com"># 60-second window</span>
+    <span class="tok-kw">if</span> count > user.rate_limit_per_minute:
+        <span class="tok-kw">raise</span> HTTPException(<span class="tok-num">429</span>, detail=<span class="tok-str">"Rate limit exceeded"</span>)
+
+<span class="tok-kw">@app.post</span>(<span class="tok-str">"/v1/chat"</span>, dependencies=[Depends(rate_limit)])   <span class="tok-com"># applied as a dependency -- composes with auth cleanly</span>
+<span class="tok-kw">async def</span> chat(req: ChatRequest): ...</pre>
+      </div>
+      <p>Per-user request limits are only half the picture for an AI API specifically — token-based limits matter just as much, since a single request's cost varies enormously with output length and context size (Topic 7's token economics). Production AI gateways typically enforce both a requests/minute cap and a tokens/minute cap simultaneously.</p>
+    </div>
+  </section>
+
+  <!-- ============ 16 RELIABILITY ============ -->
+  <section class="chapter" id="reliability">
+    <div class="chapter-head"><span class="chapter-num">16</span><h2 class="chapter-title">Reliability Engineering</h2></div>
+    <p class="chapter-dek">This section is almost entirely a pointer — Topic 7 covers this material in full depth. Here's the API-layer-specific wiring.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Concept</th><th>Covered in full</th><th>API-layer specifics</th></tr>
+        <tr><td class="k">Timeouts, retries, backoff, jitter</td><td class="k">Topic 7, Doc 18 §02</td><td>Set per-endpoint timeouts matched to expected latency — a <code class="inline">/v1/agent</code> route needs a much longer timeout than <code class="inline">/v1/embed</code></td></tr>
+        <tr><td class="k">Circuit breakers</td><td class="k">Topic 7</td><td>Wrap outbound calls to the LLM provider and any external tool APIs — trip the breaker on a provider outage rather than letting every incoming request hang against a dead dependency</td></tr>
+        <tr><td class="k">Idempotency</td><td class="k">Topic 7, this doc §01</td><td>Any endpoint triggering a real side effect (refunds, sending messages) needs an idempotency key accepted from the client and checked server-side before executing</td></tr>
+        <tr><td class="k">Graceful degradation, fallback models</td><td class="k">Topic 7</td><td>Doc 18 §17's <code class="inline">RobustLLMClient</code> fallback pattern, invoked from inside the FastAPI route</td></tr>
+        <tr><td class="k">Bulkheads</td><td>—</td><td>Isolate resource pools per downstream dependency (a separate connection pool per external tool API) so one dependency's overload doesn't starve requests to a healthy one</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 17 OBSERVABILITY ============ -->
+  <section class="chapter" id="observability">
+    <div class="chapter-head"><span class="chapter-num">17</span><h2 class="chapter-title">Observability</h2></div>
+    <p class="chapter-dek">Wiring Topic 7's OTel GenAI material into an actual FastAPI app.</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>otel_instrumentation.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> opentelemetry.instrumentation.fastapi <span class="tok-kw">import</span> FastAPIInstrumentor
+
+FastAPIInstrumentor.instrument_app(app)   <span class="tok-com"># auto-instruments every route as a span, zero manual wiring</span>
+
+<span class="tok-com"># health vs readiness -- a real, commonly-tested distinction</span>
+<span class="tok-kw">@app.get</span>(<span class="tok-str">"/healthz"</span>)                        <span class="tok-com"># liveness: is the process alive at all?</span>
+<span class="tok-kw">async def</span> healthz():
+    <span class="tok-kw">return</span> {<span class="tok-str">"status"</span>: <span class="tok-str">"ok"</span>}
+
+<span class="tok-kw">@app.get</span>(<span class="tok-str">"/readyz"</span>)                        <span class="tok-com"># readiness: can it actually SERVE traffic right now?</span>
+<span class="tok-kw">async def</span> readyz():
+    <span class="tok-kw">try</span>:
+        <span class="tok-kw">await</span> db.execute(select(<span class="tok-num">1</span>))
+        <span class="tok-kw">await</span> r.ping()
+        <span class="tok-kw">return</span> {<span class="tok-str">"status"</span>: <span class="tok-str">"ready"</span>}
+    <span class="tok-kw">except</span> Exception:
+        <span class="tok-kw">raise</span> HTTPException(<span class="tok-num">503</span>, <span class="tok-str">"dependencies unavailable"</span>)</pre>
+      </div>
+      <div class="callout">
+        <span class="callout-label">Liveness vs readiness, precisely — a real orchestrator (Kubernetes) distinction</span>
+        <p>Liveness answers "should the orchestrator restart this process" — a failing liveness check means the process itself is stuck/deadlocked. Readiness answers "should the load balancer send this instance traffic right now" — a process can be alive but not ready (e.g. its DB connection pool hasn't finished initializing, or a downstream dependency is temporarily down) without needing a restart, just a temporary traffic pause.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 18 SECURITY ============ -->
+  <section class="chapter" id="security">
+    <div class="chapter-head"><span class="chapter-num">18</span><h2 class="chapter-title">Security</h2></div>
+    <p class="chapter-dek">This section is deliberately a bridge, not a repeat — Topic 6 is the canonical source; here's exactly how those concepts land at the API layer.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Risk</th><th>API-layer manifestation</th></tr>
+        <tr><td class="k">Prompt injection / indirect injection</td><td>Any endpoint accepting user text that flows into an agent's context (Topic 6's lethal trifecta) — validate/sanitize at the boundary, but remember detection alone doesn't close the trifecta; architectural controls (Topic 6 §05-06) still apply</td></tr>
+        <tr><td class="k">SSRF (Server-Side Request Forgery)</td><td>An agent tool that fetches a URL supplied by user input can be tricked into making the server request internal/forbidden addresses — validate and allowlist outbound destinations, never pass raw user-supplied URLs to an unrestricted fetch</td></tr>
+        <tr><td class="k">Excessive Agency / tool authorization</td><td>Directly Topic 6 §07 — every tool endpoint scoped to least privilege, checked against the authenticated user's actual permissions, not a blanket service credential</td></tr>
+        <tr><td class="k">File-upload security</td><td>Any <code class="inline">/v1/upload</code> endpoint feeding a RAG pipeline — validate file type/size server-side (never trust the client-reported content-type), scan for malicious content, and isolate processing (never execute uploaded content)</td></tr>
+        <tr><td class="k">PII handling</td><td>Structured logging (Section 17) must not log full prompt/response bodies by default in a way that captures PII — redact or hash sensitive fields before they hit a log aggregator</td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"How do you secure a file-upload endpoint that feeds a RAG pipeline?" — Validate file type and size server-side using the actual file content (magic bytes), not the client-supplied content-type header, which is trivially spoofable. Process uploads in an isolated environment (Topic 6's sandboxing principle) rather than the main API process. Scan for malicious content before ingestion. And treat the uploaded document's text exactly like any other untrusted content once it enters the RAG pipeline — Topic 6's lethal trifecta framing applies directly, since a malicious document is a textbook indirect-prompt-injection vector.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 19 TESTING ============ -->
+  <section class="chapter" id="testing">
+    <div class="chapter-head"><span class="chapter-num">19</span><h2 class="chapter-title">API Testing</h2></div>
+    <p class="chapter-dek">FastAPI's <code class="inline">TestClient</code>, plus the dependency-override trick from Section 04 used for real.</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>test_api.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> fastapi.testclient <span class="tok-kw">import</span> TestClient
+<span class="tok-kw">import</span> pytest
+
+<span class="tok-kw">@pytest.fixture</span>
+<span class="tok-kw">def</span> client():
+    app.dependency_overrides[get_current_user] = <span class="tok-kw">lambda</span>: FakeUser(id=<span class="tok-str">"u1"</span>)   <span class="tok-com"># swap real auth for a fake user</span>
+    app.dependency_overrides[get_db_session] = <span class="tok-kw">lambda</span>: FakeDBSession()
+    <span class="tok-kw">yield</span> TestClient(app)
+    app.dependency_overrides.clear()
+
+<span class="tok-kw">def</span> test_chat_endpoint_returns_valid_shape(client, monkeypatch):
+    <span class="tok-com"># mock the model boundary -- Doc 18 §14's exact discipline, applied at the API test level</span>
+    monkeypatch.setattr(agent_graph, <span class="tok-str">"ainvoke"</span>, AsyncMock(return_value={
+        <span class="tok-str">"messages"</span>: [FakeAIMessage(content=<span class="tok-str">"mocked reply"</span>)]
+    }))
+    response = client.post(<span class="tok-str">"/v1/chat"</span>, json={<span class="tok-str">"message"</span>: <span class="tok-str">"hi"</span>})
+    <span class="tok-kw">assert</span> response.status_code == <span class="tok-num">200</span>
+    <span class="tok-kw">assert</span> <span class="tok-str">"thread_id"</span> <span class="tok-kw">in</span> response.json()</pre>
+      </div>
+      <table class="tbl">
+        <tr><th>Test layer</th><th>What it validates</th></tr>
+        <tr><td class="k">Unit</td><td>Individual functions/dependencies in isolation</td></tr>
+        <tr><td class="k">API/integration (TestClient, mocked model)</td><td>Request validation, routing, error shapes, auth wiring — everything except real model quality</td></tr>
+        <tr><td class="k">Eval suite (Topic 5)</td><td>Actual model/agent output quality — a separate, dedicated tier</td></tr>
+        <tr><td class="k">Load testing</td><td>Throughput and latency under concurrent load (Section 20) — reveals connection-pool sizing and blocking-call bugs (Section 06) that single-request tests never surface</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 20 PERFORMANCE ============ -->
+  <section class="chapter" id="performance">
+    <div class="chapter-head"><span class="chapter-num">20</span><h2 class="chapter-title">API Performance</h2></div>
+    <p class="chapter-dek">The metrics that actually get reported on a production dashboard.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Metric</th><th>Why it's reported instead of average latency</th></tr>
+        <tr><td class="k">P50 (median)</td><td>Typical-case experience</td></tr>
+        <tr><td class="k">P95 / P99</td><td>Tail latency — the experience of your worst-served 5%/1% of requests. Averages hide this entirely; a few very slow requests (e.g. LLM calls that hit a provider-side slowdown) can be invisible in an average but glaring in P99, and P99 is usually what SLAs are actually written against</td></tr>
+        <tr><td class="k">Throughput (req/s)</td><td>How much load the service handles — directly tied to Section 16's connection pool and worker-count sizing</td></tr>
+      </table>
+      <div class="callout">
+        <span class="callout-label">Where the levers actually are for an AI API specifically</span>
+        <p>Async I/O (Section 06) and connection pooling (Section 10) matter, but the dominant latency cost in an AI backend is almost always the LLM call itself — which is why Topic 7's caching and routing material, not raw API-layer tuning, is where the biggest performance wins in this domain actually come from.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 21 DEPLOYMENT ============ -->
+  <section class="chapter" id="deployment">
+    <div class="chapter-head"><span class="chapter-num">21</span><h2 class="chapter-title">Deployment</h2></div>
+    <p class="chapter-dek">Getting a FastAPI app from a laptop to production.</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>Dockerfile + run command</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-com"># Uvicorn -- the actual ASGI server running your async app</span>
+<span class="tok-com"># Gunicorn -- a process manager, running multiple Uvicorn WORKERS for parallelism</span>
+<span class="tok-com"># (remember: one process = one GIL, so multiple worker PROCESSES is how you use multiple CPU cores)</span>
+
+CMD [<span class="tok-str">"gunicorn"</span>, <span class="tok-str">"main:app"</span>, <span class="tok-str">"-k"</span>, <span class="tok-str">"uvicorn.workers.UvicornWorker"</span>, <span class="tok-str">"--workers"</span>, <span class="tok-str">"4"</span>, <span class="tok-str">"--bind"</span>, <span class="tok-str">"0.0.0.0:8000"</span>]</pre>
+      </div>
+      <table class="tbl">
+        <tr><th>Concept</th><th>Note</th></tr>
+        <tr><td class="k">Worker count</td><td>Roughly (2 × CPU cores) + 1 is a common starting heuristic — but I/O-bound AI workloads with heavy async usage may benefit from fewer, since a single async worker already handles high I/O-bound concurrency; profile rather than guess</td></tr>
+        <tr><td class="k">Graceful shutdown</td><td>On SIGTERM, stop accepting new connections but let in-flight requests (and checkpointed agent runs) finish — exactly Doc 18 §13's shutdown handler, wired to the ASGI server's lifecycle</td></tr>
+        <tr><td class="k">Reverse proxy (Nginx)</td><td>TLS termination, static asset serving, and load balancing in front of multiple Uvicorn/Gunicorn instances</td></tr>
+        <tr><td class="k">Health checks in orchestration</td><td>Section 17's <code class="inline">/healthz</code> and <code class="inline">/readyz</code> endpoints are exactly what a load balancer or Kubernetes uses to route traffic only to instances that are actually ready</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 22 PRODUCTION ARCHITECTURE ============ -->
+  <section class="chapter" id="production-architecture">
+    <div class="chapter-head"><span class="chapter-num">22</span><h2 class="chapter-title">Production Architecture</h2></div>
+    <p class="chapter-dek">Where a real AI backend lands on the monolith-to-microservices spectrum in practice.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Pattern</th><th>When it's the right call</th></tr>
+        <tr><td class="k">Modular monolith</td><td>The honest default for most teams starting out — one deployable, but internally organized into clear service-layer modules (AI service, RAG service, tool service as separate internal packages) so a future split to real microservices is a refactor, not a rewrite</td></tr>
+        <tr><td class="k">AI gateway / model gateway</td><td>A dedicated service in front of all LLM calls — centralizes routing (Topic 7), rate limiting (Section 15), caching, and provider fallback, so every other service calls one internal gateway instead of each independently wiring provider SDKs</td></tr>
+        <tr><td class="k">Separate RAG / tool / worker services</td><td>Justified once one component's scaling needs diverge sharply from the rest — e.g. the embedding/retrieval service needs GPU-backed infrastructure while the API layer doesn't, making a shared deployable wasteful</td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">The same discipline as Topic 3's multi-agent economics</span>
+        <p>Splitting into microservices prematurely adds real operational overhead (network calls where function calls used to suffice, distributed tracing complexity, more deployment surface) for a scaling problem you may not actually have yet. Default to a modular monolith; split specific components out only once you have a measured, specific reason — the same "prove you need the complexity first" discipline that runs through this entire series.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 23 SYSTEM DESIGN ============ -->
+  <section class="chapter" id="system-design">
+    <div class="chapter-head"><span class="chapter-num">23 ★★★</span><h2 class="chapter-title">AI Backend System Design</h2></div>
+    <p class="chapter-dek">Every prior section in this document, applied to a full worked example — walk this out loud exactly like Topic 10's worked examples.</p>
+    <div class="chapter-body">
+      <h3>Worked example: "Design a RAG API for a document Q&amp;A product"</h3>
+      <table class="tbl">
+        <tr><th>Layer</th><th>Design decision</th></tr>
+        <tr><td class="k">Requirements</td><td>Users upload documents, ask questions; latency budget ~3-5s; must cite sources; documents are private per-tenant</td></tr>
+        <tr><td class="k">API</td><td><code class="inline">POST /v1/documents</code> (upload, async-processed per Section 14), <code class="inline">POST /v1/query</code> (sync, streamed per Section 13), <code class="inline">GET /v1/documents/{id}/status</code></td></tr>
+        <tr><td class="k">Architecture</td><td>Modular monolith (Section 22) to start: FastAPI API layer → AI service layer → retrieval pipeline (Topic 8: hybrid search + reranking) → generation</td></tr>
+        <tr><td class="k">Data model</td><td>Postgres for document/tenant metadata and conversation history; a vector store (Topic 13 — start with pgvector) for chunk embeddings, tenant-filtered per Topic 13's filtered-search material</td></tr>
+        <tr><td class="k">RAG layer</td><td>Contextual retrieval or late chunking (Topic 8) at ingestion time; hybrid search + reranking at query time</td></tr>
+        <tr><td class="k">Caching</td><td>Prompt caching on the static system prompt (Topic 7); semantic caching only if query repetition in usage data justifies it, with tenant-scoped cache keys (Topic 7's CVA-desk caution)</td></tr>
+        <tr><td class="k">Queues</td><td>Document ingestion (chunking, embedding) goes through Section 14's queue pattern — too slow for a synchronous request</td></tr>
+        <tr><td class="k">Scaling</td><td>Stateless API layer scales horizontally behind a load balancer; ingestion workers scale independently based on queue depth</td></tr>
+        <tr><td class="k">Observability</td><td>OTel spans per request (Section 17) plus Topic 5's trajectory-level eval on the retrieval+generation pipeline specifically</td></tr>
+        <tr><td class="k">Security</td><td>Tenant isolation enforced at the vector-search filter layer (Topic 13 §06), not just at the API auth layer — a filter bug here is a cross-tenant data leak, the most severe failure mode for this specific product</td></tr>
+        <tr><td class="k">Cost</td><td>Token-based rate limiting per tenant (Section 15); cache hit rate as a first-class cost metric to monitor (Topic 7)</td></tr>
+        <tr><td class="k">Failure handling</td><td>Circuit breaker on the LLM provider (Topic 7/Section 16); graceful degradation to "retrieval-only, no generation" if the model provider is down, rather than a hard failure</td></tr>
+      </table>
+      <div class="callout focus">
+        <span class="callout-label">Practice this shape on every prompt in Topic 10 and the outline's own list</span>
+        <p>Run this exact same layer-by-layer walkthrough against: a ChatGPT-like API, a deep-research API, an AI customer-support backend, a coding-agent backend, a multi-agent backend, an LLM gateway, and an async document-processing pipeline. The layers stay identical every time (requirements → API → architecture → data model → AI layer → caching → queues → scaling → observability → security → cost → failure handling) — only the specific decisions at each layer change per scenario, exactly like Topic 10's Five Primitives framework applied one level closer to the metal.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 24 INTERVIEW ============ -->
+  <section class="chapter" id="interview">
+    <div class="chapter-head"><span class="chapter-num">24</span><h2 class="chapter-title">Interview Cheat-Sheet</h2></div>
+    <p class="chapter-dek">The generic backend comparisons the outline calls for, plus AI-specific system design prompts.</p>
+    <div class="chapter-body">
+      <details class="qa"><summary>REST vs GraphQL — when would you choose each for an AI API?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>REST's resource-oriented, cacheable-by-URL model fits most AI API shapes well (chat, embed, retrieve are naturally distinct resources/actions), and its simplicity matches most client needs. GraphQL earns its complexity when clients have highly variable data needs from the same underlying resources (e.g. a dashboard needing different slices of conversation/agent-run data per view) and over-fetching with REST would be a real problem — less common for AI-specific endpoints, more common for a broader product surface built around the same data.</p></div>
+      </details>
+      <details class="qa"><summary>PUT vs PATCH, and GET vs POST — the precise distinctions.<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>PUT replaces a resource entirely (idempotent — sending the same PUT twice yields the same end state); PATCH applies a partial update (idempotency depends on the specific patch semantics). GET retrieves without side effects and is safely cacheable/idempotent; POST typically creates a resource or triggers a non-idempotent action and should never be used for a pure read, both for caching correctness and because some infrastructure (browsers, proxies) treats GET and POST very differently around retries and caching.</p></div>
+      </details>
+      <details class="qa"><summary>WebSockets vs SSE — which would you choose for streaming agent tokens, and why?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>SSE, for the large majority of LLM token-streaming use cases — it's plain HTTP (simpler infrastructure, works through most proxies without special configuration) and the communication is inherently one-directional (server streams tokens to the client; the client doesn't need to send data mid-stream). Choose WebSockets specifically when the interaction is genuinely bidirectional in real time — a voice agent with simultaneous audio in and out is the clearest example.</p></div>
+      </details>
+      <details class="qa"><summary>Design a streaming AI API end to end.<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>SSE endpoint (Section 13) wrapping graph.astream_events, filtering for on_chat_model_stream token events and on_tool_start events, formatted as typed JSON events over the SSE wire format. Explicitly handle client disconnection via asyncio.CancelledError to stop the underlying agent run rather than letting it execute orphaned. Layer rate limiting (Section 15) and auth (Section 09) as FastAPI dependencies ahead of the streaming handler. Instrument with request-ID correlation (Section 07) so a slow or failed stream is traceable end-to-end in observability tooling (Section 17).</p></div>
+      </details>
+      <details class="qa"><summary>Design an async agent API that supports human-in-the-loop approval.<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Exactly Section 12's worked endpoint: compile the LangGraph agent with interrupt_before on any sensitive tool node (foundational bible). The POST /v1/agent endpoint invokes the graph, then checks graph.aget_state(thread) — if state.next is non-empty, the graph paused and the response returns status="requires_approval" with the pending tool call's details instead of a final result. A separate POST /v1/agent/{thread_id}/approve endpoint calls graph.astream(None, thread) to resume, or a /reject endpoint that ends the thread without resuming. Idempotency keys (Section 01/16) on the approve endpoint specifically, since a duplicated approval request must not execute the sensitive action twice.</p></div>
+      </details>
+      <details class="qa"><summary>How would you design an LLM gateway sitting in front of multiple internal services?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>A dedicated FastAPI service (Section 22's AI gateway pattern) that every internal service calls instead of talking to LLM providers directly — centralizing model routing/cascades (Topic 7), per-service and per-token rate limiting (Section 15), prompt/semantic caching (Section 11), provider fallback (Doc 18 §17's RobustLLMClient pattern), and unified observability (Section 17) in one place rather than duplicated across every service that needs model access. This also makes a provider outage or a model deprecation a one-service change instead of a scattered migration across the whole backend.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ 25 GLOSSARY ============ -->
+  <section class="chapter" id="glossary">
+    <div class="chapter-head"><span class="chapter-num">25</span><h2 class="chapter-title">Glossary</h2></div>
+    <p class="chapter-dek">Every term used in this document.</p>
+    <div class="chapter-body">
+      <dl class="glossary-grid">
+        <div class="gterm"><dt>ASGI</dt><dd>Asynchronous Server Gateway Interface — the async successor to WSGI; Uvicorn is an ASGI server, FastAPI is an ASGI framework.</dd></div>
+        <div class="gterm"><dt>response_model</dt><dd>FastAPI parameter both validating and filtering a route's output to a declared Pydantic schema.</dd></div>
+        <div class="gterm"><dt>Depends</dt><dd>FastAPI's dependency injection mechanism for shared, composable, overridable resources.</dd></div>
+        <div class="gterm"><dt>run_in_threadpool</dt><dd>FastAPI helper offloading a blocking call to a thread so the event loop isn't stalled.</dd></div>
+        <div class="gterm"><dt>N+1 query problem</dt><dd>Issuing one query per item in a loop instead of one batched/eager-loaded query.</dd></div>
+        <div class="gterm"><dt>Cache-aside pattern</dt><dd>Check cache first, generate and populate on miss.</dd></div>
+        <div class="gterm"><dt>SSE (Server-Sent Events)</dt><dd>One-way HTTP streaming protocol from server to client.</dd></div>
+        <div class="gterm"><dt>202 Accepted</dt><dd>HTTP status indicating work was queued, not yet completed — the background-job pattern's response.</dd></div>
+        <div class="gterm"><dt>Liveness vs readiness</dt><dd>Is the process alive (restart if not) vs is it ready to serve traffic (pause routing if not).</dd></div>
+        <div class="gterm"><dt>P95 / P99 latency</dt><dd>Tail-latency percentiles; the metric SLAs are typically written against, unlike averages.</dd></div>
+        <div class="gterm"><dt>Modular monolith</dt><dd>A single deployable internally organized into clearly separated service modules.</dd></div>
+        <div class="gterm"><dt>AI gateway / model gateway</dt><dd>A dedicated internal service centralizing all LLM provider calls, routing, caching, and rate limiting.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ 26 RESOURCES ============ -->
+  <section class="chapter" id="resources">
+    <div class="chapter-head"><span class="chapter-num">26</span><h2 class="chapter-title">Resources</h2></div>
+    <p class="chapter-dek">Where to go for hands-on practice.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>FastAPI official documentation</strong> — exceptionally good, and the async/dependency-injection sections specifically are worth reading in full</li>
+        <li><strong>SQLAlchemy 2.0 async documentation</strong> — the current async ORM API</li>
+        <li><strong>Starlette documentation</strong> — the ASGI toolkit FastAPI is built on; useful for understanding middleware and StreamingResponse at a lower level</li>
+        <li><strong>OpenTelemetry Python + FastAPI instrumentation docs</strong> — direct continuation of Topic 7's observability material</li>
+      </ul>
+      <div class="callout">
+        <span class="callout-label">How to actually get interview-ready on this topic</span>
+        <p>Build the full <code class="inline">/v1/agent</code> endpoint from Section 12 yourself, end to end — real auth dependency, real LangGraph agent with an <code class="inline">interrupt_before</code> step, real streaming variant, real tests with mocked dependencies. That one endpoint, built completely, exercises nearly every concept in this document and in the series behind it — it's the single most efficient thing you could build before an interview.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SEAL ============ -->
+  <section class="chapter" id="seal">
+    <div class="chapter-head"><span class="chapter-num">✓</span><h2 class="chapter-title">The Course Is Sealed — 19 Documents</h2></div>
+    <p class="chapter-dek">From ReAct to a production FastAPI agent backend.</p>
+    <div class="chapter-body">
+      <p>The library now runs end to end: agent reasoning and control flow (Docs 0-3), how to know if it actually works and is safe (Docs 5-6), how to run it reliably and cheaply at scale (Doc 7), how it retrieves and remembers (Docs 8-9, 13-14), how to talk about all of it in an interview (Doc 10), the machinery underneath the model itself (Doc 11), how it calls tools and returns structured data (Doc 12), how to make it better through fine-tuning and how to serve it fast (Docs 15-16), the classical ML floor underneath all of it (Doc 17), the Python that implements it (Doc 18), and now — sealing it — the backend that turns all of that into a real, callable, observable, secured service other people and systems can depend on.</p>
+      <div class="seal">
+        <div class="stitle">The instruction that has run through every one of these 19 documents</div>
+        <p>Measure before you build. Question the sophisticated-sounding default. Name your tradeoffs out loud, unprompted. Never let a technique's reputation substitute for your own numbers on your own system. That instinct is the actual curriculum — everything else was worked examples.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">Doc 19 — FastAPI &amp; Backend Engineering for AI Services. Course complete.</div>
+</main>
+</div>
+
+<script>
+const links = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('section.chapter');
+const map = new Map();
+links.forEach(l => map.set(l.getAttribute('href').slice(1), l));
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const link = map.get(entry.target.id);
+    if(!link) return;
+    if(entry.isIntersecting){
+      links.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, {rootMargin: '-15% 0px -70% 0px', threshold: 0});
+sections.forEach(s => io.observe(s));
+</script>
+</body>
+</html>

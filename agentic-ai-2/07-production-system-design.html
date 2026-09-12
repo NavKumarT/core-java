@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Production System Design for AI Agents — The Complete Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d10; --bg-raised:#12151a; --bg-card:#14181f;
+  --line:#242a33; --line-soft:#1b2028;
+  --ink:#e7e9ec; --ink-dim:#9aa3b0; --ink-faint:#5c6672;
+  --amber:#ff9f40; --amber-dim:#c97a2e; --lime:#c9f04c; --cyan:#5fd9c9; --violet:#b592ff; --rose:#ff7a8a;
+  --serif:'Source Serif 4', Georgia, serif;
+  --display:'Space Grotesk', sans-serif;
+  --mono:'JetBrains Mono', 'Courier New', monospace;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:radial-gradient(var(--line-soft) 1px, transparent 1px);
+  background-size:22px 22px; background-color:var(--bg);
+  color:var(--ink); font-family:var(--serif); font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+a{color:var(--amber); text-decoration:none;}
+::selection{background:var(--amber); color:#111;}
+.shell{display:grid; grid-template-columns:290px 1fr; min-height:100vh;}
+@media (max-width:920px){ .shell{grid-template-columns:1fr;} .side{display:none;} }
+.side{position:sticky; top:0; height:100vh; overflow-y:auto; border-right:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(18,21,26,.9), rgba(11,13,16,.9)); padding:28px 20px 60px;}
+.side::-webkit-scrollbar{width:6px;} .side::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.brand{font-family:var(--display); font-weight:700; font-size:15px; color:var(--ink); margin-bottom:2px;}
+.brand span{color:var(--amber);}
+.brand-sub{font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-bottom:24px;}
+.back-link{display:inline-block; font-family:var(--mono); font-size:11px; color:var(--cyan); margin-bottom:20px; border:1px solid var(--line); padding:5px 10px; border-radius:6px;}
+.nav-link{display:flex; align-items:baseline; gap:7px; font-family:var(--display); font-size:12.2px; color:var(--ink-dim);
+  padding:5px 7px; border-radius:6px; border-left:2px solid transparent; transition:.15s;}
+.nav-link:hover{color:var(--ink); background:var(--bg-raised);}
+.nav-link.active{color:var(--amber); border-left-color:var(--amber); background:var(--bg-raised);}
+.nav-num{font-family:var(--mono); font-size:9.5px; color:var(--ink-faint); min-width:20px;}
+.main{max-width:920px; padding:0 44px 140px; margin:0 auto;}
+@media (max-width:700px){ .main{padding:0 20px 100px;} }
+.hero{padding:76px 0 54px; border-bottom:1px solid var(--line);}
+.hero-eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--lime);
+  margin-bottom:18px; display:flex; align-items:center; gap:10px;}
+.hero-eyebrow::before{content:''; width:22px; height:1px; background:var(--lime); display:inline-block;}
+h1.title{font-family:var(--display); font-weight:700; font-size:clamp(30px,4.8vw,50px); line-height:1.08; letter-spacing:-.02em; color:var(--ink); max-width:15ch;}
+h1.title em{font-style:normal; color:var(--amber);}
+.hero-sub{font-family:var(--serif); font-size:18px; color:var(--ink-dim); max-width:62ch; margin-top:20px;}
+.tag-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:26px;}
+.tag{font-family:var(--mono); font-size:11px; padding:5px 11px; border-radius:20px; border:1px solid var(--line); color:var(--ink-dim); background:var(--bg-raised);}
+section.chapter{padding:60px 0; border-bottom:1px solid var(--line);}
+section.chapter:last-of-type{border-bottom:none;}
+.chapter-head{display:flex; align-items:flex-start; gap:16px; margin-bottom:8px;}
+.chapter-num{font-family:var(--mono); font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:20px; padding:3px 11px; margin-top:6px; white-space:nowrap;}
+h2.chapter-title{font-family:var(--display); font-weight:600; font-size:clamp(22px,3.2vw,30px); color:var(--ink); letter-spacing:-.01em;}
+.chapter-dek{font-family:var(--serif); font-style:italic; color:var(--ink-dim); font-size:16px; max-width:66ch; margin:14px 0 30px 0; padding-left:66px;}
+@media (max-width:700px){.chapter-dek{padding-left:0;}}
+.chapter-body{padding-left:66px;}
+@media (max-width:700px){.chapter-body{padding-left:0;}}
+.chapter-body h3{font-family:var(--display); font-weight:600; font-size:19px; color:var(--ink); margin:32px 0 12px;}
+.chapter-body h4{font-family:var(--display); font-weight:600; color:var(--cyan); margin:22px 0 10px; text-transform:uppercase; letter-spacing:.04em; font-size:12px;}
+.chapter-body p{color:var(--ink-dim); margin-bottom:14px; max-width:72ch;}
+.chapter-body ul, .chapter-body ol{color:var(--ink-dim); margin:0 0 16px 20px; max-width:70ch;}
+.chapter-body li{margin-bottom:7px;}
+.chapter-body strong{color:var(--ink); font-weight:600;}
+code.inline{font-family:var(--mono); font-size:.87em; background:var(--bg-raised); color:var(--lime); padding:1px 6px; border-radius:4px; border:1px solid var(--line);}
+.callout{border-left:3px solid var(--amber); background:var(--bg-card); padding:16px 18px; border-radius:0 8px 8px 0; margin:20px 0; max-width:70ch;}
+.callout p{margin-bottom:0; color:var(--ink-dim); font-size:14.5px;}
+.callout .callout-label{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--amber); margin-bottom:6px; display:block;}
+.callout.interview{border-left-color:var(--violet);} .callout.interview .callout-label{color:var(--violet);}
+.callout.pitfall{border-left-color:var(--rose);} .callout.pitfall .callout-label{color:var(--rose);}
+.callout.paper{border-left-color:var(--cyan);} .callout.paper .callout-label{color:var(--cyan);}
+.callout.focus{border-left-color:var(--lime); background:#151b12;} .callout.focus .callout-label{color:var(--lime);}
+.code-wrap{background:#0a0c0f; border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:18px 0 24px;}
+.code-head{display:flex; align-items:center; justify-content:space-between; padding:9px 14px; border-bottom:1px solid var(--line); background:var(--bg-raised); font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+.code-dots{display:flex; gap:5px;} .code-dots span{width:8px; height:8px; border-radius:50%; background:var(--line);}
+pre{padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:12.6px; line-height:1.7; color:#d7dbe0;}
+pre::-webkit-scrollbar{height:6px;} pre::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.tok-kw{color:var(--violet);} .tok-str{color:var(--lime);} .tok-com{color:var(--ink-faint); font-style:italic;} .tok-fn{color:var(--cyan);} .tok-num{color:var(--amber);}
+.tbl{width:100%; border-collapse:collapse; margin:18px 0 26px; font-size:13.2px; max-width:78ch;}
+.tbl th{text-align:left; font-family:var(--mono); font-size:10.2px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); padding:10px 12px; border-bottom:1px solid var(--line);}
+.tbl td{padding:11px 12px; border-bottom:1px solid var(--line-soft); color:var(--ink-dim); vertical-align:top;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl td.k{color:var(--ink); font-family:var(--mono); font-size:12.2px; white-space:nowrap;}
+.diagram{background:var(--bg-card); border:1px solid var(--line); border-radius:12px; padding:22px; margin:20px 0 26px;}
+.diagram svg{width:100%; height:auto; display:block;}
+.legend{display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; font-family:var(--mono); font-size:10.5px; color:var(--ink-faint);}
+.legend span{display:inline-flex; align-items:center; gap:6px;} .legend i{width:9px; height:9px; border-radius:2px; display:inline-block;}
+.qa{border:1px solid var(--line); border-radius:10px; margin-bottom:10px; background:var(--bg-card); overflow:hidden;}
+.qa summary{list-style:none; cursor:pointer; padding:15px 18px; display:flex; gap:12px; align-items:flex-start; font-family:var(--display); font-size:14px; color:var(--ink); font-weight:500;}
+.qa summary::-webkit-details-marker{display:none;}
+.qa summary::before{content:'+'; font-family:var(--mono); color:var(--amber); font-size:16px; line-height:1;}
+.qa[open] summary::before{content:'–';}
+.qa .qa-body{padding:0 18px 18px 40px; color:var(--ink-dim); font-size:14px; max-width:68ch;}
+.qa .qa-body p{margin-bottom:10px;}
+.qa-tag{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; background:var(--bg-raised); color:var(--ink-faint); padding:2px 8px; border-radius:20px; border:1px solid var(--line); margin-left:auto; white-space:nowrap; flex-shrink:0;}
+.glossary-grid{display:grid; grid-template-columns:1fr 1fr; gap:2px 28px;}
+@media (max-width:700px){.glossary-grid{grid-template-columns:1fr;}}
+.gterm{padding:14px 0; border-bottom:1px solid var(--line-soft);}
+.gterm dt{font-family:var(--mono); color:var(--cyan); font-size:13px; margin-bottom:4px;}
+.gterm dd{color:var(--ink-dim); font-size:13px; line-height:1.55;}
+.footer{padding:60px 0 20px; text-align:center; color:var(--ink-faint); font-family:var(--mono); font-size:12px;}
+.statgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:20px 0 26px;}
+@media (max-width:700px){.statgrid{grid-template-columns:1fr;}}
+.statcard{background:var(--bg-card); border:1px solid var(--line); border-radius:10px; padding:16px;}
+.statcard .num{font-family:var(--display); font-weight:700; font-size:24px; color:var(--amber);}
+.statcard .lbl{font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); margin-top:4px;}
+.incident{background:var(--bg-card); border:1px solid var(--rose); border-radius:10px; padding:16px 18px; margin:14px 0;}
+.incident .iname{font-family:var(--display); font-weight:600; color:var(--rose); font-size:14.5px; margin-bottom:5px;}
+.incident p{margin-bottom:0; font-size:13.6px;}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav class="side" id="side">
+  <a class="back-link" href="#">← Topic 6: Security</a>
+  <div class="brand">Production <span>System Design</span></div>
+  <div class="brand-sub">Topic 7 of 10 — deep reference</div>
+  <a class="nav-link" href="#why-different"><span class="nav-num">00</span>Why This Is a Different Systems Problem</a>
+  <a class="nav-link" href="#cost-stack"><span class="nav-num">01</span>★ Cost Stack: Cache → Route → Compress</a>
+  <a class="nav-link" href="#prompt-caching"><span class="nav-num">02</span>Prompt / Prefix Caching</a>
+  <a class="nav-link" href="#semantic-caching"><span class="nav-num">03</span>Semantic Caching (and Its Trap)</a>
+  <a class="nav-link" href="#routing"><span class="nav-num">04</span>Model Routing &amp; Cascades</a>
+  <a class="nav-link" href="#batching"><span class="nav-num">05</span>Batching</a>
+  <a class="nav-link" href="#latency"><span class="nav-num">06</span>Latency Budgets &amp; Streaming</a>
+  <a class="nav-link" href="#durable"><span class="nav-num">07</span>★ Durable Execution — the Reliability Core</a>
+  <a class="nav-link" href="#temporal"><span class="nav-num">08</span>Temporal &amp; the Replay-Safety Contract</a>
+  <a class="nav-link" href="#retries"><span class="nav-num">09</span>Retries, Idempotency &amp; Circuit Breakers</a>
+  <a class="nav-link" href="#observability"><span class="nav-num">10</span>Observability: OTel GenAI &amp; OpenInference</a>
+  <a class="nav-link" href="#context-mgmt"><span class="nav-num">11</span>Context Window Management at Scale</a>
+  <a class="nav-link" href="#capacity"><span class="nav-num">12</span>Rate Limiting &amp; Capacity Planning</a>
+  <a class="nav-link" href="#deployment"><span class="nav-num">13</span>Deployment Patterns</a>
+  <a class="nav-link" href="#decision"><span class="nav-num">14</span>Decision Framework</a>
+  <a class="nav-link" href="#pitfalls"><span class="nav-num">15</span>Anti-Patterns</a>
+  <a class="nav-link" href="#interview"><span class="nav-num">16</span>Interview Cheat-Sheet</a>
+  <a class="nav-link" href="#glossary"><span class="nav-num">17</span>Glossary</a>
+  <a class="nav-link" href="#resources"><span class="nav-num">18</span>Resources</a>
+</nav>
+
+<main class="main">
+  <div class="hero">
+    <div class="hero-eyebrow">Deep reference · Topic 7 of 10</div>
+    <h1 class="title">Production System Design <em>for AI Agents</em></h1>
+    <p class="hero-sub">The plumbing nobody shows in a demo: token economics (caching, routing, batching), why multi-step agents fail more often than single API calls and what durable execution actually buys you, the replay-safety contract that makes agent workflows resumable, and the observability stack that makes a 47-step invisible agent trace visible again. Real 2026 numbers throughout, not vibes.</p>
+    <div class="tag-row">
+      <span class="tag">Prompt Caching</span><span class="tag">Semantic Caching</span><span class="tag">Model Routing</span>
+      <span class="tag">Durable Execution</span><span class="tag">Temporal</span><span class="tag">Idempotency</span>
+      <span class="tag">OTel GenAI</span><span class="tag">Circuit Breakers</span><span class="tag">Context Compaction</span>
+    </div>
+  </div>
+
+  <!-- ============ 00 WHY DIFFERENT ============ -->
+  <section class="chapter" id="why-different">
+    <div class="chapter-head"><span class="chapter-num">00</span><h2 class="chapter-title">Why This Is a Different Systems-Design Problem</h2></div>
+    <p class="chapter-dek">Three properties of agents break assumptions that traditional backend system design takes for granted.</p>
+    <div class="chapter-body">
+      <p>Agents are probabilistic — the same prompt can produce different responses across calls, so a retry might not produce an equivalent result, making idempotency more complex than a simple cache lookup. Agents are compositional — a single user request might trigger a planning phase, multiple tool calls, memory retrieval, and a synthesis step, and each component can fail independently with failure modes that compound. Agents are stateful — the context window accumulates information across the workflow, and losing that state mid-execution means losing the reasoning chain, the intermediate results, and the plan the agent was following.</p>
+      <div class="statgrid">
+        <div class="statcard"><div class="num">95% → 90%</div><div class="lbl">success rate at 5 vs 10 steps, each individually 99% reliable</div></div>
+        <div class="statcard"><div class="num">up to 90%</div><div class="lbl">cost reduction from prompt caching on cached input tokens</div></div>
+        <div class="statcard"><div class="num">5–20%</div><div class="lbl">durable-execution overhead at a 100k-runs/day reference workload</div></div>
+      </div>
+      <div class="callout pitfall">
+        <span class="callout-label">The multiplicative failure math, spelled out</span>
+        <p>If you have five steps with 99% reliability each, your overall success rate drops to 95%. With ten steps, you're at 90%. Real-world agents often involve dozens of operations — at 20 steps and 99% per-step reliability, that's roughly 82%; a genuinely long-running research or coding agent with 50+ operations can fall well below 60% end-to-end success purely from compounding per-step failure, with zero additional bugs anywhere. This single piece of arithmetic is the entire justification for everything in this document.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 01 COST STACK ============ -->
+  <section class="chapter" id="cost-stack">
+    <div class="chapter-head"><span class="chapter-num">01 ★</span><h2 class="chapter-title">The Cost Stack: Cache → Route → Compress</h2></div>
+    <p class="chapter-dek">The three-pillar framework production teams actually converge on, in the order you should implement them.</p>
+    <div class="chapter-body">
+      <p>The most effective 2026 LLM cost strategies share a common structure regardless of provider, model family, or use case, organized around three pillars: Cache, Route, and Compress. The combination of prompt caching, semantic caching, and model routing delivers 47–80% cost reduction with relatively low implementation effort, and it is where every production optimization programme should start.</p>
+      <div class="diagram">
+        <svg viewBox="0 0 700 160" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="csm" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff9f40"/></marker></defs>
+          <rect x="20" y="50" width="180" height="60" rx="8" fill="none" stroke="#5fd9c9" stroke-width="1.5"/>
+          <text x="110" y="76" fill="#e7e9ec" font-family="JetBrains Mono" font-size="13" text-anchor="middle">Cache</text>
+          <text x="110" y="94" fill="#9aa3b0" font-family="JetBrains Mono" font-size="10" text-anchor="middle">prompt + semantic</text>
+          <line x1="200" y1="80" x2="260" y2="80" stroke="#ff9f40" stroke-width="1.5" marker-end="url(#csm)"/>
+          <rect x="260" y="50" width="180" height="60" rx="8" fill="none" stroke="#ff9f40" stroke-width="1.5"/>
+          <text x="350" y="76" fill="#e7e9ec" font-family="JetBrains Mono" font-size="13" text-anchor="middle">Route</text>
+          <text x="350" y="94" fill="#9aa3b0" font-family="JetBrains Mono" font-size="10" text-anchor="middle">right model per query</text>
+          <line x1="440" y1="80" x2="500" y2="80" stroke="#ff9f40" stroke-width="1.5" marker-end="url(#csm)"/>
+          <rect x="500" y="50" width="180" height="60" rx="8" fill="none" stroke="#b592ff" stroke-width="1.5"/>
+          <text x="590" y="76" fill="#e7e9ec" font-family="JetBrains Mono" font-size="13" text-anchor="middle">Compress</text>
+          <text x="590" y="94" fill="#9aa3b0" font-family="JetBrains Mono" font-size="10" text-anchor="middle">context, batching, distill</text>
+        </svg>
+      </div>
+      <table class="tbl">
+        <tr><th>Lever</th><th>Typical savings</th><th>Implementation effort</th></tr>
+        <tr><td class="k">Prompt/prefix caching</td><td>50–90% cost reduction, 13–31% faster time-to-first-token</td><td>Low — often automatic</td></tr>
+        <tr><td class="k">Semantic caching</td><td>20–45% of production traffic served without touching the model</td><td>Medium — needs embedding + vector infra</td></tr>
+        <tr><td class="k">Model routing / cascades</td><td>40–70% savings</td><td>Medium-high — needs a reliable difficulty/confidence signal</td></tr>
+        <tr><td class="k">Batching (async work)</td><td>50% savings via provider Batch APIs</td><td>Low, but only applies to non-interactive workloads</td></tr>
+        <tr><td class="k">All four combined</td><td>70–90% total reduction</td><td>Compounding — implement roughly in this order</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 02 PROMPT CACHING ============ -->
+  <section class="chapter" id="prompt-caching">
+    <div class="chapter-head"><span class="chapter-num">02</span><h2 class="chapter-title">Prompt / Prefix Caching</h2></div>
+    <p class="chapter-dek">The single highest-leverage, lowest-risk lever available — and the first thing to implement, full stop.</p>
+    <div class="chapter-body">
+      <p>Prompt caching reuses the computed key-value tensors behind a repeated prompt prefix, so the static portion of every request — tool definitions, system prompt, and stable context — bills at up to 90% off with no change to model output. Anthropic's prompt caching reduces costs by up to 90% and latency by up to 85% for long prompts; OpenAI achieves 50% cost reduction with automatic caching enabled by default.</p>
+      <table class="tbl">
+        <tr><th>Provider parameter</th><th>Value</th></tr>
+        <tr><td class="k">Cache write cost</td><td>25% premium over base input price (Anthropic)</td></tr>
+        <tr><td class="k">Cache read cost</td><td>90% discount — 10% of base price (Anthropic)</td></tr>
+        <tr><td class="k">Break-even point</td><td>2+ cache hits per cached prefix</td></tr>
+        <tr><td class="k">Minimum cacheable unit</td><td>1,024 tokens per cache checkpoint, up to 4 checkpoints per request</td></tr>
+        <tr><td class="k">Cache lifetime</td><td>5 minutes from last access, extendable to 1 hour with regular hits</td></tr>
+      </table>
+      <div class="callout paper">
+        <span class="callout-label">Documented production outcomes — cite these directly</span>
+        <p>A customer support application with a 4,000-token system prompt and 6,000-token RAG context achieved a 76% total API cost reduction at a 95% cache hit rate, from $10,000/month to $2,361/month. ProjectDiscovery raised their cache hit rate from 7% to 84%, cutting total LLM spend by 59-70% with a single architectural change.</p>
+      </div>
+      <div class="callout pitfall">
+        <span class="callout-label">The ordering rule that makes or breaks your hit rate</span>
+        <p>Cache hit rate is almost entirely a function of prompt structure: static content (system prompt, tool schemas, few-shot examples) must come <strong>first</strong>, in identical order, every single call — any variation in the prefix (even reordering unrelated fields) invalidates the cache. Naive caching can paradoxically increase latency if cache blocks are positioned poorly — test your caching strategy carefully. Put the volatile part (the actual user query, current turn) last, always.</p>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"How would you cut costs on an agent whose system prompt and tool definitions are 5,000 tokens, called on every turn?" — Prompt caching first: structure every request with the static system prompt and tool schemas as an identical, unchanging prefix, and put the dynamic user turn last. At Anthropic's pricing this turns a 5,000-token static prefix from full price into ~10% price on every call after the first, with breakeven at just 2 hits — for a chat agent with any real conversation length, that's an immediate, close to risk-free win before touching anything else.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 SEMANTIC CACHING ============ -->
+  <section class="chapter" id="semantic-caching">
+    <div class="chapter-head"><span class="chapter-num">03</span><h2 class="chapter-title">Semantic Caching (and Its Trap)</h2></div>
+    <p class="chapter-dek">Goes further than prefix caching — and is exactly where naive implementations quietly start returning wrong answers.</p>
+    <div class="chapter-body">
+      <p>Semantic caching returns a stored response for any query semantically similar to a previously answered one, skipping the model entirely. Production deployments hit 20-45% of traffic without touching the model — not the 95% vendor materials sometimes suggest, but still material cost reduction for high-volume workloads, since 31% of LLM queries in production exhibit semantic similarity sufficient to return a cached response.</p>
+      <div class="code-wrap">
+        <div class="code-head"><span>semantic_cache_flow.txt</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre>Query: "What's the refund policy?"
+  -&gt; Embed query
+  -&gt; Search cache for similar embeddings
+  -&gt; If similarity &gt; threshold: return cached response
+  -&gt; Else: generate new response, store in cache</pre>
+      </div>
+      <div class="incident">
+        <div class="iname">The CVA desk incident — why similarity thresholds are a data-quality control, not just a cost lever</div>
+        <p>A financial risk platform's semantic cache returned hits with similarity scores of 0.87 on queries that sounded similar but were contextually dangerous — a credit-desk analyst's question was answered from a cached response meant for a different, semantically-adjacent-but-substantively-different query. In domains where a wrong-but-plausible-sounding cached answer is worse than a slow correct one (finance, legal, medical, safety-critical support), semantic caching without domain-aware thresholds, metadata scoping (e.g. an <code class="inline">as_of_date</code> or desk/tenant field), and event-driven invalidation on underlying data changes is a liability, not an optimization.</p>
+      </div>
+      <div class="callout pitfall">
+        <span class="callout-label">Mitigation</span>
+        <p>Scope the cache by tenant/domain/context, not just embedding similarity alone; set the similarity threshold per risk tier (looser for FAQ-style consumer chat, much tighter or disabled entirely for anything with compliance exposure); and invalidate on underlying data changes rather than relying purely on TTL expiry.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 04 ROUTING ============ -->
+  <section class="chapter" id="routing">
+    <div class="chapter-head"><span class="chapter-num">04</span><h2 class="chapter-title">Model Routing &amp; Cascades</h2></div>
+    <p class="chapter-dek">A 2026 application doesn't talk to one model — it talks to a menu of them.</p>
+    <div class="chapter-body">
+      <p>A 2026 application talks to a menu of models spanning frontier, mid-tier, cheap, and self-hosted. Routing is the policy that picks one per request, navigating three goals that pull against each other: cost, latency, and quality. In 2026 a flagship model can cost 30x+ more per token than a small model, so capability mismatch is the biggest single source of waste.</p>
+      <table class="tbl">
+        <tr><th>Strategy</th><th>How it works</th></tr>
+        <tr><td class="k">Static rules</td><td>Hand-written rules route by request type (e.g. classification → cheap model, open-ended reasoning → frontier model)</td></tr>
+        <tr><td class="k">Learned router</td><td>A trained classifier maps queries to a small or large model, jointly optimizing cost and quality — e.g. RouteLLM's matrix-factorization or causal-LLM-classifier routers trained on preference data</td></tr>
+        <tr><td class="k">Cascade / escalation</td><td>Operates sequentially — escalate to a larger model only when the initial (cheap) response is insufficient, judged via confidence, semantic agreement across a small-model ensemble, or a difficulty estimate</td></tr>
+      </table>
+      <div class="callout paper">
+        <span class="callout-label">The semantic-agreement cascade trick</span>
+        <p>An ensemble of small models generates responses to a query; semantic similarity metrics assess agreement among the outputs. High agreement indicates reliability — return the highest-scoring ensemble response. Low agreement signals uncertainty — defer to the larger target model, ensuring the expensive model is called only when necessary. This avoids needing a trained difficulty classifier at all — disagreement among cheap models is itself the escalation signal.</p>
+      </div>
+      <div class="callout pitfall">
+        <span class="callout-label">The hidden cost of cascading — say this unprompted in an interview</span>
+        <p>A cascade also adds the cheap model's latency to every escalated request — you pay the cheap call's time, then the frontier call's time. For interactive, latency-sensitive paths that double hop can be the wrong tradeoff; cascades shine on asynchronous or latency-tolerant workloads, not on a live chat turn where the user is watching a spinner.</p>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"Design a routing strategy for a support agent handling both simple FAQ lookups and complex multi-step troubleshooting." — Static rule as the first pass (classification-style queries with a clear intent match go to a cheap/small model), cascade for the ambiguous middle (try cheap first, escalate to frontier on low confidence or ensemble disagreement), and route straight to frontier for anything already flagged high-stakes (e.g. billing disputes, safety-relevant issues) — skip the cascade there since the added latency of a failed cheap attempt isn't worth it when you already know escalation is near-certain.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 05 BATCHING ============ -->
+  <section class="chapter" id="batching">
+    <div class="chapter-head"><span class="chapter-num">05</span><h2 class="chapter-title">Batching</h2></div>
+    <p class="chapter-dek">The lever most teams forget because it only applies to a slice of their workload — but it's a clean 50% for that slice.</p>
+    <div class="chapter-body">
+      <p>Request batching trades individual latency for throughput; OpenAI's Batch API gives 50% savings for async work. Any workload that doesn't need a real-time response — nightly report generation, bulk document classification, offline eval runs — should default to a batch endpoint rather than the synchronous API, purely for the cost difference, with zero quality tradeoff.</p>
+    </div>
+  </section>
+
+  <!-- ============ 06 LATENCY ============ -->
+  <section class="chapter" id="latency">
+    <div class="chapter-head"><span class="chapter-num">06</span><h2 class="chapter-title">Latency Budgets &amp; Streaming</h2></div>
+    <p class="chapter-dek">Cost optimization and latency optimization sometimes pull in the same direction (caching helps both) and sometimes fight each other (cascades help cost, hurt latency).</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Metric</th><th>What it measures</th><th>Why it matters separately from total latency</th></tr>
+        <tr><td class="k">TTFT (time to first token)</td><td>Delay before the user sees anything</td><td>Dominates perceived responsiveness — streaming makes a 10s total response feel instant if TTFT is 300ms</td></tr>
+        <tr><td class="k">Total completion latency</td><td>Full response time</td><td>Matters for synchronous, non-streamed integrations and for total workflow duration in multi-step agents</td></tr>
+        <tr><td class="k">Per-step latency in a trajectory</td><td>Time for each individual tool call / LLM call</td><td>The compounding factor in a long agent run — 20 steps at 2s each is 40s even before any retries</td></tr>
+      </table>
+      <p>Streaming (both graph-level events and token-level via <code class="inline">astream_events</code>, covered in the LangGraph bible) is the standard mitigation for perceived latency in interactive agents — show progress ("searching…", "reading document…") rather than a blank wait, especially critical once you're chaining several tool calls per turn.</p>
+    </div>
+  </section>
+
+  <!-- ============ 07 DURABLE EXECUTION ============ -->
+  <section class="chapter" id="durable">
+    <div class="chapter-head"><span class="chapter-num">07 ★</span><h2 class="chapter-title">Durable Execution — the Reliability Core</h2></div>
+    <p class="chapter-dek">The single most important reliability concept for anything beyond a toy agent. This is the answer to the 90%-at-10-steps problem from Section 00.</p>
+    <div class="chapter-body">
+      <p>Durable execution is the property that an agent workflow — a sequence of LLM calls, tool invocations, and human-in-the-loop pauses — survives a process crash, a redeploy, or an indefinite wait. If the enrichment API rate-limits on the 15th of 20 contacts a lead-scouting agent is processing, the workflow pauses, waits according to the backoff schedule, and retries — the first 14 enrichments don't re-run because their results are already persisted. The durable execution engine ensures each step executes exactly once, even if the workflow function itself runs multiple times.</p>
+      <div class="diagram">
+        <svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="dem" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff9f40"/></marker></defs>
+          <rect x="30" y="30" width="140" height="46" rx="7" fill="none" stroke="#5fd9c9" stroke-width="1.4"/>
+          <text x="100" y="58" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Orchestrator</text>
+          <line x1="170" y1="53" x2="230" y2="53" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#dem)"/>
+          <rect x="230" y="30" width="160" height="46" rx="7" fill="none" stroke="#ff9f40" stroke-width="1.4"/>
+          <text x="310" y="52" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Durable Execution Layer</text>
+          <text x="310" y="68" fill="#9aa3b0" font-family="JetBrains Mono" font-size="9" text-anchor="middle">snapshot + idempotency + retry</text>
+          <line x1="390" y1="43" x2="450" y2="43" stroke="#c9f04c" stroke-width="1.4" marker-end="url(#dem)"/>
+          <rect x="450" y="20" width="130" height="40" rx="7" fill="none" stroke="#c9f04c" stroke-width="1.4"/>
+          <text x="515" y="44" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">LLM API</text>
+          <line x1="390" y1="63" x2="450" y2="63" stroke="#b592ff" stroke-width="1.4" marker-end="url(#dem)"/>
+          <rect x="450" y="66" width="130" height="40" rx="7" fill="none" stroke="#b592ff" stroke-width="1.4"/>
+          <text x="515" y="90" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Tool calls</text>
+          <line x1="310" y1="76" x2="310" y2="120" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#dem)"/>
+          <rect x="220" y="120" width="180" height="46" rx="7" fill="none" stroke="#ff7a8a" stroke-width="1.4"/>
+          <text x="310" y="142" fill="#e7e9ec" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Durable Store</text>
+          <text x="310" y="158" fill="#9aa3b0" font-family="JetBrains Mono" font-size="9" text-anchor="middle">Postgres / SQLite / Temporal Cloud</text>
+        </svg>
+      </div>
+      <p>The orchestrator never directly calls the LLM. Instead, it calls the durability layer, which records the intent, calls the LLM, records the result, and returns the response. If the process crashes between recording the intent and receiving the result, the next recovery discovers the pending call and retries it, with an idempotency key to avoid duplicates.</p>
+      <div class="callout paper">
+        <span class="callout-label">The economics, so you can cite a real number</span>
+        <p>Durable execution carries roughly 5–20% overhead at a 100k-runs/day reference workload — a real but modest tax relative to the failure rate it eliminates, and it's this overhead-vs-reliability trade that any "do we need Temporal" conversation should be framed around, not gut feeling.</p>
+      </div>
+      <div class="callout pitfall">
+        <span class="callout-label">What durable execution does NOT fix — say this to sound senior</span>
+        <p>Durable execution guarantees a workflow resumes correctly after infrastructure failure. It does not fix hallucinations, runaway reasoning loops, eval drift, or store-level disaster recovery — those are separate concerns (covered in Topics 5 and 6) that durable execution has no opinion on. Conflating "my agent is reliable" with "my agent is durable" is a common and costly mistake.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 08 TEMPORAL ============ -->
+  <section class="chapter" id="temporal">
+    <div class="chapter-head"><span class="chapter-num">08</span><h2 class="chapter-title">Temporal &amp; the Replay-Safety Contract</h2></div>
+    <p class="chapter-dek">The dominant durable-execution engine for agent workflows, and the specific rules its programming model imposes on your code.</p>
+    <div class="chapter-body">
+      <p>Our non-deterministic, potentially fallible LLM call becomes a Temporal Activity. Temporal's retry policies automatically handle transient failures. If the worker running the workflow crashes after processing 5,000 of 10,000 documents, a new worker picks up, is given the state (the first 5,000 results), and seamlessly resumes execution from document 5,001.</p>
+      <h3>The replay-safety contract</h3>
+      <p>Temporal records non-deterministic side effects into workflow history so replay can reuse the recorded result instead of re-running the non-deterministic operation. Agent workflows are packed with non-determinism — LLM outputs, timestamps, randomness, retrieval results, network responses, policy decisions, tool results. You cannot replay an LLM call and pretend it is the same event; the output must be recorded the first time and reused during recovery. Same for tool responses, policy decisions, and side effects.</p>
+      <table class="tbl">
+        <tr><th>Rule</th><th>Why</th></tr>
+        <tr><td class="k">No <code class="inline">Date.now()</code> / wall-clock calls in workflow code</td><td>Replay must reproduce identical decisions — non-deterministic timestamps break that guarantee unless routed through the framework's deterministic time API</td></tr>
+        <tr><td class="k">Deterministic branching only in workflow code</td><td>Any branch decision based on non-deterministic input (a raw LLM call, a random number) must happen inside an Activity, whose recorded result the workflow then branches on deterministically</td></tr>
+        <tr><td class="k">Workflow versioning</td><td>Changing workflow code while in-flight executions exist requires explicit version gating, or replay of old history against new code silently diverges</td></tr>
+        <tr><td class="k">Idempotency keys derived from (workflow_id, step_id)</td><td>Guarantees a retried non-idempotent tool call (e.g., "charge card") executes exactly once even across process crashes</td></tr>
+      </table>
+      <h3>Best practices from production Temporal+LLM deployments</h3>
+      <ul>
+        <li>Idempotency is non-negotiable — if your activity is "create user account," ensure running it twice doesn't create two accounts; design external systems to be idempotent.</li>
+        <li>Configure timeouts intelligently — an LLM call might take 2 minutes; a 1-minute start-to-close timeout causes unnecessary failures and retries. Match timeouts to the actual task, and set retry policies to avoid excessive cost on expensive activities.</li>
+        <li>For workflows running longer than a few seconds, invoke asynchronously — start the workflow, get a handle, and query it for status or receive completion via webhook/message queue later, rather than blocking a request thread.</li>
+      </ul>
+      <h3>Alternatives at different weight classes</h3>
+      <table class="tbl">
+        <tr><th>Tool</th><th>Fit</th></tr>
+        <tr><td class="k">Temporal / AWS Step Functions / Restate / DBOS / Inngest / Cloudflare Workflows</td><td>Full durable-execution platforms — general-purpose, provide durability and retries but don't gate external-effect settlement on per-resource progress by default.</td></tr>
+        <tr><td class="k">LangGraph checkpointer (PostgresSaver, RedisSaver)</td><td>Lightweight alternative when you're already on LangGraph and don't need cross-language workflow orchestration — covered in depth in the LangGraph bible's persistence chapter</td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"When do you reach for Temporal instead of a LangGraph checkpointer?" — LangGraph's checkpointer gives you resumability within LangGraph's own execution model, which is enough for most single-service agents. Temporal (or an equivalent durable-execution engine) earns its complexity when you need cross-service orchestration spanning multiple languages/frameworks, workflows genuinely running for hours or days, or the stricter replay-safety and exactly-once guarantees Temporal's activity model provides — the honest rule of thumb is if you're spending more than ~20% of engineering time on hand-rolled reliability plumbing (retries, dedup, state tracking), it's time.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 09 RETRIES ============ -->
+  <section class="chapter" id="retries">
+    <div class="chapter-head"><span class="chapter-num">09</span><h2 class="chapter-title">Retries, Idempotency &amp; Circuit Breakers</h2></div>
+    <p class="chapter-dek">The three defenses against transient failure, and where each one applies specifically to agent workloads.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Pattern</th><th>Agent-specific nuance</th></tr>
+        <tr><td class="k">Retry with exponential backoff</td><td>Standard for rate-limited LLM API calls — but remember an LLM retry can return a <em>different</em> response, so retrying a non-idempotent downstream action based on that response needs its own dedup, not just retrying the LLM call</td></tr>
+        <tr><td class="k">Idempotency keys</td><td>Derived from a stable identifier (workflow_id + step_id, not a timestamp) so a retried "send email" or "charge card" tool call executes exactly once even if the orchestrating call itself gets retried</td></tr>
+        <tr><td class="k">Circuit breakers</td><td>Trip on a downstream tool/API repeatedly failing, so the agent stops hammering a dead dependency and instead fails fast or falls back — critical when a tool failure would otherwise cause the agent to loop retrying it indefinitely</td></tr>
+        <tr><td class="k">Timeout matching</td><td>Set per-activity timeouts to match the actual expected duration of that specific call — a fast tool call and a 2-minute LLM generation should not share the same timeout budget.</td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">The retry-the-whole-thing anti-pattern</span>
+        <p>The most common naive failure-handling approach — wrapping an entire multi-step agent run in a top-level try/except and retrying the whole thing on any failure — re-executes every already-successful step, multiplying cost and risking duplicate side effects on any non-idempotent action along the way. Scope retries to the smallest failed unit, exactly as durable execution's per-step persistence is designed to enable.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 10 OBSERVABILITY ============ -->
+  <section class="chapter" id="observability">
+    <div class="chapter-head"><span class="chapter-num">10</span><h2 class="chapter-title">Observability: OTel GenAI &amp; OpenInference</h2></div>
+    <p class="chapter-dek">A 47-internal-step agent trace that shows up as two spans in a generic APM tool is a production incident waiting to happen. This section is how you fix that.</p>
+    <div class="chapter-body">
+      <div class="incident">
+        <div class="iname">The two-span trace, illustrated</div>
+        <p>A platform engineer shipped a customer-onboarding agent: LangChain plus four tools plus retrieval plus an OpenAI fallback. The trace pane showed exactly two spans per request — one HTTP span into the agent endpoint, one HTTP span out to OpenAI. Forty-seven internal steps lived inside those two spans, invisible. By Friday the agent had three incidents: a hallucinated routing number that nearly triggered a wire transfer, a tool call that retried itself in a loop for ninety seconds, and a token spike from a retrieval prompt that ran 14 times in one conversation. None were visible in the trace tool, because the trace tool didn't know about LLMs.</p>
+      </div>
+      <p>OpenTelemetry instruments LLM applications by wrapping API calls in spans with standardized <code class="inline">gen_ai.*</code> attributes — model name, token counts, finish reason. For agents, each tool call, LLM invocation, and retrieval step becomes a child span, producing a full trace of the reasoning chain. Auto-instrumentation packages exist for OpenAI, Anthropic, LangChain, and LlamaIndex.</p>
+      <table class="tbl">
+        <tr><th>Standard</th><th>Governance</th><th>Notes</th></tr>
+        <tr><td class="k">OpenTelemetry GenAI Semantic Conventions</td><td>OpenTelemetry project</td><td>The OTel GenAI SIG is actively developing conventions for multi-agent systems specifically — tasks, actions, agent teams, memory, artifact tracking.</td></tr>
+        <tr><td class="k">OpenInference</td><td>Apache 2.0, originally from Arize, now adopted across the ecosystem</td><td>Most 2026 stacks emit OpenInference instrumentation and export via OTLP.</td></tr>
+      </table>
+      <p>Traditional APM assumes the same input reliably produces the same output; LLM systems break this assumption in several ways: non-determinism (you can't reproduce an issue without capturing the exact input, model parameters, and temperature at call time), a token-based cost model (latency and cost correlate with token counts, not request count), and prompt sensitivity (prompts often contain PII or confidential data, so sending them to observability backends without sanitization creates compliance risk).</p>
+      <div class="callout focus">
+        <span class="callout-label">What to actually capture, span by span</span>
+        <p>Every prompt, completion, tool call, retrieval, and agent step as a structured span, with token counts, dollar cost, latency, and evaluation scores attached as first-class span attributes, exported via OTLP to a backend supporting span-tree visualization, per-tenant cost attribution, drift detection on quality, and correlation between offline evaluation runs and production traces via span_id. Note the direct link back to Topic 5 — production trace evaluation depends entirely on this instrumentation existing in the first place.</p>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"Your agent has an intermittent latency spike in production and generic APM shows nothing unusual. What's missing?" — Almost certainly span-level LLM/tool instrumentation. Generic APM sees the outer HTTP request and outer LLM API call; it has no visibility into the internal reasoning loop — retries, redundant retrieval calls, or a tool stuck in a retry loop are invisible unless every internal step is its own span with gen_ai.* attributes. This is the two-span trace failure mode, and the fix is OTel GenAI or OpenInference instrumentation wired through the entire agent, not just at the request boundary.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 11 CONTEXT MGMT ============ -->
+  <section class="chapter" id="context-mgmt">
+    <div class="chapter-head"><span class="chapter-num">11</span><h2 class="chapter-title">Context Window Management at Scale</h2></div>
+    <p class="chapter-dek">Ties directly to the multi-agent "context saturation" problem from Topic 3 — here's the production mitigation toolkit.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Technique</th><th>When to use it</th></tr>
+        <tr><td class="k">Sliding window</td><td>Drop oldest turns once history exceeds a token budget — simple, loses old context entirely</td></tr>
+        <tr><td class="k">Summarization / compaction</td><td>Periodically collapse older turns into a condensed summary, preserving gist at the cost of detail — the standard approach for long-running conversational agents</td></tr>
+        <tr><td class="k">External memory + retrieval</td><td>Persist full history outside the context window (a store), retrieve only what's relevant to the current turn — scales furthest, adds retrieval-quality dependency</td></tr>
+        <tr><td class="k">Subgraph isolation (multi-agent)</td><td>As covered in Topic 3 — give each sub-agent its own scoped context rather than accumulating everything in one shared state</td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">The trap: compaction interacting badly with prompt caching</span>
+        <p>Summarizing or compacting history changes the prompt's content, which invalidates any cached prefix built on the old, longer history — a naive "compact every N turns" policy can silently tank your cache hit rate exactly when the conversation gets long enough to need caching most. Coordinate compaction points with cache-checkpoint boundaries rather than triggering them independently.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 12 CAPACITY ============ -->
+  <section class="chapter" id="capacity">
+    <div class="chapter-head"><span class="chapter-num">12</span><h2 class="chapter-title">Rate Limiting &amp; Capacity Planning</h2></div>
+    <p class="chapter-dek">Provider rate limits are a real, load-bearing constraint on agent system design, not an afterthought.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Token-per-minute and request-per-minute limits</strong> are provider- and tier-specific and often the actual bottleneck on agent throughput, not compute or your own infrastructure.</li>
+        <li><strong>Backpressure</strong> — queue incoming agent requests rather than firing them all at the provider simultaneously; a durable-execution layer's built-in retry/backoff (see Temporal section) is a natural place to absorb rate-limit backpressure gracefully instead of erroring out.</li>
+        <li><strong>Multi-provider fallback</strong> — routing to a secondary provider/model when the primary is rate-limited or down trades consistency for availability; decide deliberately whether that trade is acceptable for your use case (a coding agent probably can tolerate a model swap mid-task worse than a simple classification agent can).</li>
+        <li><strong>Capacity planning for agentic workloads</strong> is fundamentally token-based, not request-based — a single agent "request" can burn 10-50x the tokens of a simple chat turn due to tool-call round trips, so provision and forecast against token throughput, not request counts.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 13 DEPLOYMENT ============ -->
+  <section class="chapter" id="deployment">
+    <div class="chapter-head"><span class="chapter-num">13</span><h2 class="chapter-title">Deployment Patterns</h2></div>
+    <p class="chapter-dek">Canary and blue-green deployment apply to agents too — with one extra dimension traditional software doesn't have.</p>
+    <div class="chapter-body">
+      <p>Beyond standard canary/blue-green code deployment, agent systems need a <strong>prompt and model version</strong> rollout strategy — a system prompt change or model version bump is a behavioral change exactly like a code change, and should go through the same staged rollout: canary a small percentage of traffic on the new prompt/model, compare quality and cost metrics (tying back to Topic 5's eval infrastructure) against the baseline, then progressively increase traffic.</p>
+      <div class="callout focus">
+        <span class="callout-label">Ties directly to Topic 5's closed loop</span>
+        <p>Integrate evaluation into CI/CD with progressive canary deployment patterns — this is the exact mechanism: a prompt/model change is gated by the offline eval suite pre-merge, then canaried against a live traffic sample with the same eval rubric before full rollout, with automatic rollback if quality or cost metrics regress past a threshold.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 14 DECISION FRAMEWORK ============ -->
+  <section class="chapter" id="decision">
+    <div class="chapter-head"><span class="chapter-num">14</span><h2 class="chapter-title">Decision Framework</h2></div>
+    <p class="chapter-dek">What to build, roughly in order, as an agent moves from prototype to production scale.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Stage</th><th>What to add</th></tr>
+        <tr><td class="k">Prototype</td><td>Nothing beyond basic try/except — optimize for iteration speed</td></tr>
+        <tr><td class="k">Early production</td><td>Prompt caching (near-zero cost to add, immediate savings), basic OTel/OpenInference span instrumentation, per-step timeouts matched to actual call duration</td></tr>
+        <tr><td class="k">Scaling</td><td>Model routing/cascade for cost, LangGraph checkpointer (or equivalent) for resumability, circuit breakers on flaky external tools, idempotency keys on any non-idempotent tool action</td></tr>
+        <tr><td class="k">Long-running / high-value workflows</td><td>Full durable-execution engine (Temporal or equivalent) once workflows genuinely span minutes-to-days or need cross-service/cross-language orchestration; semantic caching if traffic volume and repetition justify the infra</td></tr>
+        <tr><td class="k">Mature production</td><td>Canary rollout pipeline for prompt/model changes wired to the eval suite, cost anomaly detection/alerting, capacity planning against token throughput, multi-provider fallback where availability matters</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 15 PITFALLS ============ -->
+  <section class="chapter" id="pitfalls">
+    <div class="chapter-head"><span class="chapter-num">15</span><h2 class="chapter-title">Anti-Patterns</h2></div>
+    <p class="chapter-dek">What actually breaks in production, ranked roughly by how often teams hit it.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>No prompt caching structure.</strong> Putting the dynamic user query before the static system prompt/tools in the request destroys cache hit rate for zero benefit.</li>
+        <li><strong>Semantic caching without domain-aware thresholds.</strong> The CVA-desk-style failure — a plausible-sounding wrong cached answer is worse than a slow correct one in any compliance-sensitive domain.</li>
+        <li><strong>Retry-the-whole-thing error handling.</strong> Re-executes every already-successful step on any failure, multiplying cost and risking duplicate non-idempotent side effects.</li>
+        <li><strong>Cascading in a latency-sensitive interactive path.</strong> Adds the cheap model's full latency on top of the frontier model's latency for every escalated request — fine for async work, often wrong for live chat.</li>
+        <li><strong>Two-span traces.</strong> Generic APM with no LLM-aware instrumentation makes internal agent failures (retry loops, redundant retrieval, token spikes) completely invisible until a user or an invoice notices.</li>
+        <li><strong>Confusing durable execution with correctness.</strong> A workflow can resume perfectly after a crash and still hallucinate, loop pointlessly, or drift on quality — durability and reliability-of-output are separate axes.</li>
+        <li><strong>Compaction that ignores cache boundaries.</strong> Silently destroys prompt-cache hit rate right when a long conversation needs it most.</li>
+        <li><strong>Provisioning against request count instead of token throughput.</strong> Agent workloads burn wildly variable token counts per request due to tool round-trips; request-count-based capacity planning under-provisions for token-heavy workflows.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 16 INTERVIEW ============ -->
+  <section class="chapter" id="interview">
+    <div class="chapter-head"><span class="chapter-num">16</span><h2 class="chapter-title">Interview Cheat-Sheet</h2></div>
+    <p class="chapter-dek">Grouped by depth.</p>
+    <div class="chapter-body">
+
+      <h4>Core concepts</h4>
+      <details class="qa"><summary>Why does a 20-step agent fail so much more often than a single API call, even if every step is individually reliable?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>Failure compounds multiplicatively across independent steps. At 99% per-step reliability, 5 steps yields ~95% end-to-end success, 10 steps yields ~90%, and 20 steps drops to roughly 82% — with zero additional bugs anywhere, purely from the arithmetic of chained probability. This is the core justification for durable execution: it's not about making any single step more reliable, it's about ensuring a failure in one step doesn't force re-running all the others.</p></div>
+      </details>
+      <details class="qa"><summary>Explain the difference between durable execution and reliability/accuracy.<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>Durable execution guarantees a workflow's progress survives infrastructure failure — a crash, a redeploy, a long wait — resuming from the last completed step rather than losing all prior work. It says nothing about whether the agent's actual outputs are correct; a perfectly durable workflow can still hallucinate, loop unproductively, or drift on quality. Those are evaluation and prompt-engineering concerns (Topic 5), a separate axis entirely.</p></div>
+      </details>
+      <details class="qa"><summary>What is the replay-safety contract in a Temporal-style durable execution engine?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>Workflow code must be deterministic so that replaying its history reproduces identical decisions — meaning no wall-clock calls, no raw randomness, and no branching directly on a non-deterministic result (an LLM call, a random number) inside workflow code itself. Non-deterministic operations happen inside Activities, whose results get recorded on first execution and reused during replay, so recovery never re-runs (and potentially gets a different result from) an LLM call or tool invocation that already succeeded.</p></div>
+      </details>
+
+      <h4>Cost optimization</h4>
+      <details class="qa"><summary>Walk through the Cache → Route → Compress framework and roughly what each buys you.<span class="qa-tag">cost</span></summary>
+        <div class="qa-body"><p>Cache: prompt/prefix caching for repeated static content (50-90% cost reduction, near-zero implementation effort) plus semantic caching for repeated-meaning queries (20-45% of traffic served without touching the model). Route: send each query to the cheapest model capable of handling it well, via static rules or a cascade with escalation (40-70% savings, since a flagship model can cost 30x+ more per token than a small one). Compress: batching for async work (50% via provider Batch APIs) and context management to avoid paying for redundant or bloated history. Combined, these routinely deliver 70-90% total cost reduction, and should be implemented roughly in that order since caching is the highest-leverage, lowest-risk lever.</p></div>
+      </details>
+      <details class="qa"><summary>Why can naive prompt caching sometimes make latency worse instead of better?<span class="qa-tag">cost</span></summary>
+        <div class="qa-body"><p>If cache blocks are positioned poorly — e.g. splitting the cacheable content awkwardly or invalidating the cache on nearly every call due to volatile content appearing early in the prompt — you pay the cache-write overhead (a 25% premium on Anthropic) without ever reaching the break-even of 2+ hits, and may add processing overhead for a cache that rarely actually hits. The fix is structuring the prompt with all static content first, in identical order every call, and the dynamic content last.</p></div>
+      </details>
+      <details class="qa"><summary>When is a model cascade the wrong choice even though it clearly saves money?<span class="qa-tag">cost</span></summary>
+        <div class="qa-body"><p>In latency-sensitive interactive paths — a cascade adds the cheap model's full latency on top of the frontier model's latency for every request that ends up escalating, a double-hop cost that can make total response time worse than just calling the frontier model directly. Cascades are the right choice for asynchronous or latency-tolerant workloads where the escalation rate is low enough that the average latency gain from cheap-model hits outweighs the double-hop cost on the escalated minority.</p></div>
+      </details>
+      <details class="qa"><summary>Your semantic cache is saving 40% on API costs but a compliance team just flagged a wrong answer that came from a cache hit. What do you check?<span class="qa-tag">cost</span></summary>
+        <div class="qa-body"><p>The similarity threshold and whether the cache is scoped by domain/tenant/context or purely by embedding distance. A generic semantic cache with a loose threshold will conflate semantically-similar-but-substantively-different queries (the CVA desk failure pattern) — the fix is domain-aware thresholds set per risk tier, explicit scoping metadata (jurisdiction, desk, as-of-date), and event-driven invalidation tied to underlying data changes, tightened or disabled entirely for compliance-sensitive query classes even at the cost of some savings.</p></div>
+      </details>
+
+      <h4>System design</h4>
+      <details class="qa"><summary>Design the reliability architecture for an agent that processes a 10,000-document batch job over several hours.<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Durable execution is non-negotiable at this scale — wrap the per-document processing as individually retryable, idempotent activities under a durable-execution engine (Temporal or equivalent), so a worker crash after document 5,000 resumes from 5,001 rather than restarting. Match per-activity timeouts to actual expected duration (an LLM call needs a multi-minute budget, not a generic 30s default). Invoke the overall job asynchronously with a status-queryable handle rather than blocking a request thread. Instrument every step with OTel GenAI spans so a stuck or looping document is visible in trace data, not discovered via a token-spend anomaly days later.</p></div>
+      </details>
+      <details class="qa"><summary>Design cost controls for an agent whose usage just 10x'd unexpectedly.<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>First, verify instrumentation exists to even diagnose it — per-span token/cost attribution via OTel GenAI, so you can see whether the spike is more requests, more tokens per request (e.g. a retrieval prompt looping, per the two-span-trace incident), or a routing regression sending traffic to a more expensive model than intended. Then apply the cost stack: confirm prompt caching is structured correctly (a broken cache silently reverting to full-price calls is a common silent regression), check whether a cascade's escalation rate has drifted upward, and add cost anomaly alerting so the next 10x spike triggers a page rather than a surprise invoice.</p></div>
+      </details>
+      <details class="qa"><summary>How would you decide whether a given agent needs a full durable-execution engine like Temporal, versus a lighter option?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Ask whether workflows genuinely run long enough or span enough independent services/languages that hand-rolled retry/state-tracking logic becomes its own maintenance burden — the rule of thumb is if more than roughly 20% of engineering time goes into reliability plumbing (retries, dedup, state tracking, failure recovery), a dedicated engine pays for itself. For a single-service agent built entirely on LangGraph with workflows measured in seconds-to-minutes, the built-in checkpointer is usually sufficient; for cross-service orchestration or hours-to-days workflows, escalate to Temporal or an equivalent.</p></div>
+      </details>
+      <details class="qa"><summary>An agent's tool call to charge a customer's card is retried after a network timeout, and the customer is charged twice. What went wrong and how do you fix it?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>The retry logic treated the charge-card call as safely retryable without an idempotency key — the original request may have actually succeeded server-side even though the response was lost to the timeout, and a naive retry re-executes the charge rather than discovering the original succeeded. Fix: every non-idempotent tool action needs an idempotency key derived from a stable identifier (not a timestamp), passed through to the downstream API so it can recognize and deduplicate a retried request server-side — exactly the discipline Temporal's activity model enforces by design.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ 17 GLOSSARY ============ -->
+  <section class="chapter" id="glossary">
+    <div class="chapter-head"><span class="chapter-num">17</span><h2 class="chapter-title">Glossary</h2></div>
+    <p class="chapter-dek">Every term used in this document.</p>
+    <div class="chapter-body">
+      <dl class="glossary-grid">
+        <div class="gterm"><dt>Prompt / prefix caching</dt><dd>Reusing computed KV tensors for a repeated prompt prefix, billed at a steep discount on cache hits.</dd></div>
+        <div class="gterm"><dt>Semantic caching</dt><dd>Returning a stored response for a semantically similar (not identical) query, skipping the model entirely.</dd></div>
+        <div class="gterm"><dt>Model routing</dt><dd>Policy selecting which model handles a given request, balancing cost, latency, and quality.</dd></div>
+        <div class="gterm"><dt>Model cascade</dt><dd>Sequential routing strategy: try a cheap model first, escalate to a larger one only when needed.</dd></div>
+        <div class="gterm"><dt>Durable execution</dt><dd>Property that a multi-step workflow survives process crashes, redeploys, and long waits without losing progress.</dd></div>
+        <div class="gterm"><dt>Replay-safety contract</dt><dd>The determinism rules durable-execution engines impose on workflow code so history replay reproduces identical decisions.</dd></div>
+        <div class="gterm"><dt>Activity (Temporal)</dt><dd>A unit of potentially non-deterministic, retryable work (an LLM call, a tool call) whose result is recorded for replay.</dd></div>
+        <div class="gterm"><dt>Idempotency key</dt><dd>A stable identifier ensuring a retried non-idempotent action executes exactly once.</dd></div>
+        <div class="gterm"><dt>Circuit breaker</dt><dd>Pattern that stops calling a repeatedly-failing dependency, failing fast instead of retrying indefinitely.</dd></div>
+        <div class="gterm"><dt>TTFT (time to first token)</dt><dd>Latency before the first output token appears, dominating perceived responsiveness in streamed responses.</dd></div>
+        <div class="gterm"><dt>OTel GenAI Semantic Conventions</dt><dd>OpenTelemetry's standardized gen_ai.* span attributes for LLM/agent instrumentation.</dd></div>
+        <div class="gterm"><dt>OpenInference</dt><dd>Apache-2.0 tracing specification for LLM applications, originally from Arize.</dd></div>
+        <div class="gterm"><dt>Context compaction</dt><dd>Summarizing or condensing older conversation history to stay within a token budget.</dd></div>
+        <div class="gterm"><dt>Backpressure</dt><dd>Queuing/throttling incoming requests to stay within downstream capacity or rate limits rather than failing outright.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ 18 RESOURCES ============ -->
+  <section class="chapter" id="resources">
+    <div class="chapter-head"><span class="chapter-num">18</span><h2 class="chapter-title">Resources</h2></div>
+    <p class="chapter-dek">Primary sources worth reading directly.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Anthropic &amp; OpenAI prompt caching documentation</strong> — exact current pricing and cache-checkpoint mechanics</li>
+        <li><strong>Temporal.io — "From AI hype to durable reality"</strong> and the Temporal AI-agent architecture guides</li>
+        <li><strong>OpenTelemetry GenAI Semantic Conventions</strong> (opentelemetry.io) and the OpenInference specification (Arize)</li>
+        <li><strong>RouteLLM paper (Ong et al.)</strong> — learned routing from preference data, the reference implementation most production routers build on</li>
+        <li><strong>Inngest / Restate / DBOS blogs</strong> — alternative durable-execution engines with different trade-offs than Temporal</li>
+      </ul>
+      <div class="callout">
+        <span class="callout-label">How to actually get interview-ready on this topic</span>
+        <p>Take an agent you've built, add OTel/OpenInference span instrumentation, and look at the actual trace tree — you will almost certainly find at least one redundant call, one poorly-scoped timeout, or one cache-invalidating prompt structure you didn't know about. Fixing one real inefficiency you found yourself is worth more in an interview than reciting these benchmark numbers secondhand.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">Topic 7 of 10 — Production System Design for AI Agents. Next up: RAG, One Level Deeper (chunking strategies, hybrid search, GraphRAG, Self-RAG, reranking).</div>
+</main>
+</div>
+
+<script>
+const links = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('section.chapter');
+const map = new Map();
+links.forEach(l => map.set(l.getAttribute('href').slice(1), l));
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const link = map.get(entry.target.id);
+    if(!link) return;
+    if(entry.isIntersecting){
+      links.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, {rootMargin: '-15% 0px -70% 0px', threshold: 0});
+sections.forEach(s => io.observe(s));
+</script>
+</body>
+</html>

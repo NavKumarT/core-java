@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tool Calling, Structured Outputs &amp; Pydantic AI — The Complete Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d10; --bg-raised:#12151a; --bg-card:#14181f;
+  --line:#242a33; --line-soft:#1b2028;
+  --ink:#e7e9ec; --ink-dim:#9aa3b0; --ink-faint:#5c6672;
+  --amber:#ff9f40; --amber-dim:#c97a2e; --lime:#c9f04c; --cyan:#5fd9c9; --violet:#b592ff; --rose:#ff7a8a;
+  --serif:'Source Serif 4', Georgia, serif;
+  --display:'Space Grotesk', sans-serif;
+  --mono:'JetBrains Mono', 'Courier New', monospace;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:radial-gradient(var(--line-soft) 1px, transparent 1px);
+  background-size:22px 22px; background-color:var(--bg);
+  color:var(--ink); font-family:var(--serif); font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+a{color:var(--amber); text-decoration:none;}
+::selection{background:var(--amber); color:#111;}
+.shell{display:grid; grid-template-columns:290px 1fr; min-height:100vh;}
+@media (max-width:920px){ .shell{grid-template-columns:1fr;} .side{display:none;} }
+.side{position:sticky; top:0; height:100vh; overflow-y:auto; border-right:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(18,21,26,.9), rgba(11,13,16,.9)); padding:28px 20px 60px;}
+.side::-webkit-scrollbar{width:6px;} .side::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.brand{font-family:var(--display); font-weight:700; font-size:15px; color:var(--ink); margin-bottom:2px;}
+.brand span{color:var(--amber);}
+.brand-sub{font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-bottom:24px;}
+.back-link{display:inline-block; font-family:var(--mono); font-size:11px; color:var(--cyan); margin-bottom:20px; border:1px solid var(--line); padding:5px 10px; border-radius:6px;}
+.nav-link{display:flex; align-items:baseline; gap:7px; font-family:var(--display); font-size:12.2px; color:var(--ink-dim);
+  padding:5px 7px; border-radius:6px; border-left:2px solid transparent; transition:.15s;}
+.nav-link:hover{color:var(--ink); background:var(--bg-raised);}
+.nav-link.active{color:var(--amber); border-left-color:var(--amber); background:var(--bg-raised);}
+.nav-num{font-family:var(--mono); font-size:9.5px; color:var(--ink-faint); min-width:20px;}
+.main{max-width:920px; padding:0 44px 140px; margin:0 auto;}
+@media (max-width:700px){ .main{padding:0 20px 100px;} }
+.hero{padding:76px 0 54px; border-bottom:1px solid var(--line);}
+.hero-eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--lime);
+  margin-bottom:18px; display:flex; align-items:center; gap:10px;}
+.hero-eyebrow::before{content:''; width:22px; height:1px; background:var(--lime); display:inline-block;}
+h1.title{font-family:var(--display); font-weight:700; font-size:clamp(30px,4.8vw,50px); line-height:1.08; letter-spacing:-.02em; color:var(--ink); max-width:16ch;}
+h1.title em{font-style:normal; color:var(--amber);}
+.hero-sub{font-family:var(--serif); font-size:18px; color:var(--ink-dim); max-width:62ch; margin-top:20px;}
+.tag-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:26px;}
+.tag{font-family:var(--mono); font-size:11px; padding:5px 11px; border-radius:20px; border:1px solid var(--line); color:var(--ink-dim); background:var(--bg-raised);}
+section.chapter{padding:60px 0; border-bottom:1px solid var(--line);}
+section.chapter:last-of-type{border-bottom:none;}
+.chapter-head{display:flex; align-items:flex-start; gap:16px; margin-bottom:8px;}
+.chapter-num{font-family:var(--mono); font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:20px; padding:3px 11px; margin-top:6px; white-space:nowrap;}
+h2.chapter-title{font-family:var(--display); font-weight:600; font-size:clamp(22px,3.2vw,30px); color:var(--ink); letter-spacing:-.01em;}
+.chapter-dek{font-family:var(--serif); font-style:italic; color:var(--ink-dim); font-size:16px; max-width:66ch; margin:14px 0 30px 0; padding-left:66px;}
+@media (max-width:700px){.chapter-dek{padding-left:0;}}
+.chapter-body{padding-left:66px;}
+@media (max-width:700px){.chapter-body{padding-left:0;}}
+.chapter-body h3{font-family:var(--display); font-weight:600; font-size:19px; color:var(--ink); margin:32px 0 12px;}
+.chapter-body h4{font-family:var(--display); font-weight:600; color:var(--cyan); margin:22px 0 10px; text-transform:uppercase; letter-spacing:.04em; font-size:12px;}
+.chapter-body p{color:var(--ink-dim); margin-bottom:14px; max-width:72ch;}
+.chapter-body ul, .chapter-body ol{color:var(--ink-dim); margin:0 0 16px 20px; max-width:70ch;}
+.chapter-body li{margin-bottom:7px;}
+.chapter-body strong{color:var(--ink); font-weight:600;}
+code.inline{font-family:var(--mono); font-size:.87em; background:var(--bg-raised); color:var(--lime); padding:1px 6px; border-radius:4px; border:1px solid var(--line);}
+.callout{border-left:3px solid var(--amber); background:var(--bg-card); padding:16px 18px; border-radius:0 8px 8px 0; margin:20px 0; max-width:70ch;}
+.callout p{margin-bottom:0; color:var(--ink-dim); font-size:14.5px;}
+.callout .callout-label{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--amber); margin-bottom:6px; display:block;}
+.callout.interview{border-left-color:var(--violet);} .callout.interview .callout-label{color:var(--violet);}
+.callout.pitfall{border-left-color:var(--rose);} .callout.pitfall .callout-label{color:var(--rose);}
+.callout.focus{border-left-color:var(--lime); background:#151b12;} .callout.focus .callout-label{color:var(--lime);}
+.code-wrap{background:#0a0c0f; border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:18px 0 24px;}
+.code-head{display:flex; align-items:center; justify-content:space-between; padding:9px 14px; border-bottom:1px solid var(--line); background:var(--bg-raised); font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+.code-dots{display:flex; gap:5px;} .code-dots span{width:8px; height:8px; border-radius:50%; background:var(--line);}
+pre{padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:12.6px; line-height:1.7; color:#d7dbe0;}
+.tok-kw{color:var(--violet);} .tok-str{color:var(--lime);} .tok-com{color:var(--ink-faint); font-style:italic;} .tok-fn{color:var(--cyan);} .tok-num{color:var(--amber);}
+.tbl{width:100%; border-collapse:collapse; margin:18px 0 26px; font-size:13.2px; max-width:78ch;}
+.tbl th{text-align:left; font-family:var(--mono); font-size:10.2px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); padding:10px 12px; border-bottom:1px solid var(--line);}
+.tbl td{padding:11px 12px; border-bottom:1px solid var(--line-soft); color:var(--ink-dim); vertical-align:top;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl td.k{color:var(--ink); font-family:var(--mono); font-size:12.2px; white-space:nowrap;}
+.diagram{background:var(--bg-card); border:1px solid var(--line); border-radius:12px; padding:22px; margin:20px 0 26px;}
+.diagram svg{width:100%; height:auto; display:block;}
+.qa{border:1px solid var(--line); border-radius:10px; margin-bottom:10px; background:var(--bg-card); overflow:hidden;}
+.qa summary{list-style:none; cursor:pointer; padding:15px 18px; display:flex; gap:12px; align-items:flex-start; font-family:var(--display); font-size:14px; color:var(--ink); font-weight:500;}
+.qa summary::-webkit-details-marker{display:none;}
+.qa summary::before{content:'+'; font-family:var(--mono); color:var(--amber); font-size:16px; line-height:1;}
+.qa[open] summary::before{content:'–';}
+.qa .qa-body{padding:0 18px 18px 40px; color:var(--ink-dim); font-size:14px; max-width:68ch;}
+.qa .qa-body p{margin-bottom:10px;}
+.qa-tag{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; background:var(--bg-raised); color:var(--ink-faint); padding:2px 8px; border-radius:20px; border:1px solid var(--line); margin-left:auto; white-space:nowrap; flex-shrink:0;}
+.glossary-grid{display:grid; grid-template-columns:1fr 1fr; gap:2px 28px;}
+@media (max-width:700px){.glossary-grid{grid-template-columns:1fr;}}
+.gterm{padding:14px 0; border-bottom:1px solid var(--line-soft);}
+.gterm dt{font-family:var(--mono); color:var(--cyan); font-size:13px; margin-bottom:4px;}
+.gterm dd{color:var(--ink-dim); font-size:13px; line-height:1.55;}
+.footer{padding:60px 0 20px; text-align:center; color:var(--ink-faint); font-family:var(--mono); font-size:12px;}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav class="side" id="side">
+  <a class="back-link" href="#">← Topic 11: LLM Fundamentals</a>
+  <div class="brand">Tool Calling &amp; <span>Pydantic AI</span></div>
+  <div class="brand-sub">Topic 12 of 14 — deep reference</div>
+  <a class="nav-link" href="#under-the-hood"><span class="nav-num">00</span>★ How Tool Calling Actually Works</a>
+  <a class="nav-link" href="#langchain-tools"><span class="nav-num">01</span>Defining Tools in LangChain</a>
+  <a class="nav-link" href="#execution-loop"><span class="nav-num">02</span>The Execution Loop in LangGraph</a>
+  <a class="nav-link" href="#parallel"><span class="nav-num">03</span>Parallel vs Sequential Tool Calls</a>
+  <a class="nav-link" href="#structured-output"><span class="nav-num">04</span>★ Structured Outputs, Two Ways</a>
+  <a class="nav-link" href="#validation-retry"><span class="nav-num">05</span>Validation &amp; Retry-on-Invalid-Schema</a>
+  <a class="nav-link" href="#pydantic-ai"><span class="nav-num">06</span>★ Pydantic AI, In Depth</a>
+  <a class="nav-link" href="#comparison"><span class="nav-num">07</span>Pydantic AI vs LangGraph</a>
+  <a class="nav-link" href="#failure-modes"><span class="nav-num">08</span>Production Failure Modes</a>
+  <a class="nav-link" href="#interview"><span class="nav-num">09</span>Interview Cheat-Sheet</a>
+  <a class="nav-link" href="#glossary"><span class="nav-num">10</span>Glossary</a>
+  <a class="nav-link" href="#resources"><span class="nav-num">11</span>Resources</a>
+</nav>
+
+<main class="main">
+  <div class="hero">
+    <div class="hero-eyebrow">Deep reference · Topic 12 of 14</div>
+    <h1 class="title">Tool Calling, Structured Outputs &amp; <em>Pydantic AI</em></h1>
+    <p class="hero-sub">Every agent in this whole series depends on this working reliably. What actually happens when a model "calls a tool," how to define tools and force structured outputs in LangChain, how validation-and-retry closes the gap between "usually valid JSON" and "always valid JSON," and a full Pydantic AI deep dive — with real Python code throughout.</p>
+    <div class="tag-row">
+      <span class="tag">JSON Schema</span><span class="tag">LangChain @tool</span><span class="tag">Parallel Tool Calls</span>
+      <span class="tag">with_structured_output</span><span class="tag">Pydantic Validation</span><span class="tag">ModelRetry</span>
+      <span class="tag">Pydantic AI</span><span class="tag">RunContext</span>
+    </div>
+  </div>
+
+  <!-- ============ 00 UNDER THE HOOD ============ -->
+  <section class="chapter" id="under-the-hood">
+    <div class="chapter-head"><span class="chapter-num">00 ★</span><h2 class="chapter-title">How Tool Calling Actually Works, Under the Hood</h2></div>
+    <p class="chapter-dek">Building directly on Topic 11: the model is still just predicting tokens. "Calling a tool" is a specific, structured shape those tokens are trained to take.</p>
+    <div class="chapter-body">
+      <p>Recall from Topic 11 that a model only ever does one thing: predict a probability distribution over its next token, repeatedly. Tool calling doesn't add a new capability to the model architecture — it's a training and prompting convention. During SFT and preference alignment, models are specifically trained on examples where, instead of producing plain text, the "correct" continuation is a structured, machine-parseable object naming a function and its arguments. Nothing about the transformer changes; what changes is that the model has learned <em>when</em> that structured shape is the right continuation, and how to fill in valid arguments for it.</p>
+      <h3>The three-part contract</h3>
+      <ol>
+        <li><strong>You describe the tools.</strong> Every tool is turned into a JSON Schema — name, description, and a typed parameter list — and sent to the model alongside your prompt on every single call. The model does not "remember" tools between calls; you resend the schema every time.</li>
+        <li><strong>The model emits a structured call instead of text.</strong> If the model decides a tool is the right next step, instead of (or alongside) plain text, it emits a JSON object matching one of the schemas you provided — a name and an arguments object.</li>
+        <li><strong>You execute it and send the result back.</strong> The model itself never runs any code — your application code reads the emitted tool call, executes the real function, and sends the result back into the conversation as a new message, so the model can use it to decide what happens next.</li>
+      </ol>
+      <div class="diagram">
+        <svg viewBox="0 0 720 190" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="tcm" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff9f40"/></marker></defs>
+          <rect x="20" y="20" width="200" height="46" rx="7" fill="none" stroke="#5fd9c9" stroke-width="1.4"/>
+          <text x="120" y="48" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Prompt + tool JSON schemas</text>
+          <line x1="220" y1="43" x2="270" y2="43" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#tcm)"/>
+          <rect x="270" y="20" width="160" height="46" rx="7" fill="none" stroke="#ff9f40" stroke-width="1.4"/>
+          <text x="350" y="48" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Model (API)</text>
+          <line x1="430" y1="43" x2="480" y2="43" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#tcm)"/>
+          <rect x="480" y="20" width="220" height="46" rx="7" fill="none" stroke="#c9f04c" stroke-width="1.4"/>
+          <text x="590" y="42" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">tool_calls: [{name, args}]</text>
+          <text x="590" y="58" fill="#9aa3b0" font-family="JetBrains Mono" font-size="9" text-anchor="middle">model never executes this itself</text>
+          <line x1="590" y1="66" x2="590" y2="100" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#tcm)"/>
+          <rect x="480" y="100" width="220" height="46" rx="7" fill="none" stroke="#b592ff" stroke-width="1.4"/>
+          <text x="590" y="128" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">YOUR code executes it</text>
+          <line x1="480" y1="123" x2="270" y2="123" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#tcm)"/>
+          <rect x="130" y="100" width="200" height="46" rx="7" fill="none" stroke="#ff7a8a" stroke-width="1.4"/>
+          <text x="230" y="128" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Result appended as new message</text>
+          <text x="360" y="175" fill="#5c6672" font-family="JetBrains Mono" font-size="10" text-anchor="middle">→ loop repeats: full schemas + full history resent every call</text>
+        </svg>
+      </div>
+      <table class="tbl">
+        <tr><th>Provider</th><th>Wire format quirk worth knowing</th></tr>
+        <tr><td class="k">OpenAI</td><td>Tool calls appear as a <code class="inline">tool_calls</code> array on the assistant message; each call has an <code class="inline">id</code> used to match a later <code class="inline">tool</code>-role message back to it.</td></tr>
+        <tr><td class="k">Anthropic</td><td>Tool use appears as a <code class="inline">tool_use</code> content block (alongside possible <code class="inline">text</code> blocks in the same message); results are returned as a <code class="inline">tool_result</code> content block referencing the same <code class="inline">id</code>.</td></tr>
+        <tr><td class="k">Both</td><td>Neither provider "remembers" a tool across calls — every request resends the full tool schema list, which is exactly why Topic 7's prompt caching applies directly to tool definitions: a stable, unchanging tool schema block is prime cacheable content.</td></tr>
+      </table>
+      <div class="callout focus">
+        <span class="callout-label">The direct link back to the foundational agent loop</span>
+        <p>This is precisely the mechanism behind <code class="inline">model.bind_tools([...])</code> and <code class="inline">exists_action</code> from the foundational LangGraph bible — <code class="inline">bind_tools</code> is what attaches the JSON schemas to every request, and <code class="inline">len(result.tool_calls) > 0</code> is literally checking whether the model's last message contained one of these structured objects instead of (or alongside) plain text.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 01 LANGCHAIN TOOLS ============ -->
+  <section class="chapter" id="langchain-tools">
+    <div class="chapter-head"><span class="chapter-num">01</span><h2 class="chapter-title">Defining Tools in LangChain</h2></div>
+    <p class="chapter-dek">Three ways to define a tool, from simplest to most explicit — know when to reach for each.</p>
+    <div class="chapter-body">
+      <h3>The simplest form — @tool with a docstring</h3>
+      <div class="code-wrap">
+        <div class="code-head"><span>simple_tool.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> langchain_core.tools <span class="tok-kw">import</span> tool
+
+<span class="tok-kw">@tool</span>
+<span class="tok-kw">def</span> get_order_status(order_id: str) -> str:
+    <span class="tok-str">"""Look up the current status of a customer order by its order ID."""</span>
+    <span class="tok-com"># the docstring above becomes the tool's "description" field</span>
+    <span class="tok-com"># the type hint (str) becomes the JSON schema type for order_id</span>
+    order = db.get_order(order_id)
+    <span class="tok-kw">return</span> f<span class="tok-str">"Order {order_id} is currently: {order.status}"</span></pre>
+      </div>
+      <p>The docstring is not a comment — it's sent directly to the model as the tool's description, and is exactly what the model uses to decide whether this tool is relevant to the current task. A vague docstring produces unreliable tool selection; a precise one (what it does, when to use it, what it returns) measurably improves tool-choice accuracy.</p>
+      <h3>Explicit schema with Pydantic — when types alone aren't enough</h3>
+      <div class="code-wrap">
+        <div class="code-head"><span>pydantic_tool_schema.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> pydantic <span class="tok-kw">import</span> BaseModel, Field
+<span class="tok-kw">from</span> langchain_core.tools <span class="tok-kw">import</span> StructuredTool
+
+<span class="tok-kw">class</span> RefundInput(BaseModel):
+    order_id: str = Field(description=<span class="tok-str">"The order ID to refund, e.g. 'ORD-4471'"</span>)
+    amount_usd: float = Field(description=<span class="tok-str">"Refund amount in USD, must be positive"</span>, gt=<span class="tok-num">0</span>)
+    reason: str = Field(description=<span class="tok-str">"Short reason for the refund, shown in the audit log"</span>)
+
+<span class="tok-kw">def</span> issue_refund(order_id: str, amount_usd: float, reason: str) -> str:
+    <span class="tok-com"># gt=0 above is enforced BEFORE this function body ever runs --</span>
+    <span class="tok-com"># an invalid amount never reaches your business logic at all</span>
+    result = payments.refund(order_id, amount_usd, reason)
+    <span class="tok-kw">return</span> f<span class="tok-str">"Refunded ${amount_usd} for {order_id}"</span>
+
+refund_tool = StructuredTool.from_function(
+    func=issue_refund,
+    name=<span class="tok-str">"issue_refund"</span>,
+    description=<span class="tok-str">"Issue a refund for a customer order. Requires human approval above $100."</span>,
+    args_schema=RefundInput,
+)</pre>
+      </div>
+      <div class="callout">
+        <span class="callout-label">Why bother with the Pydantic version</span>
+        <p>Field-level validation (<code class="inline">gt=0</code>, string patterns, enums) is enforced automatically before your function body ever executes — the model can still <em>try</em> to call the tool with a negative refund amount, but LangChain's argument validation rejects it and returns a validation error back to the model as an observation, exactly like the "bad tool name, retry" self-correction pattern from the foundational bible, just for arguments instead of tool names.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 EXECUTION LOOP ============ -->
+  <section class="chapter" id="execution-loop">
+    <div class="chapter-head"><span class="chapter-num">02</span><h2 class="chapter-title">The Execution Loop in LangGraph</h2></div>
+    <p class="chapter-dek">A tightened, production-ready version of the foundational bible's take_action node — now with validation and error recovery made explicit.</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>robust_take_action.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> langchain_core.messages <span class="tok-kw">import</span> ToolMessage
+<span class="tok-kw">from</span> pydantic <span class="tok-kw">import</span> ValidationError
+
+<span class="tok-kw">def</span> take_action(state: AgentState) -> <span class="tok-kw">dict</span>:
+    tool_calls = state[<span class="tok-str">"messages"</span>][-<span class="tok-num">1</span>].tool_calls
+    results = []
+    <span class="tok-kw">for</span> call <span class="tok-kw">in</span> tool_calls:
+        name, args, call_id = call[<span class="tok-str">"name"</span>], call[<span class="tok-str">"args"</span>], call[<span class="tok-str">"id"</span>]
+        <span class="tok-kw">if</span> name <span class="tok-kw">not in</span> tools_by_name:
+            content = f<span class="tok-str">"Error: no tool named '{name}'. Available tools: {list(tools_by_name)}"</span>
+        <span class="tok-kw">else</span>:
+            <span class="tok-kw">try</span>:
+                content = <span class="tok-kw">str</span>(tools_by_name[name].invoke(args))   <span class="tok-com"># Pydantic validation happens here</span>
+            <span class="tok-kw">except</span> ValidationError <span class="tok-kw">as</span> e:
+                <span class="tok-com"># feed the validation error back as the observation -- the model sees</span>
+                <span class="tok-com"># exactly what was wrong with its own arguments and can self-correct</span>
+                content = f<span class="tok-str">"Error: invalid arguments for {name}: {e}"</span>
+            <span class="tok-kw">except</span> Exception <span class="tok-kw">as</span> e:
+                content = f<span class="tok-str">"Error: {name} failed during execution: {e}"</span>
+        results.append(ToolMessage(tool_call_id=call_id, name=name, content=content))
+    <span class="tok-kw">return</span> {<span class="tok-str">"messages"</span>: results}</pre>
+      </div>
+      <div class="callout pitfall">
+        <span class="callout-label">Never let a tool exception kill the graph run</span>
+        <p>An unhandled exception inside a tool call, if not caught, propagates up and crashes the entire LangGraph run — losing the whole conversation's progress for what might be a single bad argument. The <code class="inline">try/except</code> shown above is not optional defensive style; it's the difference between "the agent recovers and tries again" and "the whole run dies," and it's exactly the same discipline as Topic 7's retry/circuit-breaker material, applied at the individual tool-call level.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 PARALLEL ============ -->
+  <section class="chapter" id="parallel">
+    <div class="chapter-head"><span class="chapter-num">03</span><h2 class="chapter-title">Parallel vs Sequential Tool Calls</h2></div>
+    <p class="chapter-dek">A single model turn can request several tool calls at once — most agent code executes them sequentially by default, leaving real latency on the table.</p>
+    <div class="chapter-body">
+      <p>When a model decides it needs multiple independent pieces of information (e.g., "check the weather in SF and LA"), it can emit <em>multiple</em> tool calls in a single <code class="inline">tool_calls</code> array on one message, rather than calling one, waiting, then calling the next. Your execution code decides whether to run them sequentially or concurrently — the model has no opinion on this, it only decided <em>what</em> to call, not how you execute it.</p>
+      <div class="code-wrap">
+        <div class="code-head"><span>parallel_execution.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">import</span> asyncio
+<span class="tok-kw">from</span> langchain_core.messages <span class="tok-kw">import</span> ToolMessage
+
+<span class="tok-kw">async def</span> take_action_parallel(state: AgentState) -> <span class="tok-kw">dict</span>:
+    tool_calls = state[<span class="tok-str">"messages"</span>][-<span class="tok-num">1</span>].tool_calls
+
+    <span class="tok-kw">async def</span> run_one(call):
+        name, args, call_id = call[<span class="tok-str">"name"</span>], call[<span class="tok-str">"args"</span>], call[<span class="tok-str">"id"</span>]
+        <span class="tok-kw">try</span>:
+            content = <span class="tok-kw">str</span>(<span class="tok-kw">await</span> tools_by_name[name].ainvoke(args))
+        <span class="tok-kw">except</span> Exception <span class="tok-kw">as</span> e:
+            content = f<span class="tok-str">"Error: {name} failed: {e}"</span>
+        <span class="tok-kw">return</span> ToolMessage(tool_call_id=call_id, name=name, content=content)
+
+    <span class="tok-com"># independent tool calls run concurrently instead of one-by-one</span>
+    results = <span class="tok-kw">await</span> asyncio.gather(<span class="tok-kw">*</span>[run_one(c) <span class="tok-kw">for</span> c <span class="tok-kw">in</span> tool_calls])
+    <span class="tok-kw">return</span> {<span class="tok-str">"messages"</span>: <span class="tok-kw">list</span>(results)}</pre>
+      </div>
+      <table class="tbl">
+        <tr><th>Execute in parallel when...</th><th>Execute sequentially when...</th></tr>
+        <tr><td>The calls are genuinely independent (two separate lookups with no shared dependency) — direct latency win</td><td>A later call's arguments depend on an earlier call's result within the same batch (rare — the model usually won't request this shape, since it can't know the result yet)</td></tr>
+        <tr><td>The tools are read-only or otherwise safe to run concurrently</td><td>Tools have side effects that must not race — e.g., two calls that both modify the same record</td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"How would you speed up an agent that frequently needs to call 3-4 independent APIs per turn?" — Check whether the tool-call executor is currently sequential; if so, switch to concurrent execution via <code class="inline">asyncio.gather</code> (or your framework's async tool-call primitive) for calls within the same model turn, since the model already batches independent calls into one <code class="inline">tool_calls</code> array — most of the available speedup is simply not being captured by naive sequential execution code.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 04 STRUCTURED OUTPUT ============ -->
+  <section class="chapter" id="structured-output">
+    <div class="chapter-head"><span class="chapter-num">04 ★</span><h2 class="chapter-title">Structured Outputs, Two Ways</h2></div>
+    <p class="chapter-dek">Getting an LLM to reliably return JSON matching a schema — not for calling a real tool, but for extracting or formatting data — uses the exact same underlying mechanism as tool calling.</p>
+    <div class="chapter-body">
+      <h3>Mechanism 1 — structured output via a "fake" tool call</h3>
+      <p>The oldest and most portable trick: define a Pydantic schema, present it to the model as if it were a tool to call, but never actually execute anything — you just read the arguments the model generated as your structured result. This is exactly what LangChain's <code class="inline">with_structured_output()</code> does under the hood on many providers.</p>
+      <div class="code-wrap">
+        <div class="code-head"><span>with_structured_output.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> pydantic <span class="tok-kw">import</span> BaseModel, Field
+<span class="tok-kw">from</span> langchain_openai <span class="tok-kw">import</span> ChatOpenAI
+
+<span class="tok-kw">class</span> TicketClassification(BaseModel):
+    category: <span class="tok-kw">Literal</span>[<span class="tok-str">"billing"</span>, <span class="tok-str">"technical"</span>, <span class="tok-str">"account"</span>] = Field(description=<span class="tok-str">"Primary ticket category"</span>)
+    urgency: <span class="tok-kw">Literal</span>[<span class="tok-str">"low"</span>, <span class="tok-str">"medium"</span>, <span class="tok-str">"high"</span>] = Field(description=<span class="tok-str">"How urgent this ticket is"</span>)
+    summary: str = Field(description=<span class="tok-str">"One-sentence summary of the customer's issue"</span>)
+
+model = ChatOpenAI(model=<span class="tok-str">"gpt-4o"</span>)
+classifier = model.with_structured_output(TicketClassification)
+
+result = classifier.invoke(<span class="tok-str">"My card was charged twice for the same order, please help ASAP"</span>)
+<span class="tok-com"># result is a REAL TicketClassification instance, already validated -- not a string to parse</span>
+print(result.category)   <span class="tok-com"># "billing"</span>
+print(result.urgency)    <span class="tok-com"># "high"</span></pre>
+      </div>
+      <h3>Mechanism 2 — native JSON-schema / structured-output modes</h3>
+      <p>Newer provider APIs (OpenAI's <code class="inline">response_format</code> with a JSON schema, Anthropic's structured output support) can constrain generation directly at decoding time — the model is prevented from generating any token that would violate the schema, rather than being asked nicely via a tool-call convention. This is a stronger guarantee: with true constrained decoding, invalid JSON is architecturally impossible, not just unlikely.</p>
+      <table class="tbl">
+        <tr><th></th><th>Tool-call-based structured output</th><th>Native constrained decoding</th></tr>
+        <tr><td class="k">Guarantee strength</td><td>Very high, but not absolute — determined by training, not decoding constraints</td><td>Absolute for schema shape — invalid JSON structure is impossible</td></tr>
+        <tr><td class="k">Portability</td><td>Works across nearly every tool-calling-capable model, older and newer</td><td>Requires explicit provider support for the feature</td></tr>
+        <tr><td class="k">What it can't guarantee</td><td>Semantic correctness — a validly-shaped but factually wrong answer, or a value that's schema-valid but business-logic-invalid, still requires the retry loop below</td><td>Same limitation — shape is guaranteed, correctness of content is not</td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">The gap neither mechanism closes</span>
+        <p>Both mechanisms guarantee <em>shape</em> — you will get valid JSON matching your schema's types. Neither guarantees <em>correctness</em> — a validly-typed <code class="inline">urgency: "low"</code> on a ticket that's actually urgent is a perfectly schema-valid, completely wrong output. Structured output solves a parsing problem, not an accuracy problem — accuracy is still Topic 5's territory entirely.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 05 VALIDATION RETRY ============ -->
+  <section class="chapter" id="validation-retry">
+    <div class="chapter-head"><span class="chapter-num">05</span><h2 class="chapter-title">Validation &amp; Retry-on-Invalid-Schema</h2></div>
+    <p class="chapter-dek">The pattern that turns "usually correct" into "correct or explicitly failed after N attempts" — essential for any pipeline that can't tolerate silent bad data.</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>validate_and_retry.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> pydantic <span class="tok-kw">import</span> BaseModel, ValidationError, field_validator
+
+<span class="tok-kw">class</span> ExtractedInvoice(BaseModel):
+    invoice_number: str
+    total_usd: float
+    line_items: <span class="tok-kw">list</span>[str]
+
+    <span class="tok-kw">@field_validator</span>(<span class="tok-str">"total_usd"</span>)
+    <span class="tok-kw">@classmethod</span>
+    <span class="tok-kw">def</span> total_must_be_positive(<span class="tok-kw">cls</span>, v):
+        <span class="tok-kw">if</span> v <= <span class="tok-num">0</span>:
+            <span class="tok-kw">raise</span> ValueError(<span class="tok-str">"total_usd must be positive -- got a non-positive value"</span>)
+        <span class="tok-kw">return</span> v
+
+<span class="tok-kw">def</span> extract_with_retry(model, text: str, max_attempts: <span class="tok-kw">int</span> = <span class="tok-num">3</span>) -> ExtractedInvoice:
+    structured_model = model.with_structured_output(ExtractedInvoice, include_raw=<span class="tok-kw">True</span>)
+    error_context = <span class="tok-str">""</span>
+    <span class="tok-kw">for</span> attempt <span class="tok-kw">in</span> <span class="tok-kw">range</span>(max_attempts):
+        <span class="tok-kw">try</span>:
+            result = structured_model.invoke(text + error_context)
+            <span class="tok-kw">if</span> result[<span class="tok-str">"parsing_error"</span>] <span class="tok-kw">is</span> <span class="tok-kw">None</span>:
+                <span class="tok-kw">return</span> result[<span class="tok-str">"parsed"</span>]
+            <span class="tok-kw">raise</span> result[<span class="tok-str">"parsing_error"</span>]
+        <span class="tok-kw">except</span> (ValidationError, Exception) <span class="tok-kw">as</span> e:
+            <span class="tok-com"># feed the EXACT validation error back to the model -- this is the whole trick</span>
+            error_context = f<span class="tok-str">"\n\nYour previous attempt failed validation: {e}\nPlease correct it."</span>
+    <span class="tok-kw">raise</span> RuntimeError(f<span class="tok-str">"Failed to extract valid invoice after {max_attempts} attempts"</span>)</pre>
+      </div>
+      <p>The core trick, worth naming explicitly: <strong>don't just retry blindly — feed the exact validation error message back into the next attempt's context.</strong> The model can usually self-correct a specific, named failure ("total_usd must be positive, got -50") far more reliably than it can guess what you wanted on a second blind attempt with no feedback.</p>
+      <div class="callout focus">
+        <span class="callout-label">Pydantic AI does this automatically — a preview of Section 06</span>
+        <p>This exact retry-with-error-feedback loop is precisely what Pydantic AI's <code class="inline">ModelRetry</code> mechanism automates natively — raise <code class="inline">ModelRetry("reason")</code> inside a validator or tool, and the framework handles resending it to the model for you, with a configurable retry budget. It's worth understanding the manual version above first, so the framework doesn't feel like magic.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 06 PYDANTIC AI ============ -->
+  <section class="chapter" id="pydantic-ai">
+    <div class="chapter-head"><span class="chapter-num">06 ★</span><h2 class="chapter-title">Pydantic AI, In Depth</h2></div>
+    <p class="chapter-dek">A minimal, type-safe agent framework built by the Pydantic team, with a fundamentally different design philosophy than LangGraph — worth understanding on its own terms, not just as "LangGraph but smaller."</p>
+    <div class="chapter-body">
+      <p>Pydantic AI is an agent framework built around three ideas: type-safe structured outputs via Pydantic models, dependency injection via a typed <code class="inline">RunContext</code>, and model-agnostic agents defined as plain Python. Where LangChain composes chains of abstractions (runnables, LCEL), Pydantic AI keeps you close to plain Python — an agent is a class, a tool is a function, an output is a Pydantic model.</p>
+      <h3>Core concepts, in one example</h3>
+      <div class="code-wrap">
+        <div class="code-head"><span>pydantic_ai_full_example.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> dataclasses <span class="tok-kw">import</span> dataclass
+<span class="tok-kw">from</span> pydantic <span class="tok-kw">import</span> BaseModel, Field
+<span class="tok-kw">from</span> pydantic_ai <span class="tok-kw">import</span> Agent, RunContext, ModelRetry
+
+<span class="tok-com"># 1. Dependencies -- injected at runtime, no global state, fully type-checked</span>
+<span class="tok-kw">@dataclass</span>
+<span class="tok-kw">class</span> SupportDeps:
+    customer_id: str
+    db: DatabaseConn
+
+<span class="tok-com"># 2. Output type -- the schema the agent MUST return, validated automatically</span>
+<span class="tok-kw">class</span> SupportOutput(BaseModel):
+    response: str = Field(description=<span class="tok-str">"Reply to send the customer"</span>)
+    risk_level: <span class="tok-kw">Literal</span>[<span class="tok-str">"low"</span>, <span class="tok-str">"medium"</span>, <span class="tok-str">"high"</span>]
+
+<span class="tok-com"># 3. The agent itself -- model, deps type, output type, instructions</span>
+support_agent = Agent(
+    <span class="tok-str">"anthropic:claude-sonnet-4-6"</span>,
+    deps_type=SupportDeps,
+    output_type=SupportOutput,        <span class="tok-com"># validation failure -> auto-retry against the model</span>
+    instructions=<span class="tok-str">"You are a bank support agent. Judge the risk level of every query."</span>,
+)
+
+<span class="tok-com"># 4. Dynamic instructions via dependency injection</span>
+<span class="tok-kw">@support_agent.instructions</span>
+<span class="tok-kw">async def</span> add_customer_name(ctx: RunContext[SupportDeps]) -> str:
+    name = <span class="tok-kw">await</span> ctx.deps.db.customer_name(ctx.deps.customer_id)
+    <span class="tok-kw">return</span> f<span class="tok-str">"The customer's name is {name!r}."</span>
+
+<span class="tok-com"># 5. Tools -- plain functions, docstring becomes the description automatically</span>
+<span class="tok-kw">@support_agent.tool</span>
+<span class="tok-kw">async def</span> get_account_balance(ctx: RunContext[SupportDeps], account_type: str) -> <span class="tok-kw">float</span>:
+    <span class="tok-str">"""Get the current balance for a given account type (checking/savings)."""</span>
+    balance = <span class="tok-kw">await</span> ctx.deps.db.query_balance(ctx.deps.customer_id, account_type)
+    <span class="tok-kw">if</span> balance <span class="tok-kw">is</span> <span class="tok-kw">None</span>:
+        <span class="tok-com"># ModelRetry sends this message back to the model and lets it try again --</span>
+        <span class="tok-com"># the same "feed the error back" trick from Section 05, now framework-native</span>
+        <span class="tok-kw">raise</span> ModelRetry(f<span class="tok-str">"No {account_type} account found for this customer."</span>)
+    <span class="tok-kw">return</span> balance
+
+<span class="tok-com"># 6. Run it</span>
+result = <span class="tok-kw">await</span> support_agent.run(
+    <span class="tok-str">"What's my checking balance and is anything unusual?"</span>,
+    deps=SupportDeps(customer_id=<span class="tok-str">"cust_123"</span>, db=db_connection),
+)
+print(result.output.response)      <span class="tok-com"># guaranteed to be a valid SupportOutput instance</span>
+print(result.output.risk_level)</pre>
+      </div>
+      <table class="tbl">
+        <tr><th>Concept</th><th>What it does</th></tr>
+        <tr><td class="k"><code class="inline">deps_type</code> / <code class="inline">RunContext</code></td><td>Type-safe dependency injection — database connections, API clients, and session data are passed in at run time via <code class="inline">ctx.deps</code>, never global state, which makes agents genuinely easy to unit test (swap in a fake <code class="inline">db</code> for tests).</td></tr>
+        <tr><td class="k"><code class="inline">output_type</code></td><td>A Pydantic model the agent is guaranteed to return — if validation fails, the framework automatically re-prompts the model to try again, up to a configurable retry budget, with zero manual retry code required.</td></tr>
+        <tr><td class="k"><code class="inline">@agent.tool</code> / <code class="inline">@agent.tool_plain</code></td><td>Register a plain Python function as a tool; use <code class="inline">@agent.tool</code> (not <code class="inline">tool_plain</code>) specifically when the function needs <code class="inline">RunContext</code> access. Docstring and type hints become the tool's schema automatically.</td></tr>
+        <tr><td class="k"><code class="inline">ModelRetry</code></td><td>Raise it inside a tool or validator to send a specific error message back to the model and force another attempt — the framework-native version of Section 05's manual retry loop.</td></tr>
+        <tr><td class="k">Durable execution integration</td><td>Native <code class="inline">TemporalAgent</code> / <code class="inline">DBOSAgent</code> wrappers exist for production resilience — directly the durable-execution material from Topic 7, available as a drop-in integration rather than something you wire up yourself.</td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">API naming has changed — know the current names</span>
+        <p>Pydantic AI's 2.0 release (June 2026) renamed key parameters — <code class="inline">result_type</code> became <code class="inline">output_type</code>, and <code class="inline">system_prompt</code> is now generally <code class="inline">instructions</code>. Older tutorials and blog posts online commonly still show the pre-2.0 names — if you see <code class="inline">result_type</code> in a code sample, mentally translate it, since that's stale API surface as of the current release.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 07 COMPARISON ============ -->
+  <section class="chapter" id="comparison">
+    <div class="chapter-head"><span class="chapter-num">07</span><h2 class="chapter-title">Pydantic AI vs LangGraph</h2></div>
+    <p class="chapter-dek">Not competitors so much as complements — they optimize for different things, and the honest answer to "which one" is "it depends what you're building."</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th></th><th>Pydantic AI</th><th>LangGraph</th></tr>
+        <tr><td class="k">Design center</td><td>Type safety, validation, plain Python, minimal abstraction</td><td>Explicit control flow as a graph — cycles, branching, checkpointing, human-in-the-loop</td></tr>
+        <tr><td class="k">State / control flow</td><td>Simpler, largely linear agent runs; no first-class graph/cycle abstraction</td><td>Full StateGraph — nodes, conditional edges, cycles — built exactly for the multi-step, branching control flow covered in the foundational bible and Topic 1</td></tr>
+        <tr><td class="k">Ecosystem</td><td>Lean by design — model-agnostic core, growing but smaller integration surface</td><td>Large ecosystem — hundreds of integrations (retrievers, vector stores, document loaders) via the broader LangChain project</td></tr>
+        <tr><td class="k">Best fit</td><td>Type-safe, testable services with structured outputs and tool calls as the core need — data extraction pipelines, typed API-backed assistants</td><td>Complex multi-step or multi-agent workflows needing explicit state machines, persistence, and human approval steps — everything in Topics 1, 3, and the foundational bible</td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"How does Pydantic AI compare to LangChain/LangGraph, and when would you pick each?" — Pydantic AI is a minimal agent framework focused on three things: type-safe structured outputs via Pydantic models, dependency injection via RunContext, and model-agnostic agents defined as plain Python, with a lean, un-opinionated core. LangGraph is the graph-based orchestration layer built for genuinely complex control flow — cycles, conditional branching, checkpointed persistence, multi-agent topologies — with a much larger surrounding ecosystem. Pick Pydantic AI when the core need is a reliable, typed, testable agent with tool calls and structured output; pick LangGraph when the workflow itself has real branching, looping, or multi-agent structure that needs to be explicit and inspectable. They can also be combined — nothing stops a LangGraph node from internally using Pydantic AI's typed output guarantees.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 08 FAILURE MODES ============ -->
+  <section class="chapter" id="failure-modes">
+    <div class="chapter-head"><span class="chapter-num">08</span><h2 class="chapter-title">Production Failure Modes</h2></div>
+    <p class="chapter-dek">What actually goes wrong with tool calling in production, tied back to earlier topics.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Vague tool descriptions causing wrong tool selection.</strong> The model chooses tools based entirely on the description text you provide — a generic docstring produces unreliable selection among similar tools, directly measurable via Topic 5's tool-selection-accuracy trajectory metric.</li>
+        <li><strong>Too many tools degrading selection accuracy.</strong> As the tool list grows (the foundational bible's "single-agent ceiling" from the multi-agent doc), the model has more chances to pick wrong — this is one of the concrete reasons Topic 3's multi-agent specialization pattern exists, scoping each agent to a small, focused tool set.</li>
+        <li><strong>Hallucinated arguments that are schema-valid but factually wrong.</strong> A syntactically perfect tool call with a made-up order ID passes validation but fails at execution — this is exactly why the try/except pattern in Section 02 returns the execution error as an observation rather than crashing, letting the model see and correct its own hallucination.</li>
+        <li><strong>Unhandled tool exceptions crashing the entire agent run.</strong> Covered directly in Section 02 — always wrap tool execution, never let a single bad call kill the whole trajectory.</li>
+        <li><strong>Treating structured-output shape validity as correctness.</strong> Covered in Section 04 — a schema-valid response can still be substantively wrong; only Topic 5's evaluation discipline catches that gap.</li>
+        <li><strong>Not caching stable tool schemas.</strong> Every call resends the full tool schema list — if it's static across calls, it's exactly the kind of content Topic 7's prompt caching is built for, and skipping that caching wastes a nearly-free cost optimization.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 09 INTERVIEW ============ -->
+  <section class="chapter" id="interview">
+    <div class="chapter-head"><span class="chapter-num">09</span><h2 class="chapter-title">Interview Cheat-Sheet</h2></div>
+    <p class="chapter-dek">Grouped by depth.</p>
+    <div class="chapter-body">
+      <details class="qa"><summary>Explain what actually happens when a model "calls a tool" — mechanically.<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>Every tool is converted to a JSON Schema and sent with every request. Instead of (or alongside) plain text, the model can emit a structured object naming a tool and its arguments — this is a learned behavior from training (Topic 11's SFT/preference-alignment stages), not a new architectural capability. The model never executes anything itself; your application code reads the emitted call, runs the real function, and sends the result back as a new message for the model to continue reasoning from.</p></div>
+      </details>
+      <details class="qa"><summary>What's the difference between the two mechanisms for getting structured output from an LLM?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>One presents your schema as a fake tool call and reads the arguments the model generates as the result — portable across most tool-calling-capable models, a strong but not absolute guarantee. The other uses native constrained decoding (e.g. OpenAI's JSON schema response format) that makes the model architecturally incapable of producing invalid-shaped output during generation itself. Neither guarantees the content is factually correct — both only guarantee the shape matches your schema.</p></div>
+      </details>
+      <details class="qa"><summary>Why should you always feed a validation error back to the model rather than just retrying blindly?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>A blind retry gives the model no new information — it's likely to make a similar mistake again. Feeding back the specific validation failure ("total_usd must be positive, got -50") gives the model a targeted, actionable correction, which measurably improves retry success rates over blind re-attempts. This is the core mechanism behind both a manual retry loop and Pydantic AI's native ModelRetry.</p></div>
+      </details>
+      <details class="qa"><summary>How would you speed up an agent making several independent tool calls per turn?<span class="qa-tag">execution</span></summary>
+        <div class="qa-body"><p>Check whether the executor runs tool calls sequentially by default — most naive implementations do, even though the model already batches independent calls into one tool_calls array per turn. Switch to concurrent execution (asyncio.gather in Python) for calls within the same turn when they're safe to run in parallel (read-only, no shared side effects), capturing latency that's already available rather than architecturally unlocked by anything new.</p></div>
+      </details>
+      <details class="qa"><summary>Compare Pydantic AI's dependency injection model to how you'd typically pass shared resources in a LangGraph agent.<span class="qa-tag">framework</span></summary>
+        <div class="qa-body"><p>Pydantic AI's RunContext gives compile-time-checked, explicit dependency injection — a typed dataclass passed into agent.run(), accessed in tools via ctx.deps, with static type checkers catching mismatches. LangGraph doesn't have an equivalent first-class DI primitive — shared resources are typically threaded through as closures, class attributes on a wrapping Agent class (as in the foundational bible's Agent.__init__), or via LangGraph's config/configurable parameter, none of which get the same static type-checking guarantee Pydantic AI's RunContext provides.</p></div>
+      </details>
+      <details class="qa"><summary>When would you reach for Pydantic AI instead of LangGraph for a new agent project?<span class="qa-tag">framework</span></summary>
+        <div class="qa-body"><p>When the core requirement is a reliably typed, testable, tool-using agent without complex branching control flow — a data-extraction service, a typed API assistant, anything where dependency injection and guaranteed structured output matter more than explicit multi-step graph orchestration. Reach for LangGraph instead once the workflow needs real cycles, conditional branching, checkpointed persistence, or multi-agent coordination — the graph abstraction is solving a different problem than Pydantic AI's type-safety-first design center.</p></div>
+      </details>
+      <details class="qa"><summary>An agent's tool-selection accuracy has dropped as you've added more tools to it. What do you check first?<span class="qa-tag">production</span></summary>
+        <div class="qa-body"><p>First, whether tool descriptions are specific and distinguishable enough for the model to reliably choose between similar-sounding tools — vague docstrings are the most common cause. Second, whether the tool count itself has grown past what a single agent can reliably discriminate between, which is exactly the signal from Topic 3 that argues for splitting into multiple specialized agents each with a smaller, focused tool set rather than one agent with an ever-growing list.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ 10 GLOSSARY ============ -->
+  <section class="chapter" id="glossary">
+    <div class="chapter-head"><span class="chapter-num">10</span><h2 class="chapter-title">Glossary</h2></div>
+    <p class="chapter-dek">Every term used in this document.</p>
+    <div class="chapter-body">
+      <dl class="glossary-grid">
+        <div class="gterm"><dt>Tool / function calling</dt><dd>A trained model behavior: emitting a structured object naming a function and arguments instead of plain text.</dd></div>
+        <div class="gterm"><dt>JSON Schema</dt><dd>The typed description format tools and structured outputs are both expressed as, sent to the model every call.</dd></div>
+        <div class="gterm"><dt>@tool / StructuredTool</dt><dd>LangChain primitives for registering a Python function as a model-callable tool.</dd></div>
+        <div class="gterm"><dt>args_schema</dt><dd>A Pydantic model defining and validating a tool's expected arguments.</dd></div>
+        <div class="gterm"><dt>with_structured_output()</dt><dd>LangChain method forcing a model call to return a validated instance of a given Pydantic schema.</dd></div>
+        <div class="gterm"><dt>Constrained decoding</dt><dd>Native provider mechanism restricting token generation itself to only produce schema-valid output.</dd></div>
+        <div class="gterm"><dt>Validation-and-retry loop</dt><dd>Feeding a specific validation error back to the model to prompt a targeted correction on the next attempt.</dd></div>
+        <div class="gterm"><dt>Pydantic AI</dt><dd>A minimal, type-safe agent framework centered on structured outputs, dependency injection, and plain Python.</dd></div>
+        <div class="gterm"><dt>RunContext</dt><dd>Pydantic AI's typed dependency-injection carrier, passed into tools and dynamic instructions.</dd></div>
+        <div class="gterm"><dt>deps_type / output_type</dt><dd>Pydantic AI Agent parameters declaring the dependency type and guaranteed output schema.</dd></div>
+        <div class="gterm"><dt>ModelRetry</dt><dd>Pydantic AI exception that sends a specific error back to the model and forces another attempt.</dd></div>
+        <div class="gterm"><dt>Parallel tool calls</dt><dd>Multiple tool calls emitted in a single model turn, executable concurrently by application code.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ 11 RESOURCES ============ -->
+  <section class="chapter" id="resources">
+    <div class="chapter-head"><span class="chapter-num">11</span><h2 class="chapter-title">Resources</h2></div>
+    <p class="chapter-dek">Primary sources worth reading directly.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Pydantic AI official docs</strong> (pydantic.dev/docs/ai) — the current 2.0 API surface, always the source of truth over older tutorials</li>
+        <li><strong>LangChain — Tool calling conceptual guide</strong> (docs.langchain.com) — provider-by-provider tool-calling mechanics</li>
+        <li><strong>OpenAI — Function calling and structured outputs guide</strong> — the native constrained-decoding mechanism specifics</li>
+        <li><strong>Anthropic — Tool use documentation</strong> — the tool_use/tool_result content block format</li>
+      </ul>
+      <div class="callout">
+        <span class="callout-label">How to actually solidify this</span>
+        <p>Take one tool from an agent you've already built and deliberately make its docstring vague, then measure how often the model picks the wrong tool from a set of 4-5 similar ones (tying directly to Topic 5's tool-selection-accuracy metric) — then fix the docstring and measure again. Watching that number move from a bad description to a good one is worth more than any amount of reading about "prompt quality mattering."</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">Topic 12 of 14 — Tool Calling, Structured Outputs &amp; Pydantic AI. Next up: Vector Databases &amp; Context Engineering.</div>
+</main>
+</div>
+
+<script>
+const links = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('section.chapter');
+const map = new Map();
+links.forEach(l => map.set(l.getAttribute('href').slice(1), l));
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const link = map.get(entry.target.id);
+    if(!link) return;
+    if(entry.isIntersecting){
+      links.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, {rootMargin: '-15% 0px -70% 0px', threshold: 0});
+sections.forEach(s => io.observe(s));
+</script>
+</body>
+</html>

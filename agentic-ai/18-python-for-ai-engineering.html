@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python for AI Engineering — Implementation Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d10; --bg-raised:#12151a; --bg-card:#14181f;
+  --line:#242a33; --line-soft:#1b2028;
+  --ink:#e7e9ec; --ink-dim:#9aa3b0; --ink-faint:#5c6672;
+  --amber:#ff9f40; --amber-dim:#c97a2e; --lime:#c9f04c; --cyan:#5fd9c9; --violet:#b592ff; --rose:#ff7a8a;
+  --serif:'Source Serif 4', Georgia, serif;
+  --display:'Space Grotesk', sans-serif;
+  --mono:'JetBrains Mono', 'Courier New', monospace;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:radial-gradient(var(--line-soft) 1px, transparent 1px);
+  background-size:22px 22px; background-color:var(--bg);
+  color:var(--ink); font-family:var(--serif); font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+a{color:var(--amber); text-decoration:none;}
+::selection{background:var(--amber); color:#111;}
+.shell{display:grid; grid-template-columns:290px 1fr; min-height:100vh;}
+@media (max-width:920px){ .shell{grid-template-columns:1fr;} .side{display:none;} }
+.side{position:sticky; top:0; height:100vh; overflow-y:auto; border-right:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(18,21,26,.9), rgba(11,13,16,.9)); padding:28px 20px 60px;}
+.side::-webkit-scrollbar{width:6px;} .side::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.brand{font-family:var(--display); font-weight:700; font-size:15px; color:var(--ink); margin-bottom:2px;}
+.brand span{color:var(--amber);}
+.brand-sub{font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-bottom:24px;}
+.back-link{display:inline-block; font-family:var(--mono); font-size:11px; color:var(--cyan); margin-bottom:20px; border:1px solid var(--line); padding:5px 10px; border-radius:6px;}
+.nav-link{display:flex; align-items:baseline; gap:7px; font-family:var(--display); font-size:12px; color:var(--ink-dim);
+  padding:4px 7px; border-radius:6px; border-left:2px solid transparent; transition:.15s;}
+.nav-link:hover{color:var(--ink); background:var(--bg-raised);}
+.nav-link.active{color:var(--amber); border-left-color:var(--amber); background:var(--bg-raised);}
+.nav-num{font-family:var(--mono); font-size:9.5px; color:var(--ink-faint); min-width:20px;}
+.main{max-width:920px; padding:0 44px 140px; margin:0 auto;}
+@media (max-width:700px){ .main{padding:0 20px 100px;} }
+.hero{padding:76px 0 54px; border-bottom:1px solid var(--line);}
+.hero-eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--lime);
+  margin-bottom:18px; display:flex; align-items:center; gap:10px;}
+.hero-eyebrow::before{content:''; width:22px; height:1px; background:var(--lime); display:inline-block;}
+h1.title{font-family:var(--display); font-weight:700; font-size:clamp(28px,4.6vw,48px); line-height:1.1; letter-spacing:-.02em; color:var(--ink); max-width:17ch;}
+h1.title em{font-style:normal; color:var(--amber);}
+.hero-sub{font-family:var(--serif); font-size:18px; color:var(--ink-dim); max-width:62ch; margin-top:20px;}
+.tag-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:26px;}
+.tag{font-family:var(--mono); font-size:11px; padding:5px 11px; border-radius:20px; border:1px solid var(--line); color:var(--ink-dim); background:var(--bg-raised);}
+section.chapter{padding:56px 0; border-bottom:1px solid var(--line);}
+section.chapter:last-of-type{border-bottom:none;}
+.chapter-head{display:flex; align-items:flex-start; gap:16px; margin-bottom:8px;}
+.chapter-num{font-family:var(--mono); font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:20px; padding:3px 11px; margin-top:6px; white-space:nowrap;}
+h2.chapter-title{font-family:var(--display); font-weight:600; font-size:clamp(21px,3vw,28px); color:var(--ink); letter-spacing:-.01em;}
+.chapter-dek{font-family:var(--serif); font-style:italic; color:var(--ink-dim); font-size:15.5px; max-width:66ch; margin:14px 0 28px 0; padding-left:66px;}
+@media (max-width:700px){.chapter-dek{padding-left:0;}}
+.chapter-body{padding-left:66px;}
+@media (max-width:700px){.chapter-body{padding-left:0;}}
+.chapter-body h3{font-family:var(--display); font-weight:600; font-size:18px; color:var(--ink); margin:28px 0 12px;}
+.chapter-body h4{font-family:var(--display); font-weight:600; color:var(--cyan); margin:20px 0 10px; text-transform:uppercase; letter-spacing:.04em; font-size:11.5px;}
+.chapter-body p{color:var(--ink-dim); margin-bottom:14px; max-width:72ch;}
+.chapter-body ul, .chapter-body ol{color:var(--ink-dim); margin:0 0 16px 20px; max-width:70ch;}
+.chapter-body li{margin-bottom:6px;}
+.chapter-body strong{color:var(--ink); font-weight:600;}
+code.inline{font-family:var(--mono); font-size:.87em; background:var(--bg-raised); color:var(--lime); padding:1px 6px; border-radius:4px; border:1px solid var(--line);}
+.callout{border-left:3px solid var(--amber); background:var(--bg-card); padding:15px 18px; border-radius:0 8px 8px 0; margin:18px 0; max-width:70ch;}
+.callout p{margin-bottom:0; color:var(--ink-dim); font-size:14.2px;}
+.callout .callout-label{font-family:var(--mono); font-size:10.2px; text-transform:uppercase; letter-spacing:.1em; color:var(--amber); margin-bottom:6px; display:block;}
+.callout.interview{border-left-color:var(--violet);} .callout.interview .callout-label{color:var(--violet);}
+.callout.pitfall{border-left-color:var(--rose);} .callout.pitfall .callout-label{color:var(--rose);}
+.callout.focus{border-left-color:var(--lime); background:#151b12;} .callout.focus .callout-label{color:var(--lime);}
+.code-wrap{background:#0a0c0f; border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:16px 0 22px;}
+.code-head{display:flex; align-items:center; justify-content:space-between; padding:9px 14px; border-bottom:1px solid var(--line); background:var(--bg-raised); font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+.code-dots{display:flex; gap:5px;} .code-dots span{width:8px; height:8px; border-radius:50%; background:var(--line);}
+pre{padding:15px 18px; overflow-x:auto; font-family:var(--mono); font-size:12.4px; line-height:1.68; color:#d7dbe0;}
+.tok-kw{color:var(--violet);} .tok-str{color:var(--lime);} .tok-com{color:var(--ink-faint); font-style:italic;} .tok-fn{color:var(--cyan);} .tok-num{color:var(--amber);}
+.tbl{width:100%; border-collapse:collapse; margin:16px 0 24px; font-size:12.8px; max-width:78ch;}
+.tbl th{text-align:left; font-family:var(--mono); font-size:9.8px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-faint); padding:8px 10px; border-bottom:1px solid var(--line);}
+.tbl td{padding:8px 10px; border-bottom:1px solid var(--line-soft); color:var(--ink-dim); vertical-align:top;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl td.k{color:var(--ink); font-family:var(--mono); font-size:11.6px; white-space:nowrap;}
+.qa{border:1px solid var(--line); border-radius:10px; margin-bottom:10px; background:var(--bg-card); overflow:hidden;}
+.qa summary{list-style:none; cursor:pointer; padding:14px 18px; display:flex; gap:12px; align-items:flex-start; font-family:var(--display); font-size:13.5px; color:var(--ink); font-weight:500;}
+.qa summary::-webkit-details-marker{display:none;}
+.qa summary::before{content:'+'; font-family:var(--mono); color:var(--amber); font-size:16px; line-height:1;}
+.qa[open] summary::before{content:'–';}
+.qa .qa-body{padding:0 18px 16px 40px; color:var(--ink-dim); font-size:13.5px; max-width:68ch;}
+.qa .qa-body p{margin-bottom:10px;}
+.qa-tag{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; background:var(--bg-raised); color:var(--ink-faint); padding:2px 8px; border-radius:20px; border:1px solid var(--line); margin-left:auto; white-space:nowrap; flex-shrink:0;}
+.glossary-grid{display:grid; grid-template-columns:1fr 1fr; gap:2px 28px;}
+@media (max-width:700px){.glossary-grid{grid-template-columns:1fr;}}
+.gterm{padding:12px 0; border-bottom:1px solid var(--line-soft);}
+.gterm dt{font-family:var(--mono); color:var(--cyan); font-size:12.5px; margin-bottom:4px;}
+.gterm dd{color:var(--ink-dim); font-size:12.5px; line-height:1.55;}
+.footer{padding:60px 0 20px; text-align:center; color:var(--ink-faint); font-family:var(--mono); font-size:12px;}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav class="side" id="side">
+  <a class="back-link" href="#">← Doc 17: Classical ML</a>
+  <div class="brand">Python for <span>AI Engineering</span></div>
+  <div class="brand-sub">Doc 18 — implementation reference</div>
+  <a class="nav-link" href="#mental-model"><span class="nav-num">00</span>The Mental Model</a>
+  <a class="nav-link" href="#core"><span class="nav-num">01</span>Python Core, Fast</a>
+  <a class="nav-link" href="#functional"><span class="nav-num">02</span>★ Functional Patterns &amp; Decorators</a>
+  <a class="nav-link" href="#oop"><span class="nav-num">03</span>OOP for AI Engineering</a>
+  <a class="nav-link" href="#types"><span class="nav-num">04</span>The Type System</a>
+  <a class="nav-link" href="#pydantic"><span class="nav-num">05</span>★ Pydantic, In Full</a>
+  <a class="nav-link" href="#errors"><span class="nav-num">06</span>Exceptions &amp; Error Handling</a>
+  <a class="nav-link" href="#generators"><span class="nav-num">07</span>★ Generators &amp; Streaming</a>
+  <a class="nav-link" href="#context-managers"><span class="nav-num">08</span>Context Managers</a>
+  <a class="nav-link" href="#async"><span class="nav-num">09</span>★★ Async Python</a>
+  <a class="nav-link" href="#concurrency"><span class="nav-num">10</span>Concurrency &amp; Parallelism</a>
+  <a class="nav-link" href="#http"><span class="nav-num">11</span>HTTP &amp; Networking</a>
+  <a class="nav-link" href="#calling-llms"><span class="nav-num">12</span>★★ Calling LLMs from Python</a>
+  <a class="nav-link" href="#production"><span class="nav-num">13</span>★ Production Python for AI</a>
+  <a class="nav-link" href="#testing"><span class="nav-num">14</span>Testing</a>
+  <a class="nav-link" href="#performance"><span class="nav-num">15</span>Performance</a>
+  <a class="nav-link" href="#packaging"><span class="nav-num">16</span>Packaging &amp; Structure</a>
+  <a class="nav-link" href="#ai-patterns"><span class="nav-num">17</span>★★ AI Engineering Patterns</a>
+  <a class="nav-link" href="#interview"><span class="nav-num">18</span>Interview Cheat-Sheet</a>
+  <a class="nav-link" href="#glossary"><span class="nav-num">19</span>Glossary</a>
+  <a class="nav-link" href="#resources"><span class="nav-num">20</span>Resources</a>
+</nav>
+
+<main class="main">
+  <div class="hero">
+    <div class="hero-eyebrow">Deep reference · Doc 18 · Implementation-focused</div>
+    <h1 class="title">Python <em>for AI Engineering</em></h1>
+    <p class="hero-sub">Not a Python course — the specific slice of Python that actually shows up when you're implementing agents: decorators that become retry wrappers, Pydantic that becomes tool schemas, async that becomes concurrent tool calls, and the production patterns (provider abstraction, structured logging, graceful shutdown) that turn a LangChain prototype into something you'd actually ship. Every section that matters most is built out with real, runnable LangChain/LangGraph code.</p>
+    <div class="tag-row">
+      <span class="tag">Async Python</span><span class="tag">Pydantic</span><span class="tag">Decorators</span>
+      <span class="tag">Generators / Streaming</span><span class="tag">LangChain Clients</span><span class="tag">Provider Abstraction</span>
+      <span class="tag">Retry &amp; Rate-Limit Wrappers</span><span class="tag">Testing LLM Code</span>
+    </div>
+  </div>
+
+  <!-- ============ 00 MENTAL MODEL ============ -->
+  <section class="chapter" id="mental-model">
+    <div class="chapter-head"><span class="chapter-num">00</span><h2 class="chapter-title">The Mental Model</h2></div>
+    <p class="chapter-dek">Why Python, and the handful of runtime facts that explain nearly every "why does this behave weirdly" moment later in this doc.</p>
+    <div class="chapter-body">
+      <p>Python dominates AI engineering for a boring but decisive reason: every major model provider SDK, every agent framework in this series (LangChain, LangGraph, Pydantic AI, ADK), and nearly all ML tooling ships Python-first — the ecosystem gravity is now self-reinforcing regardless of the language's own performance characteristics.</p>
+      <table class="tbl">
+        <tr><th>Fact</th><th>Why it matters later</th></tr>
+        <tr><td class="k">CPython, interpreted</td><td>Bytecode compiled then interpreted — this is why raw CPU-bound Python loops are slow, and why Section 10's process/thread distinction matters</td></tr>
+        <tr><td class="k">Everything is an object; variables are references</td><td>Assignment binds a name to an object, it doesn't copy — mutable default arguments and shared-reference bugs both trace back to this</td></tr>
+        <tr><td class="k">Mutable vs immutable</td><td>Lists/dicts/sets mutate in place; strings/tuples/ints don't — this is the single most common source of "why did my function change something I didn't pass by reference on purpose" bugs</td></tr>
+        <tr><td class="k">The GIL (Global Interpreter Lock)</td><td>Only one thread executes Python bytecode at a time — the entire reason threads help with I/O-bound work but not CPU-bound work in pure Python (Section 10)</td></tr>
+        <tr><td class="k">Reference-counting GC + cycle detector</td><td>Objects are freed when their reference count hits zero; a periodic cycle detector catches reference cycles a pure refcount scheme would leak</td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">The mutable-default-argument trap — a real, common bug</span>
+        <p>A default argument is evaluated once, at function definition time, not on every call — so <code class="inline">def add_message(msg, history=[])</code> reuses the <em>same list object</em> across every call that doesn't pass its own <code class="inline">history</code>, silently accumulating state across unrelated calls. Always default to <code class="inline">None</code> and construct the mutable object inside the function body instead.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 01 CORE ============ -->
+  <section class="chapter" id="core">
+    <div class="chapter-head"><span class="chapter-num">01</span><h2 class="chapter-title">Python Core, Fast</h2></div>
+    <p class="chapter-dek">Since DSA fundamentals are already covered separately, this section is a fast, dense reference of the idioms that show up constantly in real agent code — not a syntax tutorial.</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>idioms_you_will_actually_write.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-com"># Comprehensions -- the default way to transform/filter in agent code</span>
+tool_names = [t.name <span class="tok-kw">for</span> t <span class="tok-kw">in</span> tools <span class="tok-kw">if</span> t.enabled]
+tools_by_name = {t.name: t <span class="tok-kw">for</span> t <span class="tok-kw">in</span> tools}          <span class="tok-com"># the exact line from the foundational bible</span>
+
+<span class="tok-com"># Unpacking -- constantly used when handling tool_calls</span>
+name, args, call_id = call[<span class="tok-str">"name"</span>], call[<span class="tok-str">"args"</span>], call[<span class="tok-str">"id"</span>]
+
+<span class="tok-com"># *args / **kwargs -- how LangChain's Runnable.invoke(**kwargs) style APIs work</span>
+<span class="tok-kw">def</span> call_tool(name: str, <span class="tok-kw">**</span>kwargs):
+    <span class="tok-kw">return</span> tools_by_name[name].invoke(kwargs)
+
+<span class="tok-com"># enumerate + zip -- pairing parallel lists (e.g. queries and their results)</span>
+<span class="tok-kw">for</span> i, (query, result) <span class="tok-kw">in</span> enumerate(<span class="tok-kw">zip</span>(queries, results)):
+    print(f<span class="tok-str">"{i}: {query} -> {result}"</span>)
+
+<span class="tok-com"># any/all -- checking agent state conditions cleanly</span>
+<span class="tok-kw">if</span> <span class="tok-kw">any</span>(msg.tool_calls <span class="tok-kw">for</span> msg <span class="tok-kw">in</span> recent_messages):
+    ...
+
+<span class="tok-com"># Shallow vs deep copy -- matters when branching LangGraph state manually</span>
+<span class="tok-kw">import</span> copy
+new_state = copy.deepcopy(state)   <span class="tok-com"># shallow copy() would still share nested dict/list references</span></pre>
+      </div>
+      <div class="callout">
+        <span class="callout-label">Shallow vs deep copy, precisely</span>
+        <p><code class="inline">copy.copy()</code> duplicates the outer container only — nested mutable objects (a list inside a dict) are still shared between the original and the copy, so mutating a nested value affects both. <code class="inline">copy.deepcopy()</code> recursively duplicates everything. This distinction matters directly in agentic code any time you're branching or snapshotting state (exactly the foundational bible's time-travel material) — a shallow copy of an <code class="inline">AgentState</code> dict can silently let two "separate" branches mutate the same underlying messages list.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 FUNCTIONAL ============ -->
+  <section class="chapter" id="functional">
+    <div class="chapter-head"><span class="chapter-num">02 ★</span><h2 class="chapter-title">Functional Patterns &amp; Decorators</h2></div>
+    <p class="chapter-dek">Decorators are not academic Python trivia in this domain — they're the actual mechanism behind retry logic, caching, and tool registration throughout LangChain.</p>
+    <div class="chapter-body">
+      <p>A decorator is a function that takes a function and returns a (usually wrapped) function — this is precisely the mechanism behind <code class="inline">@tool</code> from Topic 12, <code class="inline">@agent.tool</code> from Pydantic AI, and every retry/caching wrapper you'll write yourself.</p>
+      <div class="code-wrap">
+        <div class="code-head"><span>retry_decorator.py — a real, usable pattern</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">import</span> functools, time, random
+
+<span class="tok-kw">def</span> retry_with_backoff(max_attempts: <span class="tok-kw">int</span> = <span class="tok-num">3</span>, base_delay: <span class="tok-kw">float</span> = <span class="tok-num">1.0</span>):
+    <span class="tok-kw">def</span> decorator(fn):
+        <span class="tok-kw">@functools.wraps</span>(fn)          <span class="tok-com"># preserves fn's __name__/__doc__ -- easy to forget, breaks introspection</span>
+        <span class="tok-kw">def</span> wrapper(<span class="tok-kw">*</span>args, <span class="tok-kw">**</span>kwargs):
+            <span class="tok-kw">for</span> attempt <span class="tok-kw">in</span> <span class="tok-kw">range</span>(max_attempts):
+                <span class="tok-kw">try</span>:
+                    <span class="tok-kw">return</span> fn(<span class="tok-kw">*</span>args, <span class="tok-kw">**</span>kwargs)
+                <span class="tok-kw">except</span> RetryableError <span class="tok-kw">as</span> e:
+                    <span class="tok-kw">if</span> attempt == max_attempts - <span class="tok-num">1</span>:
+                        <span class="tok-kw">raise</span>
+                    delay = base_delay <span class="tok-kw">*</span> (<span class="tok-num">2</span> <span class="tok-kw">**</span> attempt) + random.uniform(<span class="tok-num">0</span>, <span class="tok-num">0.5</span>)  <span class="tok-com"># exp backoff + jitter</span>
+                    time.sleep(delay)
+        <span class="tok-kw">return</span> wrapper
+    <span class="tok-kw">return</span> decorator
+
+<span class="tok-kw">@retry_with_backoff</span>(max_attempts=<span class="tok-num">5</span>)
+<span class="tok-kw">def</span> call_model(prompt: str) -> str:
+    <span class="tok-kw">return</span> model.invoke(prompt)</pre>
+      </div>
+      <table class="tbl">
+        <tr><th>Tool</th><th>Use in agent code</th></tr>
+        <tr><td class="k">functools.lru_cache</td><td>Memoize pure, expensive functions (e.g. a tokenizer count) — never cache a function whose result depends on external state (like "current time" or "live API data")</td></tr>
+        <tr><td class="k">functools.partial</td><td>Pre-bind arguments to a tool function before registering it, e.g. binding a database connection into a tool's signature without exposing it to the model</td></tr>
+        <tr><td class="k">Closures</td><td>How <code class="inline">retry_with_backoff(max_attempts=5)</code> above "remembers" <code class="inline">max_attempts</code> inside <code class="inline">wrapper</code> — the inner function closes over the outer function's local variables</td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"Write a decorator that retries a function with exponential backoff." — This is a genuinely common live-coding prompt for AI engineering roles specifically, because retry logic around flaky LLM/tool calls is universal. Know the shape above cold: outer function takes config, returns a decorator; decorator takes the target function, returns a wrapper; wrapper does the actual try/except/backoff loop; always use <code class="inline">functools.wraps</code> so the wrapped function doesn't lose its identity for logging/introspection.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 OOP ============ -->
+  <section class="chapter" id="oop">
+    <div class="chapter-head"><span class="chapter-num">03</span><h2 class="chapter-title">OOP for AI Engineering</h2></div>
+    <p class="chapter-dek">The foundational bible's <code class="inline">Agent</code> class is object-oriented Python end to end — here's the specific subset that shows up in that style of code.</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>abstract_tool_base.py — ABCs for a provider-agnostic tool interface</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> abc <span class="tok-kw">import</span> ABC, abstractmethod
+<span class="tok-kw">from</span> dataclasses <span class="tok-kw">import</span> dataclass
+
+<span class="tok-kw">class</span> BaseTool(ABC):
+    <span class="tok-str">"""Every concrete tool must implement invoke() -- enforced at instantiation time."""</span>
+    <span class="tok-kw">@abstractmethod</span>
+    <span class="tok-kw">def</span> invoke(self, args: <span class="tok-kw">dict</span>) -> str: ...
+
+<span class="tok-kw">@dataclass</span>
+<span class="tok-kw">class</span> SearchTool(BaseTool):                 <span class="tok-com"># dataclass: auto __init__, __repr__, __eq__</span>
+    api_key: str
+    max_results: <span class="tok-kw">int</span> = <span class="tok-num">5</span>
+
+    <span class="tok-kw">def</span> invoke(self, args: <span class="tok-kw">dict</span>) -> str:
+        <span class="tok-kw">return</span> search_api(args[<span class="tok-str">"query"</span>], self.api_key, self.max_results)</pre>
+      </div>
+      <table class="tbl">
+        <tr><th>Concept</th><th>Where it shows up</th></tr>
+        <tr><td class="k">Composition over inheritance</td><td>The foundational bible's <code class="inline">Agent</code> class <em>has</em> a graph, a model, and a tools dict — it doesn't inherit from them. Prefer this shape for agent classes generally; deep inheritance hierarchies make agent behavior hard to trace.</td></tr>
+        <tr><td class="k">dataclass vs Pydantic BaseModel</td><td>dataclass gives you structure with zero runtime validation; Pydantic (Section 05) gives you structure <em>with</em> validation. Use dataclass for internal, trusted data; Pydantic for anything crossing a boundary — a tool's arguments, an LLM's structured output, an API request body.</td></tr>
+        <tr><td class="k">Magic methods</td><td><code class="inline">__repr__</code> for debuggable object printing (essential when logging agent state), <code class="inline">__eq__</code> for comparing tool calls in tests, <code class="inline">__enter__</code>/<code class="inline">__exit__</code> for context managers (Section 08)</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 04 TYPES ============ -->
+  <section class="chapter" id="types">
+    <div class="chapter-head"><span class="chapter-num">04</span><h2 class="chapter-title">The Type System</h2></div>
+    <p class="chapter-dek">Type hints are not decoration in this domain — they're the literal source of the JSON schemas sent to LLMs (Topic 12).</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>types_that_matter.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> typing <span class="tok-kw">import</span> Optional, Union, Literal, TypedDict, Callable, Protocol
+
+<span class="tok-com"># Literal -- constrains a field to specific values; becomes an enum in the JSON schema</span>
+<span class="tok-kw">def</span> classify(text: str) -> <span class="tok-kw">Literal</span>[<span class="tok-str">"billing"</span>, <span class="tok-str">"technical"</span>, <span class="tok-str">"account"</span>]: ...
+
+<span class="tok-com"># TypedDict -- exactly what AgentState is built from in LangGraph</span>
+<span class="tok-kw">class</span> AgentState(TypedDict):
+    messages: <span class="tok-kw">list</span>
+    step_count: <span class="tok-kw">int</span>
+
+<span class="tok-com"># Protocol -- structural typing; anything with an invoke() method satisfies this,</span>
+<span class="tok-com"># no inheritance required -- how LangChain's Runnable-like interfaces are typed</span>
+<span class="tok-kw">class</span> Invocable(Protocol):
+    <span class="tok-kw">def</span> invoke(self, args: <span class="tok-kw">dict</span>) -> str: ...
+
+<span class="tok-com"># Callable type -- typing a function passed as a callback/handler</span>
+OnToolCall = Callable[[str, <span class="tok-kw">dict</span>], <span class="tok-kw">None</span>]</pre>
+      </div>
+      <div class="callout">
+        <span class="callout-label">Why this connects directly to Topic 12</span>
+        <p>When LangChain converts a Python function into a tool via <code class="inline">@tool</code>, it introspects the function's type hints to build the JSON Schema sent to the model — a parameter typed <code class="inline">Literal["a", "b"]</code> becomes an enum constraint in the schema; <code class="inline">Optional[str]</code> becomes a nullable/non-required field. Sloppy or missing type hints on a tool function directly degrade the schema the model sees, which directly affects tool-call argument accuracy.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 05 PYDANTIC ============ -->
+  <section class="chapter" id="pydantic">
+    <div class="chapter-head"><span class="chapter-num">05 ★</span><h2 class="chapter-title">Pydantic, In Full</h2></div>
+    <p class="chapter-dek">The single most load-bearing library in this entire document — already covered from the LLM-structured-output side in Topic 12; here's the general-purpose depth underneath that.</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>pydantic_core.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> pydantic <span class="tok-kw">import</span> BaseModel, Field, field_validator, ValidationError
+
+<span class="tok-kw">class</span> RetrievalConfig(BaseModel):
+    top_k: <span class="tok-kw">int</span> = Field(default=<span class="tok-num">5</span>, gt=<span class="tok-num">0</span>, le=<span class="tok-num">50</span>, description=<span class="tok-str">"Number of chunks to retrieve"</span>)
+    threshold: <span class="tok-kw">float</span> = Field(default=<span class="tok-num">0.7</span>, ge=<span class="tok-num">0.0</span>, le=<span class="tok-num">1.0</span>)
+    filters: <span class="tok-kw">dict</span>[str, str] | <span class="tok-kw">None</span> = <span class="tok-kw">None</span>
+
+    <span class="tok-kw">@field_validator</span>(<span class="tok-str">"top_k"</span>)
+    <span class="tok-kw">@classmethod</span>
+    <span class="tok-kw">def</span> reasonable_top_k(<span class="tok-kw">cls</span>, v):
+        <span class="tok-kw">if</span> v > <span class="tok-num">20</span>:
+            <span class="tok-kw">raise</span> ValueError(<span class="tok-str">"top_k above 20 rarely improves recall and inflates cost -- consider reranking instead"</span>)
+        <span class="tok-kw">return</span> v
+
+<span class="tok-com"># nested models compose cleanly</span>
+<span class="tok-kw">class</span> AgentConfig(BaseModel):
+    name: str
+    retrieval: RetrievalConfig = RetrievalConfig()
+
+<span class="tok-com"># serialization</span>
+config = AgentConfig(name=<span class="tok-str">"support-agent"</span>)
+config.model_dump()          <span class="tok-com"># -> plain dict</span>
+config.model_dump_json()     <span class="tok-com"># -> JSON string</span>
+AgentConfig.model_validate({<span class="tok-str">"name"</span>: <span class="tok-str">"x"</span>})   <span class="tok-com"># -> parse + validate a dict</span>
+
+<span class="tok-com"># catching validation errors with structured detail -- exactly what feeds</span>
+<span class="tok-com"># the "feed the error back to the model" retry pattern from Topic 12</span>
+<span class="tok-kw">try</span>:
+    RetrievalConfig(top_k=<span class="tok-num">-1</span>)
+<span class="tok-kw">except</span> ValidationError <span class="tok-kw">as</span> e:
+    print(e.errors())   <span class="tok-com"># structured list of {loc, msg, type} -- not just a string</span></pre>
+      </div>
+      <table class="tbl">
+        <tr><th>Where it shows up across this whole series</th><th>Doc</th></tr>
+        <tr><td>Tool argument schemas (<code class="inline">args_schema</code>)</td><td class="k">Topic 12</td></tr>
+        <tr><td>Structured LLM output (<code class="inline">with_structured_output</code>)</td><td class="k">Topic 12</td></tr>
+        <tr><td>Pydantic AI's <code class="inline">output_type</code>, <code class="inline">deps_type</code></td><td class="k">Topic 12</td></tr>
+        <tr><td>FastAPI request/response models</td><td class="k">This doc, Section 13</td></tr>
+        <tr><td>Config classes (env-driven settings)</td><td class="k">This doc, Section 13</td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"Why use Pydantic instead of a plain dataclass or dict for tool arguments?" — Pydantic validates at runtime with rich, structured error messages, coerces compatible types automatically, and generates a JSON Schema directly from the model definition — that schema is exactly what gets sent to the LLM as a tool's parameter spec. A plain dataclass gives you structure with zero runtime enforcement; a raw dict gives you neither structure nor validation. For anything crossing a trust boundary (model output, external API input), Pydantic's validation is the difference between catching a bad value immediately with a clear error versus a confusing failure three steps downstream.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 06 ERRORS ============ -->
+  <section class="chapter" id="errors">
+    <div class="chapter-head"><span class="chapter-num">06</span><h2 class="chapter-title">Exceptions &amp; Error Handling</h2></div>
+    <p class="chapter-dek">Directly continuous with Topic 7's retry/circuit-breaker material and Topic 12's tool-execution error handling — here's the Python mechanics underneath both.</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>exception_hierarchy.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-com"># Design a custom exception hierarchy that distinguishes retryable from fatal --</span>
+<span class="tok-com"># this single distinction drives almost every retry decision in agent code</span>
+
+<span class="tok-kw">class</span> AgentError(Exception):
+    <span class="tok-str">"""Base for all agent-level errors."""</span>
+
+<span class="tok-kw">class</span> RetryableError(AgentError):
+    <span class="tok-str">"""Transient -- rate limits, timeouts, 5xx responses. Safe to retry."""</span>
+
+<span class="tok-kw">class</span> FatalError(AgentError):
+    <span class="tok-str">"""Non-retryable -- bad auth, malformed request, permanent 4xx. Retrying wastes time."""</span>
+
+<span class="tok-kw">def</span> call_tool_safely(tool, args) -> str:
+    <span class="tok-kw">try</span>:
+        <span class="tok-kw">return</span> <span class="tok-kw">str</span>(tool.invoke(args))
+    <span class="tok-kw">except</span> RateLimitError <span class="tok-kw">as</span> e:
+        <span class="tok-kw">raise</span> RetryableError(<span class="tok-kw">str</span>(e)) <span class="tok-kw">from</span> e     <span class="tok-com"># exception chaining preserves the original traceback</span>
+    <span class="tok-kw">except</span> AuthenticationError <span class="tok-kw">as</span> e:
+        <span class="tok-kw">raise</span> FatalError(<span class="tok-kw">str</span>(e)) <span class="tok-kw">from</span> e
+    <span class="tok-kw">except</span> Exception <span class="tok-kw">as</span> e:
+        <span class="tok-kw">return</span> f<span class="tok-str">"Error: tool failed: {e}"</span>       <span class="tok-com"># Topic 12's pattern: feed it back as an observation</span></pre>
+      </div>
+      <div class="callout">
+        <span class="callout-label">Fail-fast vs graceful failure — the actual decision rule</span>
+        <p>Fail-fast (let the exception propagate and crash) is correct at startup/configuration time — a missing API key should crash immediately, not fail mysteriously three requests later. Graceful failure (catch, log, return a degraded result) is correct mid-request in a running agent — a single failed tool call shouldn't take down an entire multi-step trajectory, exactly Topic 12's <code class="inline">take_action</code> try/except discipline.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 07 GENERATORS ============ -->
+  <section class="chapter" id="generators">
+    <div class="chapter-head"><span class="chapter-num">07 ★</span><h2 class="chapter-title">Generators &amp; Streaming</h2></div>
+    <p class="chapter-dek">The Python mechanism directly underneath every streaming LLM response and every <code class="inline">graph.stream(...)</code> call in this series.</p>
+    <div class="chapter-body">
+      <p>A generator function uses <code class="inline">yield</code> instead of <code class="inline">return</code> — calling it doesn't run the function body immediately, it returns an iterator that runs the body incrementally, one <code class="inline">yield</code> at a time, only as the caller asks for the next value. This is <strong>lazy evaluation</strong>: nothing computes until it's actually needed, which is exactly why streaming works — tokens are produced and consumed one at a time instead of the caller waiting for the entire response to be built in memory first.</p>
+      <div class="code-wrap">
+        <div class="code-head"><span>streaming_generator.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">def</span> stream_tokens(model, prompt: str):
+    <span class="tok-str">"""A generator wrapping a streaming LLM call."""</span>
+    <span class="tok-kw">for</span> chunk <span class="tok-kw">in</span> model.stream(prompt):     <span class="tok-com"># model.stream() is itself a generator</span>
+        <span class="tok-kw">if</span> chunk.content:                 <span class="tok-com"># exactly the Topic 0 gotcha: empty content = tool call in progress</span>
+            <span class="tok-kw">yield</span> chunk.content
+
+<span class="tok-com"># the caller consumes it lazily -- prints as tokens arrive, not after completion</span>
+<span class="tok-kw">for</span> token <span class="tok-kw">in</span> stream_tokens(model, <span class="tok-str">"Explain backpressure"</span>):
+    print(token, end=<span class="tok-str">""</span>, flush=<span class="tok-kw">True</span>)
+
+<span class="tok-com"># generator expression -- lazy version of a list comprehension, saves memory</span>
+<span class="tok-com"># on large corpora (chunking a big document without loading every chunk into memory at once)</span>
+chunks = (chunk_text(doc) <span class="tok-kw">for</span> doc <span class="tok-kw">in</span> huge_document_iterator)</pre>
+      </div>
+      <div class="callout">
+        <span class="callout-label">Backpressure, defined precisely</span>
+        <p>Backpressure is what happens when a producer generates data faster than a consumer can process it — a generator naturally provides backpressure because the producer's code literally pauses at each <code class="inline">yield</code> until the consumer asks for the next item, rather than racing ahead and buffering unboundedly. This is why generator-based streaming is memory-safe for arbitrarily long LLM responses in a way that "generate the whole string, then return it" is not.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 08 CONTEXT MANAGERS ============ -->
+  <section class="chapter" id="context-managers">
+    <div class="chapter-head"><span class="chapter-num">08</span><h2 class="chapter-title">Context Managers</h2></div>
+    <p class="chapter-dek">The <code class="inline">with</code> statement — guaranteed cleanup, even when something goes wrong mid-block.</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>context_manager.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> contextlib <span class="tok-kw">import</span> contextmanager
+<span class="tok-kw">import</span> time
+
+<span class="tok-kw">@contextmanager</span>
+<span class="tok-kw">def</span> timed_span(name: str):
+    <span class="tok-str">"""A minimal tracing span -- exactly the shape OTel spans (Topic 7) take."""</span>
+    start = time.monotonic()
+    <span class="tok-kw">try</span>:
+        <span class="tok-kw">yield</span>
+    <span class="tok-kw">finally</span>:                                <span class="tok-com"># runs even if the block raises</span>
+        elapsed = time.monotonic() - start
+        logger.info(f<span class="tok-str">"{name} took {elapsed:.2f}s"</span>)
+
+<span class="tok-kw">with</span> timed_span(<span class="tok-str">"retrieval"</span>):
+    docs = retriever.invoke(query)     <span class="tok-com"># timing + cleanup guaranteed regardless of success/failure</span></pre>
+      </div>
+      <p>The class-based equivalent (<code class="inline">__enter__</code>/<code class="inline">__exit__</code>) is what's underneath database connections, file handles, and locks — anything with a clear "acquire, use, release" lifecycle. In agent code, this pattern is exactly how you'd wrap a sandboxed tool-execution environment (Topic 6): acquire the sandbox on enter, guarantee teardown on exit even if the tool call inside raises.</p>
+    </div>
+  </section>
+
+  <!-- ============ 09 ASYNC ============ -->
+  <section class="chapter" id="async">
+    <div class="chapter-head"><span class="chapter-num">09 ★★</span><h2 class="chapter-title">Async Python — High Priority</h2></div>
+    <p class="chapter-dek">The outline is right to flag this as high priority. Nearly every real agent does I/O — API calls, tool calls, retrieval — and async is how you don't block on any of it needlessly.</p>
+    <div class="chapter-body">
+      <h3>Why it matters specifically for agents</h3>
+      <p>LLM calls and tool calls are I/O-bound — the CPU sits idle waiting for a network response. Synchronous code blocks entirely during that wait; async code lets the event loop run other work (other requests, other tool calls) during that same wait. This is exactly Topic 12's parallel tool-call section, now explained at the language level.</p>
+      <div class="code-wrap">
+        <div class="code-head"><span>async_fundamentals.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">import</span> asyncio
+
+<span class="tok-kw">async def</span> fetch_one(client, url: str) -> <span class="tok-kw">dict</span>:
+    resp = <span class="tok-kw">await</span> client.get(url)      <span class="tok-com"># yields control back to the event loop while waiting</span>
+    <span class="tok-kw">return</span> resp.json()
+
+<span class="tok-com"># sequential -- correct but slow: total time = sum of every call</span>
+<span class="tok-kw">async def</span> fetch_sequential(client, urls):
+    results = []
+    <span class="tok-kw">for</span> url <span class="tok-kw">in</span> urls:
+        results.append(<span class="tok-kw">await</span> fetch_one(client, url))
+    <span class="tok-kw">return</span> results
+
+<span class="tok-com"># concurrent -- total time ~= the SLOWEST single call, not the sum</span>
+<span class="tok-kw">async def</span> fetch_concurrent(client, urls):
+    <span class="tok-kw">return</span> <span class="tok-kw">await</span> asyncio.gather(<span class="tok-kw">*</span>[fetch_one(client, u) <span class="tok-kw">for</span> u <span class="tok-kw">in</span> urls])
+
+<span class="tok-com"># timeouts -- never await an external call with no timeout in production</span>
+<span class="tok-kw">async def</span> fetch_with_timeout(client, url, seconds=<span class="tok-num">10</span>):
+    <span class="tok-kw">try</span>:
+        <span class="tok-kw">return</span> <span class="tok-kw">await</span> asyncio.wait_for(fetch_one(client, url), timeout=seconds)
+    <span class="tok-kw">except</span> asyncio.TimeoutError:
+        <span class="tok-kw">return</span> {<span class="tok-str">"error"</span>: <span class="tok-str">"timed out"</span>}
+
+<span class="tok-com"># semaphore -- bound concurrency so you don't blow through a provider's rate limit</span>
+<span class="tok-kw">async def</span> fetch_bounded(client, urls, max_concurrent=<span class="tok-num">5</span>):
+    sem = asyncio.Semaphore(max_concurrent)
+    <span class="tok-kw">async def</span> bounded_fetch(url):
+        <span class="tok-kw">async with</span> sem:
+            <span class="tok-kw">return</span> <span class="tok-kw">await</span> fetch_one(client, url)
+    <span class="tok-kw">return</span> <span class="tok-kw">await</span> asyncio.gather(<span class="tok-kw">*</span>[bounded_fetch(u) <span class="tok-kw">for</span> u <span class="tok-kw">in</span> urls])</pre>
+      </div>
+      <p>This last pattern — <code class="inline">asyncio.gather</code> plus a <code class="inline">Semaphore</code> — is the exact production version of Topic 12's parallel tool-call executor, with a concurrency cap added so a burst of parallel tool calls doesn't trigger a provider rate limit.</p>
+      <h3>Cancellation and cleanup</h3>
+      <div class="code-wrap">
+        <div class="code-head"><span>cancellation.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">async def</span> run_with_cleanup(coro):
+    task = asyncio.create_task(coro)
+    <span class="tok-kw">try</span>:
+        <span class="tok-kw">return</span> <span class="tok-kw">await</span> task
+    <span class="tok-kw">except</span> asyncio.CancelledError:
+        <span class="tok-com"># cleanup logic here -- close connections, release locks --</span>
+        <span class="tok-com"># then re-raise so the cancellation actually propagates</span>
+        <span class="tok-kw">raise</span></pre>
+      </div>
+      <table class="tbl">
+        <tr><th>LangChain/LangGraph async equivalents</th><th>Sync version</th></tr>
+        <tr><td class="k">model.ainvoke(...)</td><td>model.invoke(...)</td></tr>
+        <tr><td class="k">tool.ainvoke(...)</td><td>tool.invoke(...)</td></tr>
+        <tr><td class="k">graph.ainvoke(...) / astream(...) / astream_events(...)</td><td>graph.invoke(...) / stream(...)</td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"Explain the difference between concurrency and parallelism, and where async fits." — Concurrency is structuring a program to handle multiple tasks by interleaving their progress (not necessarily running literally simultaneously); parallelism is literally running multiple tasks at the same instant, requiring multiple CPU cores. Async/asyncio gives you concurrency for I/O-bound work — a single thread interleaves many waiting-on-network operations efficiently via the event loop — but does not give you parallelism for CPU-bound work, since Python's GIL still allows only one thread to execute Python bytecode at a time (Section 10 covers what actually does give you parallelism).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 10 CONCURRENCY ============ -->
+  <section class="chapter" id="concurrency">
+    <div class="chapter-head"><span class="chapter-num">10</span><h2 class="chapter-title">Concurrency &amp; Parallelism</h2></div>
+    <p class="chapter-dek">The decision table every AI engineering interview eventually asks for directly.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Workload</th><th>Tool</th><th>Why</th></tr>
+        <tr><td>I/O-bound (API calls, tool calls, DB queries)</td><td class="k">asyncio</td><td>Highest concurrency per unit of memory/overhead; the event loop interleaves many waiting operations on a single thread</td></tr>
+        <tr><td>I/O-bound, but working with a sync-only library</td><td class="k">ThreadPoolExecutor</td><td>Threads release the GIL during I/O waits (e.g. a blocking network call), so this still gets real concurrency despite the GIL, without needing to rewrite the library as async</td></tr>
+        <tr><td>CPU-bound (heavy local computation — embedding a huge batch locally, tokenizing at scale)</td><td class="k">ProcessPoolExecutor</td><td>Separate processes each get their own GIL and their own Python interpreter — the only way to get true parallelism for CPU-bound Python code</td></tr>
+      </table>
+      <div class="code-wrap">
+        <div class="code-head"><span>choosing_the_right_tool.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> concurrent.futures <span class="tok-kw">import</span> ThreadPoolExecutor, ProcessPoolExecutor
+
+<span class="tok-com"># I/O-bound work via a sync-only SDK -- threads, not processes</span>
+<span class="tok-kw">with</span> ThreadPoolExecutor(max_workers=<span class="tok-num">10</span>) <span class="tok-kw">as</span> pool:
+    results = <span class="tok-kw">list</span>(pool.map(sync_api_call, urls))
+
+<span class="tok-com"># CPU-bound work -- processes, not threads (threads wouldn't help, GIL blocks them)</span>
+<span class="tok-kw">with</span> ProcessPoolExecutor(max_workers=<span class="tok-num">4</span>) <span class="tok-kw">as</span> pool:
+    embeddings = <span class="tok-kw">list</span>(pool.map(compute_embedding_locally, texts))</pre>
+      </div>
+      <div class="callout pitfall">
+        <span class="callout-label">The trap: using threads/processes for LLM API calls</span>
+        <p>An LLM API call is I/O-bound — the CPU is idle waiting on the network, not computing. Using a <code class="inline">ProcessPoolExecutor</code> for this wastes memory spinning up separate interpreter processes for work that doesn't need separate CPUs at all; <code class="inline">asyncio</code> (or a thread pool if a sync SDK forces your hand) is strictly the right tool. Reserve processes specifically for CPU-bound work — local embedding computation, heavy tokenization, anything actually saturating a CPU core.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 11 HTTP ============ -->
+  <section class="chapter" id="http">
+    <div class="chapter-head"><span class="chapter-num">11</span><h2 class="chapter-title">HTTP &amp; Networking</h2></div>
+    <p class="chapter-dek">Every LLM API call and every A2A/MCP call (Topic 2) is HTTP underneath — this is the layer those abstractions sit on.</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>httpx_client.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">import</span> httpx
+
+<span class="tok-com"># a single shared, connection-pooled client -- create ONCE, reuse everywhere</span>
+<span class="tok-com"># (creating a new client per request loses connection pooling / keep-alive entirely)</span>
+client = httpx.AsyncClient(timeout=<span class="tok-num">30.0</span>, limits=httpx.Limits(max_connections=<span class="tok-num">100</span>))
+
+<span class="tok-kw">async def</span> post_json(url: str, payload: <span class="tok-kw">dict</span>) -> <span class="tok-kw">dict</span>:
+    resp = <span class="tok-kw">await</span> client.post(url, json=payload)
+    resp.raise_for_status()          <span class="tok-com"># raises on 4xx/5xx instead of silently returning bad data</span>
+    <span class="tok-kw">return</span> resp.json()
+
+<span class="tok-com"># streaming SSE -- exactly the shape A2A's message/sendStream (Topic 2) uses</span>
+<span class="tok-kw">async def</span> stream_sse(url: str, payload: <span class="tok-kw">dict</span>):
+    <span class="tok-kw">async with</span> client.stream(<span class="tok-str">"POST"</span>, url, json=payload) <span class="tok-kw">as</span> response:
+        <span class="tok-kw">async for</span> line <span class="tok-kw">in</span> response.aiter_lines():
+            <span class="tok-kw">if</span> line.startswith(<span class="tok-str">"data: "</span>):
+                <span class="tok-kw">yield</span> line[<span class="tok-num">6</span>:]</pre>
+      </div>
+      <div class="callout">
+        <span class="callout-label">Why httpx over requests for AI engineering specifically</span>
+        <p><code class="inline">requests</code> is sync-only. <code class="inline">httpx</code> supports both sync and async with the same API, plus native HTTP/2 and streaming — the practical default for any codebase that will eventually need async (which, in this domain, is essentially all of them per Section 09).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 12 CALLING LLMS ============ -->
+  <section class="chapter" id="calling-llms">
+    <div class="chapter-head"><span class="chapter-num">12 ★★</span><h2 class="chapter-title">Calling LLMs from Python</h2></div>
+    <p class="chapter-dek">Where every previous section in this document converges — this is what it actually looks like in real LangChain code.</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>full_llm_client_pattern.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> langchain_anthropic <span class="tok-kw">import</span> ChatAnthropic
+<span class="tok-kw">from</span> langchain_core.messages <span class="tok-kw">import</span> SystemMessage, HumanMessage
+<span class="tok-kw">import</span> asyncio, tiktoken
+
+model = ChatAnthropic(model=<span class="tok-str">"claude-sonnet-4-6"</span>, temperature=<span class="tok-num">0</span>, max_tokens=<span class="tok-num">1024</span>)
+
+<span class="tok-com"># token counting BEFORE the call -- avoid discovering a context overflow mid-request</span>
+enc = tiktoken.get_encoding(<span class="tok-str">"cl100k_base"</span>)
+<span class="tok-kw">def</span> count_tokens(text: str) -> <span class="tok-kw">int</span>:
+    <span class="tok-kw">return</span> <span class="tok-kw">len</span>(enc.encode(text))
+
+<span class="tok-com"># concurrent model calls, bounded -- Section 09's semaphore pattern applied directly</span>
+<span class="tok-kw">async def</span> classify_many(texts: <span class="tok-kw">list</span>[str], max_concurrent: <span class="tok-kw">int</span> = <span class="tok-num">5</span>) -> <span class="tok-kw">list</span>[str]:
+    sem = asyncio.Semaphore(max_concurrent)
+    <span class="tok-kw">async def</span> classify_one(text):
+        <span class="tok-kw">async with</span> sem:
+            resp = <span class="tok-kw">await</span> model.ainvoke([
+                SystemMessage(content=<span class="tok-str">"Classify as: positive, negative, neutral."</span>),
+                HumanMessage(content=text),
+            ])
+            <span class="tok-kw">return</span> resp.content
+    <span class="tok-kw">return</span> <span class="tok-kw">await</span> asyncio.gather(<span class="tok-kw">*</span>[classify_one(t) <span class="tok-kw">for</span> t <span class="tok-kw">in</span> texts])
+
+<span class="tok-com"># fallback across providers -- graceful degradation when a primary provider is down</span>
+<span class="tok-kw">from</span> langchain_openai <span class="tok-kw">import</span> ChatOpenAI
+primary = ChatAnthropic(model=<span class="tok-str">"claude-sonnet-4-6"</span>)
+fallback = ChatOpenAI(model=<span class="tok-str">"gpt-4o"</span>)
+robust_model = primary.with_fallbacks([fallback])   <span class="tok-com"># tries primary, falls back automatically on error</span></pre>
+      </div>
+      <table class="tbl">
+        <tr><th>Concept</th><th>Where covered in depth</th></tr>
+        <tr><td>Streaming, structured outputs, tool calling</td><td class="k">Topic 12</td></tr>
+        <tr><td>Temperature, top-p sampling</td><td class="k">Topic 11</td></tr>
+        <tr><td>Rate limits, exponential backoff, timeouts</td><td class="k">This doc §02 (decorators), §09 (async); Topic 7 (production)</td></tr>
+        <tr><td>Provider abstraction, request batching</td><td class="k">This doc §17</td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">Recreating a client per call — a real, easy-to-miss cost bug</span>
+        <p>Instantiating a new <code class="inline">ChatAnthropic(...)</code> or <code class="inline">httpx.AsyncClient()</code> inside a hot loop or per-request handler discards connection pooling every time, adding real latency under load. Construct clients once, at module or application startup, and reuse them across requests — exactly the same discipline as Section 11's shared HTTP client.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 13 PRODUCTION ============ -->
+  <section class="chapter" id="production">
+    <div class="chapter-head"><span class="chapter-num">13 ★</span><h2 class="chapter-title">Production Python for AI</h2></div>
+    <p class="chapter-dek">The layer between "it works on my machine" and "it's a service other people depend on."</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>config_and_logging.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> pydantic_settings <span class="tok-kw">import</span> BaseSettings
+<span class="tok-kw">import</span> logging, json, uuid, contextvars
+
+<span class="tok-com"># Pydantic-validated config from environment variables -- catches a missing/malformed</span>
+<span class="tok-com"># API key at STARTUP (fail-fast, per Section 06) rather than on the first real request</span>
+<span class="tok-kw">class</span> Settings(BaseSettings):
+    anthropic_api_key: str
+    max_concurrent_requests: <span class="tok-kw">int</span> = <span class="tok-num">10</span>
+    log_level: str = <span class="tok-str">"INFO"</span>
+    <span class="tok-kw">class</span> Config:
+        env_file = <span class="tok-str">".env"</span>
+
+settings = Settings()   <span class="tok-com"># raises immediately if anthropic_api_key is missing</span>
+
+<span class="tok-com"># structured (JSON) logging + a request/trace ID threaded through every log line --</span>
+<span class="tok-com"># exactly what makes Topic 7's OTel-style tracing possible</span>
+request_id_var = contextvars.ContextVar(<span class="tok-str">"request_id"</span>, default=<span class="tok-str">"-"</span>)
+
+<span class="tok-kw">class</span> JSONFormatter(logging.Formatter):
+    <span class="tok-kw">def</span> format(self, record):
+        <span class="tok-kw">return</span> json.dumps({
+            <span class="tok-str">"level"</span>: record.levelname,
+            <span class="tok-str">"message"</span>: record.getMessage(),
+            <span class="tok-str">"request_id"</span>: request_id_var.get(),
+            <span class="tok-str">"logger"</span>: record.name,
+        })
+
+<span class="tok-com"># graceful shutdown -- finish in-flight agent runs before the process exits</span>
+<span class="tok-kw">import</span> signal, asyncio
+
+<span class="tok-kw">async def</span> shutdown(sig, active_tasks: <span class="tok-kw">set</span>):
+    logging.info(f<span class="tok-str">"Received {sig.name}, waiting on {len(active_tasks)} in-flight tasks"</span>)
+    <span class="tok-kw">if</span> active_tasks:
+        <span class="tok-kw">await</span> asyncio.wait(active_tasks, timeout=<span class="tok-num">30</span>)</pre>
+      </div>
+      <table class="tbl">
+        <tr><th>Practice</th><th>Why it matters in production</th></tr>
+        <tr><td class="k">Secrets never in code/git</td><td>Environment variables or a secrets manager, loaded via Pydantic Settings for validation — a leaked API key is a real, common incident source</td></tr>
+        <tr><td class="k">Structured (JSON) logs, not print statements</td><td>Machine-parseable, filterable, and directly ingestible by the OTel/OpenInference pipelines from Topic 7</td></tr>
+        <tr><td class="k">Correlation/request IDs</td><td>Thread one ID through every log line and span for a single request — without this, debugging a multi-step agent run across logs is nearly impossible</td></tr>
+        <tr><td class="k">Health checks</td><td>A cheap endpoint confirming the process (and its dependencies — DB, model API reachability) is actually healthy, not just that the process is running</td></tr>
+        <tr><td class="k">Graceful shutdown</td><td>On SIGTERM, stop accepting new requests but let in-flight agent runs finish (or checkpoint, per the foundational bible's persistence chapter) rather than killing them mid-trajectory</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 14 TESTING ============ -->
+  <section class="chapter" id="testing">
+    <div class="chapter-head"><span class="chapter-num">14</span><h2 class="chapter-title">Testing</h2></div>
+    <p class="chapter-dek">Testing agent code has one extra wrinkle beyond normal software testing: the LLM itself is a non-deterministic dependency you need to mock deliberately.</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>test_agent.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">import</span> pytest
+<span class="tok-kw">from</span> unittest.mock <span class="tok-kw">import</span> AsyncMock, patch
+
+<span class="tok-kw">@pytest.fixture</span>
+<span class="tok-kw">def</span> mock_model():
+    <span class="tok-str">"""Never call a real, billed API in a unit test -- mock the model boundary."""</span>
+    m = AsyncMock()
+    m.ainvoke.return_value = FakeAIMessage(content=<span class="tok-str">"mocked response"</span>, tool_calls=[])
+    <span class="tok-kw">return</span> m
+
+<span class="tok-kw">@pytest.mark.asyncio</span>                     <span class="tok-com"># required for pytest to run an async test function</span>
+<span class="tok-kw">async def</span> test_agent_handles_tool_error(mock_model):
+    <span class="tok-kw">with</span> patch(<span class="tok-str">"my_agent.search_tool.invoke"</span>, side_effect=Exception(<span class="tok-str">"API down"</span>)):
+        result = <span class="tok-kw">await</span> run_agent(mock_model, <span class="tok-str">"search for something"</span>)
+    <span class="tok-kw">assert</span> <span class="tok-str">"Error"</span> <span class="tok-kw">in</span> result   <span class="tok-com"># the agent should degrade gracefully, per Section 06, not crash</span>
+
+<span class="tok-com"># parameterized test -- one test function, many cases, exactly how you'd</span>
+<span class="tok-com"># run a small slice of Topic 5's eval dataset as a unit test</span>
+<span class="tok-kw">@pytest.mark.parametrize</span>(<span class="tok-str">"query,expected_tool"</span>, [
+    (<span class="tok-str">"what's the weather in SF"</span>, <span class="tok-str">"weather_tool"</span>),
+    (<span class="tok-str">"refund my order"</span>, <span class="tok-str">"refund_tool"</span>),
+])
+<span class="tok-kw">def</span> test_tool_routing(query, expected_tool):
+    <span class="tok-kw">assert</span> route_to_tool(query) == expected_tool</pre>
+      </div>
+      <table class="tbl">
+        <tr><th>Test type</th><th>What it checks, in agent code specifically</th></tr>
+        <tr><td class="k">Unit test, mocked model</td><td>Your orchestration logic (routing, error handling, state updates) — independent of actual model quality</td></tr>
+        <tr><td class="k">Integration test, real model, cheap/fast model</td><td>The real prompt/tool-schema wiring actually works end-to-end — run sparingly, these cost money and are slower</td></tr>
+        <tr><td class="k">Eval suite (Topic 5)</td><td>Model output <em>quality</em> — a different concern from whether the code runs correctly; both are needed</td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"How do you test code that calls an LLM?" — Separate two concerns explicitly: does the code work (mock the model boundary, unit-test your orchestration/error-handling logic deterministically) and is the model's output good (that's Topic 5's evaluation discipline, run separately, usually against a real or near-real model on a curated dataset). Conflating the two — trying to unit-test "is this response good" — produces flaky, expensive, non-deterministic tests that fail for the wrong reasons.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 15 PERFORMANCE ============ -->
+  <section class="chapter" id="performance">
+    <div class="chapter-head"><span class="chapter-num">15</span><h2 class="chapter-title">Performance</h2></div>
+    <p class="chapter-dek">In agent code specifically, the bottleneck is almost never raw Python speed.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Question</th><th>Reality check for agent code</th></tr>
+        <tr><td>Is my Python loop too slow?</td><td>Almost never the real bottleneck — a single LLM call (hundreds of ms to seconds) dwarfs nearly any pure-Python computation around it</td></tr>
+        <tr><td>What's actually slow?</td><td>Network I/O (model calls, tool calls, retrieval) — exactly why Section 09's async material and Topic 7's caching/batching material are the real performance levers in this domain</td></tr>
+        <tr><td>list vs set vs dict for membership checks</td><td><code class="inline">in</code> on a list is O(n); on a set/dict it's O(1) average — a real, easy win when checking membership repeatedly (e.g. "is this tool name in the allowed set")</td></tr>
+      </table>
+      <div class="callout">
+        <span class="callout-label">The honest priority order</span>
+        <p>Profile before optimizing (Python's <code class="inline">cProfile</code> or a simple <code class="inline">timeit</code> on the suspected hot path), but expect the profile to point at network waits, not CPU-bound Python code. Reach for Topic 7's caching and batching before reaching for algorithmic micro-optimization — in this domain, the former routinely saves orders of magnitude more time and money than the latter.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 16 PACKAGING ============ -->
+  <section class="chapter" id="packaging">
+    <div class="chapter-head"><span class="chapter-num">16</span><h2 class="chapter-title">Packaging &amp; Project Structure</h2></div>
+    <p class="chapter-dek">Fast reference — the mechanics of shipping Python code as a reproducible artifact.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Concept</th><th>Practical note</th></tr>
+        <tr><td class="k">Virtual environments</td><td>Isolate project dependencies from the system Python — never install agent-framework dependencies globally</td></tr>
+        <tr><td class="k">pyproject.toml</td><td>The modern standard for declaring dependencies, build config, and metadata — supersedes a bare <code class="inline">requirements.txt</code> for real projects</td></tr>
+        <tr><td class="k">Dependency pinning</td><td>Pin exact versions for reproducible builds — LangChain/LangGraph move fast enough that an unpinned install can silently change agent behavior between deploys</td></tr>
+        <tr><td class="k">Relative vs absolute imports</td><td>Prefer absolute imports in application code — relative imports get fragile as a project's module structure grows</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 17 AI PATTERNS ============ -->
+  <section class="chapter" id="ai-patterns">
+    <div class="chapter-head"><span class="chapter-num">17 ★★</span><h2 class="chapter-title">AI Engineering Patterns</h2></div>
+    <p class="chapter-dek">Everything above, assembled into the actual reusable patterns you'd build once and use across every agent project.</p>
+    <div class="chapter-body">
+      <h3>Provider abstraction (the model adapter pattern)</h3>
+      <div class="code-wrap">
+        <div class="code-head"><span>provider_abstraction.py</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">from</span> typing <span class="tok-kw">import</span> Protocol
+
+<span class="tok-kw">class</span> LLMProvider(Protocol):
+    <span class="tok-str">"""Any provider satisfying this shape is swappable -- structural typing, Section 04."""</span>
+    <span class="tok-kw">async def</span> complete(self, messages: <span class="tok-kw">list</span>[<span class="tok-kw">dict</span>]) -> str: ...
+
+<span class="tok-kw">class</span> AnthropicProvider:
+    <span class="tok-kw">def</span> __init__(self, model: str = <span class="tok-str">"claude-sonnet-4-6"</span>):
+        self.client = ChatAnthropic(model=model)
+    <span class="tok-kw">async def</span> complete(self, messages):
+        resp = <span class="tok-kw">await</span> self.client.ainvoke(messages)
+        <span class="tok-kw">return</span> resp.content
+
+<span class="tok-kw">class</span> OpenAIProvider:
+    <span class="tok-kw">def</span> __init__(self, model: str = <span class="tok-str">"gpt-4o"</span>):
+        self.client = ChatOpenAI(model=model)
+    <span class="tok-kw">async def</span> complete(self, messages):
+        resp = <span class="tok-kw">await</span> self.client.ainvoke(messages)
+        <span class="tok-kw">return</span> resp.content
+
+<span class="tok-com"># application code depends on the Protocol, never a specific provider --</span>
+<span class="tok-com"># swapping providers (or A/B testing them, per Topic 7's canary pattern) is a one-line change</span>
+<span class="tok-kw">async def</span> run_pipeline(provider: LLMProvider, prompt: str) -> str:
+    <span class="tok-kw">return</span> <span class="tok-kw">await</span> provider.complete([{<span class="tok-str">"role"</span>: <span class="tok-str">"user"</span>, <span class="tok-str">"content"</span>: prompt}])</pre>
+      </div>
+      <h3>Rate limiter</h3>
+      <div class="code-wrap">
+        <div class="code-head"><span>rate_limiter.py — token bucket</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">import</span> asyncio, time
+
+<span class="tok-kw">class</span> TokenBucketLimiter:
+    <span class="tok-str">"""Classic token-bucket rate limiter -- a very common live-coding prompt."""</span>
+    <span class="tok-kw">def</span> __init__(self, rate: <span class="tok-kw">float</span>, capacity: <span class="tok-kw">int</span>):
+        self.rate = rate            <span class="tok-com"># tokens added per second</span>
+        self.capacity = capacity
+        self.tokens = capacity
+        self.last_refill = time.monotonic()
+        self._lock = asyncio.Lock()
+
+    <span class="tok-kw">async def</span> acquire(self):
+        <span class="tok-kw">async with</span> self._lock:
+            now = time.monotonic()
+            elapsed = now - self.last_refill
+            self.tokens = <span class="tok-kw">min</span>(self.capacity, self.tokens + elapsed <span class="tok-kw">*</span> self.rate)
+            self.last_refill = now
+            <span class="tok-kw">if</span> self.tokens < <span class="tok-num">1</span>:
+                wait = (<span class="tok-num">1</span> - self.tokens) / self.rate
+                <span class="tok-kw">await</span> asyncio.sleep(wait)
+                self.tokens = <span class="tok-num">0</span>
+            <span class="tok-kw">else</span>:
+                self.tokens -= <span class="tok-num">1</span></pre>
+      </div>
+      <h3>Full composed client wrapper</h3>
+      <div class="code-wrap">
+        <div class="code-head"><span>llm_client_wrapper.py — retry + rate limit + fallback, composed</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-kw">class</span> RobustLLMClient:
+    <span class="tok-str">"""Composes everything from this document into one production-ready client."""</span>
+    <span class="tok-kw">def</span> __init__(self, primary: LLMProvider, fallback: LLMProvider | <span class="tok-kw">None</span> = <span class="tok-kw">None</span>):
+        self.primary = primary
+        self.fallback = fallback
+        self.limiter = TokenBucketLimiter(rate=<span class="tok-num">5</span>, capacity=<span class="tok-num">10</span>)
+
+    <span class="tok-kw">@retry_with_backoff</span>(max_attempts=<span class="tok-num">3</span>)                        <span class="tok-com"># §02</span>
+    <span class="tok-kw">async def</span> _call(self, provider: LLMProvider, messages):
+        <span class="tok-kw">await</span> self.limiter.acquire()                          <span class="tok-com"># §17 rate limiting</span>
+        <span class="tok-kw">return</span> <span class="tok-kw">await</span> asyncio.wait_for(provider.complete(messages), timeout=<span class="tok-num">30</span>)  <span class="tok-com"># §09 timeout</span>
+
+    <span class="tok-kw">async def</span> complete(self, messages: <span class="tok-kw">list</span>[<span class="tok-kw">dict</span>]) -> str:
+        <span class="tok-kw">try</span>:
+            <span class="tok-kw">return</span> <span class="tok-kw">await</span> self._call(self.primary, messages)
+        <span class="tok-kw">except</span> Exception:
+            <span class="tok-kw">if</span> self.fallback:                                    <span class="tok-com"># §12 fallback across providers</span>
+                <span class="tok-kw">return</span> <span class="tok-kw">await</span> self._call(self.fallback, messages)
+            <span class="tok-kw">raise</span></pre>
+      </div>
+      <div class="callout focus">
+        <span class="callout-label">Why this section is the actual point of the whole document</span>
+        <p>Every prior section in this document exists to make this final composition possible — decorators (§02), Pydantic validation (§05), async/semaphores (§09), HTTP clients (§11), production logging (§13), and testing discipline (§14) all converge into this one reusable, production-grade LLM client. This is what "implementing with Python and LangChain" actually looks like once you move past a notebook prototype.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 18 INTERVIEW ============ -->
+  <section class="chapter" id="interview">
+    <div class="chapter-head"><span class="chapter-num">18</span><h2 class="chapter-title">Interview Cheat-Sheet</h2></div>
+    <p class="chapter-dek">Coding-round-style prompts specific to this domain, plus conceptual questions.</p>
+    <div class="chapter-body">
+      <details class="qa"><summary>Design a rate limiter for calls to an LLM API.<span class="qa-tag">coding</span></summary>
+        <div class="qa-body"><p>The token-bucket pattern in §17 is the standard answer: maintain a token count that refills continuously at a fixed rate up to a capacity cap; each call consumes one token, waiting if none are available. Know the alternative (sliding window log/counter) and be ready to discuss the tradeoff — token bucket allows bursts up to capacity, sliding window enforces a stricter, smoother rate — and know that in async Python this needs a lock around the refill/consume logic to be correct under concurrent callers.</p></div>
+      </details>
+      <details class="qa"><summary>Design a retry mechanism for a flaky external API.<span class="qa-tag">coding</span></summary>
+        <div class="qa-body"><p>The decorator pattern from §02: exponential backoff (delay doubles each attempt) plus jitter (a small random addition) to avoid many clients retrying in lockstep and re-causing the same overload. Distinguish retryable errors (timeouts, 5xx, rate limits) from fatal ones (4xx auth/validation errors) — retrying a fatal error wastes time and can mask a real bug; only retry the former.</p></div>
+      </details>
+      <details class="qa"><summary>Design a concurrent API caller that respects a maximum concurrency limit.<span class="qa-tag">coding</span></summary>
+        <div class="qa-body"><p>asyncio.gather combined with a Semaphore, exactly the §09 pattern: wrap each individual call in `async with semaphore`, launch all of them via gather, and the semaphore transparently caps how many run at once regardless of how many total calls were requested. This is also directly the correct answer to "how would you execute an agent's parallel tool calls without exceeding a provider rate limit," tying §09 straight back to Topic 12.</p></div>
+      </details>
+      <details class="qa"><summary>Why would you choose async over threads for calling multiple LLM APIs concurrently?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>Both can achieve concurrency for I/O-bound work since threads release the GIL during I/O waits — but async has substantially lower per-task overhead (no OS thread stack allocation per task) and scales to far higher concurrency counts (thousands of pending calls) than a thread pool practically can. Choose threads specifically when working with a library that's sync-only and can't be made async without a rewrite; otherwise async is the more efficient default in this domain.</p></div>
+      </details>
+      <details class="qa"><summary>What's wrong with this code: `def add_msg(msg, history=[]): history.append(msg); return history`?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>The default argument `[]` is evaluated once at function definition time, not per call — every call that doesn't pass its own `history` shares and mutates the exact same list object, silently leaking state across unrelated calls. The fix: default to `None`, and construct a new list inside the function body when `history is None`.</p></div>
+      </details>
+      <details class="qa"><summary>How do you test code that calls a non-deterministic LLM?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>Separate correctness-of-code from quality-of-output. Mock the model boundary (AsyncMock returning a fixed fake response) to unit-test your orchestration, error handling, and state management deterministically and cheaply. Reserve real model calls for a smaller integration-test tier and for Topic 5's dedicated evaluation suite, which is the right tool for judging actual output quality — conflating the two produces flaky, expensive tests.</p></div>
+      </details>
+      <details class="qa"><summary>Explain the provider abstraction pattern and why it matters for an agent codebase.<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Define a Protocol (or ABC) describing the minimal interface your application needs from a model provider (e.g. a single `complete(messages) -> str` method), then implement that interface once per provider (Anthropic, OpenAI, etc.). Application code depends only on the abstraction, never a concrete provider class — swapping providers, adding a fallback chain (Topic 7-style), or A/B testing two providers becomes a one-line change at the composition point instead of a scattered find-and-replace across the codebase.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ 19 GLOSSARY ============ -->
+  <section class="chapter" id="glossary">
+    <div class="chapter-head"><span class="chapter-num">19</span><h2 class="chapter-title">Glossary</h2></div>
+    <p class="chapter-dek">Every term used in this document.</p>
+    <div class="chapter-body">
+      <dl class="glossary-grid">
+        <div class="gterm"><dt>GIL</dt><dd>Global Interpreter Lock — only one thread executes Python bytecode at a time in CPython.</dd></div>
+        <div class="gterm"><dt>Decorator</dt><dd>A function wrapping another function to add behavior (retry, caching, logging) without modifying its body.</dd></div>
+        <div class="gterm"><dt>Closure</dt><dd>An inner function retaining access to its enclosing function's local variables.</dd></div>
+        <div class="gterm"><dt>Protocol</dt><dd>Structural typing — any object with matching methods satisfies the type, no inheritance required.</dd></div>
+        <div class="gterm"><dt>TypedDict</dt><dd>A dict type with a fixed, typed set of keys — the basis of LangGraph's AgentState.</dd></div>
+        <div class="gterm"><dt>Pydantic BaseModel</dt><dd>A class providing runtime validation, coercion, and JSON Schema generation.</dd></div>
+        <div class="gterm"><dt>Generator</dt><dd>A function using yield to produce values lazily, one at a time, on demand.</dd></div>
+        <div class="gterm"><dt>Backpressure</dt><dd>A consumer naturally throttling a producer by only pulling data as fast as it can process it.</dd></div>
+        <div class="gterm"><dt>Event loop</dt><dd>The asyncio scheduler interleaving many coroutines' progress on a single thread.</dd></div>
+        <div class="gterm"><dt>Coroutine</dt><dd>An async function's suspended/resumable execution unit, created by calling an `async def` function.</dd></div>
+        <div class="gterm"><dt>Semaphore</dt><dd>A concurrency primitive capping how many coroutines/threads run a section of code simultaneously.</dd></div>
+        <div class="gterm"><dt>Token bucket</dt><dd>A rate-limiting algorithm allowing bursts up to a capacity while enforcing an average refill rate.</dd></div>
+        <div class="gterm"><dt>Provider abstraction</dt><dd>An interface (Protocol/ABC) decoupling application code from a specific LLM provider implementation.</dd></div>
+        <div class="gterm"><dt>Structured logging</dt><dd>Machine-parseable (typically JSON) log output, enabling correlation and ingestion by tracing pipelines.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ 20 RESOURCES ============ -->
+  <section class="chapter" id="resources">
+    <div class="chapter-head"><span class="chapter-num">20</span><h2 class="chapter-title">Resources</h2></div>
+    <p class="chapter-dek">Where to go for hands-on practice.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Python asyncio official documentation</strong> — the canonical reference for Section 09's primitives</li>
+        <li><strong>Pydantic V2 documentation</strong> — validators, model_validate/model_dump, pydantic-settings</li>
+        <li><strong>httpx documentation</strong> — async client patterns, streaming, connection pooling</li>
+        <li><strong>LangChain Python API reference</strong> — the concrete async method signatures (ainvoke, astream) used throughout Section 12</li>
+        <li><strong>pytest-asyncio documentation</strong> — testing async agent code correctly</li>
+      </ul>
+      <div class="callout">
+        <span class="callout-label">How to actually get interview-ready on this topic</span>
+        <p>Build the <code class="inline">RobustLLMClient</code> from Section 17 yourself, end to end, against a real (or locally mocked) model API — retry decorator, token-bucket limiter, timeout, and provider fallback, all composed. Having built that one class yourself is worth more in an interview than reading every code sample in this document — it's the single artifact that proves you can actually implement this material, not just recognize it.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">Doc 18 — Python for AI Engineering. Implementation-focused companion to the full reference series.</div>
+</main>
+</div>
+
+<script>
+const links = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('section.chapter');
+const map = new Map();
+links.forEach(l => map.set(l.getAttribute('href').slice(1), l));
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const link = map.get(entry.target.id);
+    if(!link) return;
+    if(entry.isIntersecting){
+      links.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, {rootMargin: '-15% 0px -70% 0px', threshold: 0});
+sections.forEach(s => io.observe(s));
+</script>
+</body>
+</html>

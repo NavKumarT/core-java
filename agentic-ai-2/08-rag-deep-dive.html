@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG, One Level Deeper — The Complete Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d10; --bg-raised:#12151a; --bg-card:#14181f;
+  --line:#242a33; --line-soft:#1b2028;
+  --ink:#e7e9ec; --ink-dim:#9aa3b0; --ink-faint:#5c6672;
+  --amber:#ff9f40; --amber-dim:#c97a2e; --lime:#c9f04c; --cyan:#5fd9c9; --violet:#b592ff; --rose:#ff7a8a;
+  --serif:'Source Serif 4', Georgia, serif;
+  --display:'Space Grotesk', sans-serif;
+  --mono:'JetBrains Mono', 'Courier New', monospace;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:radial-gradient(var(--line-soft) 1px, transparent 1px);
+  background-size:22px 22px; background-color:var(--bg);
+  color:var(--ink); font-family:var(--serif); font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+a{color:var(--amber); text-decoration:none;}
+::selection{background:var(--amber); color:#111;}
+.shell{display:grid; grid-template-columns:290px 1fr; min-height:100vh;}
+@media (max-width:920px){ .shell{grid-template-columns:1fr;} .side{display:none;} }
+.side{position:sticky; top:0; height:100vh; overflow-y:auto; border-right:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(18,21,26,.9), rgba(11,13,16,.9)); padding:28px 20px 60px;}
+.side::-webkit-scrollbar{width:6px;} .side::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.brand{font-family:var(--display); font-weight:700; font-size:15px; color:var(--ink); margin-bottom:2px;}
+.brand span{color:var(--amber);}
+.brand-sub{font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-bottom:24px;}
+.back-link{display:inline-block; font-family:var(--mono); font-size:11px; color:var(--cyan); margin-bottom:20px; border:1px solid var(--line); padding:5px 10px; border-radius:6px;}
+.nav-link{display:flex; align-items:baseline; gap:7px; font-family:var(--display); font-size:12.2px; color:var(--ink-dim);
+  padding:5px 7px; border-radius:6px; border-left:2px solid transparent; transition:.15s;}
+.nav-link:hover{color:var(--ink); background:var(--bg-raised);}
+.nav-link.active{color:var(--amber); border-left-color:var(--amber); background:var(--bg-raised);}
+.nav-num{font-family:var(--mono); font-size:9.5px; color:var(--ink-faint); min-width:20px;}
+.main{max-width:920px; padding:0 44px 140px; margin:0 auto;}
+@media (max-width:700px){ .main{padding:0 20px 100px;} }
+.hero{padding:76px 0 54px; border-bottom:1px solid var(--line);}
+.hero-eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--lime);
+  margin-bottom:18px; display:flex; align-items:center; gap:10px;}
+.hero-eyebrow::before{content:''; width:22px; height:1px; background:var(--lime); display:inline-block;}
+h1.title{font-family:var(--display); font-weight:700; font-size:clamp(30px,4.8vw,50px); line-height:1.08; letter-spacing:-.02em; color:var(--ink); max-width:15ch;}
+h1.title em{font-style:normal; color:var(--amber);}
+.hero-sub{font-family:var(--serif); font-size:18px; color:var(--ink-dim); max-width:62ch; margin-top:20px;}
+.tag-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:26px;}
+.tag{font-family:var(--mono); font-size:11px; padding:5px 11px; border-radius:20px; border:1px solid var(--line); color:var(--ink-dim); background:var(--bg-raised);}
+section.chapter{padding:60px 0; border-bottom:1px solid var(--line);}
+section.chapter:last-of-type{border-bottom:none;}
+.chapter-head{display:flex; align-items:flex-start; gap:16px; margin-bottom:8px;}
+.chapter-num{font-family:var(--mono); font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:20px; padding:3px 11px; margin-top:6px; white-space:nowrap;}
+h2.chapter-title{font-family:var(--display); font-weight:600; font-size:clamp(22px,3.2vw,30px); color:var(--ink); letter-spacing:-.01em;}
+.chapter-dek{font-family:var(--serif); font-style:italic; color:var(--ink-dim); font-size:16px; max-width:66ch; margin:14px 0 30px 0; padding-left:66px;}
+@media (max-width:700px){.chapter-dek{padding-left:0;}}
+.chapter-body{padding-left:66px;}
+@media (max-width:700px){.chapter-body{padding-left:0;}}
+.chapter-body h3{font-family:var(--display); font-weight:600; font-size:19px; color:var(--ink); margin:32px 0 12px;}
+.chapter-body h4{font-family:var(--display); font-weight:600; color:var(--cyan); margin:22px 0 10px; text-transform:uppercase; letter-spacing:.04em; font-size:12px;}
+.chapter-body p{color:var(--ink-dim); margin-bottom:14px; max-width:72ch;}
+.chapter-body ul, .chapter-body ol{color:var(--ink-dim); margin:0 0 16px 20px; max-width:70ch;}
+.chapter-body li{margin-bottom:7px;}
+.chapter-body strong{color:var(--ink); font-weight:600;}
+code.inline{font-family:var(--mono); font-size:.87em; background:var(--bg-raised); color:var(--lime); padding:1px 6px; border-radius:4px; border:1px solid var(--line);}
+.callout{border-left:3px solid var(--amber); background:var(--bg-card); padding:16px 18px; border-radius:0 8px 8px 0; margin:20px 0; max-width:70ch;}
+.callout p{margin-bottom:0; color:var(--ink-dim); font-size:14.5px;}
+.callout .callout-label{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--amber); margin-bottom:6px; display:block;}
+.callout.interview{border-left-color:var(--violet);} .callout.interview .callout-label{color:var(--violet);}
+.callout.pitfall{border-left-color:var(--rose);} .callout.pitfall .callout-label{color:var(--rose);}
+.callout.paper{border-left-color:var(--cyan);} .callout.paper .callout-label{color:var(--cyan);}
+.callout.focus{border-left-color:var(--lime); background:#151b12;} .callout.focus .callout-label{color:var(--lime);}
+.code-wrap{background:#0a0c0f; border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:18px 0 24px;}
+.code-head{display:flex; align-items:center; justify-content:space-between; padding:9px 14px; border-bottom:1px solid var(--line); background:var(--bg-raised); font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+.code-dots{display:flex; gap:5px;} .code-dots span{width:8px; height:8px; border-radius:50%; background:var(--line);}
+pre{padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:12.6px; line-height:1.7; color:#d7dbe0;}
+pre::-webkit-scrollbar{height:6px;} pre::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.tok-kw{color:var(--violet);} .tok-str{color:var(--lime);} .tok-com{color:var(--ink-faint); font-style:italic;} .tok-fn{color:var(--cyan);} .tok-num{color:var(--amber);}
+.tbl{width:100%; border-collapse:collapse; margin:18px 0 26px; font-size:13.2px; max-width:78ch;}
+.tbl th{text-align:left; font-family:var(--mono); font-size:10.2px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); padding:10px 12px; border-bottom:1px solid var(--line);}
+.tbl td{padding:11px 12px; border-bottom:1px solid var(--line-soft); color:var(--ink-dim); vertical-align:top;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl td.k{color:var(--ink); font-family:var(--mono); font-size:12.2px; white-space:nowrap;}
+.diagram{background:var(--bg-card); border:1px solid var(--line); border-radius:12px; padding:22px; margin:20px 0 26px;}
+.diagram svg{width:100%; height:auto; display:block;}
+.legend{display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; font-family:var(--mono); font-size:10.5px; color:var(--ink-faint);}
+.legend span{display:inline-flex; align-items:center; gap:6px;} .legend i{width:9px; height:9px; border-radius:2px; display:inline-block;}
+.qa{border:1px solid var(--line); border-radius:10px; margin-bottom:10px; background:var(--bg-card); overflow:hidden;}
+.qa summary{list-style:none; cursor:pointer; padding:15px 18px; display:flex; gap:12px; align-items:flex-start; font-family:var(--display); font-size:14px; color:var(--ink); font-weight:500;}
+.qa summary::-webkit-details-marker{display:none;}
+.qa summary::before{content:'+'; font-family:var(--mono); color:var(--amber); font-size:16px; line-height:1;}
+.qa[open] summary::before{content:'–';}
+.qa .qa-body{padding:0 18px 18px 40px; color:var(--ink-dim); font-size:14px; max-width:68ch;}
+.qa .qa-body p{margin-bottom:10px;}
+.qa-tag{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; background:var(--bg-raised); color:var(--ink-faint); padding:2px 8px; border-radius:20px; border:1px solid var(--line); margin-left:auto; white-space:nowrap; flex-shrink:0;}
+.glossary-grid{display:grid; grid-template-columns:1fr 1fr; gap:2px 28px;}
+@media (max-width:700px){.glossary-grid{grid-template-columns:1fr;}}
+.gterm{padding:14px 0; border-bottom:1px solid var(--line-soft);}
+.gterm dt{font-family:var(--mono); color:var(--cyan); font-size:13px; margin-bottom:4px;}
+.gterm dd{color:var(--ink-dim); font-size:13px; line-height:1.55;}
+.footer{padding:60px 0 20px; text-align:center; color:var(--ink-faint); font-family:var(--mono); font-size:12px;}
+.statgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:20px 0 26px;}
+@media (max-width:700px){.statgrid{grid-template-columns:1fr;}}
+.statcard{background:var(--bg-card); border:1px solid var(--line); border-radius:10px; padding:16px;}
+.statcard .num{font-family:var(--display); font-weight:700; font-size:24px; color:var(--amber);}
+.statcard .lbl{font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); margin-top:4px;}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav class="side" id="side">
+  <a class="back-link" href="#">← Topic 7: Production Design</a>
+  <div class="brand">RAG, One Level <span>Deeper</span></div>
+  <div class="brand-sub">Topic 8 of 10 — deep reference</div>
+  <a class="nav-link" href="#pipeline-not-technique"><span class="nav-num">00</span>RAG Is a Pipeline, Not a Technique</a>
+  <a class="nav-link" href="#chunking"><span class="nav-num">01</span>★ Chunking Strategies, All 9</a>
+  <a class="nav-link" href="#contextual-retrieval"><span class="nav-num">02</span>★ Contextual Retrieval &amp; Late Chunking</a>
+  <a class="nav-link" href="#hybrid-search"><span class="nav-num">03</span>Hybrid Search &amp; RRF</a>
+  <a class="nav-link" href="#reranking"><span class="nav-num">04</span>Reranking: Cross-Encoders &amp; ColBERT</a>
+  <a class="nav-link" href="#query-transform"><span class="nav-num">05</span>Query Transformation: HyDE, Multi-Query</a>
+  <a class="nav-link" href="#self-correcting"><span class="nav-num">06</span>Self-RAG, CRAG &amp; Adaptive RAG</a>
+  <a class="nav-link" href="#graphrag"><span class="nav-num">07</span>GraphRAG &amp; RAPTOR</a>
+  <a class="nav-link" href="#agentic-rag"><span class="nav-num">08</span>Agentic RAG, Revisited</a>
+  <a class="nav-link" href="#architecture"><span class="nav-num">09</span>Production Architecture, End to End</a>
+  <a class="nav-link" href="#evaluation-link"><span class="nav-num">10</span>Evaluation Tie-In</a>
+  <a class="nav-link" href="#decision"><span class="nav-num">11</span>Decision Framework</a>
+  <a class="nav-link" href="#pitfalls"><span class="nav-num">12</span>Production Pitfalls</a>
+  <a class="nav-link" href="#interview"><span class="nav-num">13</span>Interview Cheat-Sheet</a>
+  <a class="nav-link" href="#glossary"><span class="nav-num">14</span>Glossary</a>
+  <a class="nav-link" href="#resources"><span class="nav-num">15</span>Resources</a>
+</nav>
+
+<main class="main">
+  <div class="hero">
+    <div class="hero-eyebrow">Deep reference · Topic 8 of 10</div>
+    <h1 class="title">RAG, <em>One Level Deeper</em></h1>
+    <p class="hero-sub">Every advanced retrieval technique that separates a 44%-correct naive RAG demo from a 63%+ production system: all nine chunking strategies with real benchmark numbers, Anthropic's contextual retrieval (67% failure reduction), hybrid search and reranking (the two biggest single levers), the self-correcting RAG family (Self-RAG, CRAG), GraphRAG, and exactly where agentic patterns from Topic 1 plug back in.</p>
+    <div class="tag-row">
+      <span class="tag">Chunking Strategies</span><span class="tag">Contextual Retrieval</span><span class="tag">Hybrid Search / RRF</span>
+      <span class="tag">Cross-Encoder Reranking</span><span class="tag">HyDE</span><span class="tag">Self-RAG</span>
+      <span class="tag">CRAG</span><span class="tag">GraphRAG</span><span class="tag">RAPTOR</span>
+    </div>
+  </div>
+
+  <!-- ============ 00 PIPELINE NOT TECHNIQUE ============ -->
+  <section class="chapter" id="pipeline-not-technique">
+    <div class="chapter-head"><span class="chapter-num">00</span><h2 class="chapter-title">RAG Is a Pipeline, Not a Technique</h2></div>
+    <p class="chapter-dek">The gap between a RAG demo and a RAG system that survives production is entirely in this section's framing.</p>
+    <div class="chapter-body">
+      <div class="statgrid">
+        <div class="statcard"><div class="num">44%</div><div class="lbl">factual accuracy for naive retrieval, no advanced techniques</div></div>
+        <div class="statcard"><div class="num">63%</div><div class="lbl">factual accuracy for state-of-the-art RAG with advanced techniques</div></div>
+        <div class="statcard"><div class="num">+17.4%</div><div class="lbl">Recall@5 gain from adding reranking on top of hybrid RRF alone</div></div>
+      </div>
+      <p>A comprehensive RAG benchmark found that state-of-the-art RAG systems answer only 63% of factual questions correctly, while straightforward retrieval without advanced techniques scores just 44%. Every technique in this document exists to close some specific slice of that 19-point gap — chunking fixes context loss at boundaries, hybrid search fixes vocabulary mismatch, reranking fixes coarse ranking precision, self-correction fixes retrieval failures the pipeline can detect and recover from.</p>
+      <div class="callout pitfall">
+        <span class="callout-label">The upstream truth that outranks every technique below</span>
+        <p>The choice of chunking strategy matters — but most teams discover that chunk size is not the binding constraint. Production RAG failures usually trace back to stale, ungoverned, or semantically thin source data rather than suboptimal boundary placement. Every technique in this document assumes your source corpus is accurate and current — no retrieval technique fixes a knowledge base that's wrong or stale, and that's worth saying explicitly in an interview before diving into technique details.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 01 CHUNKING ============ -->
+  <section class="chapter" id="chunking">
+    <div class="chapter-head"><span class="chapter-num">01 ★</span><h2 class="chapter-title">Chunking Strategies, All Nine</h2></div>
+    <p class="chapter-dek">The most over-discussed, under-decisive lever in RAG — know all nine, know the real numbers, know that it's rarely the actual bottleneck.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Strategy</th><th>How it works</th><th>Cost / speed</th></tr>
+        <tr><td class="k">Fixed-size / character</td><td>Split every N characters, often with overlap</td><td>Fastest, simplest — the 5-minute baseline</td></tr>
+        <tr><td class="k">Recursive (token-based)</td><td>Splits recursively along a hierarchy of separators, respecting sentence/paragraph boundaries where possible; the pragmatic 2026 default</td><td>4.82 MB/s (Chonkie benchmark)</td></tr>
+        <tr><td class="k">Semantic chunking</td><td>Uses embedding similarity to detect topic shifts, grouping sentences whose embeddings are similar and starting a new chunk when embedding distance jumps above a threshold</td><td>~0.33 MB/s — roughly 14x slower than token-based; improves recall up to 9% over simpler methods</td></tr>
+        <tr><td class="k">Document-structure-aware</td><td>Splits along native document structure (headers, sections) rather than arbitrary token counts</td><td>Low overhead if structure metadata already exists</td></tr>
+        <tr><td class="k">Parent-child / sentence window</td><td>Retrieve a small precise chunk, but pass its larger parent context to the generator — decouples retrieval precision from generation completeness</td><td>Storage overhead for maintaining both granularities</td></tr>
+        <tr><td class="k">Agentic chunking</td><td>Uses an LLM to propose chunk boundaries based on semantic logic — e.g. LumberChunker for narrative long-form documents</td><td>Highest cost — an LLM call per boundary decision</td></tr>
+        <tr><td class="k">Late chunking</td><td>Embeds the entire document first to capture global context, then splits into chunks afterward — improves retrieval by emphasizing document-level coherence</td><td>Cheaper than contextual retrieval — uses only the embedding model, no LLM cost</td></tr>
+        <tr><td class="k">Contextual retrieval (chunking + enrichment)</td><td>Covered in full in the next section — prepend LLM-generated context to each chunk before embedding</td><td>Highest quality gain, LLM cost per chunk at indexing time</td></tr>
+        <tr><td class="k">Metadata-enriched retrieval units</td><td>Chunks with ownership, freshness, lineage, and policy context attached — less about boundary placement, more about governance</td><td>Engineering overhead, pays off at enterprise scale/compliance</td></tr>
+      </table>
+      <h3>Chunk size &amp; overlap — the numbers to actually cite</h3>
+      <table class="tbl">
+        <tr><th>Parameter</th><th>2026 guidance</th></tr>
+        <tr><td class="k">Chunk size</td><td>512–1024 tokens is a defensible starting point — a February 2026 vendor benchmark ranked recursive 512-token splitting first across seven strategies; an earlier LlamaIndex study found 1024 tokens near peak faithfulness.</td></tr>
+        <tr><td class="k">Overlap</td><td>Industry best practice historically recommended 10-20% overlap — <strong>but</strong> a January 2026 systematic analysis using SPLADE retrieval and Mistral-8B on Natural Questions found that overlap provided no measurable benefit and only increased indexing cost. Treat the 10-20% figure as a legacy default worth re-testing on your own corpus, not a settled fact.</td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"How do you choose a chunking strategy for a new RAG system?" — Start with recursive token-based splitting at 512-1024 tokens as the pragmatic default; it's the top-ranked strategy in recent benchmarks and costs almost nothing to implement. Only escalate to semantic or agentic chunking if your eval (Topic 5's context recall/precision metrics) shows chunking-boundary losses specifically — semantic chunking is ~14x slower to index, so it should be a measured decision, not a default. And always check your source data quality before tuning chunking further — most production RAG failures are upstream of the chunker entirely.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 CONTEXTUAL RETRIEVAL ============ -->
+  <section class="chapter" id="contextual-retrieval">
+    <div class="chapter-head"><span class="chapter-num">02 ★</span><h2 class="chapter-title">Contextual Retrieval &amp; Late Chunking</h2></div>
+    <p class="chapter-dek">The single highest-ROI technique in this entire document — and the exact mechanism behind why it works.</p>
+    <div class="chapter-body">
+      <p>A chunk saying "revenue grew 3% last quarter" is useless without knowing which company, which quarter, or which document it came from. The embedding model faithfully encodes the fragment but misses the context that makes it meaningful — when a user asks "What was Acme Corp's Q2 2023 revenue growth?", the retriever may not find this chunk because the embedding has no signal for "Acme Corp" or "Q2 2023."</p>
+      <h3>Contextual retrieval (Anthropic, 2024)</h3>
+      <p>Prepends a short LLM-generated context summary to each chunk before embedding — the summary explains where the chunk sits within its source document, so the embedding carries document-level context rather than just the chunk's local text.</p>
+      <div class="code-wrap">
+        <div class="code-head"><span>contextual_retrieval_example.txt</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre>Original chunk: <span class="tok-str">"Revenue grew 3% last quarter."</span>
+
+Contextualized chunk (LLM-generated prefix + original chunk):
+<span class="tok-str">"This chunk is from Acme Corp's Q2 2023 earnings report, in the
+revenue summary section. Revenue grew 3% last quarter."</span>
+<span class="tok-com"># -- now embedded and indexed as one unit</span></pre>
+      </div>
+      <div class="statgrid">
+        <div class="statcard"><div class="num">49%</div><div class="lbl">reduction in retrieval failures from contextual embeddings alone</div></div>
+        <div class="statcard"><div class="num">67%</div><div class="lbl">reduction when combined with reranking</div></div>
+        <div class="statcard"><div class="num">&gt;model swap</div><div class="lbl">a bigger improvement than switching to a more expensive embedding model</div></div>
+      </div>
+      <p>Anthropic's contextual retrieval research demonstrated that adding context to chunks before embedding reduces retrieval failures by 49%, and by 67% when combined with reranking — a bigger improvement than switching from a cheap embedding model to an expensive one.</p>
+      <h3>Late chunking (Jina AI) — the cheaper alternative solving the same problem</h3>
+      <p>Late chunking uses the embedding model only, cheaper than contextual retrieval's LLM + embedding pipeline. Best for long documents with cross-references — technical docs, research papers, legal documents where entities are introduced once and referenced throughout.</p>
+      <div class="callout paper">
+        <span class="callout-label">When they converge — a genuinely interesting nuance</span>
+        <p>A 2025 arXiv paper comparing late chunking and contextual retrieval found results depend heavily on the embedding model used — with Jina-V3, fixed-window chunking and semantic chunking "do not differ much in terms of performance" when late chunking is applied, because the full-document context already captures the cross-references. This is a good "I know the nuance, not just the headline number" fact to have ready.</p>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"Your RAG system misses queries that reference an entity only named once, early in a long document. What do you do?" — This is the canonical contextual-retrieval failure mode. Either prepend LLM-generated context to each chunk before embedding (Anthropic's approach, ~49% failure reduction, ~67% with reranking) or use late chunking with a long-context embedding model that embeds the full document before splitting (cheaper, no LLM cost, particularly strong when entities are introduced once and referenced throughout — legal/technical docs). Choose late chunking first if cost is a concern; escalate to full contextual retrieval if late chunking's gains plateau on your eval set.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 HYBRID SEARCH ============ -->
+  <section class="chapter" id="hybrid-search">
+    <div class="chapter-head"><span class="chapter-num">03</span><h2 class="chapter-title">Hybrid Search &amp; Reciprocal Rank Fusion</h2></div>
+    <p class="chapter-dek">Dense and sparse retrieval fail on opposite query types. Fusing them is close to a free lunch.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Method</th><th>Wins on</th><th>Loses on</th></tr>
+        <tr><td class="k">Dense (embeddings)</td><td>Paraphrasing, synonyms, conceptual/semantic matching</td><td>Exact-match terms — identifiers, names, domain jargon — because embedding models compress semantics and lose token-level precision</td></tr>
+        <tr><td class="k">Sparse (BM25)</td><td>SKUs, product codes, exact tokens, rare terms</td><td>Semantic synonyms and paraphrased queries</td></tr>
+        <tr><td class="k">Hybrid (fused)</td><td>Both — the standard implementation is BM25 plus an off-the-shelf dense encoder plus RRF or weighted scoring</td><td>Added latency and infra complexity relative to either alone</td></tr>
+      </table>
+      <p>Reciprocal Rank Fusion merges the two ranked result sets by rank position rather than raw score, making it robust to the different score scales of the two systems — no need to normalize BM25 scores against cosine similarities, which live on entirely different numeric ranges.</p>
+      <div class="callout paper">
+        <span class="callout-label">The real cost/benefit trade, quantified</span>
+        <p>Moving from dense-only to hybrid retrieval elevated Mean Reciprocal Rank from 0.410 to 0.486 — an 18.5% improvement in the likelihood of the correct answer appearing in the top position. This accuracy lift came with a 24.5% increase in query latency (an additional 201ms), largely due to the overhead of generating both dense and sparse vectors.</p>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"When would you skip hybrid search and use dense retrieval alone?" — When the corpus is clean and single-topic with no exact-match requirement — e.g. a narrow FAQ knowledge base where every query is naturally conceptual. Skip it also when the added ~200ms latency genuinely doesn't fit the budget and your query distribution is dominated by paraphrase-style questions rather than exact lookups. Add it back the moment identifiers, product codes, names, or rare technical terms appear in real query logs.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 04 RERANKING ============ -->
+  <section class="chapter" id="reranking">
+    <div class="chapter-head"><span class="chapter-num">04</span><h2 class="chapter-title">Reranking: Cross-Encoders &amp; ColBERT</h2></div>
+    <p class="chapter-dek">The single biggest precision lever in the entire pipeline — and the most expensive per-candidate.</p>
+    <div class="chapter-body">
+      <p>A cross-encoder model reads both the user query and each retrieved chunk as a single input, producing a precise relevance score for each pair — unlike bi-encoders (used for the initial dense retrieval pass), which encode query and document independently and can only be compared via a cheap vector operation afterward.</p>
+      <div class="statgrid">
+        <div class="statcard"><div class="num">+17.4%</div><div class="lbl">Recall@5 gain: hybrid+rerank (0.816) vs hybrid RRF alone (0.695)</div></div>
+        <div class="statcard"><div class="num">+39.7%</div><div class="lbl">relative MRR@3 gain from adding a reranker (0.433 → 0.605)</div></div>
+        <div class="statcard"><div class="num">5,000x</div><div class="lbl">more compute-per-query for cross-encoders vs bi-encoders</div></div>
+      </div>
+      <p>The two-stage pipeline of hybrid retrieval followed by neural reranking dominates all single-stage methods by a wide margin — Recall@5 of 0.816 compared to 0.695 for hybrid RRF alone, 0.644 for BM25 alone, and 0.587 for dense retrieval alone. While bi-encoders provide low-latency retrieval, cross-encoder rerankers can be 5,000x more expensive in terms of compute-per-query — which is exactly why reranking is always a second-stage refinement over a small candidate set, never the primary retrieval mechanism.</p>
+      <table class="tbl">
+        <tr><th>Parameter</th><th>Guidance</th></tr>
+        <tr><td class="k">Retrieve-then-rerank candidate count</td><td>Reranking the top-50 candidates is considered the "sweet spot" for most production use cases</td></tr>
+        <tr><td class="k">Latency added</td><td>Typically 150-300ms for 20 candidates</td></tr>
+        <tr><td class="k">When to skip it</td><td>Real-time applications with strict latency budgets, or when initial retrieval candidates are already clean (small, low-noise corpus)</td></tr>
+      </table>
+      <p><strong>ColBERT</strong> sits between bi-encoders and cross-encoders: a multi-vector (token-level) retrieval model that's more precise than a single-vector bi-encoder but cheaper than a full cross-encoder, often used as a coarse reranking pass before a final cross-encoder stage in the most demanding pipelines.</p>
+    </div>
+  </section>
+
+  <!-- ============ 05 QUERY TRANSFORM ============ -->
+  <section class="chapter" id="query-transform">
+    <div class="chapter-head"><span class="chapter-num">05</span><h2 class="chapter-title">Query Transformation: HyDE &amp; Multi-Query</h2></div>
+    <p class="chapter-dek">Techniques that rewrite or expand the query before retrieval — with an honest, benchmark-backed caveat on the most famous one.</p>
+    <div class="chapter-body">
+      <h3>HyDE (Hypothetical Document Embeddings)</h3>
+      <p>HyDE addresses the asymmetry between short queries and long documents by generating a hypothetical answer passage at query time and retrieving with its embedding rather than the original query's embedding — the intuition being that a hypothetical <em>answer</em> is closer in embedding space to a real answer passage than a short <em>question</em> is.</p>
+      <div class="callout pitfall">
+        <span class="callout-label">The honest benchmark result — say this to sound current, not textbook</span>
+        <p>HyDE underperforms vanilla dense retrieval in a recent controlled benchmark, with all pairwise differences between adjacent methods statistically significant (p &lt; 0.001). HyDE is a genuinely clever idea that doesn't reliably beat the simple baseline in practice — a hypothetical passage generated by the LLM can just as easily hallucinate content that pulls retrieval toward the wrong documents. Test it on your own eval set before trusting the theory; don't cite it as an automatic win in an interview.</p>
+      </div>
+      <h3>Multi-query / RAG-Fusion</h3>
+      <p>Generate several reformulations of the original query (different phrasings, different angles), retrieve for each independently, then fuse the results (typically via RRF) — broadens recall by covering vocabulary and framing the original single query might miss, at the cost of N retrieval calls instead of one.</p>
+      <h3>Query rewriting</h3>
+      <p>A lighter-weight transformation: clean up, disambiguate, or expand the raw user query (resolve pronouns, add implied context from conversation history) before it ever hits the retriever — cheap, and often catches a meaningful share of retrieval misses caused by ambiguous or underspecified queries rather than genuine retrieval-system limitations.</p>
+    </div>
+  </section>
+
+  <!-- ============ 06 SELF-CORRECTING ============ -->
+  <section class="chapter" id="self-correcting">
+    <div class="chapter-head"><span class="chapter-num">06</span><h2 class="chapter-title">Self-RAG, CRAG &amp; Adaptive RAG</h2></div>
+    <p class="chapter-dek">The family of techniques that let the pipeline notice its own retrieval failures and do something about it — directly related to the Reflexion/Self-Refine patterns from Topic 1.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Technique</th><th>Mechanism</th></tr>
+        <tr><td class="k">Self-RAG</td><td>On-demand retrieval with built-in output critique — the model signals when to retrieve and whether the retrieved context actually supports the generated answer, using special reflection tokens rather than always retrieving unconditionally on every query</td></tr>
+        <tr><td class="k">CRAG (Corrective RAG)</td><td>Retrieval evaluation with web search fallback — a fallback path that triggers when retrieved documents look weak, grading retrieved documents and either using them, refining them, or escalating to an external search when confidence is low</td></tr>
+        <tr><td class="k">Adaptive RAG</td><td>Query routing to right-sized retrieval pipelines — simple factual queries get lightweight single-pass retrieval, complex multi-hop queries get the full agentic treatment, avoiding paying agentic-RAG overhead on queries that don't need it</td></tr>
+      </table>
+      <div class="callout paper">
+        <span class="callout-label">Where CRAG actually lands in the benchmark hierarchy</span>
+        <p>Cross-encoder reranking dominates all methods; contextual hybrid outperforms vanilla hybrid RRF; CRAG provides moderate gains through adaptive query correction; HyDE underperforms vanilla dense retrieval. This ranking is worth memorizing directly — it tells you where to actually invest engineering effort first (reranking, then contextual/hybrid) versus where the marginal gain is smaller (CRAG) or negative in practice (HyDE).</p>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"Explain the difference between CRAG and Self-RAG." — Self-RAG decides <em>whether to retrieve at all</em> and critiques whether retrieved context supports its own answer, using the model's own reflection tokens — it's a decision layer wrapped around a single retrieval pass. CRAG assumes retrieval already happened and grades the quality of what came back, with an explicit fallback (often web search) when the retrieved documents are judged weak — it's a quality-control layer sitting after retrieval, not a decision about whether to retrieve. They're complementary, not competing.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 07 GRAPHRAG ============ -->
+  <section class="chapter" id="graphrag">
+    <div class="chapter-head"><span class="chapter-num">07</span><h2 class="chapter-title">GraphRAG &amp; RAPTOR</h2></div>
+    <p class="chapter-dek">For questions a flat vector store structurally cannot answer well — multi-hop relationships and whole-corpus synthesis.</p>
+    <div class="chapter-body">
+      <h3>GraphRAG</h3>
+      <p>Knowledge graph RAG augments vector retrieval with a structured knowledge graph representing entities and their relationships, using graph traversal at retrieval time to assemble context a flat vector store cannot. Microsoft's GraphRAG paper showed that local-question performance is comparable to vector RAG, but global questions — the kind asking about themes or relationships spanning the whole corpus — are where GraphRAG earns its keep, since flat retrieval is ineffective for holistic questions like "what are the main themes across all these documents?"</p>
+      <h3>RAPTOR</h3>
+      <p>Recursive tree indexing for long-document reasoning — builds a hierarchical tree of recursive summaries over a document (clustering and summarizing chunks bottom-up), so retrieval can pull from the right level of abstraction: a fine-grained leaf chunk for a specific fact, or a higher-level summary node for a broad thematic question.</p>
+      <table class="tbl">
+        <tr><th>Use when</th><th>Skip when</th></tr>
+        <tr><td>Multi-hop questions requiring explicit entity/relationship traversal, or whole-corpus synthesis questions a single retrieval pass structurally can't answer</td><td>Most queries are simple fact lookups answerable from a single chunk — graph construction and maintenance overhead isn't repaid</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 08 AGENTIC RAG ============ -->
+  <section class="chapter" id="agentic-rag">
+    <div class="chapter-head"><span class="chapter-num">08</span><h2 class="chapter-title">Agentic RAG, Revisited</h2></div>
+    <p class="chapter-dek">Ties every technique above back to the reasoning patterns from Topic 1 — this is where retrieval stops being a single pipeline stage and becomes something an agent plans and adapts.</p>
+    <div class="chapter-body">
+      <p>Every technique in this document so far assumes a largely fixed pipeline shape (retrieve → maybe rerank → generate). Agentic RAG is what happens when an LLM plans the retrieval strategy itself, mid-task — deciding <em>whether</em> to retrieve (Self-RAG's core question), <em>how many</em> times, with <em>what</em> reformulated sub-queries (Topic 1's Self-Ask pattern), and whether the results are good enough to stop or need another pass (CRAG's grading step, generalized into a full agentic loop rather than a single fallback branch).</p>
+      <div class="callout focus">
+        <span class="callout-label">The direct connection to Topic 1</span>
+        <p>The "query → subquery → retrieve → rank" diagram from Topic 1's agentic search section is the same shape as CRAG's grade-and-correct loop and Self-RAG's retrieve-and-critique loop, generalized. The reasoning patterns you already know — ReAct for step-by-step adaptive retrieval, Plan-and-Execute for a fixed multi-hop retrieval plan, Reflexion for improving retrieval strategy across attempts — are directly applicable to building an agentic RAG system; this topic is Topic 1's patterns applied specifically to the retrieval domain.</p>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"When does agentic RAG earn its added latency and cost over a fixed pipeline?" — Same criteria as Topic 1's decision framework: when the right retrieval strategy can only be determined after seeing intermediate results (a fixed ReWOO-style plan would be wrong), when questions are genuinely multi-hop with dependent sub-queries, or when self-correction (noticing weak retrieved context and retrying differently) measurably improves your eval numbers over a static pipeline. For single-hop factual lookups, a fixed hybrid-search-plus-rerank pipeline is both cheaper and more predictable.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 09 ARCHITECTURE ============ -->
+  <section class="chapter" id="architecture">
+    <div class="chapter-head"><span class="chapter-num">09</span><h2 class="chapter-title">Production Architecture, End to End</h2></div>
+    <p class="chapter-dek">Every technique above, assembled into one reference pipeline.</p>
+    <div class="chapter-body">
+      <div class="diagram">
+        <svg viewBox="0 0 780 300" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="ram" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff9f40"/></marker></defs>
+          <rect x="20" y="20" width="140" height="46" rx="7" fill="none" stroke="#5fd9c9" stroke-width="1.4"/>
+          <text x="90" y="48" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Ingestion</text>
+          <line x1="160" y1="43" x2="200" y2="43" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#ram)"/>
+          <rect x="200" y="20" width="140" height="46" rx="7" fill="none" stroke="#c9f04c" stroke-width="1.4"/>
+          <text x="270" y="48" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Chunk + Contextualize</text>
+          <line x1="340" y1="43" x2="380" y2="43" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#ram)"/>
+          <rect x="380" y="20" width="140" height="46" rx="7" fill="none" stroke="#b592ff" stroke-width="1.4"/>
+          <text x="450" y="48" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Embed + Index</text>
+          <text x="450" y="10" fill="#5c6672" font-family="JetBrains Mono" font-size="9" text-anchor="middle">offline / indexing time</text>
+
+          <rect x="20" y="130" width="140" height="46" rx="7" fill="none" stroke="#5fd9c9" stroke-width="1.4"/>
+          <text x="90" y="158" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Query rewrite</text>
+          <line x1="160" y1="153" x2="200" y2="153" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#ram)"/>
+          <rect x="200" y="130" width="140" height="46" rx="7" fill="none" stroke="#ff9f40" stroke-width="1.4"/>
+          <text x="270" y="152" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Hybrid retrieve</text>
+          <text x="270" y="167" fill="#9aa3b0" font-family="JetBrains Mono" font-size="9" text-anchor="middle">BM25 + dense, RRF</text>
+          <line x1="340" y1="153" x2="380" y2="153" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#ram)"/>
+          <rect x="380" y="130" width="140" height="46" rx="7" fill="none" stroke="#ff7a8a" stroke-width="1.4"/>
+          <text x="450" y="152" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Rerank</text>
+          <text x="450" y="167" fill="#9aa3b0" font-family="JetBrains Mono" font-size="9" text-anchor="middle">top-50 -&gt; top-5</text>
+          <line x1="520" y1="153" x2="560" y2="153" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#ram)"/>
+          <rect x="560" y="130" width="140" height="46" rx="7" fill="none" stroke="#c9f04c" stroke-width="1.4"/>
+          <text x="630" y="152" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Generate</text>
+          <text x="630" y="167" fill="#9aa3b0" font-family="JetBrains Mono" font-size="9" text-anchor="middle">cite sources</text>
+          <text x="360" y="112" fill="#5c6672" font-family="JetBrains Mono" font-size="9" text-anchor="middle">query time</text>
+
+          <line x1="630" y1="176" x2="630" y2="220" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#ram)"/>
+          <rect x="530" y="220" width="200" height="46" rx="7" fill="none" stroke="#5fd9c9" stroke-width="1.4"/>
+          <text x="630" y="242" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Eval: faithfulness,</text>
+          <text x="630" y="257" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">context recall (Topic 5)</text>
+        </svg>
+      </div>
+      <p>Ingestion: normalize sources, strip boilerplate, attach metadata for filtered retrieval. Chunking: semantic or recursive splits, parent/child IDs for hierarchy. Embed &amp; index: batch embed with a domain-aligned model, incremental upserts. Query understanding: rewriting, HyDE (with the caveat above), multi-query for recall. Retrieve &amp; rerank: hybrid search, wide candidate set (e.g. 20-50), rerank to a tight set (e.g. 5). Prompting: answer only from context, cite sources, low temperature for factual tasks. Validation: faithfulness checks, safety filters, tracing IDs.</p>
+      <div class="callout">
+        <span class="callout-label">Embedding model choice, briefly</span>
+        <p>Dense embeddings via current MTEB leaderboard top picks (Voyage-3, OpenAI text-embedding-3-large, BGE-M3, Cohere Embed v4). Model choice matters less than the contextual-retrieval and reranking decisions above it in this pipeline — per the earlier stat, contextual retrieval alone beats switching to a more expensive embedding model.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 10 EVAL TIE-IN ============ -->
+  <section class="chapter" id="evaluation-link">
+    <div class="chapter-head"><span class="chapter-num">10</span><h2 class="chapter-title">Evaluation Tie-In</h2></div>
+    <p class="chapter-dek">Every technique in this document should be justified by a measured eval delta, not adopted on reputation — this is Topic 5's RAGAS metrics applied specifically to the choices above.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Technique change</th><th>Metric that should move (from Topic 5)</th></tr>
+        <tr><td class="k">Better chunking / contextual retrieval</td><td>Context recall, context precision</td></tr>
+        <tr><td class="k">Hybrid search / reranking</td><td>Context precision specifically — these are ranking-quality levers</td></tr>
+        <tr><td class="k">Self-RAG / CRAG</td><td>Faithfulness (fewer ungrounded claims when the pipeline notices and corrects weak retrieval)</td></tr>
+        <tr><td class="k">GraphRAG / RAPTOR</td><td>Answer correctness on multi-hop / global-question eval subsets specifically — flat metrics on single-hop questions won't show the gain</td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">Don't skip this step</span>
+        <p>Every number cited throughout this document comes from a benchmark on someone else's corpus and query distribution. HyDE's underperformance and CRAG's "moderate gains" are directional, not universal laws — the only way to know whether a technique helps <em>your</em> system is to run it against your own eval set, exactly as Topic 5 argues.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 11 DECISION FRAMEWORK ============ -->
+  <section class="chapter" id="decision">
+    <div class="chapter-head"><span class="chapter-num">11</span><h2 class="chapter-title">Decision Framework</h2></div>
+    <p class="chapter-dek">In rough order of implementation priority, given the numbers cited throughout this document.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Priority</th><th>What to add</th><th>Why this order</th></tr>
+        <tr><td class="k">1</td><td>Verify source data quality/freshness first</td><td>No downstream technique fixes bad source data</td></tr>
+        <tr><td class="k">2</td><td>Recursive chunking at 512-1024 tokens</td><td>Cheap, well-benchmarked default</td></tr>
+        <tr><td class="k">3</td><td>Hybrid search (BM25 + dense + RRF)</td><td>~18.5% MRR gain for ~200ms latency cost — strong ROI</td></tr>
+        <tr><td class="k">4</td><td>Cross-encoder reranking on top-50 candidates</td><td>The single biggest precision lever (+17-40% depending on metric)</td></tr>
+        <tr><td class="k">5</td><td>Contextual retrieval or late chunking</td><td>49-67% retrieval failure reduction — bigger than most embedding model upgrades</td></tr>
+        <tr><td class="k">6</td><td>CRAG-style grading + fallback</td><td>Moderate additional gains once the pipeline above is solid</td></tr>
+        <tr><td class="k">7</td><td>GraphRAG / RAPTOR</td><td>Only if eval shows specific multi-hop/global-question failures</td></tr>
+        <tr><td class="k">8</td><td>Full agentic RAG loop</td><td>Highest cost/latency — justify against Topic 1's decision framework first</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 12 PITFALLS ============ -->
+  <section class="chapter" id="pitfalls">
+    <div class="chapter-head"><span class="chapter-num">12</span><h2 class="chapter-title">Production Pitfalls</h2></div>
+    <p class="chapter-dek">What actually goes wrong.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Obsessing over chunk size while source data is stale.</strong> Chunking is rarely the binding constraint — check data governance first.</li>
+        <li><strong>Adding overlap by default without testing it.</strong> A recent systematic analysis found no measurable benefit from overlap on some retrieval setups — it's a legacy default, not a law.</li>
+        <li><strong>Trusting HyDE without testing on your own corpus.</strong> It underperforms vanilla dense retrieval in controlled benchmarks — a plausible idea that doesn't always pay off.</li>
+        <li><strong>Using a cross-encoder as the primary retrieval mechanism.</strong> 5,000x more expensive per-candidate than a bi-encoder — always a second-stage refinement over a small candidate set, never the first pass.</li>
+        <li><strong>Skipping hybrid search on a corpus full of identifiers/codes/names.</strong> Dense-only retrieval structurally misses exact-match terms — this is the most common "why can't it find the SKU" bug report.</li>
+        <li><strong>Reaching for GraphRAG or agentic RAG before checking if a simpler pipeline already clears your eval bar.</strong> Same discipline as Topic 3's multi-agent decision framework — measure the baseline first.</li>
+        <li><strong>Adopting a technique because a blog post cited a benchmark number, without validating it on your own eval set.</strong> Every number in this document is corpus- and query-distribution-specific.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 13 INTERVIEW ============ -->
+  <section class="chapter" id="interview">
+    <div class="chapter-head"><span class="chapter-num">13</span><h2 class="chapter-title">Interview Cheat-Sheet</h2></div>
+    <p class="chapter-dek">Grouped by depth.</p>
+    <div class="chapter-body">
+
+      <h4>Core concepts</h4>
+      <details class="qa"><summary>Walk through why naive RAG underperforms and where the 44%→63% gap actually comes from.<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>Naive RAG (single dense retrieval pass, no reranking, no context enrichment, fixed-size chunking) fails in specific, well-understood ways: chunks lose document-level context, dense-only retrieval misses exact-match terms, and coarse initial ranking surfaces noisy candidates the generator can't distinguish from genuinely relevant ones. Each advanced technique — hybrid search, reranking, contextual retrieval — closes one specific slice of that gap, which is why they compound rather than substitute for each other.</p></div>
+      </details>
+      <details class="qa"><summary>Why does contextual retrieval outperform just switching to a better embedding model?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>A better embedding model still embeds the same context-poor chunk text — it can't recover information that was never in the chunk to begin with (e.g., which company or quarter a revenue figure refers to). Contextual retrieval fixes the actual root cause by enriching the chunk's content before embedding, so the improvement isn't bounded by embedding model quality the way a model swap is.</p></div>
+      </details>
+      <details class="qa"><summary>Explain Reciprocal Rank Fusion and why it's preferred over combining raw scores.<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>BM25 scores and cosine-similarity scores live on entirely different, incompatible numeric scales, so combining them directly requires careful normalization that's fragile across corpora. RRF sidesteps this by fusing based on each result's rank position in its own list rather than its raw score, making fusion robust regardless of how the underlying scores are distributed.</p></div>
+      </details>
+
+      <h4>Technique trade-offs</h4>
+      <details class="qa"><summary>When would you choose late chunking over contextual retrieval, and vice versa?<span class="qa-tag">tradeoffs</span></summary>
+        <div class="qa-body"><p>Late chunking uses only the embedding model (no LLM cost) and is a strong fit for long documents with cross-references — technical docs, legal documents where entities are introduced once. Contextual retrieval requires an LLM call per chunk at indexing time but has a stronger track record (49-67% failure reduction) and works well even when late chunking's long-context embedding requirement isn't met by your chosen embedding model. Start with late chunking for cost reasons; escalate to full contextual retrieval if gains plateau.</p></div>
+      </details>
+      <details class="qa"><summary>Why is a cross-encoder never used as the primary retrieval mechanism?<span class="qa-tag">tradeoffs</span></summary>
+        <div class="qa-body"><p>A cross-encoder must jointly process the query and each candidate document together, which is roughly 5,000x more compute-per-query than a bi-encoder's independent-encoding-plus-vector-comparison approach. Running that over an entire corpus per query is computationally infeasible at any real scale — it only becomes viable as a second-stage reranker over a small candidate set (the "top-50" sweet spot) already narrowed by a cheap first-pass retriever.</p></div>
+      </details>
+      <details class="qa"><summary>Your team wants to add HyDE because a well-known blog post recommends it. How do you respond?<span class="qa-tag">tradeoffs</span></summary>
+        <div class="qa-body"><p>HyDE is a legitimate, clever idea — generating a hypothetical answer passage to retrieve against rather than the raw short query — but recent controlled benchmarking found it underperforms vanilla dense retrieval, likely because the LLM's hypothetical passage can hallucinate content that pulls retrieval toward the wrong documents. Recommend an A/B test against your own eval set before adopting it; don't take a technique's reputation as a substitute for measuring it on your actual corpus and query distribution.</p></div>
+      </details>
+      <details class="qa"><summary>What's the actual difference between CRAG and Self-RAG, precisely?<span class="qa-tag">tradeoffs</span></summary>
+        <div class="qa-body"><p>Self-RAG decides whether retrieval is needed at all for a given query, and after generating, critiques whether its own answer is actually supported by the retrieved context — both decisions live inside the generation model via reflection tokens. CRAG assumes retrieval has already happened and specifically grades the quality of what came back, triggering a fallback (often external web search) when confidence in the retrieved documents is low. Self-RAG is a decision-and-critique wrapper; CRAG is a post-retrieval quality gate.</p></div>
+      </details>
+
+      <h4>System design</h4>
+      <details class="qa"><summary>Design a RAG system for an internal legal document search tool with entities (client names, case numbers) introduced once and referenced throughout long documents.<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>This is the canonical late-chunking / contextual-retrieval use case. Use a long-context embedding model with late chunking (embed the full document first, split after) to preserve cross-reference context cheaply, layered with hybrid search since case numbers and client names are exact-match terms dense retrieval alone would miss. Add reranking over the top-50 hybrid candidates for final precision. Validate on an eval set specifically containing "entity introduced once, referenced later" queries, since that's the exact failure mode being targeted.</p></div>
+      </details>
+      <details class="qa"><summary>Your RAG system handles both simple FAQ lookups and complex multi-document comparison questions. How do you architect for both without over-paying on the simple case?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Adaptive RAG — route simple factual queries to a lightweight single-pass hybrid-search-plus-rerank pipeline, and route queries classified as complex/comparative/multi-hop to a heavier agentic RAG loop (query decomposition, multiple retrieval rounds, CRAG-style grading between rounds). The routing decision itself can be a cheap classifier or even a simple heuristic on query structure, avoiding the cost of running every query through the expensive path.</p></div>
+      </details>
+      <details class="qa"><summary>Users report your RAG system confidently answers questions with wrong information rather than saying "I don't know." How do you diagnose and fix this?<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Check faithfulness and context recall separately (Topic 5's RAGAS metrics) — if faithfulness is high but the underlying retrieved context was actually insufficient or wrong, the generator is being faithfully wrong, and the fix belongs upstream in retrieval quality (hybrid search, reranking, contextual retrieval), not in the generation prompt. If faithfulness itself is low despite good context recall, add a CRAG-style grading step or Self-RAG-style critique that can trigger a "insufficient evidence" response instead of a confident hallucination when retrieved context doesn't actually support an answer.</p></div>
+      </details>
+      <details class="qa"><summary>A stakeholder asks why you're not using GraphRAG for a customer support knowledge base of short, mostly independent articles.<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>GraphRAG earns its complexity on multi-hop relationship questions and whole-corpus synthesis questions — a support KB of short, mostly independent articles rarely has either property; most queries are single-hop fact lookups a flat hybrid-search-plus-rerank pipeline already handles well. Recommend measuring against the eval set first: if global/thematic questions are a real, frequent part of the query distribution, GraphRAG is worth the graph-construction and maintenance overhead; if not, it's added complexity without a corresponding accuracy gain.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ 14 GLOSSARY ============ -->
+  <section class="chapter" id="glossary">
+    <div class="chapter-head"><span class="chapter-num">14</span><h2 class="chapter-title">Glossary</h2></div>
+    <p class="chapter-dek">Every term used in this document.</p>
+    <div class="chapter-body">
+      <dl class="glossary-grid">
+        <div class="gterm"><dt>Semantic chunking</dt><dd>Splitting text at points where embedding similarity between sentences drops, rather than fixed character/token counts.</dd></div>
+        <div class="gterm"><dt>Late chunking</dt><dd>Embedding a full document first for global context, then splitting into chunks afterward.</dd></div>
+        <div class="gterm"><dt>Contextual retrieval</dt><dd>Prepending LLM-generated document-context summaries to chunks before embedding.</dd></div>
+        <div class="gterm"><dt>Hybrid search</dt><dd>Combining sparse (BM25) and dense (embedding) retrieval, typically fused via RRF.</dd></div>
+        <div class="gterm"><dt>Reciprocal Rank Fusion (RRF)</dt><dd>Merging ranked result lists by rank position rather than raw score, robust to differing score scales.</dd></div>
+        <div class="gterm"><dt>Cross-encoder reranking</dt><dd>Jointly scoring a query-document pair for precise relevance, applied as a second-stage refinement over a small candidate set.</dd></div>
+        <div class="gterm"><dt>Bi-encoder</dt><dd>Independently encodes query and document, compared via cheap vector similarity — used for initial retrieval, not reranking.</dd></div>
+        <div class="gterm"><dt>ColBERT</dt><dd>Multi-vector (token-level) retrieval model, precision/cost between bi-encoders and cross-encoders.</dd></div>
+        <div class="gterm"><dt>HyDE</dt><dd>Retrieving using the embedding of a generated hypothetical answer passage instead of the raw query.</dd></div>
+        <div class="gterm"><dt>Self-RAG</dt><dd>Model decides when to retrieve and critiques whether retrieved context supports its own generated answer.</dd></div>
+        <div class="gterm"><dt>CRAG (Corrective RAG)</dt><dd>Grades retrieved document quality and triggers a fallback (e.g. web search) when confidence is low.</dd></div>
+        <div class="gterm"><dt>Adaptive RAG</dt><dd>Routes queries to a right-sized retrieval pipeline based on estimated complexity.</dd></div>
+        <div class="gterm"><dt>GraphRAG</dt><dd>Augments vector retrieval with a structured entity-relationship knowledge graph for multi-hop and global questions.</dd></div>
+        <div class="gterm"><dt>RAPTOR</dt><dd>Recursive hierarchical tree of document summaries, enabling retrieval at variable levels of abstraction.</dd></div>
+        <div class="gterm"><dt>Agentic RAG</dt><dd>An LLM plans and adapts the retrieval strategy itself mid-task, rather than following a fixed pipeline.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ 15 RESOURCES ============ -->
+  <section class="chapter" id="resources">
+    <div class="chapter-head"><span class="chapter-num">15</span><h2 class="chapter-title">Resources</h2></div>
+    <p class="chapter-dek">Primary sources worth reading directly.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Anthropic — "Introducing Contextual Retrieval"</strong> (2024) — the source of the 49%/67% figures</li>
+        <li><strong>Günther et al. — "Late Chunking: Contextual Chunk Embeddings Using Long-Context Embedding Models"</strong> (Jina AI)</li>
+        <li><strong>Edge et al. — Microsoft GraphRAG paper</strong> (2024)</li>
+        <li><strong>Asai et al. — "Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection"</strong></li>
+        <li><strong>"From BM25 to Corrective RAG" (arXiv:2604.01733)</strong> — the controlled benchmark behind the HyDE/CRAG/reranking comparison numbers throughout this doc</li>
+        <li><strong>MTEB leaderboard</strong> — current embedding model rankings</li>
+      </ul>
+      <div class="callout">
+        <span class="callout-label">How to actually get interview-ready on this topic</span>
+        <p>Take any RAG system you've built (even a toy one) and add hybrid search plus reranking — the two highest-ROI, best-benchmarked levers in this entire document — then measure the before/after on Topic 5's RAGAS metrics. Having your own faithfulness/context-recall delta is worth more in an interview than reciting these benchmark numbers secondhand.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">Topic 8 of 10 — RAG, One Level Deeper. Next up: Memory Architectures (short-term thread state, long-term semantic memory, episodic memory, vector store architectures).</div>
+</main>
+</div>
+
+<script>
+const links = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('section.chapter');
+const map = new Map();
+links.forEach(l => map.set(l.getAttribute('href').slice(1), l));
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const link = map.get(entry.target.id);
+    if(!link) return;
+    if(entry.isIntersecting){
+      links.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, {rootMargin: '-15% 0px -70% 0px', threshold: 0});
+sections.forEach(s => io.observe(s));
+</script>
+</body>
+</html>

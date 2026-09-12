@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Model Serving &amp; Inference Optimization — The Complete Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d10; --bg-raised:#12151a; --bg-card:#14181f;
+  --line:#242a33; --line-soft:#1b2028;
+  --ink:#e7e9ec; --ink-dim:#9aa3b0; --ink-faint:#5c6672;
+  --amber:#ff9f40; --amber-dim:#c97a2e; --lime:#c9f04c; --cyan:#5fd9c9; --violet:#b592ff; --rose:#ff7a8a;
+  --serif:'Source Serif 4', Georgia, serif;
+  --display:'Space Grotesk', sans-serif;
+  --mono:'JetBrains Mono', 'Courier New', monospace;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:radial-gradient(var(--line-soft) 1px, transparent 1px);
+  background-size:22px 22px; background-color:var(--bg);
+  color:var(--ink); font-family:var(--serif); font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+a{color:var(--amber); text-decoration:none;}
+::selection{background:var(--amber); color:#111;}
+.shell{display:grid; grid-template-columns:290px 1fr; min-height:100vh;}
+@media (max-width:920px){ .shell{grid-template-columns:1fr;} .side{display:none;} }
+.side{position:sticky; top:0; height:100vh; overflow-y:auto; border-right:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(18,21,26,.9), rgba(11,13,16,.9)); padding:28px 20px 60px;}
+.side::-webkit-scrollbar{width:6px;} .side::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+.brand{font-family:var(--display); font-weight:700; font-size:15px; color:var(--ink); margin-bottom:2px;}
+.brand span{color:var(--amber);}
+.brand-sub{font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-bottom:24px;}
+.back-link{display:inline-block; font-family:var(--mono); font-size:11px; color:var(--cyan); margin-bottom:20px; border:1px solid var(--line); padding:5px 10px; border-radius:6px;}
+.nav-link{display:flex; align-items:baseline; gap:7px; font-family:var(--display); font-size:12.2px; color:var(--ink-dim);
+  padding:5px 7px; border-radius:6px; border-left:2px solid transparent; transition:.15s;}
+.nav-link:hover{color:var(--ink); background:var(--bg-raised);}
+.nav-link.active{color:var(--amber); border-left-color:var(--amber); background:var(--bg-raised);}
+.nav-num{font-family:var(--mono); font-size:9.5px; color:var(--ink-faint); min-width:20px;}
+.main{max-width:920px; padding:0 44px 140px; margin:0 auto;}
+@media (max-width:700px){ .main{padding:0 20px 100px;} }
+.hero{padding:76px 0 54px; border-bottom:1px solid var(--line);}
+.hero-eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--lime);
+  margin-bottom:18px; display:flex; align-items:center; gap:10px;}
+.hero-eyebrow::before{content:''; width:22px; height:1px; background:var(--lime); display:inline-block;}
+h1.title{font-family:var(--display); font-weight:700; font-size:clamp(28px,4.6vw,48px); line-height:1.1; letter-spacing:-.02em; color:var(--ink); max-width:17ch;}
+h1.title em{font-style:normal; color:var(--amber);}
+.hero-sub{font-family:var(--serif); font-size:18px; color:var(--ink-dim); max-width:62ch; margin-top:20px;}
+.tag-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:26px;}
+.tag{font-family:var(--mono); font-size:11px; padding:5px 11px; border-radius:20px; border:1px solid var(--line); color:var(--ink-dim); background:var(--bg-raised);}
+section.chapter{padding:60px 0; border-bottom:1px solid var(--line);}
+section.chapter:last-of-type{border-bottom:none;}
+.chapter-head{display:flex; align-items:flex-start; gap:16px; margin-bottom:8px;}
+.chapter-num{font-family:var(--mono); font-size:13px; color:var(--amber); border:1px solid var(--amber-dim); border-radius:20px; padding:3px 11px; margin-top:6px; white-space:nowrap;}
+h2.chapter-title{font-family:var(--display); font-weight:600; font-size:clamp(22px,3.2vw,30px); color:var(--ink); letter-spacing:-.01em;}
+.chapter-dek{font-family:var(--serif); font-style:italic; color:var(--ink-dim); font-size:16px; max-width:66ch; margin:14px 0 30px 0; padding-left:66px;}
+@media (max-width:700px){.chapter-dek{padding-left:0;}}
+.chapter-body{padding-left:66px;}
+@media (max-width:700px){.chapter-body{padding-left:0;}}
+.chapter-body h3{font-family:var(--display); font-weight:600; font-size:19px; color:var(--ink); margin:32px 0 12px;}
+.chapter-body h4{font-family:var(--display); font-weight:600; color:var(--cyan); margin:22px 0 10px; text-transform:uppercase; letter-spacing:.04em; font-size:12px;}
+.chapter-body p{color:var(--ink-dim); margin-bottom:14px; max-width:72ch;}
+.chapter-body ul, .chapter-body ol{color:var(--ink-dim); margin:0 0 16px 20px; max-width:70ch;}
+.chapter-body li{margin-bottom:7px;}
+.chapter-body strong{color:var(--ink); font-weight:600;}
+code.inline{font-family:var(--mono); font-size:.87em; background:var(--bg-raised); color:var(--lime); padding:1px 6px; border-radius:4px; border:1px solid var(--line);}
+.callout{border-left:3px solid var(--amber); background:var(--bg-card); padding:16px 18px; border-radius:0 8px 8px 0; margin:20px 0; max-width:70ch;}
+.callout p{margin-bottom:0; color:var(--ink-dim); font-size:14.5px;}
+.callout .callout-label{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--amber); margin-bottom:6px; display:block;}
+.callout.interview{border-left-color:var(--violet);} .callout.interview .callout-label{color:var(--violet);}
+.callout.pitfall{border-left-color:var(--rose);} .callout.pitfall .callout-label{color:var(--rose);}
+.callout.paper{border-left-color:var(--cyan);} .callout.paper .callout-label{color:var(--cyan);}
+.callout.focus{border-left-color:var(--lime); background:#151b12;} .callout.focus .callout-label{color:var(--lime);}
+.code-wrap{background:#0a0c0f; border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:18px 0 24px;}
+.code-head{display:flex; align-items:center; justify-content:space-between; padding:9px 14px; border-bottom:1px solid var(--line); background:var(--bg-raised); font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+.code-dots{display:flex; gap:5px;} .code-dots span{width:8px; height:8px; border-radius:50%; background:var(--line);}
+pre{padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:12.6px; line-height:1.7; color:#d7dbe0;}
+.tok-kw{color:var(--violet);} .tok-str{color:var(--lime);} .tok-com{color:var(--ink-faint); font-style:italic;} .tok-fn{color:var(--cyan);} .tok-num{color:var(--amber);}
+.tbl{width:100%; border-collapse:collapse; margin:18px 0 26px; font-size:13px; max-width:80ch;}
+.tbl th{text-align:left; font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-faint); padding:9px 10px; border-bottom:1px solid var(--line);}
+.tbl td{padding:9px 10px; border-bottom:1px solid var(--line-soft); color:var(--ink-dim); vertical-align:top;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl td.k{color:var(--ink); font-family:var(--mono); font-size:11.8px; white-space:nowrap;}
+.diagram{background:var(--bg-card); border:1px solid var(--line); border-radius:12px; padding:22px; margin:20px 0 26px;}
+.diagram svg{width:100%; height:auto; display:block;}
+.statgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:20px 0 26px;}
+@media (max-width:700px){.statgrid{grid-template-columns:1fr;}}
+.statcard{background:var(--bg-card); border:1px solid var(--line); border-radius:10px; padding:16px;}
+.statcard .num{font-family:var(--display); font-weight:700; font-size:22px; color:var(--amber);}
+.statcard .lbl{font-family:var(--mono); font-size:10px; color:var(--ink-faint); margin-top:4px;}
+.qa{border:1px solid var(--line); border-radius:10px; margin-bottom:10px; background:var(--bg-card); overflow:hidden;}
+.qa summary{list-style:none; cursor:pointer; padding:15px 18px; display:flex; gap:12px; align-items:flex-start; font-family:var(--display); font-size:14px; color:var(--ink); font-weight:500;}
+.qa summary::-webkit-details-marker{display:none;}
+.qa summary::before{content:'+'; font-family:var(--mono); color:var(--amber); font-size:16px; line-height:1;}
+.qa[open] summary::before{content:'–';}
+.qa .qa-body{padding:0 18px 18px 40px; color:var(--ink-dim); font-size:14px; max-width:68ch;}
+.qa .qa-body p{margin-bottom:10px;}
+.qa-tag{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; background:var(--bg-raised); color:var(--ink-faint); padding:2px 8px; border-radius:20px; border:1px solid var(--line); margin-left:auto; white-space:nowrap; flex-shrink:0;}
+.glossary-grid{display:grid; grid-template-columns:1fr 1fr; gap:2px 28px;}
+@media (max-width:700px){.glossary-grid{grid-template-columns:1fr;}}
+.gterm{padding:14px 0; border-bottom:1px solid var(--line-soft);}
+.gterm dt{font-family:var(--mono); color:var(--cyan); font-size:13px; margin-bottom:4px;}
+.gterm dd{color:var(--ink-dim); font-size:13px; line-height:1.55;}
+.footer{padding:60px 0 20px; text-align:center; color:var(--ink-faint); font-family:var(--mono); font-size:12px;}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav class="side" id="side">
+  <a class="back-link" href="#">← Doc 15: Fine-Tuning &amp; PEFT</a>
+  <div class="brand">Model Serving &amp; <span>Inference</span></div>
+  <div class="brand-sub">Doc 16 — plugging the gap</div>
+  <a class="nav-link" href="#roofline"><span class="nav-num">00</span>★ The Memory-Bandwidth Problem</a>
+  <a class="nav-link" href="#continuous-batching"><span class="nav-num">01</span>★ Continuous Batching</a>
+  <a class="nav-link" href="#pagedattention"><span class="nav-num">02</span>★ PagedAttention &amp; vLLM</a>
+  <a class="nav-link" href="#radixattention"><span class="nav-num">03</span>RadixAttention &amp; SGLang</a>
+  <a class="nav-link" href="#engine-comparison"><span class="nav-num">04</span>★ Engine Comparison, 2026</a>
+  <a class="nav-link" href="#kv-cache-math"><span class="nav-num">05</span>KV Cache Memory Math</a>
+  <a class="nav-link" href="#quantization-formats"><span class="nav-num">06</span>★ Deployment Quantization: GGUF, AWQ, GPTQ</a>
+  <a class="nav-link" href="#speculative-decoding"><span class="nav-num">07</span>★ Speculative Decoding</a>
+  <a class="nav-link" href="#gpu-memory-math"><span class="nav-num">08</span>GPU Memory Math, Worked Example</a>
+  <a class="nav-link" href="#decision"><span class="nav-num">09</span>Decision Framework</a>
+  <a class="nav-link" href="#pitfalls"><span class="nav-num">10</span>Production Pitfalls</a>
+  <a class="nav-link" href="#interview"><span class="nav-num">11</span>Interview Cheat-Sheet</a>
+  <a class="nav-link" href="#glossary"><span class="nav-num">12</span>Glossary</a>
+  <a class="nav-link" href="#resources"><span class="nav-num">13</span>Resources</a>
+</nav>
+
+<main class="main">
+  <div class="hero">
+    <div class="hero-eyebrow">Deep reference · Doc 16 · Gap-plugging series</div>
+    <h1 class="title">Model Serving &amp; <em>Inference Optimization</em></h1>
+    <p class="hero-sub">The infrastructure layer underneath Topic 7's application-layer caching and routing. Why decoding is memory-bandwidth-bound not compute-bound, how continuous batching and PagedAttention actually work mechanically, the real 2026 engine landscape (vLLM, SGLang, TGI's retirement), deployment quantization formats, speculative decoding, and the GPU memory math to answer "will this model fit."</p>
+    <div class="tag-row">
+      <span class="tag">Continuous Batching</span><span class="tag">PagedAttention</span><span class="tag">RadixAttention</span>
+      <span class="tag">vLLM / SGLang</span><span class="tag">GGUF / AWQ / GPTQ</span><span class="tag">Speculative Decoding</span>
+      <span class="tag">GPU Memory Math</span>
+    </div>
+  </div>
+
+  <!-- ============ 00 ROOFLINE ============ -->
+  <section class="chapter" id="roofline">
+    <div class="chapter-head"><span class="chapter-num">00 ★</span><h2 class="chapter-title">The Memory-Bandwidth Problem — Start Here</h2></div>
+    <p class="chapter-dek">Every optimization in this document exists to fix the same root cause. Understand this once and everything else becomes obvious.</p>
+    <div class="chapter-body">
+      <p>Modern LLM inference runs on GPUs built for massively parallel matrix multiplication — but decoding one token at a time, for one request, uses almost none of that parallelism. At batch size 1, 16-bit precision decoding has an arithmetic intensity of roughly 1 — meaning the GPU spends nearly all its time waiting on memory bandwidth to load weights, not actually computing. A reference GPT-2 Large inference on a quiesced RTX 4090 achieves only about 150 tokens/second, for a compute utilization of roughly 0.13% — the GPU's raw compute power is almost entirely wasted, governed instead by the memory-bandwidth roofline.</p>
+      <div class="callout focus">
+        <span class="callout-label">The one sentence that explains this entire document</span>
+        <p>The raw mathematics of model serving dictate that memory bandwidth, rather than pure compute power, is the primary bottleneck for inference speed. Every technique in this document — batching, paging, quantization, speculative decoding — is a different strategy for getting more useful work done per byte of memory bandwidth consumed, because that bandwidth, not FLOPs, is the actual scarce resource.</p>
+      </div>
+      <p>The fix for low arithmetic intensity at batch size 1 is obvious once framed this way: <strong>serve many requests at once</strong>, so the same weight-loading cost is amortized across many tokens being generated in parallel. That's exactly what batching solves — and naive batching has its own problems, which is where continuous batching and PagedAttention come in.</p>
+    </div>
+  </section>
+
+  <!-- ============ 01 CONTINUOUS BATCHING ============ -->
+  <section class="chapter" id="continuous-batching">
+    <div class="chapter-head"><span class="chapter-num">01 ★</span><h2 class="chapter-title">Continuous Batching</h2></div>
+    <p class="chapter-dek">The single biggest throughput lever in modern LLM serving — and the reason naive batching leaves most of the gain on the table.</p>
+    <div class="chapter-body">
+      <p>Naive ("static") batching waits until a fixed-size batch of requests has arrived, processes all of them together, and only starts the next batch once every request in the current batch has finished generating — meaning a batch is only as fast as its slowest (longest-output) request, and the GPU sits partially idle waiting for short requests to finish alongside long ones. <strong>Continuous batching</strong> dynamically groups requests as they arrive, rather than waiting for a full batch — as soon as any request in a running batch finishes, a new request from the queue is immediately spliced in to take its slot, keeping the GPU busy on bursty, variable-length, real-world traffic without manual batching logic.</p>
+      <div class="diagram">
+        <svg viewBox="0 0 700 180" xmlns="http://www.w3.org/2000/svg">
+          <text x="180" y="20" fill="#5fd9c9" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Static batching</text>
+          <rect x="40" y="35" width="280" height="20" rx="3" fill="none" stroke="#5fd9c9" stroke-width="1.2"/>
+          <rect x="40" y="35" width="90" height="20" fill="#5fd9c9" opacity="0.35"/>
+          <rect x="40" y="60" width="280" height="20" rx="3" fill="none" stroke="#5fd9c9" stroke-width="1.2"/>
+          <rect x="40" y="60" width="280" height="20" fill="#5fd9c9" opacity="0.35"/>
+          <text x="330" y="50" fill="#5c6672" font-family="JetBrains Mono" font-size="9">idle,</text>
+          <text x="330" y="62" fill="#5c6672" font-family="JetBrains Mono" font-size="9">waiting</text>
+
+          <text x="180" y="110" fill="#ff9f40" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Continuous batching</text>
+          <rect x="40" y="125" width="90" height="20" rx="3" fill="#ff9f40" opacity="0.4"/>
+          <rect x="130" y="125" width="60" height="20" rx="3" fill="#c9f04c" opacity="0.5"/>
+          <rect x="190" y="125" width="130" height="20" rx="3" fill="#b592ff" opacity="0.45"/>
+          <rect x="40" y="150" width="280" height="20" rx="3" fill="#ff9f40" opacity="0.4"/>
+          <text x="360" y="140" fill="#5c6672" font-family="JetBrains Mono" font-size="9" text-anchor="start">new requests slot in</text>
+          <text x="360" y="152" fill="#5c6672" font-family="JetBrains Mono" font-size="9" text-anchor="start">immediately, GPU stays busy</text>
+        </svg>
+      </div>
+      <div class="callout paper">
+        <span class="callout-label">The measured impact</span>
+        <p>The difference between a purpose-built inference server and a naive deployment can be up to 24x throughput on identical hardware — continuous batching combined with the memory-management techniques below is where nearly all of that gap comes from. A server that handles 4x more requests on the same GPU means you need 4x fewer GPUs for the same traffic — this is a direct, measurable cost lever, not a marginal tuning knob.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 PAGEDATTENTION ============ -->
+  <section class="chapter" id="pagedattention">
+    <div class="chapter-head"><span class="chapter-num">02 ★</span><h2 class="chapter-title">PagedAttention &amp; vLLM</h2></div>
+    <p class="chapter-dek">vLLM's core innovation, and the reason it became the default 2026 choice for production LLM serving.</p>
+    <div class="chapter-body">
+      <p>Every request being decoded needs its own growing KV cache (recall Topic 13's vector-search KV-cache concept — this is the analogous idea inside the serving engine itself: cached key/value tensors from every previous token, needed so attention doesn't have to recompute from scratch each step). Traditional inference engines allocate one contiguous memory block per request for this cache, sized for the maximum possible sequence length — this wastes 60-80% of KV cache memory through fragmentation, since most requests never reach that maximum length, and the unused reserved space can't be given to other requests.</p>
+      <p>PagedAttention, vLLM's core design, borrows virtual memory concepts directly from operating systems: it breaks the KV cache into small, non-contiguous "pages" and maps them dynamically, rather than reserving one large contiguous block per request upfront. This lets vLLM serve many concurrent requests without reserving per-request memory upfront — previous systems wasted 60-80% of KV cache memory; vLLM wastes under 4%.</p>
+      <div class="statgrid">
+        <div class="statcard"><div class="num">60-80% → &lt;4%</div><div class="lbl">KV cache memory waste, traditional allocation vs PagedAttention</div></div>
+        <div class="statcard"><div class="num">3.67x - 24x</div><div class="lbl">vLLM vs naive/older serving throughput, depending on concurrency</div></div>
+        <div class="statcard"><div class="num">#1</div><div class="lbl">vLLM ranked the #1 open-source project by contributors (Octoverse 2025)</div></div>
+      </div>
+      <div class="callout">
+        <span class="callout-label">Where this concept is heading</span>
+        <p>PagedAttention now ships natively in Hugging Face Transformers itself, achieving roughly 84% of vLLM's throughput on a single GPU without any extra runtime — a sign the inference stack is converging, and today's performance gaps between engines may narrow over time as core techniques get absorbed into the broader ecosystem rather than staying engine-specific advantages.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 RADIXATTENTION ============ -->
+  <section class="chapter" id="radixattention">
+    <div class="chapter-head"><span class="chapter-num">03</span><h2 class="chapter-title">RadixAttention &amp; SGLang</h2></div>
+    <p class="chapter-dek">SGLang's answer to the same memory problem, optimized for a different traffic shape — directly relevant to agentic and RAG workloads specifically.</p>
+    <div class="chapter-body">
+      <p>SGLang's signature technique is RadixAttention: automatic prefix caching via a radix tree data structure, which detects and reuses shared prefixes across different requests — exactly the same insight as Topic 7's prompt caching, but implemented at the serving-engine level across concurrent requests from potentially different users, not just within one repeated call from the same client.</p>
+      <table class="tbl">
+        <tr><th>Workload</th><th>Which engine wins, and why</th></tr>
+        <tr><td class="k">Prefix-heavy: RAG, agents, multi-turn conversation, structured output</td><td>SGLang — RadixAttention's automatic prefix caching provides real savings when requests share context; on 7-8B models this measures as roughly a 29% throughput advantage on H100 over vLLM, with lower tail latency (TTFT p95) at all tested concurrency levels</td></tr>
+        <tr><td class="k">General high-throughput serving, broadest hardware/community support</td><td>vLLM — larger ecosystem, more battle-tested across cloud providers, the safer default absent a specific reason to choose otherwise</td></tr>
+        <tr><td class="k">70B+ models</td><td>The gap narrows to 3-5% — at this scale the workload becomes more compute-bound than memory-bound, so PagedAttention and RadixAttention's advantages converge, and operational maturity matters more than engine choice</td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"You're serving a RAG-based agentic pipeline with heavy prompt reuse across users. Which serving engine would you evaluate first, and why?" — SGLang, specifically because RadixAttention's prefix caching is built exactly for this traffic shape — shared system prompts, shared retrieved-context prefixes, and multi-turn conversation history all benefit from automatic cross-request prefix reuse. The 29% throughput advantage measured on smaller models narrows significantly at 70B+ scale, so this recommendation is model-size-dependent — always validate against your own traffic pattern rather than trusting a single benchmark number in isolation.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 04 ENGINE COMPARISON ============ -->
+  <section class="chapter" id="engine-comparison">
+    <div class="chapter-head"><span class="chapter-num">04 ★</span><h2 class="chapter-title">Engine Comparison, 2026</h2></div>
+    <p class="chapter-dek">Four names that matter, one important retirement to know about.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Engine</th><th>2026 status</th></tr>
+        <tr><td class="k">vLLM</td><td>The default, safest choice for new deployments — broadest hardware support, largest community, battle-tested across AWS/GCP/Azure. Core innovation: PagedAttention.</td></tr>
+        <tr><td class="k">SGLang</td><td>The performance-focused choice, especially for prefix-heavy/agentic/structured-output workloads. Smaller ecosystem, fewer deployment guides, no HuggingFace Hub-equivalent integration — genuinely the fastest engine for multi-turn and agentic workloads if comfortable with less mature tooling.</td></tr>
+        <tr><td class="k">TGI (Text Generation Inference)</td><td>Hugging Face put TGI into maintenance mode in December 2025 — it only accepts bug fixes, no new features, and Hugging Face now points teams toward vLLM or SGLang for new deployments. Still fine for existing deployments; do not recommend it for a new build in an interview without flagging this.</td></tr>
+        <tr><td class="k">TensorRT-LLM</td><td>NVIDIA's compiled-engine approach — highest peak throughput when using the compiled TRT engine, but with a real compilation barrier; the PyTorch backend removes that barrier at the cost of some peak throughput.</td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">A stale-knowledge trap worth avoiding explicitly</span>
+        <p>If your mental model of "the LLM serving landscape" still includes TGI as a live, actively-developed default, that's now outdated information as of December 2025 — naming TGI as a first-choice recommendation in a 2026 interview without acknowledging its maintenance-mode status is a visible signal of stale knowledge in a fast-moving infra space.</p>
+      </div>
+      <div class="callout">
+        <span class="callout-label">The honest meta-point</span>
+        <p>Unless benchmarks on your specific model show one engine winning by 20%+ on your actual traffic, operational simplicity should usually win the decision — these numbers are directional and swing 2-3x depending on sequence length distribution, prefix overlap, and quantization. Run the engines on your actual traffic before committing, exactly the same measure-before-you-build discipline threaded through every prior document in this series.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 05 KV CACHE MATH ============ -->
+  <section class="chapter" id="kv-cache-math">
+    <div class="chapter-head"><span class="chapter-num">05</span><h2 class="chapter-title">KV Cache Memory Math</h2></div>
+    <p class="chapter-dek">The formula behind why KV cache, not model weights, is often the real constraint on how many concurrent users a GPU can serve.</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>kv_cache_size_formula.txt</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre>KV cache size (bytes) =
+    2                       <span class="tok-com"># K and V, both cached</span>
+    × num_layers
+    × num_attention_heads × head_dim   <span class="tok-com"># = hidden_size, typically</span>
+    × sequence_length
+    × batch_size (concurrent sequences)
+    × bytes_per_element     <span class="tok-com"># 2 for FP16/BF16</span></pre>
+      </div>
+      <p>Notice this scales <strong>linearly with both sequence length and concurrent batch size</strong> — doubling either one doubles KV cache memory demand. This is precisely why leaving ample VRAM headroom after loading model weights matters so much for concurrency: quantizing a 70B model from ~140GB (FP16) down to ~35GB (4-bit) doesn't just fit the model on smaller hardware, it frees dramatically more room for the KV cache, which is essential to handle high-concurrency requests in production — directly connecting Section 06's quantization formats back to this section's memory math.</p>
+      <div class="callout">
+        <span class="callout-label">Why this is the real bottleneck at scale, not raw model size</span>
+        <p>Once a model's weights fit comfortably in VRAM, the actual limit on how many concurrent users a single GPU can serve is almost always KV cache capacity, not weight storage — this is exactly the constraint PagedAttention (Section 02) is built to use as efficiently as possible, and exactly why quantization's VRAM savings compound directly into concurrency gains, not just "the model fits."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 06 QUANTIZATION FORMATS ============ -->
+  <section class="chapter" id="quantization-formats">
+    <div class="chapter-head"><span class="chapter-num">06 ★</span><h2 class="chapter-title">Deployment Quantization: GGUF, AWQ, GPTQ</h2></div>
+    <p class="chapter-dek">Distinct from Topic 13's vector-search quantization — this is compressing the model's own weights for deployment. Three formats, each optimized for a different serving context.</p>
+    <div class="chapter-body">
+      <p>Quantization compresses weights from 16-bit floats to 4-bit integers, shrinking models by roughly 75% with surprisingly little quality loss. A Llama 3 70B model needing ~140GB of VRAM in FP16 drops to roughly 35-40GB at 4-bit — the difference between requiring multiple A100s and fitting on a single high-end consumer or prosumer GPU.</p>
+      <table class="tbl">
+        <tr><th>Format</th><th>Approach</th><th>Best for</th></tr>
+        <tr><td class="k">GGUF</td><td>K-quants — mixed bit-depth per layer type (e.g. attention layers at 6-bit, feed-forward at 4-bit), giving better quality-per-bit than naive uniform quantization</td><td>CPU inference and Ollama-style local deployment — retains roughly 92% quality at Q4_K_M</td></tr>
+        <tr><td class="k">AWQ</td><td>Activation-aware — observes model activations during a calibration phase to identify "salient" weights that matter most for output quality, protecting those with higher precision while aggressively quantizing the rest</td><td>Production GPU serving — the 2026 default for that use case, particularly strong for instruction-tuned models; fastest on vLLM with the Marlin kernel</td></tr>
+        <tr><td class="k">GPTQ</td><td>A mature, purely weight-based (not activation-aware) GPU quantization approach with an extensive pre-quantized model library already available</td><td>GPU serving where a pre-quantized checkpoint already exists for your target model — a practical, adoption-driven reason to prefer it over AWQ in specific cases</td></tr>
+        <tr><td class="k">bitsandbytes</td><td>The only one of these four that supports training directly</td><td>QLoRA fine-tuning (Doc 15) specifically — train adapters on a 4-bit base model, then merge back or keep separate</td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">A precise, useful fact: you cannot directly fine-tune the other three formats</span>
+        <p>GGUF, AWQ, and GPTQ are deployment-time formats — you can't directly fine-tune pre-quantized weights in these formats. The correct workflow is either bitsandbytes with QLoRA to train adapters on a 4-bit base model, then merge and optionally re-export to a deployment format, or fine-tune in full precision first and quantize to GGUF/AWQ/GPTQ afterward purely for serving. Conflating "quantization for training" (bitsandbytes/QLoRA) with "quantization for serving" (GGUF/AWQ/GPTQ) is a common, avoidable confusion.</p>
+      </div>
+      <table class="tbl">
+        <tr><th>Metric</th><th>Number</th></tr>
+        <tr><td class="k">Quality retention at 4-bit (GGUF Q4_K_M vs AWQ)</td><td>Both retain roughly 92-95% of FP16 quality — differences between formats are minor; choose based on inference stack, not quality expectations</td></tr>
+        <tr><td class="k">Typical perplexity increase at Q4</td><td>5-10% vs FP16 baseline is typical</td></tr>
+        <tr><td class="k">Concurrent-throughput advantage, AWQ/GPTQ vs GGUF</td><td>AWQ and GPTQ consistently outperform GGUF in highly concurrent GPU serving, due to optimized custom kernels in frameworks like vLLM built specifically for accelerating 4-bit integer matrix multiplication on NVIDIA hardware</td></tr>
+      </table>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"You need to deploy a 70B model for production GPU serving with high concurrency. Which quantization format?" — AWQ, as the 2026 default for GPU production serving specifically — its activation-aware calibration protects the weights that matter most for output quality while aggressively compressing the rest, it's the fastest on vLLM with the Marlin kernel, and it consistently outperforms GGUF in concurrent-throughput benchmarks due to optimized integer matrix multiplication kernels. GGUF would be the better choice specifically for CPU-bound or Ollama-style local/edge deployment instead, where its K-quant mixed-precision approach and broader hardware compatibility matter more than raw GPU-concurrent throughput.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 07 SPECULATIVE DECODING ============ -->
+  <section class="chapter" id="speculative-decoding">
+    <div class="chapter-head"><span class="chapter-num">07 ★</span><h2 class="chapter-title">Speculative Decoding</h2></div>
+    <p class="chapter-dek">A genuinely clever trick for the batch-size-1 memory-bandwidth problem from Section 00 — generate more, verify cheaply.</p>
+    <div class="chapter-body">
+      <p>Speculative decoding uses a small, fast "draft" model to generate several candidate next tokens speculatively, then has the large target model verify all of them in a single forward pass — because verifying multiple tokens in parallel costs roughly the same memory-bandwidth budget as generating one token normally (per Section 00's roofline problem), any correctly-guessed draft tokens are essentially "free," accepted without the large model needing a separate full decoding step for each.</p>
+      <div class="diagram">
+        <svg viewBox="0 0 700 150" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="spm" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff9f40"/></marker></defs>
+          <rect x="20" y="20" width="180" height="46" rx="7" fill="none" stroke="#5fd9c9" stroke-width="1.4"/>
+          <text x="110" y="42" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Draft model</text>
+          <text x="110" y="58" fill="#9aa3b0" font-family="JetBrains Mono" font-size="9" text-anchor="middle">generates k candidate tokens, fast</text>
+          <line x1="200" y1="43" x2="250" y2="43" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#spm)"/>
+          <rect x="250" y="20" width="220" height="46" rx="7" fill="none" stroke="#ff9f40" stroke-width="1.4"/>
+          <text x="360" y="42" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Target model verifies</text>
+          <text x="360" y="58" fill="#9aa3b0" font-family="JetBrains Mono" font-size="9" text-anchor="middle">all k tokens in ONE forward pass</text>
+          <line x1="470" y1="43" x2="510" y2="43" stroke="#ff9f40" stroke-width="1.4" marker-end="url(#spm)"/>
+          <rect x="510" y="20" width="170" height="46" rx="7" fill="none" stroke="#c9f04c" stroke-width="1.4"/>
+          <text x="595" y="42" fill="#e7e9ec" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Accept correct prefix,</text>
+          <text x="595" y="58" fill="#9aa3b0" font-family="JetBrains Mono" font-size="9" text-anchor="middle">reject &amp; correct the rest</text>
+          <text x="350" y="105" fill="#5c6672" font-family="JetBrains Mono" font-size="10" text-anchor="middle">correctly-guessed tokens cost ~nothing extra — this is the entire speedup</text>
+        </svg>
+      </div>
+      <table class="tbl">
+        <tr><th>Variant</th><th>What's different</th></tr>
+        <tr><td class="k">Classic speculative decoding</td><td>A separate, smaller model from the same family serves as the draft model</td></tr>
+        <tr><td class="k">Medusa</td><td>Adds multiple extra decoding heads directly to the target model itself, predicting several future positions at once, avoiding the need for a wholly separate draft model</td></tr>
+        <tr><td class="k">EAGLE</td><td>Speculates in feature space rather than token space, specifically addressing feature uncertainty in the draft process for improved acceptance rates</td></tr>
+        <tr><td class="k">Self-speculative decoding</td><td>Uses a subset of the target model's own layers as the draft, avoiding a separate model entirely</td></tr>
+      </table>
+      <div class="callout pitfall">
+        <span class="callout-label">Why this isn't free — the real tradeoff</span>
+        <p>Speculative decoding is lossless (the target model always verifies, so output distribution is unchanged) but not free — it requires either a separate draft model (extra memory and complexity) or extra heads/layers on the target model, and the speedup is entirely dependent on the draft's acceptance rate: if the draft model rarely guesses correctly, verification overhead can erode or even negate the benefit. It composes with the other techniques in this document (quantized draft models, batched speculative verification) rather than replacing them.</p>
+      </div>
+      <div class="callout interview">
+        <span class="callout-label">Interview framing</span>
+        <p>"Explain speculative decoding and why it speeds up inference without changing output quality." — A small draft model generates several candidate tokens quickly; the large target model verifies all of them in a single forward pass rather than one sequential pass per token. Because that verification pass costs roughly the same memory-bandwidth budget as generating just one token normally (the batch-1 memory-bandwidth bottleneck from earlier), correctly-guessed draft tokens are accepted essentially for free. It's lossless because the target model still makes the final accept/reject decision on every token — the output distribution exactly matches what the target model alone would have produced, just computed faster.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 08 GPU MEMORY MATH ============ -->
+  <section class="chapter" id="gpu-memory-math">
+    <div class="chapter-head"><span class="chapter-num">08</span><h2 class="chapter-title">GPU Memory Math, Worked Example</h2></div>
+    <p class="chapter-dek">The exact calculation to answer "will this model fit" — walk this out loud in an interview.</p>
+    <div class="chapter-body">
+      <div class="code-wrap">
+        <div class="code-head"><span>gpu_memory_worked_example.txt</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="tok-com"># Scenario: serve a 70B parameter model, want to know if it fits on a single 80GB GPU</span>
+<span class="tok-com"># with room for reasonable concurrency</span>
+
+Step 1 -- model weight memory:
+  70B params × 2 bytes (FP16)               = 140 GB   <span class="tok-com"># doesn't fit on one 80GB GPU</span>
+  70B params × 0.5 bytes (4-bit quantized)  = 35 GB    <span class="tok-com"># fits, with 45GB left over</span>
+
+Step 2 -- KV cache memory (per the formula in Section 05), example config:
+  num_layers = 80, hidden_size = 8192, 2 bytes/elem
+  sequence_length = 4096, batch_size (concurrent seqs) = 32
+
+  KV cache = 2 × 80 × 8192 × 4096 × 32 × 2 bytes
+           ≈ 344 GB   <span class="tok-com"># !! this alone exceeds the entire GPU's memory</span>
+
+Step 3 -- the real lesson:
+  At meaningful concurrency and sequence length, KV cache -- not model
+  weights -- is almost always the binding constraint. Quantizing the
+  MODEL frees VRAM, but the KV CACHE itself is usually the thing you
+  actually need to manage carefully (via PagedAttention-style paging,
+  shorter max sequence length, lower concurrency, or KV cache quantization).</pre>
+      </div>
+      <div class="callout focus">
+        <span class="callout-label">The insight this worked example is built to produce</span>
+        <p>Quantizing the model's weights is necessary but not sufficient — the KV cache scales with concurrency and sequence length independently of model quantization, and at real production concurrency levels it routinely dwarfs the model weights themselves. This is exactly why PagedAttention (Section 02) matters as much as or more than weight quantization for serving many concurrent users, and it's the calculation that separates a candidate who's actually done GPU capacity planning from one who's only memorized "quantize the model."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 09 DECISION ============ -->
+  <section class="chapter" id="decision">
+    <div class="chapter-head"><span class="chapter-num">09</span><h2 class="chapter-title">Decision Framework</h2></div>
+    <p class="chapter-dek">A practical starting-point path.</p>
+    <div class="chapter-body">
+      <table class="tbl">
+        <tr><th>Situation</th><th>Starting recommendation</th></tr>
+        <tr><td>General-purpose production GPU serving, new deployment</td><td>vLLM + AWQ quantization — the safest, most battle-tested 2026 default</td></tr>
+        <tr><td>Heavy prefix reuse: RAG, agents, multi-turn, structured output</td><td>Evaluate SGLang specifically — RadixAttention is built for this traffic shape</td></tr>
+        <tr><td>CPU-only or local/edge deployment (Ollama-style)</td><td>GGUF — broadest hardware compatibility, K-quant mixed precision</td></tr>
+        <tr><td>Already have a pre-quantized checkpoint available for your target model</td><td>Use it — GPTQ's large pre-quantized library is a practical, adoption-driven reason to skip re-quantizing</td></tr>
+        <tr><td>Latency-critical, batch-size-1-heavy interactive workload</td><td>Add speculative decoding on top of whichever engine you've chosen</td></tr>
+        <tr><td>Currently running TGI in production</td><td>It still works, but plan a migration to vLLM or SGLang — no new features are coming</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 10 PITFALLS ============ -->
+  <section class="chapter" id="pitfalls">
+    <div class="chapter-head"><span class="chapter-num">10</span><h2 class="chapter-title">Production Pitfalls</h2></div>
+    <p class="chapter-dek">What actually goes wrong.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Deploying with naive/static batching.</strong> Leaves most of the available throughput on the table — up to 24x on identical hardware versus a purpose-built continuous-batching engine.</li>
+        <li><strong>Only accounting for model weight memory, not KV cache.</strong> Per Section 08's worked example, KV cache at real concurrency routinely exceeds model weight memory by a wide margin — a capacity plan that ignores this will hit OOM errors in production that never showed up in single-request testing.</li>
+        <li><strong>Recommending TGI for a new 2026 deployment without flagging its maintenance-mode status.</strong> A visible stale-knowledge signal in an infra-focused interview.</li>
+        <li><strong>Conflating deployment quantization (GGUF/AWQ/GPTQ) with training quantization (bitsandbytes/QLoRA).</strong> You cannot directly fine-tune pre-quantized GGUF/AWQ/GPTQ weights — this is a common, avoidable confusion between Doc 15's training-time quantization and this document's serving-time quantization.</li>
+        <li><strong>Choosing an engine based on published benchmarks alone.</strong> Numbers swing 2-3x depending on sequence length distribution, prefix overlap, and quantization — always validate against your own actual traffic before committing.</li>
+        <li><strong>Ignoring draft-model acceptance rate when adopting speculative decoding.</strong> A poorly matched draft model can erode or negate the speedup entirely — the technique's benefit is not guaranteed, it's conditional on draft quality.</li>
+        <li><strong>Treating engine choice as fixed regardless of model scale.</strong> The SGLang-vs-vLLM performance gap narrows sharply from ~29% at 7-8B to 3-5% at 70B+ — a recommendation validated at one model size doesn't automatically transfer to another.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 11 INTERVIEW ============ -->
+  <section class="chapter" id="interview">
+    <div class="chapter-head"><span class="chapter-num">11</span><h2 class="chapter-title">Interview Cheat-Sheet</h2></div>
+    <p class="chapter-dek">Grouped by depth.</p>
+    <div class="chapter-body">
+      <details class="qa"><summary>Why is single-request LLM decoding memory-bandwidth-bound rather than compute-bound, and why does this matter for serving design?<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>At batch size 1, generating one token requires loading the entire model's weights from GPU memory but only performing a comparatively tiny amount of computation per token — arithmetic intensity is roughly 1, meaning the GPU spends nearly all its time waiting on memory bandwidth rather than computing, achieving well under 1% compute utilization in practice. This matters because it means the fix isn't "make the GPU compute faster" — it's "amortize that same memory-bandwidth cost across more useful work," which is exactly what batching, paging, and speculative decoding all do in different ways.</p></div>
+      </details>
+      <details class="qa"><summary>Explain continuous batching and quantify why it matters.<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>Static batching waits for a fixed batch to fill and finishes only when every request in it completes, wasting GPU capacity on short requests stuck waiting alongside long ones. Continuous batching dynamically splices new requests into a running batch's slots as soon as any request finishes, keeping the GPU consistently busy on bursty, variable-length traffic. The measured impact is large — up to 24x throughput versus a naive deployment on identical hardware, which translates directly into needing far fewer GPUs for the same traffic volume.</p></div>
+      </details>
+      <details class="qa"><summary>Explain PagedAttention and the specific problem it solves.<span class="qa-tag">core</span></summary>
+        <div class="qa-body"><p>Traditional serving engines reserve one contiguous memory block per request for its KV cache, sized for the maximum possible sequence length — since most requests never reach that maximum, this wastes 60-80% of KV cache memory through fragmentation. PagedAttention borrows virtual-memory paging from operating systems, breaking the KV cache into small, dynamically-mapped, non-contiguous pages instead of one large reserved block — reducing that waste to under 4% and letting far more concurrent requests fit in the same GPU memory.</p></div>
+      </details>
+      <details class="qa"><summary>When would you choose SGLang over vLLM, and when does that choice stop mattering?<span class="qa-tag">architecture</span></summary>
+        <div class="qa-body"><p>Choose SGLang for prefix-heavy workloads — RAG, agentic pipelines, multi-turn conversation, structured output — where RadixAttention's automatic cross-request prefix caching measurably helps, roughly a 29% throughput advantage on 7-8B models in published H100 benchmarks. That advantage narrows to 3-5% at 70B+ scale, where the workload becomes more compute-bound than memory-bound and PagedAttention/RadixAttention converge — at that scale, operational maturity and ecosystem support (favoring vLLM) matter more than the raw engine choice.</p></div>
+      </details>
+      <details class="qa"><summary>Walk through the GPU memory math for serving a 70B model: does it fit, and what's the real constraint?<span class="qa-tag">architecture</span></summary>
+        <div class="qa-body"><p>At FP16, 70B parameters need roughly 140GB — doesn't fit on a single 80GB GPU. Quantized to 4-bit, that drops to roughly 35GB, comfortably fitting with room to spare. But the KV cache scales independently with concurrency and sequence length — at realistic production concurrency (dozens of concurrent sequences, several-thousand-token context), KV cache memory can easily exceed the entire GPU's capacity on its own, becoming the actual binding constraint rather than model weights. Managing this requires PagedAttention-style paging, careful concurrency/sequence-length limits, or KV cache quantization — quantizing the model alone is necessary but not sufficient for real production capacity planning.</p></div>
+      </details>
+      <details class="qa"><summary>Compare AWQ and GGUF and explain when you'd pick each.<span class="qa-tag">quantization</span></summary>
+        <div class="qa-body"><p>AWQ uses activation-aware calibration to identify and protect "salient" weights that matter most for output quality, and is the 2026 default for production GPU serving — fastest on vLLM, strong quality retention, particularly for instruction-tuned models. GGUF uses K-quants (mixed bit-depth per layer type) and is optimized for CPU inference and local/edge deployment (Ollama-style) rather than raw GPU-concurrent throughput. Quality differences between the two at 4-bit are minor (roughly 92-95% of FP16 quality for both) — the real deciding factor is your inference stack and target hardware, not quality expectations.</p></div>
+      </details>
+      <details class="qa"><summary>Why is speculative decoding lossless despite using a smaller, less capable draft model?<span class="qa-tag">optimization</span></summary>
+        <div class="qa-body"><p>The draft model only proposes candidate tokens — the large target model always verifies every proposed token in a single forward pass and rejects (and corrects) anything the draft got wrong. Because the final accept/reject decision always rests with the target model, the output distribution exactly matches what the target model alone would have produced; the draft model only affects how many tokens get generated per expensive verification pass, not what tokens are ultimately accepted. The speedup comes entirely from the fact that verifying several tokens in one pass costs roughly the same memory-bandwidth budget as generating a single token normally.</p></div>
+      </details>
+      <details class="qa"><summary>Design the serving infrastructure for a production coding-agent product needing low-latency, high-concurrency inference on a 70B model.<span class="qa-tag">design</span></summary>
+        <div class="qa-body"><p>Start with vLLM or SGLang (evaluate both on real traffic given the coding-agent's likely prefix-heavy pattern from repeated system prompts and shared code context — SGLang is worth a real look here) with AWQ 4-bit quantization to fit comfortably on available GPUs with headroom for KV cache. Explicitly capacity-plan the KV cache separately from model weights using the formula from this document, sized against your real expected concurrency and context length, since that — not model weight size — is the likely binding constraint at production scale. Layer speculative decoding on top if latency-critical, using a smaller model from the same family as the draft, and validate the acceptance rate on real coding-task traffic before committing to it in production.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ 12 GLOSSARY ============ -->
+  <section class="chapter" id="glossary">
+    <div class="chapter-head"><span class="chapter-num">12</span><h2 class="chapter-title">Glossary</h2></div>
+    <p class="chapter-dek">Every term used in this document.</p>
+    <div class="chapter-body">
+      <dl class="glossary-grid">
+        <div class="gterm"><dt>Arithmetic intensity</dt><dd>Ratio of compute operations to memory operations; low at batch-1 decoding, making inference memory-bandwidth-bound.</dd></div>
+        <div class="gterm"><dt>Continuous batching</dt><dd>Dynamically splicing new requests into a running batch's freed slots, rather than waiting for a fixed batch to complete.</dd></div>
+        <div class="gterm"><dt>PagedAttention</dt><dd>vLLM's KV cache memory manager using OS-style paging instead of contiguous per-request allocation.</dd></div>
+        <div class="gterm"><dt>RadixAttention</dt><dd>SGLang's automatic cross-request prefix caching via a radix tree, optimized for prefix-heavy workloads.</dd></div>
+        <div class="gterm"><dt>KV cache</dt><dd>Cached key/value attention tensors from previous tokens, avoiding recomputation each decoding step; scales with sequence length × batch size.</dd></div>
+        <div class="gterm"><dt>GGUF</dt><dd>Quantization format using mixed-precision K-quants; optimized for CPU/local/Ollama deployment.</dd></div>
+        <div class="gterm"><dt>AWQ</dt><dd>Activation-aware weight quantization protecting salient weights; 2026 default for production GPU serving.</dd></div>
+        <div class="gterm"><dt>GPTQ</dt><dd>Mature weight-based GPU quantization format with an extensive pre-quantized model library.</dd></div>
+        <div class="gterm"><dt>bitsandbytes</dt><dd>The quantization library that supports training (QLoRA); distinct from deployment-only formats.</dd></div>
+        <div class="gterm"><dt>Speculative decoding</dt><dd>Using a fast draft model to propose tokens, verified in one batched pass by the target model, for lossless speedup.</dd></div>
+        <div class="gterm"><dt>Draft model / target model</dt><dd>The small proposer and large verifier models in speculative decoding.</dd></div>
+        <div class="gterm"><dt>Medusa / EAGLE</dt><dd>Speculative decoding variants using extra decoding heads or feature-space speculation instead of a separate draft model.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ 13 RESOURCES ============ -->
+  <section class="chapter" id="resources">
+    <div class="chapter-head"><span class="chapter-num">13</span><h2 class="chapter-title">Resources</h2></div>
+    <p class="chapter-dek">Primary sources worth reading directly.</p>
+    <div class="chapter-body">
+      <ul>
+        <li><strong>Kwon et al. — "Efficient Memory Management for Large Language Model Serving with PagedAttention"</strong> (SOSP 2023) — the vLLM paper</li>
+        <li><strong>vLLM and SGLang official documentation</strong> — the fastest path to current benchmark numbers, since these shift quickly</li>
+        <li><strong>Leviathan et al. — "Fast Inference from Transformers via Speculative Decoding"</strong> (2023) — the foundational speculative decoding paper</li>
+        <li><strong>Lin et al. — "AWQ: Activation-aware Weight Quantization for LLM Compression and Acceleration"</strong> (2023)</li>
+      </ul>
+      <div class="callout">
+        <span class="callout-label">How to actually get interview-ready on this topic</span>
+        <p>Stand up vLLM locally (or on a rented GPU) serving a small open model, hit it with a concurrent load-testing script, and watch throughput scale with batch size — then swap in an AWQ-quantized version of the same model and measure the VRAM headroom it frees for KV cache. Having personally watched the memory math from Section 08 play out on real hardware is worth more in an interview than reciting this document's numbers.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">Doc 16 — Model Serving &amp; Inference Optimization. Gap-plugging series continues.</div>
+</main>
+</div>
+
+<script>
+const links = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('section.chapter');
+const map = new Map();
+links.forEach(l => map.set(l.getAttribute('href').slice(1), l));
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const link = map.get(entry.target.id);
+    if(!link) return;
+    if(entry.isIntersecting){
+      links.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, {rootMargin: '-15% 0px -70% 0px', threshold: 0});
+sections.forEach(s => io.observe(s));
+</script>
+</body>
+</html>
