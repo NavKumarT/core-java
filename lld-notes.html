@@ -917,8 +917,10 @@
     .memory-aid-grid { grid-template-columns: 1fr; gap: 12px; }
   }
 </style>
+  <link rel="stylesheet" href="style-guide.css">
 </head>
 <body>
+  <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark/light mode" aria-label="Toggle theme">☀️</button>
 
 <!-- ═══════════════════ SIDEBAR ═══════════════════ -->
 <aside class="sidebar">
@@ -980,6 +982,7 @@
 
 <!-- ═══════════════════ MAIN ═══════════════════ -->
 <main class="main">
+    <div class="nav-header"><a href="index.html" class="back-home">← Back to Notes Hub</a></div>
 
   <!-- Page Title -->
   <div class="page-title-block">
@@ -2540,6 +2543,26 @@ const observer = new IntersectionObserver((entries) => {
   });
 }, { threshold: 0.3, rootMargin: '-60px 0px -60% 0px' });
 sections.forEach(s => observer.observe(s));
+</script>
+<script>
+  (function() {
+    const html = document.documentElement;
+    const btn = document.getElementById('theme-toggle-btn');
+    function getTheme() {
+      return localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    }
+    function applyTheme(t) {
+      html.setAttribute('data-theme', t);
+      localStorage.setItem('theme', t);
+      if (btn) btn.textContent = t === 'dark' ? '☀️' : '🌙';
+    }
+    applyTheme(getTheme());
+    if (btn) {
+      btn.addEventListener('click', function() {
+        applyTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+      });
+    }
+  })();
 </script>
 </body>
 </html>
