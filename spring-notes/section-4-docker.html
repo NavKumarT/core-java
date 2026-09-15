@@ -3,50 +3,232 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Docker & Deployment Portability — GrowthScript Engineering</title>
+<title>Spring Boot Bible — Section 4: Docker, Deployment Portability & Scalability</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../style-guide.css">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0f14; --bg-elev:#111820; --bg-elev-2:#161f2a; --border:#233042;
+  --text:#dbe4ee; --text-dim:#8a9bb0; --text-faint:#5c6b7e;
+  --accent:#6DB33F; --accent-soft:#6DB33F22;
+  --accent-2:#4fa3d1; --accent-2-soft:#4fa3d122;
+  --docker:#2496ED; --docker-soft:#2496ED22;
+  --warn:#e0a94f; --warn-soft:#e0a94f22;
+  --danger:#e0655f; --danger-soft:#e0655f22;
+  --code-bg:#0d1420; --code-border:#1e2a3a;
+  --shadow: 0 8px 24px rgba(0,0,0,0.35); --radius: 10px; --sidebar-w: 300px;
+}
+html[data-theme="light"]{
+  --bg:#f6f4ee; --bg-elev:#ffffff; --bg-elev-2:#eef0e8; --border:#dcdccf;
+  --text:#1c231d; --text-dim:#586257; --text-faint:#8b9188;
+  --accent:#3f7d1f; --accent-soft:#3f7d1f1a;
+  --accent-2:#1f6f9c; --accent-2-soft:#1f6f9c1a;
+  --docker:#0e63ac; --docker-soft:#0e63ac18;
+  --warn:#8a5a12; --warn-soft:#8a5a1218;
+  --danger:#a3352f; --danger-soft:#a3352f18;
+  --code-bg:#fbfaf5; --code-border:#e2e0d2;
+  --shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;line-height:1.65;font-size:15.5px;}
+::selection{background:var(--accent-soft);color:var(--accent);}
+h1,h2,h3,h4{font-family:'Space Mono',monospace;letter-spacing:-0.01em;color:var(--text);}
+code, pre, .mono{font-family:'Space Mono',monospace;}
+a{color:var(--accent-2);text-decoration:none;}
+a:hover{text-decoration:underline;}
+
+.shell{display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;border-right:1px solid var(--border);background:var(--bg-elev);position:sticky;top:0;height:100vh;overflow-y:auto;padding:22px 16px 60px;}
+.sidebar::-webkit-scrollbar{width:6px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:4px;padding:0 6px;}
+.brand-badge{width:34px;height:34px;border-radius:8px;background:var(--docker);display:flex;align-items:center;justify-content:center;font-family:'Space Mono';font-weight:700;color:#fff;font-size:13px;flex-shrink:0;}
+.brand-text{font-family:'Space Mono';font-weight:700;font-size:14.5px;line-height:1.2;}
+.brand-text span{display:block;font-size:10.5px;color:var(--text-faint);font-weight:400;margin-top:2px;letter-spacing:0.04em;}
+.theme-toggle{margin:14px 6px 20px;width:calc(100% - 12px);background:var(--bg-elev-2);border:1px solid var(--border);color:var(--text-dim);padding:8px 10px;border-radius:8px;font-family:'Inter';font-size:12.5px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
+.theme-toggle:hover{color:var(--text);border-color:var(--docker);}
+.nav-group{margin-bottom:6px;}
+.nav-group-title{font-size:10.5px;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-faint);padding:14px 8px 6px;font-family:'Space Mono';}
+.nav-link{display:block;padding:7px 10px;border-radius:7px;font-size:13px;color:var(--text-dim);margin-bottom:1px;border-left:2px solid transparent;}
+.nav-link:hover{background:var(--bg-elev-2);color:var(--text);text-decoration:none;}
+.nav-link.active{background:var(--docker-soft);color:var(--docker);border-left:2px solid var(--docker);font-weight:600;}
+.nav-link .vid-no{color:var(--text-faint);margin-right:5px;}
+
+main{flex:1;min-width:0;padding:48px 56px 120px;max-width:980px;}
+.hero{margin-bottom:44px;}
+.hero-eyebrow{font-family:'Space Mono';font-size:11.5px;color:var(--docker);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.hero-eyebrow::before{content:"";width:20px;height:1px;background:var(--docker);}
+.hero h1{font-size:32px;margin:0 0 12px;line-height:1.25;}
+.hero p{color:var(--text-dim);font-size:15.5px;max-width:680px;}
+.scope-box{margin-top:20px;border:1px solid var(--border);background:var(--bg-elev);border-radius:var(--radius);padding:16px 18px;font-size:13px;color:var(--text-dim);}
+.scope-box b{color:var(--text);}
+
+section.topic{margin-bottom:56px;scroll-margin-top:24px;}
+.topic-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;border-bottom:1px solid var(--border);padding-bottom:14px;}
+.topic-no{font-family:'Space Mono';color:var(--docker);font-size:13px;background:var(--docker-soft);padding:3px 9px;border-radius:20px;flex-shrink:0;}
+.topic-head h2{font-size:22px;margin:0;}
+.topic-sub{color:var(--text-faint);font-size:12.5px;margin:8px 0 22px;}
+
+p{color:var(--text-dim);}
+h3.subhead{font-size:16.5px;color:var(--text);margin:28px 0 10px;display:flex;align-items:center;gap:8px;}
+h3.subhead::before{content:"";width:3px;height:15px;background:var(--accent-2);border-radius:2px;}
+h4.minihead{font-size:13.5px;color:var(--text);margin:18px 0 8px;font-family:'Inter';font-weight:700;}
+ul,ol{color:var(--text-dim);padding-left:22px;}
+li{margin-bottom:6px;}
+strong{color:var(--text);}
+
+.ann-box{border:1px solid var(--code-border);background:var(--bg-elev);border-radius:var(--radius);margin:14px 0;overflow:hidden;}
+.ann-box-head{display:flex;align-items:center;gap:10px;padding:11px 16px;background:var(--docker-soft);border-bottom:1px solid var(--code-border);}
+.ann-tag{font-family:'Space Mono';font-weight:700;color:var(--docker);font-size:14px;}
+.ann-loc{margin-left:auto;font-size:10.5px;color:var(--text-faint);font-family:'Space Mono';text-transform:uppercase;letter-spacing:0.05em;}
+.ann-body{padding:12px 16px;}
+.ann-body p{margin:4px 0 8px;font-size:13.5px;}
+.ann-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0;}
+@media(max-width:760px){.ann-grid{grid-template-columns:1fr;}}
+
+.code-panel{border:1px solid var(--code-border);border-radius:var(--radius);overflow:hidden;margin:16px 0;background:var(--code-bg);}
+.code-tabs{display:flex;background:var(--bg-elev-2);border-bottom:1px solid var(--code-border);overflow-x:auto;}
+.code-tab{padding:9px 16px;font-family:'Space Mono';font-size:12px;color:var(--text-faint);cursor:pointer;border-right:1px solid var(--code-border);white-space:nowrap;user-select:none;}
+.code-tab:hover{color:var(--text-dim);}
+.code-tab.active{color:var(--docker);background:var(--code-bg);border-bottom:2px solid var(--docker);margin-bottom:-1px;}
+.code-body{position:relative;}
+.code-pane{display:none;padding:16px 18px;overflow-x:auto;}
+.code-pane.active{display:block;}
+pre{margin:0;font-size:12.8px;line-height:1.65;color:#c7d3e0;}
+html[data-theme="light"] pre{color:#333c30;}
+.kw{color:#c586c0;}
+.ann{color:var(--docker);font-weight:700;}
+.str{color:#ce9178;}
+.cm{color:var(--text-faint);font-style:italic;}
+.ty{color:#4ec9b0;}
+.cl{color:#e5c07b;}
+.flag{color:#e5c07b;}
+
+.callout{border-radius:var(--radius);padding:14px 16px;margin:16px 0;border:1px solid;font-size:13.5px;}
+.callout.info{background:var(--accent-2-soft);border-color:var(--accent-2);color:var(--text);}
+.callout.warn{background:var(--warn-soft);border-color:var(--warn);color:var(--text);}
+.callout.pitfall{background:var(--danger-soft);border-color:var(--danger);color:var(--text);}
+.callout b.lbl{display:block;font-family:'Space Mono';font-size:11px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;}
+.callout.info b.lbl{color:var(--accent-2);}
+.callout.warn b.lbl{color:var(--warn);}
+.callout.pitfall b.lbl{color:var(--danger);}
+.callout p{margin:0;color:var(--text-dim);}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left;color:var(--text-dim);}
+th{background:var(--bg-elev-2);color:var(--text);font-family:'Space Mono';font-size:11.5px;text-transform:uppercase;letter-spacing:0.04em;}
+tr:hover td{background:var(--bg-elev-2);}
+
+.diagram{border:1px solid var(--code-border);background:var(--code-bg);border-radius:var(--radius);padding:22px 18px;margin:18px 0;overflow-x:auto;}
+.dflow{display:flex;align-items:stretch;gap:10px;min-width:max-content;}
+.dbox{flex-shrink:0;min-width:120px;border:1px solid var(--border);background:var(--bg-elev);border-radius:8px;padding:12px 14px;text-align:center;}
+.dbox .t{font-family:'Space Mono';font-size:12px;color:var(--text);font-weight:700;}
+.dbox .s{font-size:10.5px;color:var(--text-faint);margin-top:4px;}
+.dbox.accent{border-color:var(--docker);background:var(--docker-soft);}
+.dbox.accent .t{color:var(--docker);}
+.dbox.warn{border-color:var(--warn);background:var(--warn-soft);}
+.dbox.warn .t{color:var(--warn);}
+.dbox.dim{opacity:0.55;}
+.darrow{flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-family:'Space Mono';font-size:16px;min-width:24px;}
+.dstack{display:flex;flex-direction:column;gap:8px;}
+.dcol{display:flex;flex-direction:column;gap:8px;align-items:center;}
+.dphase-label{font-family:'Space Mono';font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;text-align:center;margin-top:8px;}
+
+.stack-diagram{border:1px solid var(--code-border);background:var(--code-bg);border-radius:var(--radius);padding:18px;margin:18px 0;}
+.stack-layer{border:1px solid var(--border);border-radius:6px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;font-size:12.5px;}
+.stack-layer .l-name{font-family:'Space Mono';font-weight:700;color:var(--text);}
+.stack-layer .l-desc{color:var(--text-faint);font-size:11px;}
+.stack-layer.app{background:var(--docker-soft);border-color:var(--docker);}
+.stack-layer.shared{background:var(--accent-soft);border-color:var(--accent);}
+.stack-col{display:flex;gap:16px;}
+.stack-half{flex:1;}
+.stack-half-title{font-family:'Space Mono';font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-bottom:8px;text-align:center;}
+
+.qa-section{margin-top:26px;}
+.qa-tabs{display:flex;gap:8px;margin-bottom:14px;}
+.qa-tab-btn{font-family:'Space Mono';font-size:11.5px;padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg-elev);color:var(--text-dim);cursor:pointer;text-transform:uppercase;letter-spacing:0.04em;}
+.qa-tab-btn.common.active{background:var(--accent-2-soft);border-color:var(--accent-2);color:var(--accent-2);}
+.qa-tab-btn.faang.active{background:var(--danger-soft);border-color:var(--danger);color:var(--danger);}
+.qa-pane{display:none;}
+.qa-pane.active{display:block;}
+details.qa{border:1px solid var(--border);border-radius:8px;margin-bottom:8px;background:var(--bg-elev);overflow:hidden;}
+details.qa[open]{border-color:var(--accent-2);}
+details.qa summary{padding:12px 16px;cursor:pointer;font-weight:600;font-size:13.8px;list-style:none;display:flex;align-items:flex-start;gap:10px;color:var(--text);}
+details.qa summary::-webkit-details-marker{display:none;}
+details.qa summary::before{content:"Q";flex-shrink:0;font-family:'Space Mono';font-size:11px;color:var(--accent-2);background:var(--accent-2-soft);width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+details.qa .qa-answer{padding:0 16px 16px 46px;color:var(--text-dim);font-size:13.5px;}
+details.qa .qa-answer p{margin:0 0 8px;color:var(--text-dim);}
+details.qa .qa-answer p:last-child{margin-bottom:0;}
+
+.divider{height:1px;background:linear-gradient(90deg,var(--border),transparent);margin:44px 0;}
+.footer-note{color:var(--text-faint);font-size:12px;text-align:center;padding:30px 0 10px;}
+
+.cmd-table code{color:var(--docker);}
+
+@media(max-width:900px){
+  .shell{flex-direction:column;}
+  .sidebar{position:relative;width:100%;height:auto;}
+  main{padding:32px 20px 80px;}
+  .stack-col{flex-direction:column;}
+}
+</style>
+  <link rel="stylesheet" href="../style-guide.css">
 </head>
-<body data-theme="dark">
+<body>
+    <div class="nav-header"><a href="../index.html" class="back-home">← Back to Notes Hub</a></div>
+  <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark/light mode" aria-label="Toggle theme">☀️</button>
+<div class="shell">
+
 <aside class="sidebar">
-  <div class="sidebar-brand">
-    <div class="brand-row">
-      <span class="sidebar-logo">GS // Spring Boot</span>
-      <span class="sidebar-tagline">Docker & Deployment Portability</span>
-    </div>
-    <div class="theme-toggle">
-      <button class="theme-toggle-btn active" id="btn-light" title="Light Theme">☀️</button>
-      <button class="theme-toggle-btn" id="btn-dark" title="Dark Theme">🌙</button>
-    </div>
+  <div class="brand">
+    <div class="brand-badge">🐳</div>
+    <div class="brand-text">Spring Boot Bible<span>Section 4 · Docker</span></div>
   </div>
-  <div class="sidebar-group">
-    <span class="sidebar-group-label">Navigation</span>
-    <a href="../index.html" class="sidebar-link"><span class="sl-dot"></span>← Notes Hub</a>
-    <a href="#sec-1" class="sidebar-link"><span class="sl-dot"></span>Docker Fundamentals</a>
-    <a href="#sec-2" class="sidebar-link"><span class="sl-dot"></span>Spring Boot Containerization</a>
-    <a href="#sec-3" class="sidebar-link"><span class="sl-dot"></span>Multi-Stage Dockerfiles</a>
-    <a href="#sec-4" class="sidebar-link"><span class="sl-dot"></span>Deployment Best Practices</a>
+  <button class="theme-toggle" id="themeToggle">🌙 Dark mode <span>⇄</span></button>
+
+  <div class="nav-group">
+    <div class="nav-group-title">Foundations</div>
+    <a class="nav-link" href="#challenges"><span class="vid-no">39</span>Deployment Challenges</a>
+    <a class="nav-link" href="#containers-vs-vms"><span class="vid-no">40</span>Containers vs VMs</a>
+    <a class="nav-link" href="#definitions"><span class="vid-no">41</span>Containers, Containerization, Docker</a>
+    <a class="nav-link" href="#architecture"><span class="vid-no">42</span>Docker Architecture</a>
+    <a class="nav-link" href="#install-hub"><span class="vid-no">43</span>Installation & Docker Hub</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Building Images: Dockerfile</div>
+    <a class="nav-link" href="#three-approaches"><span class="vid-no">44</span>Three Image-Build Approaches</a>
+    <a class="nav-link" href="#dockerfile-accounts"><span class="vid-no">45-47</span>Dockerfile for Accounts MS</a>
+    <a class="nav-link" href="#run-container"><span class="vid-no">48</span>Running as a Container</a>
+    <a class="nav-link" href="#dockerfile-challenges"><span class="vid-no">49</span>Dockerfile Challenges</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Alternative Build Tools</div>
+    <a class="nav-link" href="#buildpacks"><span class="vid-no">50</span>Buildpacks — Loans MS</a>
+    <a class="nav-link" href="#jib"><span class="vid-no">51</span>Google Jib — Cards MS</a>
+    <a class="nav-link" href="#compare-approaches"><span class="vid-no">52</span>Compare All Three</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Distribution & Orchestration</div>
+    <a class="nav-link" href="#push-hub"><span class="vid-no">53</span>Push to Docker Hub</a>
+    <a class="nav-link" href="#compose-intro"><span class="vid-no">54</span>Docker Compose Intro</a>
+    <a class="nav-link" href="#compose-run"><span class="vid-no">55-56</span>Running via Compose</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Operations</div>
+    <a class="nav-link" href="#docker-commands"><span class="vid-no">57</span>Docker Commands Deep Dive</a>
+    <a class="nav-link" href="#extensions-logs"><span class="vid-no">58</span>Extensions & Logs Explorer</a>
   </div>
 </aside>
-<div class="main">
-<div class="page-title-block">
-  <span class="page-eyebrow">GROWTHSCRIPT ENGINEERING — SPRING BOOT BIBLE</span>
-  <h1>Docker & Deployment Portability</h1>
-  <p>Containerizing Spring Boot applications, multi-stage builds, and deployment portability.</p>
-  <div class="tc-row">
-    <div class="tc-pill"><span></span>DOC 04</div>
-    <div class="tc-pill"><span></span>SPRING BOOT</div>
-    <div class="tc-pill"><span></span>MICROSERVICES</div>
-  </div>
-</div>
 
-  <h1>Docker — Deployment Portability & Scalability</h1>
+<main>
+  <div class="hero">
+    <div class="hero-eyebrow">Section 4 · Spring Boot Bible</div>
+    <h1>Docker — Deployment Portability & Scalability</h1>
     <p>You've built three Spring Boot microservices that run fine on your machine. The next problem is universal: <em>"it works on my machine"</em> is not a deployment strategy. This section covers Docker end-to-end — from first principles (what a container actually is, why it's not a lightweight VM) through three different ways to package the Accounts/Loans/Cards services as images, running them, pushing them to a registry, and orchestrating all three together with Docker Compose. Written assuming zero prior Docker exposure — every concept is built up before it's used.</p>
-    <div class="note-box"><div class="tip-icon">💡</div><div class="tip-text">
+    <div class="scope-box">
       <b>How to use this document:</b> Read foundations (39–43) fully before touching commands — the mental model of "containers share the host kernel, images are layered, a registry is just a content-addressable store" makes every later command make sense instead of feeling like magic incantations. Each topic has concept → diagram/code → <b>Common</b>/<b>FAANG-level</b> Q&A.
-    </div></div>
+    </div>
   </div>
 
   <!-- ========================================================= -->
@@ -902,36 +1084,70 @@ $ docker compose up -d --build
   </section>
 
   <div class="footer-note">Spring Boot Bible · Section 4 of N · Standalone reference document · Generated for interview preparation</div>
-
+</main>
 </div>
 
 <script>
-  (function() {
-    const html = document.documentElement;
-    const btnLight = document.getElementById('btn-light');
-    const btnDark = document.getElementById('btn-dark');
+const themeToggle = document.getElementById('themeToggle');
+const html = document.documentElement;
+function applyThemeLabel(){
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  themeToggle.innerHTML = isDark ? '🌙 Dark mode <span>⇄</span>' : '☀️ Light mode <span>⇄</span>';
+}
+themeToggle.addEventListener('click', () => {
+  const cur = html.getAttribute('data-theme');
+  html.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+  applyThemeLabel();
+  localStorage.setItem('sb-bible-theme', html.getAttribute('data-theme'));
+});
+(function initTheme(){
+  const saved = localStorage.getItem('sb-bible-theme');
+  if(saved){ html.setAttribute('data-theme', saved); }
+  applyThemeLabel();
+})();
 
-    function getTheme() {
-      return localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+document.querySelectorAll('.code-panel').forEach(panel => {
+  const tabs = panel.querySelectorAll('.code-tab');
+  if(tabs.length <= 1) return;
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.getAttribute('data-pane');
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      panel.querySelectorAll('.code-pane').forEach(p => p.classList.remove('active'));
+      const pane = panel.querySelector('#' + target);
+      if(pane) pane.classList.add('active');
+    });
+  });
+});
+
+document.querySelectorAll('.qa-section').forEach(section => {
+  const btns = section.querySelectorAll('.qa-tab-btn');
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-target');
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      section.querySelectorAll('.qa-pane').forEach(p => p.classList.remove('active'));
+      document.getElementById(target).classList.add('active');
+    });
+  });
+});
+
+const navLinks = document.querySelectorAll('.nav-link');
+const topics = document.querySelectorAll('section.topic');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const id = entry.target.getAttribute('id');
+    const link = document.querySelector('.nav-link[href="#' + id + '"]');
+    if(!link) return;
+    if(entry.isIntersecting){
+      navLinks.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
     }
-
-    function applyTheme(t) {
-      html.setAttribute('data-theme', t);
-      localStorage.setItem('theme', t);
-      if (t === 'dark') {
-        btnDark.classList.add('active');
-        btnLight.classList.remove('active');
-      } else {
-        btnLight.classList.add('active');
-        btnDark.classList.remove('active');
-      }
-    }
-
-    applyTheme(getTheme());
-
-    if (btnLight) btnLight.addEventListener('click', function() { applyTheme('light'); });
-    if (btnDark) btnDark.addEventListener('click', function() { applyTheme('dark'); });
-  })();
+  });
+}, { rootMargin: '-15% 0px -75% 0px', threshold: 0 });
+topics.forEach(t => observer.observe(t));
 </script>
 </body>
 </html>

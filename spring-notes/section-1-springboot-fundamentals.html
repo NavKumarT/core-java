@@ -3,50 +3,306 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Spring Boot Fundamentals — GrowthScript Engineering</title>
+<title>Spring Boot Bible — Section 1: Foundations, REST, JPA & Docs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../style-guide.css">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0f14;
+  --bg-elev:#111820;
+  --bg-elev-2:#161f2a;
+  --border:#233042;
+  --text:#dbe4ee;
+  --text-dim:#8a9bb0;
+  --text-faint:#5c6b7e;
+  --accent:#6DB33F;
+  --accent-soft:#6DB33F22;
+  --accent-2:#4fa3d1;
+  --accent-2-soft:#4fa3d122;
+  --warn:#e0a94f;
+  --warn-soft:#e0a94f22;
+  --danger:#e0655f;
+  --danger-soft:#e0655f22;
+  --code-bg:#0d1420;
+  --code-border:#1e2a3a;
+  --shadow: 0 8px 24px rgba(0,0,0,0.35);
+  --radius: 10px;
+  --sidebar-w: 300px;
+}
+html[data-theme="light"]{
+  --bg:#f6f4ee;
+  --bg-elev:#ffffff;
+  --bg-elev-2:#eef0e8;
+  --border:#dcdccf;
+  --text:#1c231d;
+  --text-dim:#586257;
+  --text-faint:#8b9188;
+  --accent:#3f7d1f;
+  --accent-soft:#3f7d1f1a;
+  --accent-2:#1f6f9c;
+  --accent-2-soft:#1f6f9c1a;
+  --warn:#8a5a12;
+  --warn-soft:#8a5a1218;
+  --danger:#a3352f;
+  --danger-soft:#a3352f18;
+  --code-bg:#fbfaf5;
+  --code-border:#e2e0d2;
+  --shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  line-height:1.65;
+  font-size:15.5px;
+}
+::selection{background:var(--accent-soft);color:var(--accent);}
+h1,h2,h3,h4{font-family:'Space Mono',monospace;letter-spacing:-0.01em;color:var(--text);}
+code, pre, .mono{font-family:'Space Mono',monospace;}
+a{color:var(--accent-2);text-decoration:none;}
+a:hover{text-decoration:underline;}
+
+/* ===== Layout ===== */
+.shell{display:flex;min-height:100vh;}
+.sidebar{
+  width:var(--sidebar-w);
+  flex-shrink:0;
+  border-right:1px solid var(--border);
+  background:var(--bg-elev);
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+  padding:22px 16px 60px;
+}
+.sidebar::-webkit-scrollbar{width:6px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.brand{
+  display:flex;align-items:center;gap:10px;margin-bottom:4px;padding:0 6px;
+}
+.brand-badge{
+  width:34px;height:34px;border-radius:8px;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;font-family:'Space Mono';
+  font-weight:700;color:#0b0f14;font-size:14px;flex-shrink:0;
+}
+.brand-text{font-family:'Space Mono';font-weight:700;font-size:14.5px;line-height:1.2;}
+.brand-text span{display:block;font-size:10.5px;color:var(--text-faint);font-weight:400;margin-top:2px;letter-spacing:0.04em;}
+.theme-toggle{
+  margin:14px 6px 20px;width:calc(100% - 12px);
+  background:var(--bg-elev-2);border:1px solid var(--border);color:var(--text-dim);
+  padding:8px 10px;border-radius:8px;font-family:'Inter';font-size:12.5px;cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.theme-toggle:hover{color:var(--text);border-color:var(--accent);}
+.nav-group{margin-bottom:6px;}
+.nav-group-title{
+  font-size:10.5px;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-faint);
+  padding:14px 8px 6px;font-family:'Space Mono';
+}
+.nav-link{
+  display:block;padding:7px 10px;border-radius:7px;font-size:13px;color:var(--text-dim);
+  margin-bottom:1px;border-left:2px solid transparent;
+}
+.nav-link:hover{background:var(--bg-elev-2);color:var(--text);text-decoration:none;}
+.nav-link.active{background:var(--accent-soft);color:var(--accent);border-left:2px solid var(--accent);font-weight:600;}
+.nav-link .vid-no{color:var(--text-faint);margin-right:5px;}
+
+main{flex:1;min-width:0;padding:48px 56px 120px;max-width:980px;}
+.hero{margin-bottom:44px;}
+.hero-eyebrow{
+  font-family:'Space Mono';font-size:11.5px;color:var(--accent);letter-spacing:0.1em;
+  text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;
+}
+.hero-eyebrow::before{content:"";width:20px;height:1px;background:var(--accent);}
+.hero h1{font-size:32px;margin:0 0 12px;line-height:1.25;}
+.hero p{color:var(--text-dim);font-size:15.5px;max-width:680px;}
+.scope-box{
+  margin-top:20px;border:1px solid var(--border);background:var(--bg-elev);border-radius:var(--radius);
+  padding:16px 18px;font-size:13px;color:var(--text-dim);
+}
+.scope-box b{color:var(--text);}
+
+section.topic{margin-bottom:56px;scroll-margin-top:24px;}
+.topic-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;border-bottom:1px solid var(--border);padding-bottom:14px;}
+.topic-no{font-family:'Space Mono';color:var(--accent);font-size:13px;background:var(--accent-soft);padding:3px 9px;border-radius:20px;flex-shrink:0;}
+.topic-head h2{font-size:22px;margin:0;}
+.topic-sub{color:var(--text-faint);font-size:12.5px;margin:8px 0 22px;}
+
+p{color:var(--text-dim);}
+h3.subhead{font-size:16.5px;color:var(--text);margin:28px 0 10px;display:flex;align-items:center;gap:8px;}
+h3.subhead::before{content:"";width:3px;height:15px;background:var(--accent-2);border-radius:2px;}
+h4.minihead{font-size:13.5px;color:var(--text);margin:18px 0 8px;font-family:'Inter';font-weight:700;}
+ul,ol{color:var(--text-dim);padding-left:22px;}
+li{margin-bottom:6px;}
+strong{color:var(--text);}
+
+/* ===== Annotation callouts ===== */
+.ann-box{
+  border:1px solid var(--code-border);background:var(--bg-elev);border-radius:var(--radius);
+  margin:14px 0;overflow:hidden;
+}
+.ann-box-head{
+  display:flex;align-items:center;gap:10px;padding:11px 16px;background:var(--accent-soft);
+  border-bottom:1px solid var(--code-border);
+}
+.ann-tag{font-family:'Space Mono';font-weight:700;color:var(--accent);font-size:14px;}
+.ann-loc{margin-left:auto;font-size:10.5px;color:var(--text-faint);font-family:'Space Mono';text-transform:uppercase;letter-spacing:0.05em;}
+.ann-body{padding:12px 16px;}
+.ann-body p{margin:4px 0 8px;font-size:13.5px;}
+.ann-attrs{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.attr-chip{
+  font-family:'Space Mono';font-size:11px;background:var(--bg-elev-2);border:1px solid var(--border);
+  padding:3px 8px;border-radius:6px;color:var(--text-dim);
+}
+.attr-chip b{color:var(--accent-2);}
+
+.ann-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0;}
+@media(max-width:760px){.ann-grid{grid-template-columns:1fr;}}
+
+/* ===== Code panels ===== */
+.code-panel{border:1px solid var(--code-border);border-radius:var(--radius);overflow:hidden;margin:16px 0;background:var(--code-bg);}
+.code-tabs{display:flex;background:var(--bg-elev-2);border-bottom:1px solid var(--code-border);overflow-x:auto;}
+.code-tab{
+  padding:9px 16px;font-family:'Space Mono';font-size:12px;color:var(--text-faint);cursor:pointer;
+  border-right:1px solid var(--code-border);white-space:nowrap;user-select:none;
+}
+.code-tab:hover{color:var(--text-dim);}
+.code-tab.active{color:var(--accent);background:var(--code-bg);border-bottom:2px solid var(--accent);margin-bottom:-1px;}
+.code-body{position:relative;}
+.code-pane{display:none;padding:16px 18px;overflow-x:auto;}
+.code-pane.active{display:block;}
+pre{margin:0;font-size:12.8px;line-height:1.65;color:#c7d3e0;}
+html[data-theme="light"] pre{color:#333c30;}
+.kw{color:#c586c0;}
+.ann{color:var(--accent);font-weight:700;}
+.str{color:#ce9178;}
+.cm{color:var(--text-faint);font-style:italic;}
+.ty{color:#4ec9b0;}
+.cl{color:#e5c07b;}
+
+.callout{border-radius:var(--radius);padding:14px 16px;margin:16px 0;border:1px solid;font-size:13.5px;}
+.callout.info{background:var(--accent-2-soft);border-color:var(--accent-2);color:var(--text);}
+.callout.warn{background:var(--warn-soft);border-color:var(--warn);color:var(--text);}
+.callout.pitfall{background:var(--danger-soft);border-color:var(--danger);color:var(--text);}
+.callout b.lbl{display:block;font-family:'Space Mono';font-size:11px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;}
+.callout.info b.lbl{color:var(--accent-2);}
+.callout.warn b.lbl{color:var(--warn);}
+.callout.pitfall b.lbl{color:var(--danger);}
+.callout p{margin:0;color:var(--text-dim);}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left;color:var(--text-dim);}
+th{background:var(--bg-elev-2);color:var(--text);font-family:'Space Mono';font-size:11.5px;text-transform:uppercase;letter-spacing:0.04em;}
+tr:hover td{background:var(--bg-elev-2);}
+
+/* ===== Q&A ===== */
+.qa-section{margin-top:26px;}
+.qa-tabs{display:flex;gap:8px;margin-bottom:14px;}
+.qa-tab-btn{
+  font-family:'Space Mono';font-size:11.5px;padding:7px 14px;border-radius:20px;border:1px solid var(--border);
+  background:var(--bg-elev);color:var(--text-dim);cursor:pointer;text-transform:uppercase;letter-spacing:0.04em;
+}
+.qa-tab-btn.common.active{background:var(--accent-2-soft);border-color:var(--accent-2);color:var(--accent-2);}
+.qa-tab-btn.faang.active{background:var(--danger-soft);border-color:var(--danger);color:var(--danger);}
+.qa-pane{display:none;}
+.qa-pane.active{display:block;}
+details.qa{
+  border:1px solid var(--border);border-radius:8px;margin-bottom:8px;background:var(--bg-elev);overflow:hidden;
+}
+details.qa[open]{border-color:var(--accent-2);}
+details.qa summary{
+  padding:12px 16px;cursor:pointer;font-weight:600;font-size:13.8px;list-style:none;
+  display:flex;align-items:flex-start;gap:10px;color:var(--text);
+}
+details.qa summary::-webkit-details-marker{display:none;}
+details.qa summary::before{
+  content:"Q";flex-shrink:0;font-family:'Space Mono';font-size:11px;color:var(--accent-2);
+  background:var(--accent-2-soft);width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;
+  margin-top:1px;
+}
+details.qa .qa-answer{padding:0 16px 16px 46px;color:var(--text-dim);font-size:13.5px;}
+details.qa .qa-answer p{margin:0 0 8px;color:var(--text-dim);}
+details.qa .qa-answer p:last-child{margin-bottom:0;}
+
+.divider{height:1px;background:linear-gradient(90deg,var(--border),transparent);margin:44px 0;}
+.footer-note{color:var(--text-faint);font-size:12px;text-align:center;padding:30px 0 10px;}
+.badge-row{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 18px;}
+.badge{font-family:'Space Mono';font-size:10.5px;background:var(--bg-elev-2);border:1px solid var(--border);padding:3px 9px;border-radius:20px;color:var(--text-faint);}
+
+@media(max-width:900px){
+  .shell{flex-direction:column;}
+  .sidebar{position:relative;width:100%;height:auto;}
+  main{padding:32px 20px 80px;}
+}
+</style>
+  <link rel="stylesheet" href="../style-guide.css">
 </head>
-<body data-theme="dark">
+<body>
+    <div class="nav-header"><a href="../index.html" class="back-home">← Back to Notes Hub</a></div>
+  <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark/light mode" aria-label="Toggle theme">☀️</button>
+<div class="shell">
+
 <aside class="sidebar">
-  <div class="sidebar-brand">
-    <div class="brand-row">
-      <span class="sidebar-logo">GS // Spring Boot</span>
-      <span class="sidebar-tagline">Spring Boot Fundamentals</span>
-    </div>
-    <div class="theme-toggle">
-      <button class="theme-toggle-btn active" id="btn-light" title="Light Theme">☀️</button>
-      <button class="theme-toggle-btn" id="btn-dark" title="Dark Theme">🌙</button>
-    </div>
+  <div class="brand">
+    <div class="brand-badge">SB</div>
+    <div class="brand-text">Spring Boot Bible<span>Section 1 · eazybank demo</span></div>
   </div>
-  <div class="sidebar-group">
-    <span class="sidebar-group-label">Navigation</span>
-    <a href="../index.html" class="sidebar-link"><span class="sl-dot"></span>← Notes Hub</a>
-    <a href="#sec-1" class="sidebar-link"><span class="sl-dot"></span>Spring Boot Core</a>
-    <a href="#sec-2" class="sidebar-link"><span class="sl-dot"></span>REST API Design</a>
-    <a href="#sec-3" class="sidebar-link"><span class="sl-dot"></span>Spring Data JPA</a>
-    <a href="#sec-4" class="sidebar-link"><span class="sl-dot"></span>API Documentation</a>
+  <button class="theme-toggle" id="themeToggle">🌙 Dark mode <span>⇄</span></button>
+
+  <div class="nav-group">
+    <div class="nav-group-title">Foundations</div>
+    <a class="nav-link" href="#microservices"><span class="vid-no">06</span>Building Microservices</a>
+    <a class="nav-link" href="#springboot-intro"><span class="vid-no">07</span>Intro to Spring Boot</a>
+    <a class="nav-link" href="#rest-intro"><span class="vid-no">09</span>REST APIs & Best Practices</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Project Setup</div>
+    <a class="nav-link" href="#create-project"><span class="vid-no">11</span>Creating the Project</a>
+    <a class="nav-link" href="#hello-world"><span class="vid-no">12</span>@RestController Hello World</a>
+    <a class="nav-link" href="#h2-yaml"><span class="vid-no">13</span>H2 DB & YAML Config</a>
+    <a class="nav-link" href="#lombok-issue"><span class="vid-no">14</span>Lombok + IntelliJ Fix</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Persistence Layer</div>
+    <a class="nav-link" href="#jpa-entities"><span class="vid-no">15</span>JPA Entities & Repositories</a>
+    <a class="nav-link" href="#dto-intro"><span class="vid-no">16</span>DTO Pattern — Intro</a>
+    <a class="nav-link" href="#dto-accounts"><span class="vid-no">17</span>DTOs in Accounts MS</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">CRUD APIs</div>
+    <a class="nav-link" href="#create-api"><span class="vid-no">18-19</span>CREATE API</a>
+    <a class="nav-link" href="#read-api"><span class="vid-no">20</span>READ API</a>
+    <a class="nav-link" href="#update-api"><span class="vid-no">21</span>UPDATE API</a>
+    <a class="nav-link" href="#delete-api"><span class="vid-no">22</span>DELETE API</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Robustness</div>
+    <a class="nav-link" href="#exception-handling"><span class="vid-no">23</span>Global Exception Handling</a>
+    <a class="nav-link" href="#validation"><span class="vid-no">24</span>Input Validation</a>
+    <a class="nav-link" href="#auditing"><span class="vid-no">25</span>Auditing Columns</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">API Documentation</div>
+    <a class="nav-link" href="#openapi-intro"><span class="vid-no">26</span>springdoc-openapi Intro</a>
+    <a class="nav-link" href="#openapi-def"><span class="vid-no">27</span>@OpenAPIDefinition</a>
+    <a class="nav-link" href="#openapi-tags"><span class="vid-no">28</span>@Tag @Operation @ApiResponse</a>
+    <a class="nav-link" href="#openapi-schema"><span class="vid-no">29-30</span>@Schema & Examples</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Wrap-up</div>
+    <a class="nav-link" href="#annotations-cheatsheet"><span class="vid-no">31</span>Annotations Cheat-sheet</a>
+    <a class="nav-link" href="#loans-cards"><span class="vid-no">32-34</span>Loans & Cards MS</a>
   </div>
 </aside>
-<div class="main">
-<div class="page-title-block">
-  <span class="page-eyebrow">GROWTHSCRIPT ENGINEERING — SPRING BOOT BIBLE</span>
-  <h1>Spring Boot Fundamentals</h1>
-  <p>Foundations, RESTful API design, Spring Data JPA, and OpenAPI documentation.</p>
-  <div class="tc-row">
-    <div class="tc-pill"><span></span>DOC 01</div>
-    <div class="tc-pill"><span></span>SPRING BOOT</div>
-    <div class="tc-pill"><span></span>MICROSERVICES</div>
-  </div>
-</div>
 
-  <h1>Foundations, REST, Spring Data JPA & API Docs</h1>
+<main>
+  <div class="hero">
+    <div class="hero-eyebrow">Section 1 · Spring Boot Bible</div>
+    <h1>Foundations, REST, Spring Data JPA & API Docs</h1>
     <p>Deep, interview-oriented notes built around the <strong>eazybank</strong> style demo — three microservices (<strong>Accounts</strong>, <strong>Loans</strong>, <strong>Cards</strong>) each doing CRUD against an <strong>H2</strong> database using <strong>Spring Data JPA</strong>, with validation, global exception handling, auditing, and OpenAPI/Swagger documentation. Every topic below is written to "bible" depth: concept → annotation-by-annotation breakdown → working code → common interview questions → FAANG/product-company level questions.</p>
-    <div class="note-box"><div class="tip-icon">💡</div><div class="tip-text">
+    <div class="scope-box">
       <b>How to use this document:</b> Each section is self-contained. Read the concept, study the annotated code panel (annotations are highlighted in <span style="color:var(--accent);font-family:'Space Mono';font-weight:700;">green</span>), then work through the Q&A — toggle between <b>Common</b> (baseline, "can this person actually build things") and <b>FAANG</b> (probing internals, trade-offs, "why not X instead") question sets.
-    </div></div>
+    </div>
   </div>
 
   <!-- ========================================================= -->
@@ -1533,36 +1789,74 @@ BeanUtils.copyProperties(customerDto, customer);
   </section>
 
   <div class="footer-note">Spring Boot Bible · Section 1 of N · Standalone reference document · Generated for interview preparation</div>
-
+</main>
 </div>
 
 <script>
-  (function() {
-    const html = document.documentElement;
-    const btnLight = document.getElementById('btn-light');
-    const btnDark = document.getElementById('btn-dark');
+// ===== Theme toggle =====
+const themeToggle = document.getElementById('themeToggle');
+const html = document.documentElement;
+function applyThemeLabel(){
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  themeToggle.innerHTML = isDark ? '🌙 Dark mode <span>⇄</span>' : '☀️ Light mode <span>⇄</span>';
+}
+themeToggle.addEventListener('click', () => {
+  const cur = html.getAttribute('data-theme');
+  html.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+  applyThemeLabel();
+  localStorage.setItem('sb-bible-theme', html.getAttribute('data-theme'));
+});
+(function initTheme(){
+  const saved = localStorage.getItem('sb-bible-theme');
+  if(saved){ html.setAttribute('data-theme', saved); }
+  applyThemeLabel();
+})();
 
-    function getTheme() {
-      return localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+// ===== Code tab switching =====
+document.querySelectorAll('.code-panel').forEach(panel => {
+  const tabs = panel.querySelectorAll('.code-tab');
+  if(tabs.length <= 1) return;
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.getAttribute('data-pane');
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      panel.querySelectorAll('.code-pane').forEach(p => p.classList.remove('active'));
+      const pane = panel.querySelector('#' + target);
+      if(pane) pane.classList.add('active');
+    });
+  });
+});
+
+// ===== Q&A tab switching (Common / FAANG) =====
+document.querySelectorAll('.qa-section').forEach(section => {
+  const btns = section.querySelectorAll('.qa-tab-btn');
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-target');
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      section.querySelectorAll('.qa-pane').forEach(p => p.classList.remove('active'));
+      document.getElementById(target).classList.add('active');
+    });
+  });
+});
+
+// ===== Sidebar active-link highlighting on scroll =====
+const navLinks = document.querySelectorAll('.nav-link');
+const topics = document.querySelectorAll('section.topic');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const id = entry.target.getAttribute('id');
+    const link = document.querySelector('.nav-link[href="#' + id + '"]');
+    if(!link) return;
+    if(entry.isIntersecting){
+      navLinks.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
     }
-
-    function applyTheme(t) {
-      html.setAttribute('data-theme', t);
-      localStorage.setItem('theme', t);
-      if (t === 'dark') {
-        btnDark.classList.add('active');
-        btnLight.classList.remove('active');
-      } else {
-        btnLight.classList.add('active');
-        btnDark.classList.remove('active');
-      }
-    }
-
-    applyTheme(getTheme());
-
-    if (btnLight) btnLight.addEventListener('click', function() { applyTheme('light'); });
-    if (btnDark) btnDark.addEventListener('click', function() { applyTheme('dark'); });
-  })();
+  });
+}, { rootMargin: '-15% 0px -75% 0px', threshold: 0 });
+topics.forEach(t => observer.observe(t));
 </script>
 </body>
 </html>
