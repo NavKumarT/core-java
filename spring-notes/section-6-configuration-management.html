@@ -3,235 +3,50 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Spring Boot Bible — Section 6: Configuration Management in Microservices</title>
+<title>Configuration Management — GrowthScript Engineering</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-:root{
-  --bg:#0b0f14; --bg-elev:#111820; --bg-elev-2:#161f2a; --border:#233042;
-  --text:#dbe4ee; --text-dim:#8a9bb0; --text-faint:#5c6b7e;
-  --accent:#6DB33F; --accent-soft:#6DB33F22;
-  --accent-2:#4fa3d1; --accent-2-soft:#4fa3d122;
-  --cfg:#a684e8; --cfg-soft:#a684e822;
-  --warn:#e0a94f; --warn-soft:#e0a94f22;
-  --danger:#e0655f; --danger-soft:#e0655f22;
-  --code-bg:#0d1420; --code-border:#1e2a3a;
-  --shadow: 0 8px 24px rgba(0,0,0,0.35); --radius: 10px; --sidebar-w: 300px;
-}
-html[data-theme="light"]{
-  --bg:#f6f4ee; --bg-elev:#ffffff; --bg-elev-2:#eef0e8; --border:#dcdccf;
-  --text:#1c231d; --text-dim:#586257; --text-faint:#8b9188;
-  --accent:#3f7d1f; --accent-soft:#3f7d1f1a;
-  --accent-2:#1f6f9c; --accent-2-soft:#1f6f9c1a;
-  --cfg:#6b3fa8; --cfg-soft:#6b3fa818;
-  --warn:#8a5a12; --warn-soft:#8a5a1218;
-  --danger:#a3352f; --danger-soft:#a3352f18;
-  --code-bg:#fbfaf5; --code-border:#e2e0d2;
-  --shadow: 0 8px 24px rgba(0,0,0,0.08);
-}
-*{box-sizing:border-box;}
-html{scroll-behavior:smooth;}
-body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;line-height:1.65;font-size:15.5px;}
-::selection{background:var(--cfg-soft);color:var(--cfg);}
-h1,h2,h3,h4{font-family:'Space Mono',monospace;letter-spacing:-0.01em;color:var(--text);}
-code, pre, .mono{font-family:'Space Mono',monospace;}
-a{color:var(--accent-2);text-decoration:none;}
-a:hover{text-decoration:underline;}
-
-.shell{display:flex;min-height:100vh;}
-.sidebar{width:var(--sidebar-w);flex-shrink:0;border-right:1px solid var(--border);background:var(--bg-elev);position:sticky;top:0;height:100vh;overflow-y:auto;padding:22px 16px 60px;}
-.sidebar::-webkit-scrollbar{width:6px;}
-.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
-.brand{display:flex;align-items:center;gap:10px;margin-bottom:4px;padding:0 6px;}
-.brand-badge{width:34px;height:34px;border-radius:8px;background:var(--cfg);display:flex;align-items:center;justify-content:center;font-family:'Space Mono';font-weight:700;color:#fff;font-size:13px;flex-shrink:0;}
-.brand-text{font-family:'Space Mono';font-weight:700;font-size:14.5px;line-height:1.2;}
-.brand-text span{display:block;font-size:10.5px;color:var(--text-faint);font-weight:400;margin-top:2px;letter-spacing:0.04em;}
-.theme-toggle{margin:14px 6px 20px;width:calc(100% - 12px);background:var(--bg-elev-2);border:1px solid var(--border);color:var(--text-dim);padding:8px 10px;border-radius:8px;font-family:'Inter';font-size:12.5px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
-.theme-toggle:hover{color:var(--text);border-color:var(--cfg);}
-.nav-group{margin-bottom:6px;}
-.nav-group-title{font-size:10.5px;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-faint);padding:14px 8px 6px;font-family:'Space Mono';}
-.nav-link{display:block;padding:7px 10px;border-radius:7px;font-size:13px;color:var(--text-dim);margin-bottom:1px;border-left:2px solid transparent;}
-.nav-link:hover{background:var(--bg-elev-2);color:var(--text);text-decoration:none;}
-.nav-link.active{background:var(--cfg-soft);color:var(--cfg);border-left:2px solid var(--cfg);font-weight:600;}
-.nav-link .vid-no{color:var(--text-faint);margin-right:5px;}
-
-main{flex:1;min-width:0;padding:48px 56px 120px;max-width:980px;}
-.hero{margin-bottom:44px;}
-.hero-eyebrow{font-family:'Space Mono';font-size:11.5px;color:var(--cfg);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
-.hero-eyebrow::before{content:"";width:20px;height:1px;background:var(--cfg);}
-.hero h1{font-size:32px;margin:0 0 12px;line-height:1.25;}
-.hero p{color:var(--text-dim);font-size:15.5px;max-width:680px;}
-.scope-box{margin-top:20px;border:1px solid var(--border);background:var(--bg-elev);border-radius:var(--radius);padding:16px 18px;font-size:13px;color:var(--text-dim);}
-.scope-box b{color:var(--text);}
-
-section.topic{margin-bottom:56px;scroll-margin-top:24px;}
-.topic-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;border-bottom:1px solid var(--border);padding-bottom:14px;}
-.topic-no{font-family:'Space Mono';color:var(--cfg);font-size:13px;background:var(--cfg-soft);padding:3px 9px;border-radius:20px;flex-shrink:0;}
-.topic-head h2{font-size:22px;margin:0;}
-.topic-sub{color:var(--text-faint);font-size:12.5px;margin:8px 0 22px;}
-
-p{color:var(--text-dim);}
-h3.subhead{font-size:16.5px;color:var(--text);margin:28px 0 10px;display:flex;align-items:center;gap:8px;}
-h3.subhead::before{content:"";width:3px;height:15px;background:var(--accent-2);border-radius:2px;}
-h4.minihead{font-size:13.5px;color:var(--text);margin:18px 0 8px;font-family:'Inter';font-weight:700;}
-ul,ol{color:var(--text-dim);padding-left:22px;}
-li{margin-bottom:6px;}
-strong{color:var(--text);}
-
-.ann-box{border:1px solid var(--code-border);background:var(--bg-elev);border-radius:var(--radius);margin:14px 0;overflow:hidden;}
-.ann-box-head{display:flex;align-items:center;gap:10px;padding:11px 16px;background:var(--cfg-soft);border-bottom:1px solid var(--code-border);}
-.ann-tag{font-family:'Space Mono';font-weight:700;color:var(--cfg);font-size:14px;}
-.ann-loc{margin-left:auto;font-size:10.5px;color:var(--text-faint);font-family:'Space Mono';text-transform:uppercase;letter-spacing:0.05em;}
-.ann-body{padding:12px 16px;}
-.ann-body p{margin:4px 0 8px;font-size:13.5px;}
-.ann-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0;}
-@media(max-width:760px){.ann-grid{grid-template-columns:1fr;}}
-
-.code-panel{border:1px solid var(--code-border);border-radius:var(--radius);overflow:hidden;margin:16px 0;background:var(--code-bg);}
-.code-tabs{display:flex;background:var(--bg-elev-2);border-bottom:1px solid var(--code-border);overflow-x:auto;}
-.code-tab{padding:9px 16px;font-family:'Space Mono';font-size:12px;color:var(--text-faint);cursor:pointer;border-right:1px solid var(--code-border);white-space:nowrap;user-select:none;}
-.code-tab:hover{color:var(--text-dim);}
-.code-tab.active{color:var(--cfg);background:var(--code-bg);border-bottom:2px solid var(--cfg);margin-bottom:-1px;}
-.code-body{position:relative;}
-.code-pane{display:none;padding:16px 18px;overflow-x:auto;}
-.code-pane.active{display:block;}
-pre{margin:0;font-size:12.8px;line-height:1.65;color:#c7d3e0;}
-html[data-theme="light"] pre{color:#333c30;}
-.kw{color:#c586c0;}
-.ann{color:var(--cfg);font-weight:700;}
-.str{color:#ce9178;}
-.cm{color:var(--text-faint);font-style:italic;}
-.ty{color:#4ec9b0;}
-.cl{color:#e5c07b;}
-
-.callout{border-radius:var(--radius);padding:14px 16px;margin:16px 0;border:1px solid;font-size:13.5px;}
-.callout.info{background:var(--accent-2-soft);border-color:var(--accent-2);color:var(--text);}
-.callout.warn{background:var(--warn-soft);border-color:var(--warn);color:var(--text);}
-.callout.pitfall{background:var(--danger-soft);border-color:var(--danger);color:var(--text);}
-.callout b.lbl{display:block;font-family:'Space Mono';font-size:11px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;}
-.callout.info b.lbl{color:var(--accent-2);}
-.callout.warn b.lbl{color:var(--warn);}
-.callout.pitfall b.lbl{color:var(--danger);}
-.callout p{margin:0;color:var(--text-dim);}
-
-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;}
-th,td{border:1px solid var(--border);padding:8px 12px;text-align:left;color:var(--text-dim);}
-th{background:var(--bg-elev-2);color:var(--text);font-family:'Space Mono';font-size:11.5px;text-transform:uppercase;letter-spacing:0.04em;}
-tr:hover td{background:var(--bg-elev-2);}
-
-.diagram{border:1px solid var(--code-border);background:var(--code-bg);border-radius:var(--radius);padding:22px 18px;margin:18px 0;overflow-x:auto;}
-.dflow{display:flex;align-items:stretch;gap:10px;min-width:max-content;flex-wrap:wrap;}
-.dbox{flex-shrink:0;min-width:120px;border:1px solid var(--border);background:var(--bg-elev);border-radius:8px;padding:12px 14px;text-align:center;}
-.dbox .t{font-family:'Space Mono';font-size:12px;color:var(--text);font-weight:700;}
-.dbox .s{font-size:10.5px;color:var(--text-faint);margin-top:4px;}
-.dbox.accent{border-color:var(--cfg);background:var(--cfg-soft);}
-.dbox.accent .t{color:var(--cfg);}
-.dbox.warn{border-color:var(--warn);background:var(--warn-soft);}
-.dbox.warn .t{color:var(--warn);}
-.dbox.dim{opacity:0.55;}
-.darrow{flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-family:'Space Mono';font-size:16px;min-width:24px;}
-.dstack{display:flex;flex-direction:column;gap:8px;}
-.dcol{display:flex;flex-direction:column;gap:8px;align-items:center;}
-.dphase-label{font-family:'Space Mono';font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;text-align:center;margin-top:8px;}
-
-.qa-section{margin-top:26px;}
-.qa-tabs{display:flex;gap:8px;margin-bottom:14px;}
-.qa-tab-btn{font-family:'Space Mono';font-size:11.5px;padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg-elev);color:var(--text-dim);cursor:pointer;text-transform:uppercase;letter-spacing:0.04em;}
-.qa-tab-btn.common.active{background:var(--accent-2-soft);border-color:var(--accent-2);color:var(--accent-2);}
-.qa-tab-btn.faang.active{background:var(--danger-soft);border-color:var(--danger);color:var(--danger);}
-.qa-pane{display:none;}
-.qa-pane.active{display:block;}
-details.qa{border:1px solid var(--border);border-radius:8px;margin-bottom:8px;background:var(--bg-elev);overflow:hidden;}
-details.qa[open]{border-color:var(--accent-2);}
-details.qa summary{padding:12px 16px;cursor:pointer;font-weight:600;font-size:13.8px;list-style:none;display:flex;align-items:flex-start;gap:10px;color:var(--text);}
-details.qa summary::-webkit-details-marker{display:none;}
-details.qa summary::before{content:"Q";flex-shrink:0;font-family:'Space Mono';font-size:11px;color:var(--accent-2);background:var(--accent-2-soft);width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;margin-top:1px;}
-details.qa .qa-answer{padding:0 16px 16px 46px;color:var(--text-dim);font-size:13.5px;}
-details.qa .qa-answer p{margin:0 0 8px;color:var(--text-dim);}
-details.qa .qa-answer p:last-child{margin-bottom:0;}
-
-.divider{height:1px;background:linear-gradient(90deg,var(--border),transparent);margin:44px 0;}
-.footer-note{color:var(--text-faint);font-size:12px;text-align:center;padding:30px 0 10px;}
-
-@media(max-width:900px){
-  .shell{flex-direction:column;}
-  .sidebar{position:relative;width:100%;height:auto;}
-  main{padding:32px 20px 80px;}
-}
-</style>
-  <link rel="stylesheet" href="../style-guide.css">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style-guide.css">
 </head>
-<body>
-    <div class="nav-header"><a href="../index.html" class="back-home">← Back to Notes Hub</a></div>
-  <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark/light mode" aria-label="Toggle theme">☀️</button>
-<div class="shell">
-
+<body data-theme="dark">
 <aside class="sidebar">
-  <div class="brand">
-    <div class="brand-badge">⚙</div>
-    <div class="brand-text">Spring Boot Bible<span>Section 6 · Config Mgmt</span></div>
+  <div class="sidebar-brand">
+    <div class="brand-row">
+      <span class="sidebar-logo">GS // Spring Boot</span>
+      <span class="sidebar-tagline">Configuration Management</span>
+    </div>
+    <div class="theme-toggle">
+      <button class="theme-toggle-btn active" id="btn-light" title="Light Theme">☀️</button>
+      <button class="theme-toggle-btn" id="btn-dark" title="Dark Theme">🌙</button>
+    </div>
   </div>
-  <button class="theme-toggle" id="themeToggle">🌙 Dark mode <span>⇄</span></button>
-
-  <div class="nav-group">
-    <div class="nav-group-title">Foundations</div>
-    <a class="nav-link" href="#challenges"><span class="vid-no">67</span>Config Management Challenges</a>
-    <a class="nav-link" href="#how-config-works"><span class="vid-no">68</span>How Config Works in Spring Boot</a>
-  </div>
-  <div class="nav-group">
-    <div class="nav-group-title">Reading Config Values</div>
-    <a class="nav-link" href="#value-annotation"><span class="vid-no">69</span>@Value Annotation</a>
-    <a class="nav-link" href="#environment-interface"><span class="vid-no">70</span>Environment Interface</a>
-    <a class="nav-link" href="#configuration-properties"><span class="vid-no">71</span>@ConfigurationProperties</a>
-  </div>
-  <div class="nav-group">
-    <div class="nav-group-title">Spring Boot Profiles</div>
-    <a class="nav-link" href="#profiles-intro"><span class="vid-no">72</span>Intro to Profiles</a>
-    <a class="nav-link" href="#profiles-demo"><span class="vid-no">73</span>Profiles Demo — Accounts</a>
-    <a class="nav-link" href="#externalizing"><span class="vid-no">74</span>Externalizing Config (CLI/JVM/Env)</a>
-    <a class="nav-link" href="#activating-profile"><span class="vid-no">75</span>Activating Profiles</a>
-    <a class="nav-link" href="#loans-cards-profiles"><span class="vid-no">76-77</span>Loans & Cards Profiles</a>
-  </div>
-  <div class="nav-group">
-    <div class="nav-group-title">Spring Cloud Config</div>
-    <a class="nav-link" href="#drawbacks"><span class="vid-no">78</span>Drawbacks of Boot-only Config</a>
-    <a class="nav-link" href="#cloud-config-intro"><span class="vid-no">79</span>Intro to Spring Cloud Config</a>
-    <a class="nav-link" href="#config-server-build"><span class="vid-no">80</span>Building the Config Server</a>
-    <a class="nav-link" href="#classpath-location"><span class="vid-no">81</span>Reading from Classpath</a>
-    <a class="nav-link" href="#accounts-config-client"><span class="vid-no">82</span>Accounts as Config Client</a>
-    <a class="nav-link" href="#loans-cards-config-client"><span class="vid-no">83</span>Loans & Cards as Clients</a>
-  </div>
-  <div class="nav-group">
-    <div class="nav-group-title">Config Server Backends</div>
-    <a class="nav-link" href="#filesystem-location"><span class="vid-no">84</span>File System Backend</a>
-    <a class="nav-link" href="#github-backend"><span class="vid-no">85</span>GitHub Repo Backend</a>
-    <a class="nav-link" href="#encryption"><span class="vid-no">86</span>Encryption & Decryption</a>
-  </div>
-  <div class="nav-group">
-    <div class="nav-group-title">Runtime Refresh</div>
-    <a class="nav-link" href="#refresh-actuator"><span class="vid-no">87</span>Refresh via /actuator/refresh</a>
-    <a class="nav-link" href="#cloud-bus"><span class="vid-no">88</span>Refresh via Spring Cloud Bus</a>
-    <a class="nav-link" href="#config-monitor"><span class="vid-no">89</span>Cloud Bus + Config Monitor</a>
-  </div>
-  <div class="nav-group">
-    <div class="nav-group-title">Docker Compose & Probes</div>
-    <a class="nav-link" href="#compose-config-server"><span class="vid-no">90,92</span>Compose Updates for Config Server</a>
-    <a class="nav-link" href="#probes"><span class="vid-no">91</span>Liveness & Readiness Probes</a>
-    <a class="nav-link" href="#compose-optimize"><span class="vid-no">93</span>Optimizing Docker Compose</a>
-    <a class="nav-link" href="#build-push-images"><span class="vid-no">94</span>Build & Push Images</a>
-    <a class="nav-link" href="#e2e-testing"><span class="vid-no">95</span>End-to-End Testing</a>
-    <a class="nav-link" href="#qa-prod-compose"><span class="vid-no">96</span>QA & Prod Compose Files</a>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Navigation</span>
+    <a href="../index.html" class="sidebar-link"><span class="sl-dot"></span>← Notes Hub</a>
+    <a href="#sec-1" class="sidebar-link"><span class="sl-dot"></span>Centralized Configuration</a>
+    <a href="#sec-2" class="sidebar-link"><span class="sl-dot"></span>Environment Profiles</a>
+    <a href="#sec-3" class="sidebar-link"><span class="sl-dot"></span>Spring Cloud Config Server</a>
+    <a href="#sec-4" class="sidebar-link"><span class="sl-dot"></span>Dynamic Refresh</a>
   </div>
 </aside>
+<div class="main">
+<div class="page-title-block">
+  <span class="page-eyebrow">GROWTHSCRIPT ENGINEERING — SPRING BOOT BIBLE</span>
+  <h1>Configuration Management</h1>
+  <p>Centralized config with Spring Cloud Config Server, profiles, and live @RefreshScope.</p>
+  <div class="tc-row">
+    <div class="tc-pill"><span></span>DOC 06</div>
+    <div class="tc-pill"><span></span>SPRING BOOT</div>
+    <div class="tc-pill"><span></span>MICROSERVICES</div>
+  </div>
+</div>
 
-<main>
-  <div class="hero">
-    <div class="hero-eyebrow">Section 6 · Spring Boot Bible</div>
-    <h1>Configuration Management in Microservices</h1>
+  <h1>Configuration Management in Microservices</h1>
     <p>Almost every real production incident traced back to "config" falls into one of two buckets: a secret leaked because it lived in source control, or a service came up with the wrong value because config drifted silently between environments. This is one of the highest-leverage topics for both real production work and interviews — it's where "I can write a CRUD API" turns into "I understand how a fleet of services stays correctly configured, secured, and updatable without downtime." This section goes from the three ways to read a property inside one Spring Boot app, all the way to a centralized, git-backed, encrypted, runtime-refreshable Spring Cloud Config setup wired into Docker Compose with proper liveness/readiness probes.</p>
-    <div class="scope-box">
+    <div class="note-box"><div class="tip-icon">💡</div><div class="tip-text">
       <b>How to use this document:</b> This section builds cumulatively — profiles (72–77) motivate why config needs externalizing at all, section 78 is the pivot point explaining exactly what Spring Boot alone can't do, and everything from 79 onward (Spring Cloud Config) is the production-grade answer to those specific gaps. Read in order the first time through.
-    </div>
+    </div></div>
   </div>
 
   <!-- ========================================================= -->
@@ -1769,70 +1584,36 @@ mySecretPassword</pre></div>
   </section>
 
   <div class="footer-note">Spring Boot Bible · Section 6 of N · Standalone reference document · Generated for interview preparation</div>
-</main>
+
 </div>
 
 <script>
-const themeToggle = document.getElementById('themeToggle');
-const html = document.documentElement;
-function applyThemeLabel(){
-  const isDark = html.getAttribute('data-theme') === 'dark';
-  themeToggle.innerHTML = isDark ? '🌙 Dark mode <span>⇄</span>' : '☀️ Light mode <span>⇄</span>';
-}
-themeToggle.addEventListener('click', () => {
-  const cur = html.getAttribute('data-theme');
-  html.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
-  applyThemeLabel();
-  localStorage.setItem('sb-bible-theme', html.getAttribute('data-theme'));
-});
-(function initTheme(){
-  const saved = localStorage.getItem('sb-bible-theme');
-  if(saved){ html.setAttribute('data-theme', saved); }
-  applyThemeLabel();
-})();
+  (function() {
+    const html = document.documentElement;
+    const btnLight = document.getElementById('btn-light');
+    const btnDark = document.getElementById('btn-dark');
 
-document.querySelectorAll('.code-panel').forEach(panel => {
-  const tabs = panel.querySelectorAll('.code-tab');
-  if(tabs.length <= 1) return;
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      const target = tab.getAttribute('data-pane');
-      tabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      panel.querySelectorAll('.code-pane').forEach(p => p.classList.remove('active'));
-      const pane = panel.querySelector('#' + target);
-      if(pane) pane.classList.add('active');
-    });
-  });
-});
-
-document.querySelectorAll('.qa-section').forEach(section => {
-  const btns = section.querySelectorAll('.qa-tab-btn');
-  btns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const target = btn.getAttribute('data-target');
-      btns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      section.querySelectorAll('.qa-pane').forEach(p => p.classList.remove('active'));
-      document.getElementById(target).classList.add('active');
-    });
-  });
-});
-
-const navLinks = document.querySelectorAll('.nav-link');
-const topics = document.querySelectorAll('section.topic');
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    const id = entry.target.getAttribute('id');
-    const link = document.querySelector('.nav-link[href="#' + id + '"]');
-    if(!link) return;
-    if(entry.isIntersecting){
-      navLinks.forEach(l => l.classList.remove('active'));
-      link.classList.add('active');
+    function getTheme() {
+      return localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     }
-  });
-}, { rootMargin: '-15% 0px -75% 0px', threshold: 0 });
-topics.forEach(t => observer.observe(t));
+
+    function applyTheme(t) {
+      html.setAttribute('data-theme', t);
+      localStorage.setItem('theme', t);
+      if (t === 'dark') {
+        btnDark.classList.add('active');
+        btnLight.classList.remove('active');
+      } else {
+        btnLight.classList.add('active');
+        btnDark.classList.remove('active');
+      }
+    }
+
+    applyTheme(getTheme());
+
+    if (btnLight) btnLight.addEventListener('click', function() { applyTheme('light'); });
+    if (btnDark) btnDark.addEventListener('click', function() { applyTheme('dark'); });
+  })();
 </script>
 </body>
 </html>
