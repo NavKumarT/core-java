@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Section 1: Foundations — Maven, Spring Core, IoC & DI | GrowthScript Engineering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117; --bg-elev:#151b23; --bg-card:#1a2230; --border:#2a3441;
+  --text:#e6edf3; --text-dim:#9aa7b5; --text-faint:#6e7c8c;
+  --accent:#3fb950; --accent-soft:rgba(63,185,80,.12);
+  --blue:#58a6ff; --blue-soft:rgba(88,166,255,.12);
+  --warn:#f0883e; --warn-soft:rgba(240,136,62,.12);
+  --danger:#f85149; --danger-soft:rgba(248,81,73,.12);
+  --code-bg:#0a0e14; --sidebar-w:290px; --radius:10px;
+  --shadow:0 4px 16px rgba(0,0,0,.35);
+}
+[data-theme="light"]{
+  --bg:#f6f8fa; --bg-elev:#ffffff; --bg-card:#ffffff; --border:#d8dee4;
+  --text:#1b2430; --text-dim:#4b5563; --text-faint:#8a96a3;
+  --accent:#1a7f37; --accent-soft:rgba(26,127,55,.08);
+  --blue:#0969da; --blue-soft:rgba(9,105,218,.08);
+  --warn:#9a6700; --warn-soft:rgba(154,103,0,.08);
+  --danger:#cf222e; --danger-soft:rgba(207,34,46,.08);
+  --code-bg:#0d1117; --shadow:0 2px 10px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{
+  font-family:'Inter',sans-serif; background:var(--bg); color:var(--text);
+  line-height:1.65; font-size:15.5px; transition:background .2s,color .2s;
+}
+code, pre, .mono{font-family:'Space Mono',monospace;}
+a{color:var(--blue); text-decoration:none;}
+a:hover{text-decoration:underline;}
+
+/* ===== Layout ===== */
+.wrapper{display:flex; min-height:100vh;}
+.sidebar{
+  width:var(--sidebar-w); flex-shrink:0; background:var(--bg-elev);
+  border-right:1px solid var(--border); position:sticky; top:0; height:100vh;
+  overflow-y:auto; padding:22px 16px 40px;
+}
+.sidebar::-webkit-scrollbar{width:6px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border); border-radius:3px;}
+.brand{display:flex; align-items:center; gap:10px; margin-bottom:4px;}
+.brand-badge{
+  width:34px; height:34px; border-radius:8px; background:var(--accent);
+  display:flex; align-items:center; justify-content:center; color:#0d1117;
+  font-weight:800; font-family:'Space Mono',monospace; font-size:15px; flex-shrink:0;
+}
+.brand-text{font-weight:800; font-size:14.5px; letter-spacing:.2px;}
+.brand-sub{font-size:11px; color:var(--text-faint); margin-top:1px;}
+.theme-toggle{
+  margin:16px 0 20px; width:100%; padding:8px 10px; border-radius:8px;
+  border:1px solid var(--border); background:var(--bg-card); color:var(--text);
+  cursor:pointer; font-size:12.5px; font-weight:600; display:flex; align-items:center;
+  justify-content:center; gap:6px;
+}
+.nav-group{margin-bottom:6px;}
+.nav-label{
+  font-size:10.5px; text-transform:uppercase; letter-spacing:.9px; color:var(--text-faint);
+  font-weight:700; margin:18px 4px 8px;
+}
+.nav-link{
+  display:block; padding:7px 10px; border-radius:7px; font-size:13px; color:var(--text-dim);
+  border-left:2px solid transparent; margin-bottom:1px;
+}
+.nav-link:hover{background:var(--accent-soft); color:var(--text); text-decoration:none;}
+.nav-link.sub{padding-left:22px; font-size:12.3px;}
+
+.main{flex:1; min-width:0; padding:44px 56px 120px; max-width:980px;}
+.header-block{margin-bottom:44px; padding-bottom:28px; border-bottom:1px solid var(--border);}
+.eyebrow{
+  font-family:'Space Mono',monospace; font-size:11.5px; color:var(--accent); font-weight:700;
+  letter-spacing:1px; text-transform:uppercase; margin-bottom:10px;
+}
+.header-block h1{font-size:32px; font-weight:800; letter-spacing:-.5px; margin-bottom:12px;}
+.header-block p{color:var(--text-dim); font-size:15px; max-width:680px;}
+.meta-row{display:flex; gap:18px; margin-top:16px; flex-wrap:wrap;}
+.meta-pill{
+  font-size:11.5px; padding:5px 11px; border-radius:20px; background:var(--bg-card);
+  border:1px solid var(--border); color:var(--text-dim); font-family:'Space Mono',monospace;
+}
+
+section.topic{margin-bottom:56px; scroll-margin-top:24px;}
+.topic-head{display:flex; align-items:baseline; gap:12px; margin-bottom:6px;}
+.topic-num{
+  font-family:'Space Mono',monospace; color:var(--accent); font-weight:700; font-size:14px;
+}
+h2{font-size:23px; font-weight:800; letter-spacing:-.3px;}
+.topic-video{font-size:12px; color:var(--text-faint); margin-bottom:20px; margin-top:2px; font-family:'Space Mono',monospace;}
+h3{font-size:17.5px; font-weight:700; margin:26px 0 12px; color:var(--text);}
+h4{font-size:14.5px; font-weight:700; margin:18px 0 8px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.4px; font-size:12.5px;}
+p{margin-bottom:13px; color:var(--text); font-size:15px;}
+p.dim{color:var(--text-dim);}
+ul, ol{margin:0 0 15px 22px;}
+li{margin-bottom:7px; font-size:14.8px;}
+strong{color:var(--text); font-weight:700;}
+.hl{color:var(--accent); font-weight:700;}
+
+/* ===== Boxes ===== */
+.box{
+  border-radius:var(--radius); padding:16px 18px; margin:18px 0; border:1px solid var(--border);
+  font-size:14.3px;
+}
+.box-title{
+  font-weight:700; font-size:12.5px; text-transform:uppercase; letter-spacing:.5px;
+  margin-bottom:7px; display:flex; align-items:center; gap:7px;
+}
+.tip{background:var(--accent-soft); border-color:rgba(63,185,80,.3);}
+.tip .box-title{color:var(--accent);}
+.warn{background:var(--warn-soft); border-color:rgba(240,136,62,.3);}
+.warn .box-title{color:var(--warn);}
+.info{background:var(--blue-soft); border-color:rgba(88,166,255,.3);}
+.info .box-title{color:var(--blue);}
+.danger{background:var(--danger-soft); border-color:rgba(248,81,73,.3);}
+.danger .box-title{color:var(--danger);}
+
+/* ===== Code tabs ===== */
+.code-block{
+  background:var(--code-bg); border-radius:var(--radius); overflow:hidden; margin:16px 0;
+  border:1px solid var(--border); box-shadow:var(--shadow);
+}
+.tabs{display:flex; background:rgba(255,255,255,.03); border-bottom:1px solid rgba(255,255,255,.08); overflow-x:auto;}
+.tab-btn{
+  padding:9px 16px; font-family:'Space Mono',monospace; font-size:12px; color:#8a96a3;
+  background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap;
+}
+.tab-btn.active{color:#e6edf3; border-bottom-color:var(--accent);}
+.tab-content{display:none; padding:16px 18px; overflow-x:auto;}
+.tab-content.active{display:block;}
+.tab-content pre{color:#c9d1d9; font-size:13px; line-height:1.65; white-space:pre;}
+.tab-content .kw{color:#ff7b72;} .tab-content .str{color:#a5d6ff;} .tab-content .cm{color:#8b949e; font-style:italic;}
+.tab-content .an{color:#d2a8ff;} .tab-content .cl{color:#79c0ff;} .tab-content .mt{color:#d2a8ff;}
+
+/* ===== Table ===== */
+table{width:100%; border-collapse:collapse; margin:16px 0; font-size:13.8px;}
+th{
+  text-align:left; padding:9px 12px; background:var(--bg-card); border-bottom:2px solid var(--border);
+  font-size:11.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--text-dim);
+}
+td{padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top;}
+tr:hover td{background:var(--accent-soft);}
+
+/* ===== Q&A ===== */
+.qa-wrap{margin-top:18px;}
+.qa-item{
+  border:1px solid var(--border); border-radius:var(--radius); margin-bottom:10px; overflow:hidden;
+  background:var(--bg-card);
+}
+.qa-q{
+  padding:14px 46px 14px 18px; cursor:pointer; font-weight:600; font-size:14.3px; position:relative;
+  display:flex; align-items:center; gap:10px;
+}
+.qa-q:hover{background:var(--accent-soft);}
+.qa-tag{
+  font-family:'Space Mono',monospace; font-size:9.5px; padding:2px 7px; border-radius:4px; font-weight:700;
+  flex-shrink:0; text-transform:uppercase; letter-spacing:.3px;
+}
+.tag-faang{background:rgba(248,81,73,.15); color:var(--danger);}
+.tag-core{background:rgba(88,166,255,.15); color:var(--blue);}
+.qa-q::after{
+  content:'+'; position:absolute; right:18px; top:50%; transform:translateY(-50%); font-size:20px;
+  color:var(--text-faint); font-weight:400;
+}
+.qa-item.open .qa-q::after{content:'−';}
+.qa-a{max-height:0; overflow:hidden; transition:max-height .25s ease; padding:0 18px;}
+.qa-item.open .qa-a{max-height:1200px; padding:2px 18px 18px;}
+.qa-a p{font-size:14px; color:var(--text-dim);}
+.qa-a ul{margin-top:6px;}
+.qa-a li{color:var(--text-dim); font-size:13.8px;}
+
+.divider{height:1px; background:var(--border); margin:44px 0;}
+.section-badge{
+  display:inline-block; background:var(--accent); color:#0d1117; font-family:'Space Mono',monospace;
+  font-weight:700; font-size:11px; padding:4px 10px; border-radius:6px; margin-bottom:14px;
+}
+.diagram{
+  background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:20px;
+  margin:18px 0; font-family:'Space Mono',monospace; font-size:12.5px; color:var(--text-dim); overflow-x:auto;
+  white-space:pre; line-height:1.5;
+}
+footer{margin-top:60px; padding-top:24px; border-top:1px solid var(--border); color:var(--text-faint); font-size:12px;}
+
+@media(max-width:900px){
+  .sidebar{position:fixed; left:-100%; z-index:50; transition:left .2s; box-shadow:var(--shadow);}
+  .sidebar.open{left:0;}
+  .main{padding:24px 20px 100px;}
+  .mobile-toggle{display:block !important;}
+}
+.mobile-toggle{display:none; position:fixed; top:16px; left:16px; z-index:60; background:var(--accent); color:#0d1117; border:none; border-radius:8px; width:40px; height:40px; font-size:18px; font-weight:700;}
+</style>
+<link rel="stylesheet" href="../style-guide.css">
+</head>
+<body data-theme="dark">
+
+<button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark/light mode" aria-label="Toggle theme">☀️</button>
+<button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="wrapper">
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-badge">G</div>
+    <div>
+      <div class="brand-text">GrowthScript Eng.</div>
+      <div class="brand-sub">Spring Boot Bible</div>
+    </div>
+  </div>
+  <button class="theme-toggle" onclick="toggleTheme()">🌗 Toggle Theme</button>
+
+  <div class="nav-group">
+    <div class="nav-label">Section 01 · Foundations</div>
+    <a class="nav-link" href="#intro">1–4. Course Intro & Why Spring</a>
+    <a class="nav-link" href="#maven">Maven Crash Course</a>
+    <a class="nav-link sub" href="#maven-1">→ Part 1: What & Why</a>
+    <a class="nav-link sub" href="#maven-2">→ Part 2: Lifecycle & Plugins</a>
+    <a class="nav-link sub" href="#maven-3">→ Part 3: Repos & Scopes</a>
+    <a class="nav-link" href="#ioc-di">IoC & DI Explained</a>
+    <a class="nav-link" href="#beans-container">Beans, IoC Container, ApplicationContext</a>
+    <a class="nav-link" href="#bean-config">@Bean & @Configuration</a>
+    <a class="nav-link" href="#interview-master">Master Interview Q&A Bank</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="nav-header"><a href="../index.html" class="back-home">← Back to Notes Hub</a></div>
+
+<div class="header-block">
+  <div class="eyebrow">Java Backend Engineer · Spring Boot Course</div>
+  <h1>Section 1 — Foundations: Maven, Spring Core, IoC & DI</h1>
+  <p>Comprehensive interview-ready notes covering the course introduction, Maven build tooling, and the deepest possible treatment of Spring's core value proposition: the IoC Container, Dependency Injection, Beans, ApplicationContext, and Java-based configuration with <code>@Bean</code>/<code>@Configuration</code>.</p>
+  <div class="meta-row">
+    <span class="meta-pill">Videos 1–12</span>
+    <span class="meta-pill">~100 min runtime</span>
+    <span class="meta-pill">FAANG + Fintech interview focus</span>
+    <span class="meta-pill">Prereq: Core Java, OOP</span>
+  </div>
+</div>
+
+<!-- ============ INTRO ============ -->
+<section class="topic" id="intro">
+  <div class="topic-head"><span class="topic-num">01–04</span><h2>Course Introduction & Why Spring Exists</h2></div>
+  <div class="topic-video">Videos: Course Introduction · Source Code/PDF instructions · Why Core Java Alone Isn't Enough · Meet Spring & Spring Boot</div>
+
+  <h3>The Problem: Building a Web App with Plain Core Java / Servlets</h3>
+  <p>Before Spring, Java web development was done with raw <strong>Servlets</strong> and <strong>JSPs</strong>. This exposed a huge amount of plumbing work that has nothing to do with actual business logic:</p>
+  <ul>
+    <li><strong>Object creation & wiring</strong> — every class had to manually <code>new</code> up its dependencies (DAOs, services, utility classes), creating tightly coupled, hard-to-test code.</li>
+    <li><strong>Boilerplate infrastructure</strong> — manually configuring a servlet container, mapping URLs in <code>web.xml</code>, handling request/response objects directly, manually parsing JSON.</li>
+    <li><strong>Cross-cutting concerns</strong> — logging, transaction management, security, and validation had to be hand-rolled or duplicated across classes.</li>
+    <li><strong>Database plumbing</strong> — raw JDBC requires manual <code>Connection</code>/<code>Statement</code>/<code>ResultSet</code> handling, try-with-resources everywhere, manual mapping of rows to objects.</li>
+    <li><strong>No standard project structure</strong> — every team invents its own conventions, making onboarding and maintenance harder.</li>
+  </ul>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Interview Framing</div>
+    <p>When asked "why do we need Spring/Spring Boot," don't just say "it makes things easier." Give the <strong>specific pain points it solves</strong>: tight coupling (solved by DI/IoC), boilerplate config (solved by auto-configuration), cross-cutting concerns (solved by AOP), and lack of convention (solved by Spring Boot starters + opinionated defaults).</p>
+  </div>
+
+  <h3>Spring Framework vs Spring Boot</h3>
+  <table>
+    <tr><th>Aspect</th><th>Spring Framework</th><th>Spring Boot</th></tr>
+    <tr><td>Purpose</td><td>Core framework providing IoC, DI, AOP, transaction mgmt, MVC</td><td>Opinionated layer built <em>on top of</em> Spring to eliminate configuration</td></tr>
+    <tr><td>Configuration</td><td>Manual XML or Java-based config required</td><td>Auto-configuration based on classpath ("convention over configuration")</td></tr>
+    <tr><td>Server</td><td>Requires external servlet container (Tomcat) deployment as WAR</td><td>Embedded Tomcat/Jetty/Undertow — runnable JAR, <code>java -jar app.jar</code></td></tr>
+    <tr><td>Dependency management</td><td>You manage every version manually</td><td>Starter POMs bundle compatible, tested versions</td></tr>
+    <tr><td>Production readiness</td><td>Nothing built-in</td><td>Spring Boot Actuator: health checks, metrics, env info out of the box</td></tr>
+    <tr><td>Boilerplate</td><td>High — beans, dispatcher servlet, view resolvers all manually configured</td><td>Minimal — <code>@SpringBootApplication</code> does it all</td></tr>
+  </table>
+  <p class="dim">Key mental model: <strong>Spring Boot is not a replacement for Spring — it is Spring, pre-configured with sane defaults.</strong> Every Spring Boot app is still a full Spring application underneath; you can always drop down to raw Spring config when you need to override a default.</p>
+
+  <div class="box tip">
+    <div class="box-title">💡 The "Superpowers" Spring Gives You</div>
+    <ul>
+      <li><strong>IoC/DI</strong> — Spring creates and wires your objects; you just declare what you need.</li>
+      <li><strong>AOP</strong> — cross-cutting concerns (logging, security, transactions) applied declaratively via annotations, not scattered code.</li>
+      <li><strong>Data access abstraction</strong> — Spring Data JPA removes JDBC boilerplate almost entirely.</li>
+      <li><strong>Spring MVC</strong> — clean, annotation-driven request handling (<code>@RestController</code>, <code>@GetMapping</code>, etc.).</li>
+      <li><strong>Testing support</strong> — DI makes mocking trivial; Spring Boot Test gives you a full test slice ecosystem.</li>
+      <li><strong>Production-readiness</strong> — Actuator, externalized config profiles, embedded servers, graceful shutdown.</li>
+    </ul>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why did Spring become the de facto standard over raw Java EE / EJB?</div>
+      <div class="qa-a"><p>Early Java EE (especially EJB 2.x) required heavyweight, verbose component models (remote interfaces, home interfaces, deployment descriptors) and was hard to unit test because EJBs depended on a container to even instantiate. Spring introduced <strong>POJO-based programming</strong> — your business classes are plain Java objects with no framework interfaces to implement — and let the container inject dependencies instead of the object having to look them up (inversion of control). This made code testable without a container, lightweight, and far less boilerplate-heavy, which is why it displaced EJB as the dominant enterprise Java model.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Is Spring Boot "faster" than Spring at runtime?</div>
+      <div class="qa-a"><p>No — this is a common misconception. Spring Boot doesn't change runtime performance of the underlying Spring beans/DI machinery; it speeds up <strong>developer velocity</strong> (setup, configuration, deployment) via auto-configuration and embedded servers. Runtime performance depends on your code, JVM tuning, and how you use Spring's features, not on whether you used Boot.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Can you use Spring Boot without Spring MVC?</div>
+      <div class="qa-a"><p>Yes. Spring Boot is a general bootstrapping mechanism, not tied to web apps. You can build CLI tools, batch jobs, or messaging consumers with <code>spring-boot-starter</code> alone (no <code>spring-boot-starter-web</code>), using just the core IoC container, DI, and auto-configuration for whatever else you include (e.g. <code>spring-kafka</code>, <code>spring-batch</code>).</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MAVEN ============ -->
+<section class="topic" id="maven">
+  <div class="topic-head"><span class="topic-num">05–09</span><h2>Maven Crash Course</h2></div>
+  <div class="topic-video">Videos: IntelliJ IDEA Ultimate · Spring Project Setup (the Maven way) · Maven Crash Course Parts 1–3</div>
+
+  <h3 id="maven-1">Part 1 — What Maven Is and Why We Need It</h3>
+  <p><strong>Maven</strong> is a <strong>build automation and dependency management tool</strong> for Java projects. Before Maven (and its predecessor Ant), developers manually downloaded JAR files, placed them on the classpath, and wrote custom build scripts. This didn't scale and caused "works on my machine" problems.</p>
+
+  <p>Maven solves three core problems:</p>
+  <ul>
+    <li><strong>Dependency management</strong> — declare a library + version in <code>pom.xml</code>; Maven downloads it (and its transitive dependencies) from a remote repository automatically.</li>
+    <li><strong>Standard project structure</strong> — every Maven project follows the same folder layout, so any developer/tool immediately knows where source, tests, and resources live.</li>
+    <li><strong>Build lifecycle standardization</strong> — compile, test, package, install, deploy are the same commands across every Maven project on earth.</li>
+  </ul>
+
+  <h4>Standard Directory Layout</h4>
+  <div class="diagram">my-app/
+├── pom.xml                      ← the heart of the project
+├── src/
+│   ├── main/
+│   │   ├── java/                ← application source code
+│   │   └── resources/           ← application.properties, static files
+│   └── test/
+│       ├── java/                ← test source code
+│       └── resources/           ← test-specific config
+└── target/                      ← compiled output (generated, not committed)</div>
+
+  <h4>Anatomy of pom.xml (Project Object Model)</h4>
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'pom1')">pom.xml</button>
+    </div>
+    <div class="tab-content active" id="pom1"><pre><span class="cm">&lt;!-- POM = Project Object Model: the XML file that describes everything about the project --&gt;</span>
+<span class="kw">&lt;project</span> xmlns=<span class="str">"http://maven.apache.org/POM/4.0.0"</span><span class="kw">&gt;</span>
+    <span class="kw">&lt;modelVersion&gt;</span>4.0.0<span class="kw">&lt;/modelVersion&gt;</span>
+
+    <span class="cm">&lt;!-- GAV coordinates uniquely identify an artifact in the Maven ecosystem --&gt;</span>
+    <span class="kw">&lt;groupId&gt;</span>com.growthscript<span class="kw">&lt;/groupId&gt;</span>       <span class="cm">&lt;!-- organization/company namespace --&gt;</span>
+    <span class="kw">&lt;artifactId&gt;</span>eazybank-app<span class="kw">&lt;/artifactId&gt;</span>   <span class="cm">&lt;!-- project name --&gt;</span>
+    <span class="kw">&lt;version&gt;</span>1.0.0-SNAPSHOT<span class="kw">&lt;/version&gt;</span>    <span class="cm">&lt;!-- SNAPSHOT = in development --&gt;</span>
+    <span class="kw">&lt;packaging&gt;</span>jar<span class="kw">&lt;/packaging&gt;</span>          <span class="cm">&lt;!-- jar | war | pom --&gt;</span>
+
+    <span class="cm">&lt;!-- Spring Boot apps inherit defaults from this parent POM --&gt;</span>
+    <span class="kw">&lt;parent&gt;</span>
+        <span class="kw">&lt;groupId&gt;</span>org.springframework.boot<span class="kw">&lt;/groupId&gt;</span>
+        <span class="kw">&lt;artifactId&gt;</span>spring-boot-starter-parent<span class="kw">&lt;/artifactId&gt;</span>
+        <span class="kw">&lt;version&gt;</span>3.3.0<span class="kw">&lt;/version&gt;</span>
+    <span class="kw">&lt;/parent&gt;</span>
+
+    <span class="kw">&lt;properties&gt;</span>
+        <span class="kw">&lt;java.version&gt;</span>17<span class="kw">&lt;/java.version&gt;</span>
+    <span class="kw">&lt;/properties&gt;</span>
+
+    <span class="kw">&lt;dependencies&gt;</span>
+        <span class="kw">&lt;dependency&gt;</span>
+            <span class="kw">&lt;groupId&gt;</span>org.springframework.boot<span class="kw">&lt;/groupId&gt;</span>
+            <span class="kw">&lt;artifactId&gt;</span>spring-boot-starter-web<span class="kw">&lt;/artifactId&gt;</span>
+        <span class="kw">&lt;/dependency&gt;</span>
+    <span class="kw">&lt;/dependencies&gt;</span>
+
+    <span class="kw">&lt;build&gt;</span>
+        <span class="kw">&lt;plugins&gt;</span>
+            <span class="kw">&lt;plugin&gt;</span>
+                <span class="kw">&lt;groupId&gt;</span>org.springframework.boot<span class="kw">&lt;/groupId&gt;</span>
+                <span class="kw">&lt;artifactId&gt;</span>spring-boot-maven-plugin<span class="kw">&lt;/artifactId&gt;</span>
+            <span class="kw">&lt;/plugin&gt;</span>
+        <span class="kw">&lt;/plugins&gt;</span>
+    <span class="kw">&lt;/build&gt;</span>
+<span class="kw">&lt;/project&gt;</span></pre></div>
+  </div>
+
+  <div class="box info">
+    <div class="box-title">ℹ GAV Coordinates</div>
+    <p><strong>groupId : artifactId : version</strong> is how Maven (and every artifact repository — Nexus, Artifactory, Maven Central) uniquely identifies a build artifact. Interviewers sometimes ask you to explain this trio from memory — know it cold.</p>
+  </div>
+
+  <h3 id="maven-2">Part 2 — Build Lifecycle, Phases & Plugins</h3>
+  <p>Maven's build process is modeled as a <strong>lifecycle</strong>, made up of an ordered sequence of <strong>phases</strong>. Running a phase runs every phase before it too.</p>
+
+  <table>
+    <tr><th>Phase</th><th>What Happens</th></tr>
+    <tr><td><code>validate</code></td><td>Checks project structure and pom.xml correctness</td></tr>
+    <tr><td><code>compile</code></td><td>Compiles main <code>src/main/java</code> source into <code>target/classes</code></td></tr>
+    <tr><td><code>test</code></td><td>Runs unit tests via Surefire plugin</td></tr>
+    <tr><td><code>package</code></td><td>Bundles compiled code into a JAR/WAR in <code>target/</code></td></tr>
+    <tr><td><code>verify</code></td><td>Runs integration checks/quality gates</td></tr>
+    <tr><td><code>install</code></td><td>Copies the package into your <strong>local repository</strong> (<code>~/.m2/repository</code>) so other local projects can use it</td></tr>
+    <tr><td><code>deploy</code></td><td>Uploads the final package to a <strong>remote repository</strong> for sharing across teams/CI</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 Memory Trick</div>
+    <p><strong>V</strong>ery <strong>C</strong>lever <strong>T</strong>ests <strong>P</strong>ass <strong>V</strong>ery <strong>I</strong>mportant <strong>D</strong>eadlines → validate, compile, test, package, verify, install, deploy.</p>
+  </div>
+
+  <h4>Plugins & Goals</h4>
+  <p>A <strong>plugin</strong> is a collection of <strong>goals</strong> (a goal = one specific task, e.g. <code>compiler:compile</code>). Phases are bound to plugin goals under the hood — e.g. the <code>compile</code> phase is bound to the <code>maven-compiler-plugin</code>'s <code>compile</code> goal. In Spring Boot, the crucial plugin is <code>spring-boot-maven-plugin</code>, which repackages your JAR into an <strong>executable "fat/uber JAR"</strong> containing all dependencies, so it can be run standalone with <code>java -jar</code>.</p>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'cmd1')">Common Commands</button>
+    </div>
+    <div class="tab-content active" id="cmd1"><pre><span class="cm"># compile the project</span>
+mvn compile
+
+<span class="cm"># run tests</span>
+mvn test
+
+<span class="cm"># build the jar (runs test, package)</span>
+mvn package
+
+<span class="cm"># skip tests during packaging (use sparingly!)</span>
+mvn package -DskipTests
+
+<span class="cm"># install into local ~/.m2 repo for other local projects</span>
+mvn install
+
+<span class="cm"># clean target/ directory before rebuilding</span>
+mvn clean install
+
+<span class="cm"># run a Spring Boot app directly without building a jar first</span>
+mvn spring-boot:run</pre></div>
+  </div>
+
+  <h3 id="maven-3">Part 3 — Repositories, Dependency Scopes & Transitive Dependencies</h3>
+  <h4>Repository Types</h4>
+  <ul>
+    <li><strong>Local repository</strong> — <code>~/.m2/repository</code> on your machine; a cache of every artifact you've ever downloaded/installed.</li>
+    <li><strong>Central repository</strong> — Maven Central, the default public repo hosting virtually all open-source Java libraries.</li>
+    <li><strong>Remote/private repository</strong> — company-internal artifact servers (Nexus, JFrog Artifactory, AWS CodeArtifact) used to host proprietary internal libraries or a mirrored cache of Central.</li>
+  </ul>
+  <p><strong>Resolution order:</strong> Maven checks the local repo first → if missing, fetches from configured remote repos (private repo, then Central) → caches it locally for next time.</p>
+
+  <h4>Dependency Scopes</h4>
+  <table>
+    <tr><th>Scope</th><th>Available at Compile</th><th>Available at Runtime</th><th>Packaged in JAR?</th><th>Example Use</th></tr>
+    <tr><td><code>compile</code> (default)</td><td>✅</td><td>✅</td><td>✅</td><td>spring-boot-starter-web</td></tr>
+    <tr><td><code>provided</code></td><td>✅</td><td>❌ (provided by container)</td><td>❌</td><td>servlet-api in a WAR deployed to external Tomcat</td></tr>
+    <tr><td><code>runtime</code></td><td>❌</td><td>✅</td><td>✅</td><td>JDBC driver (MySQL connector)</td></tr>
+    <tr><td><code>test</code></td><td>❌ (only test code)</td><td>❌</td><td>❌</td><td>spring-boot-starter-test, JUnit, Mockito</td></tr>
+    <tr><td><code>system</code></td><td>✅</td><td>✅</td><td>❌</td><td>Rare — local jar not in any repo, path given explicitly</td></tr>
+  </table>
+
+  <h4>Transitive Dependencies</h4>
+  <p>If library A depends on library B, and your project depends on A, Maven automatically pulls in B too — that's a <strong>transitive dependency</strong>. This is why adding one Spring Boot starter can bring in dozens of jars. Run <code>mvn dependency:tree</code> to visualize the full graph and diagnose version conflicts.</p>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Dependency Conflicts & Mediation</div>
+    <p>When two different paths in the dependency tree pull in different versions of the same library, Maven uses <strong>"nearest wins"</strong> resolution (the version declared closest to your project in the tree wins). You can force a version explicitly using <code>&lt;dependencyManagement&gt;</code> — this is exactly what <code>spring-boot-starter-parent</code> does for you across the whole Spring ecosystem, ensuring every starter uses mutually compatible versions.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>What's the difference between a Maven "starter" and a normal dependency?</div>
+      <div class="qa-a"><p>A Spring Boot <strong>starter</strong> (e.g. <code>spring-boot-starter-data-jpa</code>) is itself just a POM artifact with no code of its own — it's a curated bundle of transitive dependencies (Hibernate, Spring Data, JPA API, connection pool) chosen to work together, plus it triggers relevant auto-configuration classes on the classpath. A normal dependency is a single library. Starters exist purely to reduce the cognitive load of picking compatible versions manually.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Why does spring-boot-starter-parent matter, and what happens if you don't use it?</div>
+      <div class="qa-a"><p>It centralizes version numbers for the entire Spring Boot BOM (Bill of Materials) via <code>&lt;dependencyManagement&gt;</code>, sets sensible compiler defaults (Java version, encoding), and configures default plugin behavior (like the Spring Boot Maven plugin). Without it, you must manually pin every dependency version yourself and risk incompatible combinations — a very common source of runtime <code>NoSuchMethodError</code>/<code>ClassNotFoundException</code> bugs in real production incidents.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What's the difference between mvn install and mvn deploy?</div>
+      <div class="qa-a"><p><code>install</code> copies the built artifact into your <strong>local</strong> <code>~/.m2</code> repo, only usable on your machine. <code>deploy</code> uploads it to a <strong>remote/shared</strong> repository (Nexus/Artifactory) so other developers and CI/CD pipelines across the org can consume it as a dependency.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How would you resolve a version conflict between two transitive dependencies?</div>
+      <div class="qa-a"><p>First run <code>mvn dependency:tree</code> to see which paths bring in which versions. Then either (a) explicitly declare the desired version directly in your own <code>&lt;dependencies&gt;</code> (direct declarations always win over transitive ones), or (b) use <code>&lt;dependencyManagement&gt;</code> to pin a version project-wide, or (c) use <code>&lt;exclusions&gt;</code> inside the offending dependency to drop the unwanted transitive version entirely.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ============ IoC & DI ============ -->
+<section class="topic" id="ioc-di">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">10</span><h2>Spring Core — IoC and DI Explained the Easy Way</h2></div>
+  <div class="topic-video">Video: Spring Core - IoC and DI Explained the Easy Way</div>
+
+  <h3>Inversion of Control (IoC) — The Core Idea</h3>
+  <p><strong>Inversion of Control</strong> is a design principle where the <em>control of object creation and lifecycle management is transferred from your code to a framework/container</em>. Normally, a class controls its own dependencies by directly instantiating them (<code>new SomeClass()</code>). With IoC, that control is "inverted" — an external container decides what to create, when, and how to wire it together. Your class simply declares what it needs.</p>
+
+  <div class="diagram">TRADITIONAL (you control everything):
+┌────────────────────────────┐
+│ class OrderService {        │
+│   PaymentGateway gw          │
+│     = new StripeGateway();  │  ← YOU decide the implementation
+│ }                            │  ← tight coupling, hard to test/swap
+└────────────────────────────┘
+
+INVERSION OF CONTROL (container controls it):
+┌────────────────────────────┐
+│ class OrderService {        │
+│   PaymentGateway gw;         │  ← declared, not created
+│   OrderService(PaymentGateway│
+│                gw){this.gw=gw;}
+│ }                            │
+└────────────────────────────┘
+        ▲
+        │  Spring IoC Container decides which
+        │  PaymentGateway implementation to inject
+   [ IoC Container ]</div>
+
+  <div class="box info">
+    <div class="box-title">ℹ The "Hollywood Principle"</div>
+    <p>IoC is often summarized as <strong>"Don't call us, we'll call you."</strong> Instead of your object reaching out and pulling in its dependencies, the framework pushes the dependencies into your object. This is the defining characteristic that separates a <em>framework</em> (which calls your code) from a <em>library</em> (which your code calls).</p>
+  </div>
+
+  <h3>Dependency Injection (DI) — IoC's Most Common Implementation</h3>
+  <p>DI is <em>one specific technique</em> for achieving IoC (others include the Service Locator pattern, though Spring favors DI). In DI, dependencies ("collaborators") a class needs are <strong>supplied ("injected") from outside</strong> rather than the class creating them itself. Spring supports three injection styles:</p>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'di1')">Constructor Injection</button>
+      <button class="tab-btn" onclick="showTab(this,'di2')">Setter Injection</button>
+      <button class="tab-btn" onclick="showTab(this,'di3')">Field Injection</button>
+    </div>
+    <div class="tab-content active" id="di1"><pre><span class="an">@Service</span>
+<span class="kw">public class</span> <span class="cl">OrderService</span> {
+
+    <span class="kw">private final</span> PaymentGateway paymentGateway;  <span class="cm">// final = immutable</span>
+
+    <span class="cm">// Spring auto-detects a single constructor and injects dependencies</span>
+    <span class="cm">// @Autowired is OPTIONAL here since Spring 4.3+ if there's only one constructor</span>
+    <span class="kw">public</span> <span class="mt">OrderService</span>(PaymentGateway paymentGateway) {
+        <span class="kw">this</span>.paymentGateway = paymentGateway;
+    }
+}</pre></div>
+    <div class="tab-content" id="di2"><pre><span class="an">@Service</span>
+<span class="kw">public class</span> <span class="cl">OrderService</span> {
+
+    <span class="kw">private</span> PaymentGateway paymentGateway;
+
+    <span class="an">@Autowired</span>
+    <span class="kw">public void</span> <span class="mt">setPaymentGateway</span>(PaymentGateway paymentGateway) {
+        <span class="kw">this</span>.paymentGateway = paymentGateway;
+    }
+}</pre></div>
+    <div class="tab-content" id="di3"><pre><span class="an">@Service</span>
+<span class="kw">public class</span> <span class="cl">OrderService</span> {
+
+    <span class="an">@Autowired</span>   <span class="cm">// injected directly via reflection — AVOID in production code</span>
+    <span class="kw">private</span> PaymentGateway paymentGateway;
+}</pre></div>
+  </div>
+
+  <table>
+    <tr><th>Style</th><th>Immutability</th><th>Testability</th><th>Circular Dep Detection</th><th>Recommended?</th></tr>
+    <tr><td>Constructor</td><td>✅ can use <code>final</code></td><td>✅ easy — pass mocks in constructor, no Spring needed</td><td>✅ fails fast at startup</td><td>✅ <strong>Best practice / Spring team's official recommendation</strong></td></tr>
+    <tr><td>Setter</td><td>❌ mutable</td><td>⚠ ok</td><td>⚠ can hide problems (partially constructed objects)</td><td>Only for optional dependencies</td></tr>
+    <tr><td>Field</td><td>❌ mutable</td><td>❌ requires reflection/Spring context to test</td><td>❌ silently allowed (can NPE later)</td><td>❌ Avoid — common anti-pattern flagged in code review</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 Why Constructor Injection Wins in Interviews</div>
+    <p>Say this confidently: constructor injection lets you (1) mark fields <code>final</code> for true immutability, (2) guarantees the object is <strong>never in a partially-initialized state</strong> — it either fully constructs or fails at startup, (3) makes <strong>unit testing trivial</strong> — you can instantiate the class with <code>new OrderService(mockGateway)</code> without needing Spring at all, and (4) surfaces <strong>circular dependency errors immediately at application startup</strong> rather than a mysterious NPE at runtime.</p>
+  </div>
+
+  <h3>Benefits of IoC/DI (Why It Actually Matters)</h3>
+  <ul>
+    <li><strong>Loose coupling</strong> — classes depend on abstractions (interfaces), not concrete implementations. Swapping <code>StripeGateway</code> for <code>RazorpayGateway</code> requires zero changes to <code>OrderService</code>.</li>
+    <li><strong>Testability</strong> — dependencies can be trivially mocked/stubbed in unit tests since they're passed in, not hard-coded.</li>
+    <li><strong>Centralized configuration</strong> — object graph wiring lives in one place (config classes/annotations), not scattered across the codebase.</li>
+    <li><strong>Lifecycle management</strong> — the container handles creation order, singleton reuse, and destruction — you don't manage object lifecycles manually.</li>
+    <li><strong>Reduced boilerplate</strong> — no manual factory classes or Service Locator lookups needed.</li>
+  </ul>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Is IoC the same thing as DI?</div>
+      <div class="qa-a"><p>No — this trips up a lot of candidates. <strong>IoC is the broader principle</strong> (control of object creation is inverted, handed to a framework). <strong>DI is one specific way to implement IoC</strong> — by injecting dependencies via constructor/setter/field. Other IoC implementations exist, like the Service Locator pattern (where the object still actively "pulls" its dependency from a registry, rather than having it "pushed" in) — Spring deliberately favors DI over Service Locator because DI keeps dependencies explicit and testable.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How does Spring resolve constructor injection when there are multiple beans of the same type?</div>
+      <div class="qa-a"><p>Spring throws a <code>NoUniqueBeanDefinitionException</code> unless you disambiguate. You resolve it using: <code>@Qualifier("beanName")</code> to pick a specific bean by name, marking one implementation <code>@Primary</code> as the default choice, or renaming the constructor parameter to exactly match a bean's name (Spring falls back to name-matching).</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How does constructor injection help detect circular dependencies, and what happens if you have one?</div>
+      <div class="qa-a"><p>If Bean A's constructor needs Bean B, and Bean B's constructor needs Bean A, Spring cannot fully construct either — it throws a <code>BeanCurrentlyInCreationException</code> at startup. With <strong>field/setter injection</strong>, Spring can sometimes work around this by creating a partially-initialized bean first and injecting the field later — which hides a real design flaw. The fact that constructor injection <strong>fails loudly</strong> is a feature: circular dependencies almost always indicate poor separation of concerns and should be refactored (e.g., extract shared logic into a third bean, or use setter injection deliberately + <code>@Lazy</code> as a last resort).</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What is "Dependency Inversion Principle" (SOLID's D) vs "Dependency Injection" — are they the same?</div>
+      <div class="qa-a"><p>Related but distinct. The <strong>Dependency Inversion Principle (DIP)</strong> is a SOLID design principle stating high-level modules should depend on abstractions, not concrete low-level modules. <strong>Dependency Injection</strong> is a mechanical technique/pattern for supplying those dependencies from outside. DI is one practical way to honor DIP, but you could follow DIP (code to interfaces) without using a DI framework at all (e.g., manual factory pattern).</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BEANS, CONTAINER, APPLICATIONCONTEXT ============ -->
+<section class="topic" id="beans-container">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">11</span><h2>Inside Spring — Beans, the IoC Container, and ApplicationContext</h2></div>
+  <div class="topic-video">Video: Inside Spring - Beans, IoC Container and ApplicationContext</div>
+
+  <h3>What Is a "Bean"?</h3>
+  <p>A <strong>Spring Bean</strong> is simply an <strong>object whose entire lifecycle — instantiation, dependency wiring, initialization, and destruction — is managed by the Spring IoC Container</strong>, rather than by your own code. Not every Java object is a bean — only objects registered with, and controlled by, the container qualify. You register beans via:</p>
+  <ul>
+    <li>Stereotype annotations: <code>@Component</code>, <code>@Service</code>, <code>@Repository</code>, <code>@Controller</code>/<code>@RestController</code> (all meta-annotated with <code>@Component</code>).</li>
+    <li>Explicit Java config: <code>@Bean</code> methods inside a <code>@Configuration</code> class (covered in depth in the next topic).</li>
+    <li>XML configuration (legacy, rarely used in modern Spring Boot projects but still testable/interview-relevant).</li>
+  </ul>
+
+  <h3>The IoC Container</h3>
+  <p>The <strong>IoC Container</strong> is the core engine of Spring — the runtime component responsible for:</p>
+  <ol>
+    <li><strong>Reading configuration metadata</strong> (annotations, Java config classes, or XML) to understand what beans need to exist and how they relate.</li>
+    <li><strong>Instantiating</strong> each bean (calling its constructor).</li>
+    <li><strong>Wiring dependencies</strong> — performing dependency injection between beans as needed.</li>
+    <li><strong>Managing the full bean lifecycle</strong> — initialization callbacks, scope management, and eventually destruction callbacks on shutdown.</li>
+  </ol>
+
+  <p>Spring provides <strong>two container implementations</strong>, forming a class hierarchy:</p>
+  <table>
+    <tr><th>Interface</th><th>Capabilities</th><th>Used In</th></tr>
+    <tr><td><code>BeanFactory</code></td><td>The root/base interface — basic DI container. <strong>Lazy initialization</strong> by default (beans created only when first requested).</td><td>Rarely used directly today — mostly historical / memory-constrained environments</td></tr>
+    <tr><td><code>ApplicationContext</code></td><td>Sub-interface of <code>BeanFactory</code> with extra enterprise features: <strong>eager singleton initialization</strong> by default, event publishing, internationalization (i18n message resolution), AOP integration, and environment/property abstraction.</td><td><strong>The one you actually use</strong> — every Spring Boot app runs on an ApplicationContext</td></tr>
+  </table>
+
+  <div class="diagram">                 BeanFactory  (root interface, lazy init, minimal features)
+                       ▲
+                       │  extends
+                       │
+                ApplicationContext  (eager init, events, i18n, AOP)
+                       ▲
+          ┌────────────┼─────────────────┐
+          │             │                  │
+AnnotationConfig   ClassPathXml    AnnotationConfigServletWebServerApplicationContext
+ApplicationContext  ApplicationContext        (what Spring Boot actually uses
+(Java @Configuration) (legacy XML)              for a web app under the hood)</div>
+
+  <div class="box tip">
+    <div class="box-title">💡 Interview Gold: BeanFactory vs ApplicationContext</div>
+    <p>This is one of the single most asked Spring Core questions. Key differentiator to state clearly: <strong>BeanFactory lazily instantiates beans</strong> (only created when <code>getBean()</code> is called), while <strong>ApplicationContext eagerly instantiates all singleton beans at startup</strong> by default — which is exactly why a Spring Boot app "fails fast" on a misconfiguration at startup rather than deep into runtime. This eager approach trades a slightly longer startup time for much earlier error detection — a deliberate design choice favoring production reliability.</p>
+  </div>
+
+  <h3>The Bean Lifecycle (Detailed)</h3>
+  <div class="diagram">1. Container starts up, reads bean definitions (from @Component scan / @Bean methods)
+2. Container instantiates the bean (constructor call)
+3. Dependencies injected (constructor/setter/field DI happens here)
+4. Aware interfaces invoked (BeanNameAware, ApplicationContextAware, etc.) — if implemented
+5. BeanPostProcessor#postProcessBeforeInitialization() — for ALL beans
+6. @PostConstruct method invoked  ─┐
+7. InitializingBean#afterPropertiesSet() │  initialization callbacks
+8. custom init-method (if configured)   ─┘
+9. BeanPostProcessor#postProcessAfterInitialization() — e.g. proxies created here (AOP!)
+10. ── Bean is now fully ready and in active use ──
+11. Container shutdown begins
+12. @PreDestroy method invoked      ─┐
+13. DisposableBean#destroy()           │  destruction callbacks (singleton scope only)
+14. custom destroy-method (if configured) ─┘</div>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Important Nuance</div>
+    <p>Destruction callbacks (<code>@PreDestroy</code>, etc.) only fire automatically for <strong>singleton-scoped</strong> beans, because the container fully owns their lifecycle. For <strong>prototype-scoped</strong> beans, Spring hands off the object after creation and does <em>not</em> manage or call destroy methods — you're responsible for cleanup yourself.</p>
+  </div>
+
+  <h3>Bean Scopes</h3>
+  <table>
+    <tr><th>Scope</th><th>Meaning</th><th>Typical Use</th></tr>
+    <tr><td><code>singleton</code> (default)</td><td>Exactly one instance per Spring IoC container, shared everywhere it's injected</td><td>Stateless services, repositories, controllers</td></tr>
+    <tr><td><code>prototype</code></td><td>A new instance created every time the bean is requested/injected</td><td>Stateful, non-thread-safe objects</td></tr>
+    <tr><td><code>request</code></td><td>One instance per HTTP request (web-aware context only)</td><td>Request-scoped data holders</td></tr>
+    <tr><td><code>session</code></td><td>One instance per HTTP session</td><td>User session state</td></tr>
+    <tr><td><code>application</code></td><td>One instance per ServletContext</td><td>Rare — app-wide shared web state</td></tr>
+  </table>
+
+  <h3>ApplicationContext: Ways to Get One in Spring Boot</h3>
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'ac1')">Accessing the Context</button>
+    </div>
+    <div class="tab-content active" id="ac1"><pre><span class="an">@SpringBootApplication</span>
+<span class="kw">public class</span> <span class="cl">EazyBankApplication</span> {
+
+    <span class="kw">public static void</span> <span class="mt">main</span>(String[] args) {
+        <span class="cm">// SpringApplication.run() bootstraps the container and returns the</span>
+        <span class="cm">// fully-initialized ApplicationContext</span>
+        ApplicationContext context =
+                SpringApplication.<span class="mt">run</span>(EazyBankApplication.<span class="kw">class</span>, args);
+
+        <span class="cm">// manually pulling a bean out of the container (rarely done in real</span>
+        <span class="cm">// app code — DI should handle this — but useful to know for debugging)</span>
+        OrderService service = context.<span class="mt">getBean</span>(OrderService.<span class="kw">class</span>);
+    }
+}</pre></div>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why does ApplicationContext eagerly create singleton beans, and can this be changed?</div>
+      <div class="qa-a"><p>Eager instantiation surfaces configuration errors (missing dependencies, bad property values, wiring mistakes) <strong>immediately at startup</strong> rather than at some unpredictable point in production traffic — a "fail fast" philosophy critical for production reliability. It also front-loads the cost of object creation so the app is warm and ready to serve requests immediately. You CAN opt individual beans into lazy initialization with <code>@Lazy</code>, or set <code>spring.main.lazy-initialization=true</code> globally (mainly useful to speed up local dev startup time), though this is discouraged in production since it defers error detection.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How would you inject a prototype-scoped bean into a singleton bean correctly?</div>
+      <div class="qa-a"><p>This is a classic trap: if you naively <code>@Autowired</code> a prototype bean directly into a singleton, Spring injects it <strong>only once</strong> at singleton creation time — you'll get the same prototype instance forever, defeating the purpose. Correct solutions: (1) inject an <code>ObjectFactory&lt;T&gt;</code> or <code>ObjectProvider&lt;T&gt;</code> and call <code>.getObject()</code> each time you need a fresh instance, (2) use <strong>lookup method injection</strong> via <code>@Lookup</code>, or (3) inject a scoped-proxy (<code>proxyMode = ScopedProxyMode.TARGET_CLASS</code>) so every method call is transparently routed to a fresh prototype instance.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What's the difference between BeanFactory.getBean() and ApplicationContext's autowiring?</div>
+      <div class="qa-a"><p><code>getBean()</code> is <strong>imperative/manual</strong> bean lookup — you explicitly ask the container for a bean by type or name, which is a Service-Locator-style anti-pattern in application code (though fine for framework/bootstrap code). <strong>Autowiring</strong> (via <code>@Autowired</code>, constructor params, etc.) is <strong>declarative DI</strong> — you simply declare what you need and the container injects it without your code ever calling the container directly. Real application code should almost always prefer autowiring; direct <code>getBean()</code> calls are a code smell outside of framework internals or very specific dynamic-lookup scenarios.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Explain how @PostConstruct differs from a constructor, and why you'd use it.</div>
+      <div class="qa-a"><p>A constructor runs <strong>before</strong> dependency injection is guaranteed complete in some injection styles (particularly field/setter injection — fields are null during the constructor call). <code>@PostConstruct</code> runs <strong>after</strong> all dependency injection is fully complete, making it the safe place to run initialization logic that depends on injected collaborators (e.g., validating configuration, warming a cache, opening a connection pool). With pure constructor injection, this distinction matters less since all dependencies are guaranteed available inside the constructor itself — but <code>@PostConstruct</code> is still useful for logic you don't want mixed into the constructor's job of just assigning fields.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Are Spring singleton beans the same as the Singleton design pattern (GoF)?</div>
+      <div class="qa-a"><p>No — a common gotcha. The GoF Singleton pattern guarantees <strong>one instance per JVM/classloader</strong>, typically enforced with a private constructor and static instance field. A Spring <strong>singleton-scoped bean</strong> guarantees only <strong>one instance per IoC container (ApplicationContext)</strong>. If you spin up two ApplicationContexts in the same JVM (unusual, but possible — e.g. in some test setups or multi-context apps), you'd get two separate instances of the "singleton" bean. Also, nothing prevents you from still calling <code>new MyBean()</code> manually elsewhere and bypassing the container entirely — Spring doesn't enforce true JVM-wide single-instance semantics.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ @BEAN and @CONFIGURATION ============ -->
+<section class="topic" id="bean-config">
+  <div class="topic-head"><span class="topic-num">12</span><h2>Let's Create Beans — @Bean and @Configuration in Action</h2></div>
+  <div class="topic-video">Video: Let's Create Beans - @Bean and @Configuration in Action</div>
+
+  <h3>Two Ways to Register a Bean</h3>
+  <table>
+    <tr><th>Approach</th><th>How</th><th>When to Use</th></tr>
+    <tr><td>Stereotype annotation</td><td><code>@Component</code> (or <code>@Service</code>/<code>@Repository</code>/<code>@Controller</code>) directly on the class + component scanning</td><td><strong>Your own classes</strong> where you can add annotations directly to the source</td></tr>
+    <tr><td><code>@Bean</code> method</td><td>A method inside a <code>@Configuration</code> class, annotated <code>@Bean</code>, that returns the object</td><td><strong>Third-party classes</strong> you can't annotate (e.g. from a library), or when object creation needs custom logic/parameters</td></tr>
+  </table>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'bc1')">@Configuration + @Bean</button>
+      <button class="tab-btn" onclick="showTab(this,'bc2')">Bean with dependencies</button>
+      <button class="tab-btn" onclick="showTab(this,'bc3')">@Component alternative</button>
+    </div>
+    <div class="tab-content active" id="bc1"><pre><span class="an">@Configuration</span>  <span class="cm">// tells Spring: "this class defines bean definitions"</span>
+<span class="kw">public class</span> <span class="cl">AppConfig</span> {
+
+    <span class="an">@Bean</span>  <span class="cm">// method's return value is registered as a bean</span>
+                <span class="cm">// bean name defaults to the METHOD NAME: "restTemplate"</span>
+    <span class="kw">public</span> RestTemplate <span class="mt">restTemplate</span>() {
+        <span class="kw">return new</span> RestTemplate();
+    }
+
+    <span class="an">@Bean</span>(name = <span class="str">"customGateway"</span>)  <span class="cm">// explicit bean name override</span>
+    <span class="kw">public</span> PaymentGateway <span class="mt">paymentGateway</span>() {
+        <span class="kw">return new</span> StripeGateway(<span class="str">"sk_live_xxx"</span>);
+    }
+}</pre></div>
+    <div class="tab-content" id="bc2"><pre><span class="an">@Configuration</span>
+<span class="kw">public class</span> <span class="cl">AppConfig</span> {
+
+    <span class="an">@Bean</span>
+    <span class="kw">public</span> PaymentGateway <span class="mt">paymentGateway</span>() {
+        <span class="kw">return new</span> StripeGateway();
+    }
+
+    <span class="cm">// Spring resolves this parameter by TYPE from the container —</span>
+    <span class="cm">// this is DI happening INSIDE a @Bean method</span>
+    <span class="an">@Bean</span>
+    <span class="kw">public</span> OrderService <span class="mt">orderService</span>(PaymentGateway paymentGateway) {
+        <span class="kw">return new</span> OrderService(paymentGateway);
+    }
+}</pre></div>
+    <div class="tab-content" id="bc3"><pre><span class="cm">// Equivalent outcome using stereotype annotations + component scan —</span>
+<span class="cm">// no @Configuration/@Bean needed at all for YOUR OWN classes</span>
+<span class="an">@Service</span>
+<span class="kw">public class</span> <span class="cl">OrderService</span> {
+    <span class="kw">private final</span> PaymentGateway gateway;
+
+    <span class="kw">public</span> <span class="mt">OrderService</span>(PaymentGateway gateway) {
+        <span class="kw">this</span>.gateway = gateway;
+    }
+}
+
+<span class="an">@Component</span>
+<span class="kw">public class</span> <span class="cl">StripeGateway implements</span> PaymentGateway { <span class="cm">/* ... */</span> }</pre></div>
+  </div>
+
+  <h4>How @Configuration Classes Are Discovered</h4>
+  <p><code>@SpringBootApplication</code> is itself a composite annotation bundling <code>@Configuration</code> + <code>@EnableAutoConfiguration</code> + <code>@ComponentScan</code>. This means your main application class is already a configuration class, and component scanning automatically discovers any other <code>@Configuration</code> classes (and <code>@Component</code>-annotated classes) sitting in the same package or sub-packages — no manual registration needed in a typical Spring Boot app.</p>
+
+  <h4>Full Mode vs Lite Mode — CGLIB Proxying</h4>
+  <p>When a class is annotated <code>@Configuration</code> (the default "full" mode), Spring generates a <strong>CGLIB subclass proxy</strong> of it at runtime. This proxy intercepts calls to <code>@Bean</code> methods so that <strong>calling one <code>@Bean</code> method from another within the same class always returns the same singleton instance</strong> — rather than creating a brand-new object each time. If you instead use <code>@Component</code> on a class with <code>@Bean</code> methods ("lite" mode, no proxy), inter-bean-method calls do NOT go through the container and create fresh objects each call — a subtle but real production bug source.</p>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'cglib1')">Full Mode (correct)</button>
+    </div>
+    <div class="tab-content active" id="cglib1"><pre><span class="an">@Configuration</span>  <span class="cm">// FULL mode — CGLIB proxy applied</span>
+<span class="kw">public class</span> <span class="cl">AppConfig</span> {
+
+    <span class="an">@Bean</span>
+    <span class="kw">public</span> PaymentGateway <span class="mt">paymentGateway</span>() {
+        <span class="kw">return new</span> StripeGateway();
+    }
+
+    <span class="an">@Bean</span>
+    <span class="kw">public</span> OrderService <span class="mt">orderService</span>() {
+        <span class="cm">// this call is intercepted by the CGLIB proxy and returns</span>
+        <span class="cm">// the SAME singleton PaymentGateway bean — NOT a new StripeGateway()</span>
+        <span class="kw">return new</span> OrderService(<span class="mt">paymentGateway</span>());
+    }
+}</pre></div>
+  </div>
+
+  <div class="box danger">
+    <div class="box-title">⚠ Common Production Bug</div>
+    <p>If your <code>@Configuration</code> class is declared <code>final</code>, CGLIB proxying <strong>fails at startup</strong> because CGLIB works by subclassing — you cannot subclass a final class. Spring Boot will throw a <code>BeanDefinitionStoreException</code>. Never mark a <code>@Configuration</code> class <code>final</code>.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>When would you choose @Bean over @Component for your own class?</div>
+      <div class="qa-a"><p>Even for your own classes, prefer <code>@Bean</code> when: (1) you need to run <strong>custom construction logic</strong> that a no-arg constructor + field injection can't express cleanly (e.g., calling a builder, choosing an implementation conditionally based on a property), (2) you want to register <strong>multiple beans of the same type</strong> with different configurations (e.g., two different <code>RestTemplate</code> beans with different timeouts), or (3) the class comes from a <strong>third-party library</strong> you cannot annotate directly. For straightforward, self-owned classes with simple constructor-based dependencies, <code>@Component</code> + stereotype annotations is idiomatic and less verbose.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Explain exactly why calling one @Bean method from another inside @Configuration doesn't create duplicate beans.</div>
+      <div class="qa-a"><p>Because <code>@Configuration</code> classes (in "full" mode, the default) are enhanced by Spring at startup using <strong>CGLIB byte-code generation</strong> to create a runtime subclass proxy. Every call to a <code>@Bean</code>-annotated method on that proxy is intercepted: the proxy first checks the container's bean cache for an existing instance under that bean's name, and returns it if present, only invoking the real method body if the bean hasn't been created yet. This is exactly what guarantees singleton semantics across inter-bean-method calls, even though syntactically it just looks like a plain Java method call.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What's the default bean name from a @Bean method, and how do you override it?</div>
+      <div class="qa-a"><p>By default the bean's name is the <strong>method name</strong> itself (e.g. a method named <code>paymentGateway()</code> registers a bean named <code>"paymentGateway"</code>). You override it with <code>@Bean(name = "customName")</code> or the shorthand <code>@Bean("customName")</code>; you can also supply multiple aliases via <code>@Bean(name = {"nameA","nameB"})</code>.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How do you conditionally register a @Bean, e.g. only when a property is set or a class is on the classpath?</div>
+      <div class="qa-a"><p>Use Spring Boot's conditional annotations on the <code>@Bean</code> method or the whole <code>@Configuration</code> class: <code>@ConditionalOnProperty</code> (register only if a specific property/value is present), <code>@ConditionalOnMissingBean</code> (register only if no other bean of that type already exists — heavily used internally by Spring Boot's auto-configuration to let user-defined beans override defaults), <code>@ConditionalOnClass</code> (register only if a given class is present on the classpath — this is literally how Spring Boot auto-configuration decides which starters' features to activate).</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ============ MASTER INTERVIEW BANK ============ -->
+<section class="topic" id="interview-master">
+  <span class="section-badge">🎯 Rapid-Fire Round</span>
+  <div class="topic-head"><h2>Master Interview Q&A Bank — Section 1</h2></div>
+  <p class="dim">Quick-fire questions commonly asked at FAANG, fintech (JPMC, Walmart Global Tech) and product-company interviews, condensed for last-minute revision.</p>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>What is Spring's "convention over configuration" and how does Spring Boot embody it?</div>
+      <div class="qa-a"><p>It means the framework assumes sensible defaults so you only write configuration for what deviates from the norm. Spring Boot embodies this via <strong>auto-configuration</strong> — e.g., if <code>spring-boot-starter-data-jpa</code> and an H2 dependency are on the classpath, Spring Boot auto-configures a <code>DataSource</code>, <code>EntityManagerFactory</code>, and <code>TransactionManager</code> with zero explicit config, based purely on what it detects.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What annotation bootstraps a Spring Boot app, and what three annotations does it combine?</div>
+      <div class="qa-a"><p><code>@SpringBootApplication</code> combines <code>@Configuration</code> (marks the class as a source of bean definitions), <code>@EnableAutoConfiguration</code> (triggers Spring Boot's classpath-based auto-configuration), and <code>@ComponentScan</code> (scans the current package and sub-packages for components).</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>What happens internally when you call SpringApplication.run()?</div>
+      <div class="qa-a"><p>At a high level: (1) it creates the appropriate <code>ApplicationContext</code> type (servlet web context if <code>spring-boot-starter-web</code> is present), (2) loads and processes all <code>@Configuration</code> classes and auto-configuration candidates, (3) triggers component scanning to register bean definitions, (4) instantiates all singleton beans eagerly and performs dependency injection, (5) runs any <code>ApplicationRunner</code>/<code>CommandLineRunner</code> beans, and (6) starts the embedded servlet container (Tomcat by default) to begin accepting HTTP traffic.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What's the difference between @Component, @Service, @Repository, and @Controller?</div>
+      <div class="qa-a"><p>Functionally, all four are meta-annotated with <code>@Component</code> and are treated identically by the container for scanning/registration purposes. They exist for <strong>semantic clarity</strong> and add specific extra behavior: <code>@Repository</code> enables automatic translation of persistence exceptions into Spring's unified <code>DataAccessException</code> hierarchy; <code>@Controller</code> is recognized by Spring MVC for request-mapping purposes; <code>@Service</code> is purely semantic (marks business-logic layer) with no extra framework behavior beyond <code>@Component</code>.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How does Spring decide which bean to inject when multiple implementations of an interface exist?</div>
+      <div class="qa-a"><p>Resolution order: (1) if only one bean of that type exists, inject it; (2) if multiple exist and one is marked <code>@Primary</code>, that one wins; (3) if a <code>@Qualifier("name")</code> is specified at the injection point, match by that exact bean name/qualifier; (4) if the injection point's variable/parameter name exactly matches a bean's name, Spring falls back to that match; (5) otherwise, Spring throws <code>NoUniqueBeanDefinitionException</code> at startup.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Can a bean depend on another bean that hasn't been created yet? How does Spring handle ordering?</div>
+      <div class="qa-a"><p>Yes — Spring automatically determines the correct instantiation order by analyzing the dependency graph declared through constructor parameters, <code>@Autowired</code> fields, etc. It creates dependencies before dependents. You rarely need to manage this manually; <code>@DependsOn</code> exists for the rare case where an ordering dependency isn't expressed through normal injection (e.g., a bean that must be initialized first purely for a side effect).</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why is field injection considered an anti-pattern despite being the most concise syntax?</div>
+      <div class="qa-a"><p>Beyond the testability and immutability issues already covered, field injection also <strong>hides a class's true dependencies</strong> — you can't tell what a class needs just by looking at its public constructor signature; you have to scan every field for <code>@Autowired</code>. It also silently allows a class to accumulate an unreasonable number of dependencies (a code smell suggesting the class violates Single Responsibility) since there's no constructor parameter list to visually "feel" the growing complexity. Constructor injection makes this pain visible early, nudging you toward better design.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What is the difference between compile-time and runtime dependency resolution in Maven vs Spring?</div>
+      <div class="qa-a"><p>Maven's dependency resolution is about <strong>which JARs are on the classpath</strong> — resolved once when the build runs, based on <code>pom.xml</code>. Spring's dependency injection is about <strong>which object instances get wired together</strong> at application startup, resolved by the IoC container reading annotations/config — an entirely different (and later) phase of "dependency resolution." Interviewers sometimes ask this to check if candidates conflate build-time and runtime concerns.</p></div>
+    </div>
+  </div>
+
+  <div class="box info" style="margin-top:28px;">
+    <div class="box-title">ℹ Next Section</div>
+    <p>Paste the next section's video list and I'll build out the next HTML notes doc in this same design system — ready for Spring MVC, REST controllers, request/response handling, or whatever the course covers next.</p>
+  </div>
+
+  <footer>GrowthScript Engineering — Spring Boot Interview Bible · Section 1 of N</footer>
+</section>
+
+</main>
+</div>
+
+<script>
+function applySpringCoreTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  document.body.setAttribute('data-theme', theme);
+  localStorage.setItem('theme', theme);
+  const btn = document.getElementById('theme-toggle-btn');
+  if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+}
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme') || document.body.getAttribute('data-theme') || 'dark';
+  applySpringCoreTheme(cur === 'dark' ? 'light' : 'dark');
+}
+function showTab(btn, id){
+  const block = btn.closest('.code-block');
+  block.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  block.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  block.querySelector('#'+id).classList.add('active');
+}
+document.querySelectorAll('.qa-q').forEach(q=>{
+  q.addEventListener('click', ()=> q.parentElement.classList.toggle('open'));
+});
+(function(){
+  const savedTheme = localStorage.getItem('theme') || document.documentElement.getAttribute('data-theme') || 'dark';
+  applySpringCoreTheme(savedTheme);
+  const btn = document.getElementById('theme-toggle-btn');
+  if (btn) btn.addEventListener('click', toggleTheme);
+})();
+</script>
+</body>
+</html>

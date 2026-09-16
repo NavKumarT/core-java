@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Section 5: Production Hardening & JPA Relationships | GrowthScript Engineering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117; --bg-elev:#151b23; --bg-card:#1a2230; --border:#2a3441;
+  --text:#e6edf3; --text-dim:#9aa7b5; --text-faint:#6e7c8c;
+  --accent:#3fb950; --accent-soft:rgba(63,185,80,.12);
+  --blue:#58a6ff; --blue-soft:rgba(88,166,255,.12);
+  --warn:#f0883e; --warn-soft:rgba(240,136,62,.12);
+  --danger:#f85149; --danger-soft:rgba(248,81,73,.12);
+  --code-bg:#0a0e14; --sidebar-w:290px; --radius:10px;
+  --shadow:0 4px 16px rgba(0,0,0,.35);
+}
+[data-theme="light"]{
+  --bg:#f6f8fa; --bg-elev:#ffffff; --bg-card:#ffffff; --border:#d8dee4;
+  --text:#1b2430; --text-dim:#4b5563; --text-faint:#8a96a3;
+  --accent:#1a7f37; --accent-soft:rgba(26,127,55,.08);
+  --blue:#0969da; --blue-soft:rgba(9,105,218,.08);
+  --warn:#9a6700; --warn-soft:rgba(154,103,0,.08);
+  --danger:#cf222e; --danger-soft:rgba(207,34,46,.08);
+  --code-bg:#0d1117; --shadow:0 2px 10px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); line-height:1.65; font-size:15.5px; transition:background .2s,color .2s;}
+code, pre, .mono{font-family:'Space Mono',monospace;}
+a{color:var(--blue); text-decoration:none;}
+a:hover{text-decoration:underline;}
+.wrapper{display:flex; min-height:100vh;}
+.sidebar{width:var(--sidebar-w); flex-shrink:0; background:var(--bg-elev); border-right:1px solid var(--border); position:sticky; top:0; height:100vh; overflow-y:auto; padding:22px 16px 40px;}
+.sidebar::-webkit-scrollbar{width:6px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border); border-radius:3px;}
+.brand{display:flex; align-items:center; gap:10px; margin-bottom:4px;}
+.brand-badge{width:34px; height:34px; border-radius:8px; background:var(--accent); display:flex; align-items:center; justify-content:center; color:#0d1117; font-weight:800; font-family:'Space Mono',monospace; font-size:15px; flex-shrink:0;}
+.brand-text{font-weight:800; font-size:14.5px; letter-spacing:.2px;}
+.brand-sub{font-size:11px; color:var(--text-faint); margin-top:1px;}
+.theme-toggle{margin:16px 0 20px; width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; font-size:12.5px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px;}
+.nav-group{margin-bottom:6px;}
+.nav-label{font-size:10.5px; text-transform:uppercase; letter-spacing:.9px; color:var(--text-faint); font-weight:700; margin:18px 4px 8px;}
+.nav-link{display:block; padding:7px 10px; border-radius:7px; font-size:13px; color:var(--text-dim); border-left:2px solid transparent; margin-bottom:1px;}
+.nav-link:hover{background:var(--accent-soft); color:var(--text); text-decoration:none;}
+.nav-link.sub{padding-left:22px; font-size:12.3px;}
+.main{flex:1; min-width:0; padding:44px 56px 120px; max-width:980px;}
+.header-block{margin-bottom:44px; padding-bottom:28px; border-bottom:1px solid var(--border);}
+.eyebrow{font-family:'Space Mono',monospace; font-size:11.5px; color:var(--accent); font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:10px;}
+.header-block h1{font-size:32px; font-weight:800; letter-spacing:-.5px; margin-bottom:12px;}
+.header-block p{color:var(--text-dim); font-size:15px; max-width:680px;}
+.meta-row{display:flex; gap:18px; margin-top:16px; flex-wrap:wrap;}
+.meta-pill{font-size:11.5px; padding:5px 11px; border-radius:20px; background:var(--bg-card); border:1px solid var(--border); color:var(--text-dim); font-family:'Space Mono',monospace;}
+section.topic{margin-bottom:56px; scroll-margin-top:24px;}
+.topic-head{display:flex; align-items:baseline; gap:12px; margin-bottom:6px;}
+.topic-num{font-family:'Space Mono',monospace; color:var(--accent); font-weight:700; font-size:14px;}
+h2{font-size:23px; font-weight:800; letter-spacing:-.3px;}
+.topic-video{font-size:12px; color:var(--text-faint); margin-bottom:20px; margin-top:2px; font-family:'Space Mono',monospace;}
+h3{font-size:17.5px; font-weight:700; margin:26px 0 12px; color:var(--text);}
+h4{font-weight:700; margin:18px 0 8px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.4px; font-size:12.5px;}
+p{margin-bottom:13px; color:var(--text); font-size:15px;}
+p.dim{color:var(--text-dim);}
+ul, ol{margin:0 0 15px 22px;}
+li{margin-bottom:7px; font-size:14.8px;}
+strong{color:var(--text); font-weight:700;}
+.hl{color:var(--accent); font-weight:700;}
+.box{border-radius:var(--radius); padding:16px 18px; margin:18px 0; border:1px solid var(--border); font-size:14.3px;}
+.box-title{font-weight:700; font-size:12.5px; text-transform:uppercase; letter-spacing:.5px; margin-bottom:7px; display:flex; align-items:center; gap:7px;}
+.tip{background:var(--accent-soft); border-color:rgba(63,185,80,.3);} .tip .box-title{color:var(--accent);}
+.warn{background:var(--warn-soft); border-color:rgba(240,136,62,.3);} .warn .box-title{color:var(--warn);}
+.info{background:var(--blue-soft); border-color:rgba(88,166,255,.3);} .info .box-title{color:var(--blue);}
+.danger{background:var(--danger-soft); border-color:rgba(248,81,73,.3);} .danger .box-title{color:var(--danger);}
+.code-block{background:var(--code-bg); border-radius:var(--radius); overflow:hidden; margin:16px 0; border:1px solid var(--border); box-shadow:var(--shadow);}
+.tabs{display:flex; background:rgba(255,255,255,.03); border-bottom:1px solid rgba(255,255,255,.08); overflow-x:auto;}
+.tab-btn{padding:9px 16px; font-family:'Space Mono',monospace; font-size:12px; color:#8a96a3; background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap;}
+.tab-btn.active{color:#e6edf3; border-bottom-color:var(--accent);}
+.tab-content{display:none; padding:16px 18px; overflow-x:auto;}
+.tab-content.active{display:block;}
+.tab-content pre{color:#c9d1d9; font-size:13px; line-height:1.65; white-space:pre;}
+.tab-content .kw{color:#ff7b72;} .tab-content .str{color:#a5d6ff;} .tab-content .cm{color:#8b949e; font-style:italic;}
+.tab-content .an{color:#d2a8ff;} .tab-content .cl{color:#79c0ff;} .tab-content .mt{color:#d2a8ff;}
+table{width:100%; border-collapse:collapse; margin:16px 0; font-size:13.8px;}
+th{text-align:left; padding:9px 12px; background:var(--bg-card); border-bottom:2px solid var(--border); font-size:11.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--text-dim);}
+td{padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top;}
+tr:hover td{background:var(--accent-soft);}
+.qa-wrap{margin-top:18px;}
+.qa-item{border:1px solid var(--border); border-radius:var(--radius); margin-bottom:10px; overflow:hidden; background:var(--bg-card);}
+.qa-q{padding:14px 46px 14px 18px; cursor:pointer; font-weight:600; font-size:14.3px; position:relative; display:flex; align-items:center; gap:10px;}
+.qa-q:hover{background:var(--accent-soft);}
+.qa-tag{font-family:'Space Mono',monospace; font-size:9.5px; padding:2px 7px; border-radius:4px; font-weight:700; flex-shrink:0; text-transform:uppercase; letter-spacing:.3px;}
+.tag-faang{background:rgba(248,81,73,.15); color:var(--danger);}
+.tag-core{background:rgba(88,166,255,.15); color:var(--blue);}
+.qa-q::after{content:'+'; position:absolute; right:18px; top:50%; transform:translateY(-50%); font-size:20px; color:var(--text-faint); font-weight:400;}
+.qa-item.open .qa-q::after{content:'−';}
+.qa-a{max-height:0; overflow:hidden; transition:max-height .25s ease; padding:0 18px;}
+.qa-item.open .qa-a{max-height:1200px; padding:2px 18px 18px;}
+.qa-a p{font-size:14px; color:var(--text-dim);}
+.qa-a ul{margin-top:6px;}
+.qa-a li{color:var(--text-dim); font-size:13.8px;}
+.divider{height:1px; background:var(--border); margin:44px 0;}
+.section-badge{display:inline-block; background:var(--accent); color:#0d1117; font-family:'Space Mono',monospace; font-weight:700; font-size:11px; padding:4px 10px; border-radius:6px; margin-bottom:14px;}
+.diagram{background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin:18px 0; font-family:'Space Mono',monospace; font-size:12.5px; color:var(--text-dim); overflow-x:auto; white-space:pre; line-height:1.5;}
+footer{margin-top:60px; padding-top:24px; border-top:1px solid var(--border); color:var(--text-faint); font-size:12px;}
+@media(max-width:900px){
+  .sidebar{position:fixed; left:-100%; z-index:50; transition:left .2s; box-shadow:var(--shadow);}
+  .sidebar.open{left:0;}
+  .main{padding:24px 20px 100px;}
+  .mobile-toggle{display:block !important;}
+}
+.mobile-toggle{display:none; position:fixed; top:16px; left:16px; z-index:60; background:var(--accent); color:#0d1117; border:none; border-radius:8px; width:40px; height:40px; font-size:18px; font-weight:700;}
+</style>
+<link rel="stylesheet" href="../style-guide.css">
+</head>
+<body data-theme="dark">
+
+<button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark/light mode" aria-label="Toggle theme">☀️</button>
+<button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="wrapper">
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-badge">G</div>
+    <div>
+      <div class="brand-text">GrowthScript Eng.</div>
+      <div class="brand-sub">Spring Boot Bible</div>
+    </div>
+  </div>
+  <button class="theme-toggle" onclick="toggleTheme()">🌗 Toggle Theme</button>
+
+  <div class="nav-group">
+    <div class="nav-label">Section 05 · Production Hardening</div>
+    <a class="nav-link" href="#exception-handling">88–89. Global Exception Handling</a>
+    <a class="nav-link" href="#validation">90–93. Backend Validation</a>
+    <a class="nav-link" href="#auditing">94–95. Spring JPA Auditing</a>
+    <a class="nav-link" href="#openapi">96. SpringDoc OpenAPI & Swagger</a>
+    <a class="nav-link" href="#bean-scopes">97–99. Request, Session & Application Scopes</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">JPA Relationships</div>
+    <a class="nav-link" href="#roadmap">100–101. Relationships Roadmap & Foundation</a>
+    <a class="nav-link" href="#data-setup">102. Jobs Table Data Setup</a>
+    <a class="nav-link" href="#jpa-buddy-mapping">103. OneToMany/ManyToOne with JPA Buddy</a>
+    <a class="nav-link" href="#mapping-deep-dive">104. Full Story: OneToMany & ManyToOne</a>
+    <a class="nav-link" href="#fetch-cascade">105. FETCH vs CASCADE</a>
+    <a class="nav-link" href="#ondelete">106. @OnDelete Explained</a>
+    <a class="nav-link" href="#implementation">107. Implementing the Mappings</a>
+    <a class="nav-link" href="#interview-master">Master Interview Q&A Bank</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="nav-header"><a href="../index.html" class="back-home">← Back to Notes Hub</a></div>
+
+<div class="header-block">
+  <div class="eyebrow">Java Backend Engineer · Spring Boot Course</div>
+  <h1>Section 5 — Production Hardening & JPA Relationships</h1>
+  <p>Everything that separates a tutorial app from a production-grade API: centralized exception handling, defense-in-depth backend validation, audit trails, self-documenting APIs with OpenAPI/Swagger, the full spectrum of Spring bean scopes — then a deep dive into JPA's most misunderstood territory: entity relationships, fetch vs cascade semantics, and what really happens when a parent row is deleted.</p>
+  <div class="meta-row">
+    <span class="meta-pill">Videos 88–107</span>
+    <span class="meta-pill">~2.7 hrs runtime</span>
+    <span class="meta-pill">FAANG + Fintech interview focus</span>
+    <span class="meta-pill">Builds on Sections 1–4</span>
+  </div>
+</div>
+
+<!-- 88-89 -->
+<section class="topic" id="exception-handling">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">88–89</span><h2>Global Exception Handling with @RestControllerAdvice</h2></div>
+  <div class="topic-video">Videos: Global Exception Handling in Spring Boot using @RestControllerAdvice - Parts 1 & 2</div>
+
+  <h3>The Problem Without Centralized Handling</h3>
+  <p>Without a global handler, every controller method needs its own try-catch to translate exceptions into proper HTTP responses — duplicated, inconsistent, and easy to forget. A missing catch block means an unhandled exception falls through to Spring Boot's <strong>default error handling</strong>, which returns a generic, unhelpful <code>500 Internal Server Error</code> with a raw stack trace (in dev) or a bare-bones error page — neither of which is acceptable for a real API contract.</p>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'ex1')">GlobalExceptionHandler.java</button>
+      <button class="tab-btn" onclick="showTab(this,'ex2')">Custom exception classes</button>
+      <button class="tab-btn" onclick="showTab(this,'ex3')">Standard ErrorResponse shape</button>
+    </div>
+    <div class="tab-content active" id="ex1"><pre><span class="an">@RestControllerAdvice</span>  <span class="cm">// = @ControllerAdvice + @ResponseBody — applies GLOBALLY, across every @RestController</span>
+<span class="kw">public class</span> <span class="cl">GlobalExceptionHandler</span> {
+
+    <span class="an">@ExceptionHandler</span>(ResourceNotFoundException.<span class="kw">class</span>)
+    <span class="kw">public</span> ResponseEntity&lt;ErrorResponse&gt; <span class="mt">handleNotFound</span>(
+            ResourceNotFoundException ex, WebRequest request) {
+        ErrorResponse error = ErrorResponse.<span class="mt">builder</span>()
+                .status(HttpStatus.NOT_FOUND.value())
+                .message(ex.<span class="mt">getMessage</span>())
+                .timestamp(LocalDateTime.<span class="mt">now</span>())
+                .path(request.<span class="mt">getDescription</span>(<span class="kw">false</span>))
+                .build();
+        <span class="kw">return new</span> ResponseEntity&lt;&gt;(error, HttpStatus.NOT_FOUND);
+    }
+
+    <span class="an">@ExceptionHandler</span>(MethodArgumentNotValidException.<span class="kw">class</span>)  <span class="cm">// thrown by @Valid failures</span>
+    <span class="kw">public</span> ResponseEntity&lt;Map&lt;String, String&gt;&gt; <span class="mt">handleValidation</span>(
+            MethodArgumentNotValidException ex) {
+        Map&lt;String, String&gt; errors = <span class="kw">new</span> HashMap&lt;&gt;();
+        ex.<span class="mt">getBindingResult</span>().<span class="mt">getFieldErrors</span>().<span class="mt">forEach</span>(err -&gt;
+                errors.<span class="mt">put</span>(err.<span class="mt">getField</span>(), err.<span class="mt">getDefaultMessage</span>()));
+        <span class="kw">return</span> ResponseEntity.<span class="mt">badRequest</span>().<span class="mt">body</span>(errors);
+    }
+
+    <span class="an">@ExceptionHandler</span>(Exception.<span class="kw">class</span>)  <span class="cm">// CATCH-ALL — last resort for anything unanticipated</span>
+    <span class="kw">public</span> ResponseEntity&lt;ErrorResponse&gt; <span class="mt">handleGeneric</span>(Exception ex) {
+        ErrorResponse error = ErrorResponse.<span class="mt">builder</span>()
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .message(<span class="str">"An unexpected error occurred"</span>)  <span class="cm">// never leak raw ex.getMessage() to clients here!</span>
+                .timestamp(LocalDateTime.<span class="mt">now</span>())
+                .build();
+        <span class="kw">return new</span> ResponseEntity&lt;&gt;(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+}</pre></div>
+    <div class="tab-content" id="ex2"><pre><span class="cm">// custom, meaningful exceptions thrown from the SERVICE layer —</span>
+<span class="cm">// business logic stays clean, translation to HTTP happens centrally</span>
+<span class="kw">public class</span> <span class="cl">ResourceNotFoundException extends</span> RuntimeException {
+    <span class="kw">public</span> <span class="mt">ResourceNotFoundException</span>(String message) {
+        <span class="kw">super</span>(message);
+    }
+}
+
+<span class="kw">public class</span> <span class="cl">DuplicateResourceException extends</span> RuntimeException {
+    <span class="kw">public</span> <span class="mt">DuplicateResourceException</span>(String message) { <span class="kw">super</span>(message); }
+}
+
+<span class="cm">// usage in the service layer:</span>
+<span class="kw">public</span> Contact <span class="mt">getContact</span>(String id) {
+    <span class="kw">return</span> contactRepository.<span class="mt">findById</span>(id)
+            .<span class="mt">orElseThrow</span>(() -&gt; <span class="kw">new</span> ResourceNotFoundException(<span class="str">"Contact not found: "</span> + id));
+}</pre></div>
+    <div class="tab-content" id="ex3"><pre><span class="an">@Data</span> <span class="an">@Builder</span>
+<span class="kw">public class</span> <span class="cl">ErrorResponse</span> {
+    <span class="kw">private int</span> status;
+    <span class="kw">private</span> String message;
+    <span class="kw">private</span> LocalDateTime timestamp;
+    <span class="kw">private</span> String path;
+    <span class="cm">// a CONSISTENT shape across every error response makes client-side</span>
+    <span class="cm">// error handling predictable — exactly what REST best practices called for</span>
+}</pre></div>
+  </div>
+
+  <div class="diagram">Controller/Service throws ResourceNotFoundException
+        │
+        ▼
+DispatcherServlet catches it, checks registered @ExceptionHandler methods
+        │
+        ▼
+Finds handleNotFound() in @RestControllerAdvice — MOST SPECIFIC match wins
+        │  (Spring matches the most specific exception type first —
+        │   e.g. a handler for IllegalArgumentException beats one for Exception)
+        ▼
+Builds and returns a proper 404 + structured ErrorResponse body</div>
+
+  <div class="box tip">
+    <div class="box-title">💡 @ControllerAdvice vs @RestControllerAdvice</div>
+    <p>Same relationship as <code>@Controller</code> vs <code>@RestController</code> from Section 3: <code>@RestControllerAdvice</code> = <code>@ControllerAdvice</code> + <code>@ResponseBody</code>, meaning every <code>@ExceptionHandler</code> method's return value is serialized straight to the response body (JSON) rather than resolved as a view. For a REST API, always use <code>@RestControllerAdvice</code>.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Never Leak Internal Exception Details to Clients</div>
+    <p>The catch-all <code>Exception.class</code> handler should return a <strong>generic, safe message</strong> — never the raw <code>ex.getMessage()</code> or stack trace, which can leak internal implementation details (SQL fragments, class names, file paths) that aid an attacker in reconnaissance. Log the full exception server-side (with the stack trace) for debugging, but return only a sanitized message to the client — this exact distinction is a common security-review talking point.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>If two @ExceptionHandler methods in the same @RestControllerAdvice could both match a thrown exception, which one wins?</div>
+      <div class="qa-a"><p>Spring selects the handler registered for the <strong>most specific exception type</strong> in the class hierarchy relative to the thrown exception. If a <code>ResourceNotFoundException extends RuntimeException</code> is thrown, and handlers exist for both <code>ResourceNotFoundException</code> and the broader <code>RuntimeException</code>/<code>Exception</code>, the more specific <code>ResourceNotFoundException</code> handler wins. This is exactly why a generic <code>Exception.class</code> catch-all handler should always be defined <em>last</em> conceptually (order in the file doesn't matter — specificity does) — it only fires when nothing more specific matches.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Can @RestControllerAdvice be scoped to only specific packages or controllers, rather than applying globally?</div>
+      <div class="qa-a"><p>Yes — <code>@RestControllerAdvice(basePackages = "com.growthscript.api")</code> restricts it to controllers within that package, or <code>@RestControllerAdvice(assignableTypes = {OrderController.class})</code> scopes it to specific controller classes. Omitting these attributes (the common default) applies the advice globally, to every <code>@RestController</code> in the application — the typical choice for a single unified error-handling strategy.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 90-93 -->
+<section class="topic" id="validation">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">90–93</span><h2>Backend Validation — Your Last Line of Defense</h2></div>
+  <div class="topic-video">Videos: Dangers of Relying Only on Client-Side Validation · Backend Validations Parts 1–3</div>
+
+  <h3>Why Client-Side Validation Alone Is Dangerous</h3>
+  <p>Client-side (browser/mobile) validation exists purely for <strong>UX</strong> — instant feedback without a round trip. It provides <strong>zero real security</strong>, because a client is entirely under the end user's control: JavaScript validation can be disabled, bypassed by directly crafting HTTP requests with Postman/curl/a script, or defeated by intercepting and modifying requests with a proxy tool. <strong>Any validation the server doesn't itself enforce effectively doesn't exist</strong> from a security standpoint.</p>
+
+  <div class="box danger">
+    <div class="box-title">⚠ The Core Principle</div>
+    <p><strong>Never trust the client.</strong> Every constraint that matters for data integrity or security — required fields, format, length, business rules — must be re-validated on the server, regardless of what the frontend already checked. Client-side validation is a convenience layer; backend validation is the actual security/integrity boundary.</p>
+  </div>
+
+  <h3>Bean Validation (JSR-380) with @Valid</h3>
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'v1')">Common validation annotations</button>
+      <button class="tab-btn" onclick="showTab(this,'v2')">Applying to a DTO</button>
+      <button class="tab-btn" onclick="showTab(this,'v3')">Custom validator</button>
+      <button class="tab-btn" onclick="showTab(this,'v4')">Nested & collection validation</button>
+    </div>
+    <div class="tab-content active" id="v1"><pre><span class="an">@NotNull</span>          <span class="cm">// value must not be null</span>
+<span class="an">@NotBlank</span>         <span class="cm">// String must not be null AND not empty/whitespace-only</span>
+<span class="an">@NotEmpty</span>         <span class="cm">// collection/String must not be null AND not empty (whitespace still allowed for String)</span>
+<span class="an">@Size</span>(min=<span class="mt">2</span>, max=<span class="mt">50</span>)  <span class="cm">// length/size bounds — Strings, collections, arrays</span>
+<span class="an">@Min</span>(<span class="mt">18</span>) <span class="an">@Max</span>(<span class="mt">65</span>)  <span class="cm">// numeric bounds</span>
+<span class="an">@Email</span>            <span class="cm">// valid email format</span>
+<span class="an">@Pattern</span>(regexp=<span class="str">"^[0-9]{10}$"</span>)  <span class="cm">// custom regex</span>
+<span class="an">@Past</span> <span class="an">@Future</span>    <span class="cm">// date must be in the past / future</span>
+<span class="an">@Positive</span> <span class="an">@PositiveOrZero</span>  <span class="cm">// numeric sign constraints</span></pre></div>
+    <div class="tab-content" id="v2"><pre><span class="an">@Data</span>
+<span class="kw">public class</span> <span class="cl">JobRequestDto</span> {
+    <span class="an">@NotBlank</span>(message = <span class="str">"Job title is required"</span>)
+    <span class="an">@Size</span>(max = <span class="mt">120</span>, message = <span class="str">"Job title must not exceed 120 characters"</span>)
+    <span class="kw">private</span> String title;
+
+    <span class="an">@NotNull</span>(message = <span class="str">"Minimum salary is required"</span>)
+    <span class="an">@Positive</span>(message = <span class="str">"Minimum salary must be positive"</span>)
+    <span class="kw">private</span> BigDecimal minSalary;
+
+    <span class="an">@Email</span>(message = <span class="str">"Recruiter email must be valid"</span>)
+    <span class="kw">private</span> String recruiterEmail;
+}
+
+<span class="an">@PostMapping</span>
+<span class="kw">public</span> ResponseEntity&lt;JobResponseDto&gt; <span class="mt">create</span>(<span class="an">@Valid</span> <span class="an">@RequestBody</span> JobRequestDto dto) {
+    <span class="cm">// if validation fails, MethodArgumentNotValidException is thrown BEFORE</span>
+    <span class="cm">// this method body ever runs — caught centrally in @RestControllerAdvice</span>
+}</pre></div>
+    <div class="tab-content" id="v3"><pre><span class="cm">// custom annotation for validation rules Bean Validation doesn't cover out of the box</span>
+<span class="an">@Target</span>(ElementType.FIELD)
+<span class="an">@Retention</span>(RetentionPolicy.RUNTIME)
+<span class="an">@Constraint</span>(validatedBy = UniqueEmailValidator.<span class="kw">class</span>)
+<span class="kw">public @interface</span> <span class="cl">UniqueEmail</span> {
+    String <span class="mt">message</span>() <span class="kw">default</span> <span class="str">"Email already registered"</span>;
+    Class&lt;?&gt;[] <span class="mt">groups</span>() <span class="kw">default</span> {};
+    Class&lt;? <span class="kw">extends</span> Payload&gt;[] <span class="mt">payload</span>() <span class="kw">default</span> {};
+}
+
+<span class="kw">public class</span> <span class="cl">UniqueEmailValidator implements</span> ConstraintValidator&lt;UniqueEmail, String&gt; {
+    <span class="an">@Autowired</span> <span class="kw">private</span> UserRepository userRepository;  <span class="cm">// custom validators ARE Spring beans!</span>
+
+    <span name="Override">@Override</span>
+    <span class="kw">public boolean</span> <span class="mt">isValid</span>(String email, ConstraintValidatorContext ctx) {
+        <span class="kw">return</span> !userRepository.<span class="mt">existsByEmail</span>(email);
+    }
+}</pre></div>
+    <div class="tab-content" id="v4"><pre><span class="an">@Data</span>
+<span class="kw">public class</span> <span class="cl">JobRequestDto</span> {
+    <span class="an">@Valid</span>  <span class="cm">// REQUIRED to cascade validation into a nested object</span>
+    <span class="kw">private</span> CompanyDto company;
+
+    <span class="an">@Valid</span>
+    <span class="kw">private</span> List&lt;SkillDto&gt; skills;  <span class="cm">// @Valid cascades into EACH element of the list too</span>
+}</pre></div>
+  </div>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Forgetting @Valid on Nested Objects Is a Common Bug</div>
+    <p>Bean Validation does <strong>not</strong> automatically cascade into nested objects or collection elements — a nested DTO's own constraints are silently skipped unless the containing field is also annotated <code>@Valid</code>. This is one of the most common real-world validation bugs: a nested object's <code>@NotBlank</code> field passes an empty string straight through because the parent field was missing its own <code>@Valid</code>.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>What's the difference between @Valid and @Validated, and when would you specifically need @Validated?</div>
+      <div class="qa-a"><p><code>@Valid</code> is the standard Bean Validation (JSR-380) annotation, sufficient for the vast majority of cases including <code>@RequestBody</code> validation and cascading into nested objects. <code>@Validated</code> is a <strong>Spring-specific</strong> annotation that adds two extra capabilities <code>@Valid</code> alone doesn't have: (1) <strong>validation groups</strong> — applying different subsets of constraints depending on context (e.g., a "create" group requiring all fields vs an "update" group allowing partial data), and (2) enabling method-level parameter validation on <em>service-layer</em> methods (not just <code>@RequestBody</code> DTOs) when placed at the class level combined with constraint annotations directly on method parameters.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Where exactly does @Valid validation happen in the request lifecycle, and what exception does a failure produce?</div>
+      <div class="qa-a"><p>Validation happens during <strong>argument resolution</strong> — <em>before</em> the controller method body executes — as part of Spring MVC's <code>HandlerMethodArgumentResolver</code> chain (the same phase that deserializes <code>@RequestBody</code> and binds <code>@PathVariable</code>/<code>@RequestParam</code>). A failure throws <code>MethodArgumentNotValidException</code> (for <code>@RequestBody</code> validation) — this is precisely why a global <code>@ExceptionHandler(MethodArgumentNotValidException.class)</code> in <code>@RestControllerAdvice</code> is the standard place to translate validation failures into a structured 400 response listing every failed field, rather than handling it per-controller.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Should validation logic ever live in the entity/JPA layer instead of the DTO?</div>
+      <div class="qa-a"><p>Both layers can carry validation annotations, and they serve different purposes: DTO-level validation guards the <strong>API contract</strong> (what a client is allowed to submit), while entity-level validation (via the same JSR-380 annotations) acts as a <strong>last-resort database integrity check</strong> that Hibernate enforces right before persisting, catching any invalid state that somehow bypassed the DTO layer (e.g., data constructed internally by a batch job, not through the REST API at all). Relying on entity-level validation as the <em>only</em> validation is risky, though, since JPA validation failures throw a less client-friendly <code>ConstraintViolationException</code> deep in the persistence layer rather than a clean, early 400 response.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 94-95 -->
+<section class="topic" id="auditing">
+  <div class="topic-head"><span class="topic-num">94–95</span><h2>Tracking Who Did What — Spring JPA Auditing</h2></div>
+  <div class="topic-video">Videos: Introduction to Spring JPA Auditing Parts 1 & 2</div>
+
+  <p><strong>Spring Data JPA Auditing</strong> automatically populates standard "who/when" metadata fields — created timestamp, last-modified timestamp, created-by user, last-modified-by user — on every entity, without manually setting them in every service method.</p>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'au1')">Enable auditing</button>
+      <button class="tab-btn" onclick="showTab(this,'au2')">Base audit entity</button>
+      <button class="tab-btn" onclick="showTab(this,'au3')">AuditorAware for created-by/modified-by</button>
+    </div>
+    <div class="tab-content active" id="au1"><pre><span class="an">@SpringBootApplication</span>
+<span class="an">@EnableJpaAuditing</span>  <span class="cm">// the single switch that turns auditing on application-wide</span>
+<span class="kw">public class</span> <span class="cl">JobPortalApplication</span> {
+    <span class="kw">public static void</span> <span class="mt">main</span>(String[] args) {
+        SpringApplication.<span class="mt">run</span>(JobPortalApplication.<span class="kw">class</span>, args);
+    }
+}</pre></div>
+    <div class="tab-content" id="au2"><pre><span class="an">@MappedSuperclass</span>              <span class="cm">// NOT an @Entity itself — fields are inherited INTO subclass tables</span>
+<span class="an">@EntityListeners</span>(AuditingEntityListener.<span class="kw">class</span>)  <span class="cm">// hooks lifecycle callbacks that populate these fields</span>
+<span class="kw">public abstract class</span> <span class="cl">BaseEntity</span> {
+
+    <span class="an">@CreatedDate</span>
+    <span class="an">@Column</span>(updatable = <span class="kw">false</span>)
+    <span class="kw">private</span> LocalDateTime createdAt;
+
+    <span class="an">@LastModifiedDate</span>
+    <span class="kw">private</span> LocalDateTime updatedAt;
+
+    <span class="an">@CreatedBy</span>
+    <span class="an">@Column</span>(updatable = <span class="kw">false</span>)
+    <span class="kw">private</span> String createdBy;
+
+    <span class="an">@LastModifiedBy</span>
+    <span class="kw">private</span> String updatedBy;
+    <span class="cm">// getters/setters omitted</span>
+}
+
+<span class="cm">// every entity simply extends BaseEntity — fields appear as real columns</span>
+<span class="an">@Entity</span>
+<span class="kw">public class</span> <span class="cl">Job extends</span> BaseEntity {
+    <span class="an">@Id</span> <span class="an">@GeneratedValue</span> <span class="kw">private</span> Long id;
+    <span class="kw">private</span> String title;
+}</pre></div>
+    <div class="tab-content" id="au3"><pre><span class="cm">// tells Spring HOW to determine "who" the current user is, for @CreatedBy/@LastModifiedBy</span>
+<span class="an">@Component</span>
+<span class="kw">public class</span> <span class="cl">SpringSecurityAuditorAware implements</span> AuditorAware&lt;String&gt; {
+
+    <span name="Override">@Override</span>
+    <span class="kw">public</span> Optional&lt;String&gt; <span class="mt">getCurrentAuditor</span>() {
+        Authentication auth = SecurityContextHolder.<span class="mt">getContext</span>().<span class="mt">getAuthentication</span>();
+        <span class="kw">if</span> (auth == <span class="kw">null</span> || !auth.<span class="mt">isAuthenticated</span>()) {
+            <span class="kw">return</span> Optional.<span class="mt">of</span>(<span class="str">"SYSTEM"</span>);  <span class="cm">// fallback for unauthenticated/system-driven changes</span>
+        }
+        <span class="kw">return</span> Optional.<span class="mt">of</span>(auth.<span class="mt">getName</span>());
+    }
+}</pre></div>
+  </div>
+
+  <table>
+    <tr><th>Annotation</th><th>Populated When</th></tr>
+    <tr><td><code>@CreatedDate</code></td><td>Once, at entity creation (first persist)</td></tr>
+    <tr><td><code>@LastModifiedDate</code></td><td>Every time the entity is updated</td></tr>
+    <tr><td><code>@CreatedBy</code></td><td>Once, at creation — pulled from your <code>AuditorAware</code> implementation</td></tr>
+    <tr><td><code>@LastModifiedBy</code></td><td>Every update — same <code>AuditorAware</code> source</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 Why @MappedSuperclass, Not @Entity, for the Base Class</div>
+    <p><code>@MappedSuperclass</code> means <code>BaseEntity</code> itself has <strong>no corresponding database table</strong> — its fields are simply inherited and mapped into <em>each subclass's own table</em> as regular columns (<code>Job</code>'s table gets <code>created_at</code>, <code>updated_at</code> columns directly). This is different from JPA inheritance strategies like <code>SINGLE_TABLE</code>/<code>JOINED</code>, which model true polymorphic entity hierarchies — auditing fields are a pure code-reuse/DRY concern, not a real "is-a" domain relationship, so <code>@MappedSuperclass</code> is the correct, lightweight tool.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How does AuditingEntityListener actually populate these fields under the hood?</div>
+      <div class="qa-a"><p><code>AuditingEntityListener</code> is a JPA <strong>entity listener</strong> hooked to lifecycle callback events — specifically <code>@PrePersist</code> (fires just before an INSERT) and <code>@PreUpdate</code> (fires just before an UPDATE). On <code>@PrePersist</code>, it sets both <code>@CreatedDate</code> and <code>@CreatedBy</code> (since this is the entity's first save) as well as the "last modified" fields to the same initial values; on <code>@PreUpdate</code>, it only refreshes <code>@LastModifiedDate</code>/<code>@LastModifiedBy</code>, leaving the original creation metadata untouched (reinforced by <code>@Column(updatable = false)</code> on the created fields as a defense-in-depth database-level guarantee).</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What happens if @EnableJpaAuditing is present but no AuditorAware bean is registered?</div>
+      <div class="qa-a"><p><code>@CreatedDate</code>/<code>@LastModifiedDate</code> still work fine, since timestamps don't need an "auditor" source. But <code>@CreatedBy</code>/<code>@LastModifiedBy</code> fields will simply remain <code>null</code> — Spring Data JPA has no way to determine "who" without an <code>AuditorAware&lt;T&gt;</code> bean explicitly telling it how to resolve the current user (typically from Spring Security's <code>SecurityContextHolder</code>, as shown above, though it could just as easily pull from a request-scoped tenant/user-context object in a non-Spring-Security setup).</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 96 -->
+<section class="topic" id="openapi">
+  <div class="topic-head"><span class="topic-num">96</span><h2>Document Your APIs Like a Pro — SpringDoc OpenAPI & Swagger</h2></div>
+  <div class="topic-video">Video: Document Your APIs Like a Pro with SpringDoc OpenAPI & Swagger</div>
+
+  <table>
+    <tr><th>Term</th><th>What It Actually Is</th></tr>
+    <tr><td><strong>OpenAPI Specification</strong></td><td>A language-agnostic, YAML/JSON standard for describing REST APIs — endpoints, request/response schemas, auth requirements — used by countless tools industry-wide (formerly called "Swagger Specification")</td></tr>
+    <tr><td><strong>Swagger UI</strong></td><td>An interactive HTML web page that renders an OpenAPI spec into a browsable, "try it out" API explorer</td></tr>
+    <tr><td><strong>SpringDoc OpenAPI</strong></td><td>The library that auto-generates an OpenAPI spec directly from your Spring Boot controllers/DTOs by scanning annotations at runtime, and serves both the raw spec JSON and a Swagger UI page</td></tr>
+  </table>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'sd1')">Dependency + zero-config baseline</button>
+      <button class="tab-btn" onclick="showTab(this,'sd2')">Enriching with annotations</button>
+    </div>
+    <div class="tab-content active" id="sd1"><pre><span class="kw">&lt;dependency&gt;</span>
+    <span class="kw">&lt;groupId&gt;</span>org.springdoc<span class="kw">&lt;/groupId&gt;</span>
+    <span class="kw">&lt;artifactId&gt;</span>springdoc-openapi-starter-webmvc-ui<span class="kw">&lt;/artifactId&gt;</span>
+    <span class="kw">&lt;version&gt;</span>2.5.0<span class="kw">&lt;/version&gt;</span>
+<span class="kw">&lt;/dependency&gt;</span>
+
+<span class="cm"># zero extra code required — visiting these URLs just works:</span>
+<span class="cm"># http://localhost:8080/v3/api-docs       -> raw OpenAPI JSON spec</span>
+<span class="cm"># http://localhost:8080/swagger-ui.html   -> interactive Swagger UI</span></pre></div>
+    <div class="tab-content" id="sd2"><pre><span class="an">@RestController</span>
+<span class="an">@RequestMapping</span>(<span class="str">"/api/v1/jobs"</span>)
+<span class="an">@Tag</span>(name = <span class="str">"Job Management"</span>, description = <span class="str">"Operations for posting and browsing jobs"</span>)
+<span class="kw">public class</span> <span class="cl">JobController</span> {
+
+    <span class="an">@Operation</span>(summary = <span class="str">"Get a job by ID"</span>, description = <span class="str">"Returns full job details for a given ID"</span>)
+    <span class="an">@ApiResponses</span>({
+        <span class="an">@ApiResponse</span>(responseCode = <span class="str">"200"</span>, description = <span class="str">"Job found"</span>),
+        <span class="an">@ApiResponse</span>(responseCode = <span class="str">"404"</span>, description = <span class="str">"Job not found"</span>)
+    })
+    <span class="an">@GetMapping</span>(<span class="str">"/{id}"</span>)
+    <span class="kw">public</span> ResponseEntity&lt;JobResponseDto&gt; <span class="mt">getJob</span>(
+            <span class="an">@Parameter</span>(description = <span class="str">"Unique job identifier"</span>) <span class="an">@PathVariable</span> Long id) {
+        ...
+    }
+}</pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 Why This Matters Beyond "Nice to Have"</div>
+    <p>Auto-generated, always-in-sync API documentation eliminates the classic problem of hand-written API docs silently drifting out of date as code changes — since the spec is derived directly from the actual live controller/DTO code, it's structurally impossible for it to lie about what the API currently does. This is standard practice at virtually every API-first company and is frequently a baseline expectation, not a differentiator, in backend interviews.</p>
+  </div>
+</section>
+
+<!-- 97-99 -->
+<section class="topic" id="bean-scopes">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">97–99</span><h2>Request, Session, Application & WebSocket Bean Scopes</h2></div>
+  <div class="topic-video">Videos: Introduction to Request/Session/Application/Websocket Bean Scopes · Hands-On Request & Session Scopes · Application Scope</div>
+
+  <p>Beyond <code>singleton</code> and <code>prototype</code> (Section 2), Spring provides <strong>web-aware scopes</strong>, only available within a <code>DispatcherServlet</code>/web-application context.</p>
+
+  <table>
+    <tr><th>Scope</th><th>Lifetime</th><th>Typical Use Case</th></tr>
+    <tr><td><code>request</code></td><td>One instance per <strong>single HTTP request</strong> — created fresh for each request, discarded once the response completes</td><td>Request-scoped context objects (correlation IDs, per-request accumulated data used across multiple collaborators within that request)</td></tr>
+    <tr><td><code>session</code></td><td>One instance per <strong>HTTP session</strong> (tracked via a session cookie, e.g. <code>JSESSIONID</code>), surviving across multiple requests from the same user until the session expires/invalidates</td><td>Shopping cart state, user-specific in-memory session data (legacy pattern — modern stateless REST APIs generally avoid server-side session state in favor of JWTs)</td></tr>
+    <tr><td><code>application</code></td><td>One instance per <strong>ServletContext</strong> — effectively identical lifetime to a singleton within a single web app deployment</td><td>App-wide shared read-only data/caches — rarely needed since regular <code>singleton</code> scope already covers this in almost all cases</td></tr>
+    <tr><td><code>websocket</code></td><td>One instance per WebSocket session</td><td>Per-connection state for STOMP/WebSocket-based real-time features (chat, live notifications)</td></tr>
+  </table>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'sc1')">Request-scoped bean</button>
+      <button class="tab-btn" onclick="showTab(this,'sc2')">Session-scoped bean</button>
+    </div>
+    <div class="tab-content active" id="sc1"><pre><span class="an">@Component</span>
+<span class="an">@Scope</span>(value = WebApplicationContext.SCOPE_REQUEST,
+        proxyMode = ScopedProxyMode.TARGET_CLASS)  <span class="cm">// see explanation below</span>
+<span class="kw">public class</span> <span class="cl">RequestContext</span> {
+    <span class="kw">private</span> String correlationId = UUID.<span class="mt">randomUUID</span>().<span class="mt">toString</span>();
+    <span class="cm">// safely injectable into a SINGLETON service — a fresh instance</span>
+    <span class="cm">// exists per request thanks to the scoped proxy</span>
+}</pre></div>
+    <div class="tab-content" id="sc2"><pre><span class="an">@Component</span>
+<span class="an">@Scope</span>(value = WebApplicationContext.SCOPE_SESSION,
+        proxyMode = ScopedProxyMode.TARGET_CLASS)
+<span class="kw">public class</span> <span class="cl">ShoppingCart</span> {
+    <span class="kw">private</span> List&lt;Item&gt; items = <span class="kw">new</span> ArrayList&lt;&gt;();
+    <span class="cm">// persists across multiple requests from the SAME user session</span>
+}</pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 Why proxyMode Is Required Here — Same Root Cause as Section 2's Prototype Trap</div>
+    <p>This is the exact same underlying problem covered when injecting a <code>prototype</code> bean into a <code>singleton</code> in Section 2: a request/session-scoped bean's real instance only exists <strong>while that request/session is active</strong>, but a <code>singleton</code> controller/service (created once, at startup) needs to hold a reference to it. The <code>proxyMode = ScopedProxyMode.TARGET_CLASS</code> setting makes Spring inject a <strong>CGLIB proxy</strong> instead of a direct reference — every method call on that proxy transparently delegates to whichever request/session's real instance is currently active (resolved from a <code>ThreadLocal</code> behind the scenes), rather than binding to one fixed instance at singleton-construction time.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why is server-side session scope increasingly avoided in modern REST API design?</div>
+      <div class="qa-a"><p>Session scope requires the server to maintain <strong>stateful, in-memory data tied to a specific server instance</strong> for each user — this directly conflicts with REST's stateless constraint and makes horizontal scaling harder: a load balancer must route all of a given user's requests back to the exact same server instance (sticky sessions) unless session data is externalized to a shared store (Redis), adding infrastructure complexity. Modern stateless architectures instead encode necessary user context in a self-contained token (JWT) sent with every request, letting any server instance handle any request without shared session state — a foundational scalability principle worth articulating clearly in system design discussions.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What's the practical difference between application scope and singleton scope, since both effectively give "one instance"?</div>
+      <div class="qa-a"><p>They're nearly identical in a typical single-application-context Spring Boot app — <code>application</code> scope ties the bean's lifetime to the <code>ServletContext</code> rather than the Spring <code>ApplicationContext</code> directly. The distinction only matters in more unusual setups, like a single web application composed of <strong>multiple Spring ApplicationContexts</strong> sharing one <code>ServletContext</code> (rare, historically seen in some multi-module enterprise WAR deployments) — in that scenario, <code>application</code> scope guarantees one shared instance across all those contexts, whereas each context would otherwise get its own separate <code>singleton</code> instance. For nearly all modern Spring Boot apps (one embedded server, one context), <code>singleton</code> is simply the right, simpler default.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 100-101 -->
+<section class="topic" id="roadmap">
+  <span class="section-badge">JPA Relationships — Deep Dive</span>
+  <div class="topic-head"><span class="topic-num">100–101</span><h2>JPA Relationships Roadmap & The Foundation</h2></div>
+  <div class="topic-video">Videos: What You'll Learn - JPA Relationships Roadmap · The Foundation - Understanding Entity Relationships in Spring Data JPA</div>
+
+  <p>A relational database expresses relationships between tables using <strong>foreign keys</strong>. JPA's job is to let you express that same relationship <strong>directly between Java objects</strong> — one entity holding a reference (or collection of references) to another — while Hibernate translates that object graph into the correct foreign-key-based SQL underneath.</p>
+
+  <table>
+    <tr><th>Relationship</th><th>Real-World Example</th><th>Cardinality</th></tr>
+    <tr><td><code>@OneToOne</code></td><td>One <code>User</code> has one <code>UserProfile</code></td><td>1 : 1</td></tr>
+    <tr><td><code>@OneToMany</code> / <code>@ManyToOne</code></td><td>One <code>Company</code> posts many <code>Job</code>s; each <code>Job</code> belongs to one <code>Company</code></td><td>1 : N (this section's focus)</td></tr>
+    <tr><td><code>@ManyToMany</code></td><td>Many <code>Job</code>s require many <code>Skill</code>s; each <code>Skill</code> appears on many <code>Job</code>s</td><td>M : N</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 The Core Mental Model Before Any Annotation</div>
+    <p>Always identify which side <strong>owns the foreign key column</strong> first, independent of annotations — that's always the "many" side in a one-to-many relationship (e.g., the <code>jobs</code> table has a <code>company_id</code> foreign key column; the <code>companies</code> table has no corresponding column at all). The owning side is where <code>@ManyToOne</code> goes; the non-owning/inverse side (<code>@OneToMany</code>) merely describes the relationship from the other direction using <code>mappedBy</code>, without controlling the actual foreign key.</p>
+  </div>
+</section>
+
+<!-- 102 -->
+<section class="topic" id="data-setup">
+  <div class="topic-head"><span class="topic-num">102</span><h2>Data Setup — Creating the Jobs Table & Bulk Loading Test Data</h2></div>
+  <div class="topic-video">Video: Data Setup - Creating the Jobs Table and Bulk Loading Test Data</div>
+
+  <p>Practical setup video: creating the <code>companies</code> and <code>jobs</code> tables (with <code>jobs.company_id</code> as the foreign key), and bulk-inserting realistic sample data to make the upcoming relationship-mapping demos concrete and testable against real query results (verifying eager vs lazy loading behavior, cascade effects, etc. actually needs real rows to observe).</p>
+</section>
+
+<!-- 103 -->
+<section class="topic" id="jpa-buddy-mapping">
+  <div class="topic-head"><span class="topic-num">103</span><h2>From Zero to Mappings in Minutes — OneToMany & ManyToOne with JPA Buddy</h2></div>
+  <div class="topic-video">Video: From Zero to Mappings in Minutes - OneToMany & ManyToOne with JPA Buddy</div>
+
+  <p>Demonstrates using the <strong>JPA Buddy</strong> IntelliJ plugin (introduced in Section 4) to reverse-engineer/generate the <code>@OneToMany</code>/<code>@ManyToOne</code> mapping code automatically from the existing <code>companies</code>/<code>jobs</code> schema, rather than hand-typing the mapping annotations — a productivity shortcut once you understand what the tool is generating (covered in full manually in the next video).</p>
+</section>
+
+<!-- 104 -->
+<section class="topic" id="mapping-deep-dive">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">104</span><h2>Unpacking JPA Mappings — The Full Story Behind OneToMany & ManyToOne</h2></div>
+  <div class="topic-video">Video: Unpacking JPA Mappings - The Full Story Behind OneToMany & ManyToOne</div>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'mp1')">Company.java (the "One" / inverse side)</button>
+      <button class="tab-btn" onclick="showTab(this,'mp2')">Job.java (the "Many" / owning side)</button>
+    </div>
+    <div class="tab-content active" id="mp1"><pre><span class="an">@Entity</span>
+<span class="an">@Table</span>(name = <span class="str">"companies"</span>)
+<span class="kw">public class</span> <span class="cl">Company</span> {
+    <span class="an">@Id</span> <span class="an">@GeneratedValue</span>(strategy = GenerationType.IDENTITY)
+    <span class="kw">private</span> Long id;
+
+    <span class="kw">private</span> String name;
+
+    <span class="cm">// INVERSE side — mappedBy points to the FIELD NAME on Job that owns this relationship</span>
+    <span class="cm">// no "company_id"-style column exists on the companies table — this is purely</span>
+    <span class="cm">// an object-graph convenience for navigating company.getJobs()</span>
+    <span class="an">@OneToMany</span>(mappedBy = <span class="str">"company"</span>, cascade = CascadeType.ALL, orphanRemoval = <span class="kw">true</span>)
+    <span class="kw">private</span> List&lt;Job&gt; jobs = <span class="kw">new</span> ArrayList&lt;&gt;();
+}</pre></div>
+    <div class="tab-content" id="mp2"><pre><span class="an">@Entity</span>
+<span class="an">@Table</span>(name = <span class="str">"jobs"</span>)
+<span class="kw">public class</span> <span class="cl">Job</span> {
+    <span class="an">@Id</span> <span class="an">@GeneratedValue</span>(strategy = GenerationType.IDENTITY)
+    <span class="kw">private</span> Long id;
+
+    <span class="kw">private</span> String title;
+
+    <span class="cm">// OWNING side — this is the field JPA maps to the actual "company_id" FK column</span>
+    <span class="an">@ManyToOne</span>(fetch = FetchType.LAZY)
+    <span class="an">@JoinColumn</span>(name = <span class="str">"company_id"</span>, nullable = <span class="kw">false</span>)
+    <span class="kw">private</span> Company company;
+}</pre></div>
+  </div>
+
+  <div class="diagram">TABLE companies                    TABLE jobs
+┌────┬───────────┐            ┌────┬─────────────┬────────────┐
+│ id │ name       │            │ id │ title        │ company_id │◄── the ONLY actual FK column
+├────┼───────────┤            ├────┼─────────────┼────────────┤    exists ONLY on the "many" side
+│ 1  │ Acme Corp  │◄───────────│ 1  │ Backend Eng.  │ 1           │
+│                │            ├────┼─────────────┼────────────┤
+│                │◄───────────│ 2  │ Frontend Eng. │ 1           │
+└────┴───────────┘            └────┴─────────────┴────────────┘
+
+  Company (ONE side)                Job (MANY / OWNING side)
+  @OneToMany(mappedBy="company")    @ManyToOne  +  @JoinColumn(name="company_id")
+  — describes the relationship      — ACTUALLY CONTROLS the foreign key</div>
+
+  <div class="box danger">
+    <div class="box-title">⚠ Bidirectional Consistency — A Very Common Real Bug</div>
+    <p>Because <code>Job.company</code> owns the FK, simply doing <code>company.getJobs().add(newJob)</code> on the inverse side <strong>does not persist the relationship</strong> — the <code>jobs.company_id</code> column is never set, because Hibernate only looks at the owning side (<code>Job.company</code>) when generating INSERT/UPDATE SQL. You must explicitly set <strong>both sides</strong>: <code>newJob.setCompany(company); company.getJobs().add(newJob);</code> — or better, add a convenience helper method on the "one" side that keeps both sides in sync automatically (a common, recommended pattern: <code>addJob(Job job) { jobs.add(job); job.setCompany(this); }</code>).</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why does mappedBy exist at all — why can't both sides just independently declare the relationship?</div>
+      <div class="qa-a"><p>A relational foreign key is inherently a <strong>one-directional, single-column fact</strong> in the database — only one table can physically hold the FK column. If both <code>@OneToMany</code> and <code>@ManyToOne</code> tried to independently "own" and manage that same column, Hibernate would have two conflicting, potentially out-of-sync sources of truth for the same piece of data, and could generate redundant or even contradictory SQL. <code>mappedBy</code> resolves this ambiguity explicitly: it tells Hibernate "this side is purely a read-only, in-memory navigational convenience — the <em>other</em> side (identified by field name) is the single source of truth that actually controls the column."</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Why is a bidirectional relationship (both @OneToMany and @ManyToOne present) common, rather than just using @ManyToOne alone?</div>
+      <div class="qa-a"><p>A unidirectional <code>@ManyToOne</code>-only mapping is perfectly valid and simpler when you only ever need to navigate "from job to its company" — and is often the right, more minimal default. A bidirectional mapping is added specifically when you also need convenient navigation "from company to all its jobs" in your object model (e.g., <code>company.getJobs()</code> to display a company's full job listing) — at the cost of the added complexity of keeping both sides in sync (as shown in the box above) and a higher risk of accidentally triggering infinite recursion during JSON serialization if entities are ever returned directly instead of DTOs (tying back to Section 4's DTO-pattern rationale).</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 105 -->
+<section class="topic" id="fetch-cascade">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">105</span><h2>FETCH vs CASCADE — The Two JPA Concepts You Must Never Confuse</h2></div>
+  <div class="topic-video">Video: FETCH vs CASCADE - The Two JPA Concepts You Must Never Confuse</div>
+
+  <p>These two concepts are unrelated in purpose despite both being relationship-annotation attributes, and conflating them is one of the most common JPA misunderstandings.</p>
+
+  <table>
+    <tr><th></th><th><code>fetch</code></th><th><code>cascade</code></th></tr>
+    <tr><td><strong>Controls</strong></td><td><strong>When</strong> associated data is loaded/queried from the database (read direction)</td><td><strong>Which operations</strong> (persist, remove, merge, etc.) automatically propagate from a parent entity to its associated child entities (write direction)</td></tr>
+    <tr><td><strong>Answers the question</strong></td><td>"When I load a <code>Company</code>, should its <code>jobs</code> collection be fetched immediately or only on first access?"</td><td>"When I <code>save()</code> or <code>delete()</code> a <code>Company</code>, should that operation automatically also apply to its associated <code>Job</code>s?"</td></tr>
+    <tr><td><strong>Values</strong></td><td><code>FetchType.EAGER</code> (load immediately, via JOIN) / <code>FetchType.LAZY</code> (defer until accessed, via proxy)</td><td><code>CascadeType.PERSIST</code>, <code>MERGE</code>, <code>REMOVE</code>, <code>REFRESH</code>, <code>DETACH</code>, or <code>ALL</code> (all of the above)</td></tr>
+    <tr><td><strong>Default</strong></td><td><code>@ManyToOne</code>/<code>@OneToOne</code> default to <code>EAGER</code>; <code>@OneToMany</code>/<code>@ManyToMany</code> default to <code>LAZY</code></td><td><strong>No cascading at all</strong> by default — you must explicitly opt in per operation</td></tr>
+  </table>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'fc1')">Fetch in isolation</button>
+      <button class="tab-btn" onclick="showTab(this,'fc2')">Cascade in isolation</button>
+    </div>
+    <div class="tab-content active" id="fc1"><pre><span class="cm">// FETCH: purely about READ timing — completely independent of cascade</span>
+<span class="an">@ManyToOne</span>(fetch = FetchType.LAZY)   <span class="cm">// company NOT loaded until job.getCompany() is called</span>
+<span class="an">@JoinColumn</span>(name = <span class="str">"company_id"</span>)
+<span class="kw">private</span> Company company;
+
+<span class="cm">// company.jobs left at DEFAULT fetch (LAZY for @OneToMany) — jobs only</span>
+<span class="cm">// queried the first time company.getJobs() is actually accessed</span>
+<span class="an">@OneToMany</span>(mappedBy = <span class="str">"company"</span>)
+<span class="kw">private</span> List&lt;Job&gt; jobs;</pre></div>
+    <div class="tab-content" id="fc2"><pre><span class="cm">// CASCADE: purely about WRITE propagation — nothing to do with when reads happen</span>
+<span class="an">@OneToMany</span>(mappedBy = <span class="str">"company"</span>, cascade = CascadeType.ALL, orphanRemoval = <span class="kw">true</span>)
+<span class="kw">private</span> List&lt;Job&gt; jobs = <span class="kw">new</span> ArrayList&lt;&gt;();
+
+<span class="cm">// with CascadeType.ALL / PERSIST:</span>
+Company company = <span class="kw">new</span> Company(<span class="str">"Acme"</span>);
+company.<span class="mt">addJob</span>(<span class="kw">new</span> Job(<span class="str">"Backend Engineer"</span>));  <span class="cm">// helper keeps both sides in sync</span>
+companyRepository.<span class="mt">save</span>(company);
+<span class="cm">// saving company AUTOMATICALLY persists the new Job too — one save() call,</span>
+<span class="cm">// two INSERT statements generated. Without cascade, the Job would need</span>
+<span class="cm">// its own explicit jobRepository.save(job) call.</span></pre></div>
+  </div>
+
+  <div class="box warn">
+    <div class="box-title">⚠ orphanRemoval vs CascadeType.REMOVE — A Frequently Confused Pair</div>
+    <p><code>CascadeType.REMOVE</code> deletes child entities <strong>when the parent itself is explicitly deleted</strong> (<code>companyRepository.delete(company)</code> also deletes all its jobs). <code>orphanRemoval = true</code> is stricter and independent — it deletes a child <strong>the moment it's removed from the parent's collection</strong>, even if the parent itself is never deleted (<code>company.getJobs().remove(someJob)</code> immediately deletes that job from the database on next flush, because it's now an "orphan" with no parent reference). Many real bugs come from expecting one behavior and getting the other.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why does @ManyToOne default to EAGER while @OneToMany defaults to LAZY — is this arbitrary?</div>
+      <div class="qa-a"><p>Not arbitrary — it reflects the JPA spec's assumption about typical cardinality cost. A <code>@ManyToOne</code> association points to exactly <strong>one</strong> other row (e.g., one <code>Company</code> per <code>Job</code>) — fetching it eagerly is a cheap, bounded, single-row join. A <code>@OneToMany</code> association can point to an <strong>unbounded number</strong> of rows (a company could have thousands of jobs) — eagerly loading that by default would be a potentially catastrophic, unpredictable performance cost baked into every single query that touches the "one" side. In practice, though, many teams override <code>@ManyToOne</code>'s default to <code>LAZY</code> explicitly anyway (as shown in the example above) to keep fetch behavior consistent and predictable across the whole codebase, and to avoid unexpectedly large eager-join query plans as the object graph grows.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Is it safe to use CascadeType.ALL on a @ManyToOne (the "many"/owning side) the same way it's used on @OneToMany?</div>
+      <div class="qa-a"><p>Generally no — this is a subtle but important asymmetry. Cascading from the "many" side toward the "one" side is dangerous: if <code>Job</code> cascades <code>REMOVE</code> to its <code>Company</code>, deleting a single job could unintentionally delete the <em>entire company</em> and, transitively, every other job that company owns — clearly not the intended semantics. Cascade is almost always configured on the <strong>parent-owns-children</strong> direction (here, <code>Company → Job</code> via <code>@OneToMany</code>), matching the real-world domain semantics of "if the parent goes away, its exclusively-owned children should go too" — not the reverse.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 106 -->
+<section class="topic" id="ondelete">
+  <div class="topic-head"><span class="topic-num">106</span><h2>@OnDelete Explained — What Really Happens When the Parent Is Deleted</h2></div>
+  <div class="topic-video">Video: @OnDelete Explained - What Really Happens When the Parent is Deleted</div>
+
+  <p>By default, without any cascade configuration, attempting to delete a <code>Company</code> row that still has <code>Job</code> rows referencing it via foreign key throws a <strong>database-level constraint violation</strong> (<code>DataIntegrityViolationException</code> in Spring's translated exception hierarchy) — the database itself refuses to leave orphaned foreign key references.</p>
+
+  <p><strong>Hibernate's <code>CascadeType.REMOVE</code></strong> (covered above) handles this at the <em>application/ORM level</em> — Hibernate first issues DELETE statements for every child row, then deletes the parent, all orchestrated in Java. <strong>Hibernate's <code>@OnDelete</code> annotation</strong> takes a fundamentally different approach: it configures the <em>database itself</em> to handle cascading deletes natively, via a <code>ON DELETE CASCADE</code> foreign key constraint.</p>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'od1')">@OnDelete — database-level cascade</button></div>
+    <div class="tab-content active" id="od1"><pre><span class="an">@ManyToOne</span>(fetch = FetchType.LAZY)
+<span class="an">@JoinColumn</span>(name = <span class="str">"company_id"</span>)
+<span class="an">@OnDelete</span>(action = OnDeleteAction.CASCADE)  <span class="cm">// Hibernate-specific — generates</span>
+<span class="kw">private</span> Company company;                        <span class="cm">// "ON DELETE CASCADE" in the DDL itself</span>
+
+<span class="cm">// resulting DDL (when ddl-auto generates the schema):</span>
+<span class="cm">// ALTER TABLE jobs ADD CONSTRAINT fk_company</span>
+<span class="cm">//   FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE;</span></pre></div>
+  </div>
+
+  <table>
+    <tr><th></th><th>CascadeType.REMOVE (Hibernate/ORM-level)</th><th>@OnDelete (Database-level)</th></tr>
+    <tr><td><strong>Who executes the deletes</strong></td><td>Hibernate — issues individual DELETE statements for each child, in Java, then the parent</td><td>The database engine itself, atomically, as part of the single DELETE on the parent</td></tr>
+    <tr><td><strong>Performance</strong></td><td>Slower for large child collections — N+1-style individual DELETEs, and requires loading children into the persistence context first</td><td>Much faster — one database-native cascading operation, no need to load anything into memory first</td></tr>
+    <tr><td><strong>Only works via</strong></td><td>Hibernate/JPA — if a child row is deleted through raw SQL/another tool bypassing Hibernate, this cascade never fires</td><td>Enforced at the schema/constraint level — fires correctly regardless of what deletes the parent row (Hibernate, a raw SQL script, another application entirely)</td></tr>
+    <tr><td><strong>Portability</strong></td><td>Standard JPA — works identically regardless of the underlying database vendor</td><td>Hibernate-specific annotation (not part of the JPA spec) — though the resulting SQL feature (<code>ON DELETE CASCADE</code>) is itself standard across virtually all relational databases</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 When to Reach for @OnDelete Instead of CascadeType.REMOVE</div>
+    <p><code>@OnDelete(action = OnDeleteAction.CASCADE)</code> is the better choice when deleting a parent with a genuinely large number of children (performance-sensitive bulk-delete scenarios), or when other systems/scripts might delete rows outside of your Hibernate-managed application and you still need referential integrity guaranteed at the database level regardless of the deletion path. <code>CascadeType.REMOVE</code> is preferable when you need Hibernate lifecycle callbacks (<code>@PreRemove</code>, etc.) to fire correctly on each child during the cascade, since database-level cascades bypass the ORM/Java layer entirely and no Java code runs for the cascaded child deletions.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>If you use both CascadeType.REMOVE and @OnDelete(CASCADE) together, what happens, and is that redundant or dangerous?</div>
+      <div class="qa-a"><p>It's technically redundant, not dangerous — Hibernate would first delete children individually via its own cascade logic (issuing the DELETE statements itself), and by the time it deletes the parent, the child rows are already gone, so the database-level <code>ON DELETE CASCADE</code> constraint simply has nothing left to cascade. The practical downside is purely wasted clarity/intent — it's unclear to a future reader which mechanism is "actually" responsible for the behavior, and it forfeits the performance benefit that was the whole point of choosing <code>@OnDelete</code> in the first place (since Hibernate is still doing the slower, one-by-one deletion). Pick one mechanism deliberately based on the trade-offs above, not both.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Without either CascadeType.REMOVE or @OnDelete, what specific error occurs when deleting a Company that still has Jobs, and how would you diagnose it?</div>
+      <div class="qa-a"><p>The database rejects the DELETE due to the foreign key constraint, and Hibernate throws a <code>ConstraintViolationException</code>, which Spring's <code>@Repository</code> exception translation (from Section 2's stereotype discussion) converts into a <code>DataIntegrityViolationException</code>. Diagnosing it means recognizing the message will typically reference the specific foreign key constraint name and the referencing table — the fix is deciding deliberately whether the intended behavior is cascading deletion (add <code>CascadeType.REMOVE</code>/<code>@OnDelete</code>), reassigning children first, or blocking the deletion entirely with a clear business-level error message (often the safer default in production, especially for irreversible cascading deletes of potentially valuable data).</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 107 -->
+<section class="topic" id="implementation">
+  <div class="topic-head"><span class="topic-num">107</span><h2>Let's Code — Implementing OneToMany & ManyToOne Step-by-Step</h2></div>
+  <div class="topic-video">Video: Let's Code - Implementing OneToMany & ManyToOne Mappings Step-by-Step</div>
+
+  <p>The hands-on capstone tying together every concept from this JPA relationships deep dive into one working feature: mapping <code>Company</code> ↔ <code>Job</code>, choosing appropriate fetch types, deciding on cascade behavior for the actual domain semantics (does deleting a company really need to delete all its jobs, or should that be blocked?), exposing the relationship safely through DTOs (never serializing the raw bidirectional entity graph directly — tying back to Section 4), and verifying the generated SQL matches expectations via <code>show-sql</code>/logging.</p>
+
+  <div class="box info">
+    <div class="box-title">ℹ Putting It All Together — The Full Checklist for a Real Relationship</div>
+    <ul>
+      <li>Identify which side owns the FK — that's where <code>@ManyToOne</code>/<code>@JoinColumn</code> goes.</li>
+      <li>Choose <code>fetch</code> deliberately per association based on real access patterns, not just accepting the JPA default blindly.</li>
+      <li>Choose <code>cascade</code> deliberately based on real domain ownership semantics (does the child truly not exist independently of the parent?).</li>
+      <li>Decide between ORM-level (<code>CascadeType.REMOVE</code>) and DB-level (<code>@OnDelete</code>) cascading deletes based on performance needs and whether other systems touch the data.</li>
+      <li>Keep both sides of a bidirectional relationship in sync with helper methods.</li>
+      <li>Map to DTOs at the API boundary — never serialize bidirectional entity graphs directly.</li>
+    </ul>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- MASTER Q&A -->
+<section class="topic" id="interview-master">
+  <span class="section-badge">🎯 Rapid-Fire Round</span>
+  <div class="topic-head"><h2>Master Interview Q&A Bank — Section 5</h2></div>
+  <p class="dim">The production-hardening and JPA-relationship questions that separate candidates who've only built tutorial CRUD apps from those who've shipped real systems.</p>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Design a complete, consistent error-response strategy for a public REST API from scratch.</div>
+      <div class="qa-a"><p>A single <code>@RestControllerAdvice</code> class with targeted <code>@ExceptionHandler</code> methods per meaningful exception type (not-found, validation, duplicate/conflict, unauthorized), each returning a <strong>consistent structured shape</strong> (status code, human-readable message, timestamp, request path, and ideally a machine-readable error code for programmatic client handling), a catch-all handler for anything unanticipated that logs full details server-side but returns only a sanitized message to the client, custom domain exceptions thrown from the service layer (keeping business logic free of HTTP concerns), and validation failures automatically mapped to a field-by-field error map via <code>MethodArgumentNotValidException</code> handling. This combines the exception-handling and validation topics from this section into one coherent, senior-level system design answer.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Trace exactly what happens, step by step, when you call company.getJobs() on a lazily-loaded association.</div>
+      <div class="qa-a"><p>(1) Hibernate initially populated <code>company.jobs</code> with an uninitialized <strong>persistent collection proxy</strong> (a <code>PersistentBag</code>/<code>PersistentList</code>) rather than the real data, when the <code>Company</code> was first loaded. (2) Calling <code>.getJobs()</code> and then iterating/accessing it triggers the proxy's initialization logic. (3) If the current persistence context/session is <strong>still open</strong>, Hibernate transparently issues a <code>SELECT * FROM jobs WHERE company_id = ?</code> query at that exact moment, populates the real collection, and returns it. (4) If the session has <strong>already closed</strong> (e.g., outside the original <code>@Transactional</code> method), this triggers <code>LazyInitializationException</code> instead, since there's no active session to run the query against — directly connecting back to Section 4's lazy-loading discussion.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What's the difference between DTO-level @NotNull/@NotBlank validation and JPA entity-level @Column(nullable=false)?</div>
+      <div class="qa-a"><p>DTO-level Bean Validation runs <strong>before</strong> the controller method body executes, during argument resolution — it's an API-contract-level check that produces a clean 400 response early, before any database interaction happens at all. <code>@Column(nullable = false)</code> is a <strong>database schema constraint</strong ("this column cannot be NULL at the DB level") that Hibernate additionally checks at flush time — it's the last line of defense against data that somehow bypasses DTO validation entirely (e.g., set by internal code, a batch job, or a bug elsewhere), but a failure here surfaces as a much less client-friendly <code>DataIntegrityViolationException</code> deep in the persistence layer rather than a clean early validation error.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How would you audit not just "who created this row" but a full historical change log — every field value at every point in time?</div>
+      <div class="qa-a"><p>Spring Data JPA's built-in auditing (<code>@CreatedBy</code>/<code>@LastModifiedBy</code>/<code>@CreatedDate</code>/<code>@LastModifiedDate</code>) only tracks the <strong>current</strong> state's metadata, not a full history of every change. For genuine historical/versioned auditing, the standard tool is <strong>Hibernate Envers</strong>, which automatically maintains a parallel "audit" table per entity, recording every INSERT/UPDATE/DELETE as a new revision — letting you query "what did this entity look like at revision N" or "show the full change history." This distinction (current-state metadata vs. full historical versioning) is a strong signal of practical, beyond-tutorial JPA experience.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Why does SpringDoc OpenAPI need annotations like @Operation at all if it can already infer endpoints from @GetMapping/@RequestBody automatically?</div>
+      <div class="qa-a"><p>SpringDoc can infer the <strong>structural</strong> facts automatically — the HTTP method, path, and request/response schema shapes, since those are directly derivable from existing Spring MVC annotations and Java types. What it <strong>cannot</strong> infer is human intent and business meaning: what a field actually represents, why an endpoint might return a 409, what a parameter's valid range means in business terms. <code>@Operation</code>/<code>@ApiResponse</code>/<code>@Parameter</code> exist purely to layer that human-authored documentation on top of the auto-inferred structure — the combination of "automatically always structurally correct" plus "manually enriched with meaning" is what makes the resulting docs genuinely useful rather than just a dry schema dump.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>A request-scoped bean is injected into a singleton service using a scoped proxy. Under high concurrent load, could two simultaneous requests ever see each other's data?</div>
+      <div class="qa-a"><p>No, by design — the scoped proxy resolves the "real" request-scoped instance via a <strong>ThreadLocal</strong> internally, and since each incoming HTTP request in a servlet container is handled on its own dedicated thread (in the traditional Spring MVC/Tomcat thread-per-request model), each thread's ThreadLocal lookup resolves to that specific request's own isolated bean instance — there's no cross-contamination between concurrent requests. The one place this breaks down is if application code manually hands off work to a different thread (e.g., submitting a task to a custom thread pool or using <code>@Async</code> without properly propagating context) — the new thread has no ThreadLocal-bound request context, and attempting to resolve the request-scoped proxy there throws an exception, since there is genuinely no "current request" from that thread's perspective.</p></div>
+    </div>
+  </div>
+
+  <div class="box info" style="margin-top:28px;">
+    <div class="box-title">ℹ Next Section</div>
+    <p>Paste the next section's video list whenever you're ready, and I'll build the next HTML notes doc in this same design system.</p>
+  </div>
+
+  <footer>GrowthScript Engineering — Spring Boot Interview Bible · Section 5 of N</footer>
+</section>
+
+</main>
+</div>
+
+<script>
+function applySpringCoreTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  document.body.setAttribute('data-theme', theme);
+  localStorage.setItem('theme', theme);
+  const btn = document.getElementById('theme-toggle-btn');
+  if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+}
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme') || document.body.getAttribute('data-theme') || 'dark';
+  applySpringCoreTheme(cur === 'dark' ? 'light' : 'dark');
+}
+function showTab(btn, id){
+  const block = btn.closest('.code-block');
+  block.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  block.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  block.querySelector('#'+id).classList.add('active');
+}
+document.querySelectorAll('.qa-q').forEach(q=>{
+  q.addEventListener('click', ()=> q.parentElement.classList.toggle('open'));
+});
+(function(){
+  const savedTheme = localStorage.getItem('theme') || document.documentElement.getAttribute('data-theme') || 'dark';
+  applySpringCoreTheme(savedTheme);
+  const btn = document.getElementById('theme-toggle-btn');
+  if (btn) btn.addEventListener('click', toggleTheme);
+})();
+</script>
+</body>
+</html>

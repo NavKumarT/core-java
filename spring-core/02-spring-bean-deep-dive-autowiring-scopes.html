@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Section 2: Spring Bean Deep Dive — Autowiring, Scopes & More | GrowthScript Engineering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117; --bg-elev:#151b23; --bg-card:#1a2230; --border:#2a3441;
+  --text:#e6edf3; --text-dim:#9aa7b5; --text-faint:#6e7c8c;
+  --accent:#3fb950; --accent-soft:rgba(63,185,80,.12);
+  --blue:#58a6ff; --blue-soft:rgba(88,166,255,.12);
+  --warn:#f0883e; --warn-soft:rgba(240,136,62,.12);
+  --danger:#f85149; --danger-soft:rgba(248,81,73,.12);
+  --code-bg:#0a0e14; --sidebar-w:290px; --radius:10px;
+  --shadow:0 4px 16px rgba(0,0,0,.35);
+}
+[data-theme="light"]{
+  --bg:#f6f8fa; --bg-elev:#ffffff; --bg-card:#ffffff; --border:#d8dee4;
+  --text:#1b2430; --text-dim:#4b5563; --text-faint:#8a96a3;
+  --accent:#1a7f37; --accent-soft:rgba(26,127,55,.08);
+  --blue:#0969da; --blue-soft:rgba(9,105,218,.08);
+  --warn:#9a6700; --warn-soft:rgba(154,103,0,.08);
+  --danger:#cf222e; --danger-soft:rgba(207,34,46,.08);
+  --code-bg:#0d1117; --shadow:0 2px 10px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); line-height:1.65; font-size:15.5px; transition:background .2s,color .2s;}
+code, pre, .mono{font-family:'Space Mono',monospace;}
+a{color:var(--blue); text-decoration:none;}
+a:hover{text-decoration:underline;}
+.wrapper{display:flex; min-height:100vh;}
+.sidebar{width:var(--sidebar-w); flex-shrink:0; background:var(--bg-elev); border-right:1px solid var(--border); position:sticky; top:0; height:100vh; overflow-y:auto; padding:22px 16px 40px;}
+.sidebar::-webkit-scrollbar{width:6px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border); border-radius:3px;}
+.brand{display:flex; align-items:center; gap:10px; margin-bottom:4px;}
+.brand-badge{width:34px; height:34px; border-radius:8px; background:var(--accent); display:flex; align-items:center; justify-content:center; color:#0d1117; font-weight:800; font-family:'Space Mono',monospace; font-size:15px; flex-shrink:0;}
+.brand-text{font-weight:800; font-size:14.5px; letter-spacing:.2px;}
+.brand-sub{font-size:11px; color:var(--text-faint); margin-top:1px;}
+.theme-toggle{margin:16px 0 20px; width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; font-size:12.5px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px;}
+.nav-group{margin-bottom:6px;}
+.nav-label{font-size:10.5px; text-transform:uppercase; letter-spacing:.9px; color:var(--text-faint); font-weight:700; margin:18px 4px 8px;}
+.nav-link{display:block; padding:7px 10px; border-radius:7px; font-size:13px; color:var(--text-dim); border-left:2px solid transparent; margin-bottom:1px;}
+.nav-link:hover{background:var(--accent-soft); color:var(--text); text-decoration:none;}
+.nav-link.sub{padding-left:22px; font-size:12.3px;}
+.main{flex:1; min-width:0; padding:44px 56px 120px; max-width:980px;}
+.header-block{margin-bottom:44px; padding-bottom:28px; border-bottom:1px solid var(--border);}
+.eyebrow{font-family:'Space Mono',monospace; font-size:11.5px; color:var(--accent); font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:10px;}
+.header-block h1{font-size:32px; font-weight:800; letter-spacing:-.5px; margin-bottom:12px;}
+.header-block p{color:var(--text-dim); font-size:15px; max-width:680px;}
+.meta-row{display:flex; gap:18px; margin-top:16px; flex-wrap:wrap;}
+.meta-pill{font-size:11.5px; padding:5px 11px; border-radius:20px; background:var(--bg-card); border:1px solid var(--border); color:var(--text-dim); font-family:'Space Mono',monospace;}
+section.topic{margin-bottom:56px; scroll-margin-top:24px;}
+.topic-head{display:flex; align-items:baseline; gap:12px; margin-bottom:6px;}
+.topic-num{font-family:'Space Mono',monospace; color:var(--accent); font-weight:700; font-size:14px;}
+h2{font-size:23px; font-weight:800; letter-spacing:-.3px;}
+.topic-video{font-size:12px; color:var(--text-faint); margin-bottom:20px; margin-top:2px; font-family:'Space Mono',monospace;}
+h3{font-size:17.5px; font-weight:700; margin:26px 0 12px; color:var(--text);}
+h4{font-weight:700; margin:18px 0 8px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.4px; font-size:12.5px;}
+p{margin-bottom:13px; color:var(--text); font-size:15px;}
+p.dim{color:var(--text-dim);}
+ul, ol{margin:0 0 15px 22px;}
+li{margin-bottom:7px; font-size:14.8px;}
+strong{color:var(--text); font-weight:700;}
+.hl{color:var(--accent); font-weight:700;}
+.box{border-radius:var(--radius); padding:16px 18px; margin:18px 0; border:1px solid var(--border); font-size:14.3px;}
+.box-title{font-weight:700; font-size:12.5px; text-transform:uppercase; letter-spacing:.5px; margin-bottom:7px; display:flex; align-items:center; gap:7px;}
+.tip{background:var(--accent-soft); border-color:rgba(63,185,80,.3);} .tip .box-title{color:var(--accent);}
+.warn{background:var(--warn-soft); border-color:rgba(240,136,62,.3);} .warn .box-title{color:var(--warn);}
+.info{background:var(--blue-soft); border-color:rgba(88,166,255,.3);} .info .box-title{color:var(--blue);}
+.danger{background:var(--danger-soft); border-color:rgba(248,81,73,.3);} .danger .box-title{color:var(--danger);}
+.code-block{background:var(--code-bg); border-radius:var(--radius); overflow:hidden; margin:16px 0; border:1px solid var(--border); box-shadow:var(--shadow);}
+.tabs{display:flex; background:rgba(255,255,255,.03); border-bottom:1px solid rgba(255,255,255,.08); overflow-x:auto;}
+.tab-btn{padding:9px 16px; font-family:'Space Mono',monospace; font-size:12px; color:#8a96a3; background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap;}
+.tab-btn.active{color:#e6edf3; border-bottom-color:var(--accent);}
+.tab-content{display:none; padding:16px 18px; overflow-x:auto;}
+.tab-content.active{display:block;}
+.tab-content pre{color:#c9d1d9; font-size:13px; line-height:1.65; white-space:pre;}
+.tab-content .kw{color:#ff7b72;} .tab-content .str{color:#a5d6ff;} .tab-content .cm{color:#8b949e; font-style:italic;}
+.tab-content .an{color:#d2a8ff;} .tab-content .cl{color:#79c0ff;} .tab-content .mt{color:#d2a8ff;}
+table{width:100%; border-collapse:collapse; margin:16px 0; font-size:13.8px;}
+th{text-align:left; padding:9px 12px; background:var(--bg-card); border-bottom:2px solid var(--border); font-size:11.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--text-dim);}
+td{padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top;}
+tr:hover td{background:var(--accent-soft);}
+.qa-wrap{margin-top:18px;}
+.qa-item{border:1px solid var(--border); border-radius:var(--radius); margin-bottom:10px; overflow:hidden; background:var(--bg-card);}
+.qa-q{padding:14px 46px 14px 18px; cursor:pointer; font-weight:600; font-size:14.3px; position:relative; display:flex; align-items:center; gap:10px;}
+.qa-q:hover{background:var(--accent-soft);}
+.qa-tag{font-family:'Space Mono',monospace; font-size:9.5px; padding:2px 7px; border-radius:4px; font-weight:700; flex-shrink:0; text-transform:uppercase; letter-spacing:.3px;}
+.tag-faang{background:rgba(248,81,73,.15); color:var(--danger);}
+.tag-core{background:rgba(88,166,255,.15); color:var(--blue);}
+.qa-q::after{content:'+'; position:absolute; right:18px; top:50%; transform:translateY(-50%); font-size:20px; color:var(--text-faint); font-weight:400;}
+.qa-item.open .qa-q::after{content:'−';}
+.qa-a{max-height:0; overflow:hidden; transition:max-height .25s ease; padding:0 18px;}
+.qa-item.open .qa-a{max-height:1200px; padding:2px 18px 18px;}
+.qa-a p{font-size:14px; color:var(--text-dim);}
+.qa-a ul{margin-top:6px;}
+.qa-a li{color:var(--text-dim); font-size:13.8px;}
+.divider{height:1px; background:var(--border); margin:44px 0;}
+.section-badge{display:inline-block; background:var(--accent); color:#0d1117; font-family:'Space Mono',monospace; font-weight:700; font-size:11px; padding:4px 10px; border-radius:6px; margin-bottom:14px;}
+.diagram{background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin:18px 0; font-family:'Space Mono',monospace; font-size:12.5px; color:var(--text-dim); overflow-x:auto; white-space:pre; line-height:1.5;}
+footer{margin-top:60px; padding-top:24px; border-top:1px solid var(--border); color:var(--text-faint); font-size:12px;}
+@media(max-width:900px){
+  .sidebar{position:fixed; left:-100%; z-index:50; transition:left .2s; box-shadow:var(--shadow);}
+  .sidebar.open{left:0;}
+  .main{padding:24px 20px 100px;}
+  .mobile-toggle{display:block !important;}
+}
+.mobile-toggle{display:none; position:fixed; top:16px; left:16px; z-index:60; background:var(--accent); color:#0d1117; border:none; border-radius:8px; width:40px; height:40px; font-size:18px; font-weight:700;}
+</style>
+<link rel="stylesheet" href="../style-guide.css">
+</head>
+<body data-theme="dark">
+
+<button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark/light mode" aria-label="Toggle theme">☀️</button>
+<button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="wrapper">
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-badge">G</div>
+    <div>
+      <div class="brand-text">GrowthScript Eng.</div>
+      <div class="brand-sub">Spring Boot Bible</div>
+    </div>
+  </div>
+  <button class="theme-toggle" onclick="toggleTheme()">🌗 Toggle Theme</button>
+
+  <div class="nav-group">
+    <div class="nav-label">Section 02 · Bean Deep Dive</div>
+    <a class="nav-link" href="#ambiguity">13. NoUniqueBeanDefinitionException</a>
+    <a class="nav-link" href="#naming">14. Custom Bean Names</a>
+    <a class="nav-link" href="#primary">15. @Primary</a>
+    <a class="nav-link" href="#import">16. @Import</a>
+    <a class="nav-link" href="#component">17. @Component</a>
+    <a class="nav-link" href="#lifecycle">18. @PostConstruct & @PreDestroy</a>
+    <a class="nav-link" href="#bean-vs-component">19. @Bean vs @Component</a>
+    <a class="nav-link" href="#stereotypes">20. Stereotype Annotations</a>
+    <a class="nav-link" href="#method-wiring">21–22. Method-Based Bean Wiring</a>
+    <a class="nav-link" href="#autowiring">23–24. Autowiring: Field/Setter/Constructor</a>
+    <a class="nav-link" href="#primary-qualifier">25–26. @Primary vs @Qualifier</a>
+    <a class="nav-link" href="#dynamic">27. Dynamic Bean Registration</a>
+    <a class="nav-link" href="#singleton">28–29. Singleton Scope, Eager vs Lazy</a>
+    <a class="nav-link" href="#prototype">30. Prototype Scope</a>
+    <a class="nav-link" href="#advice">31. An Advice</a>
+    <a class="nav-link" href="#interview-master">Master Interview Q&A Bank</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="nav-header"><a href="../index.html" class="back-home">← Back to Notes Hub</a></div>
+
+<div class="header-block">
+  <div class="eyebrow">Java Backend Engineer · Spring Boot Course</div>
+  <h1>Section 2 — Spring Bean Deep Dive: Autowiring, Scopes & More</h1>
+  <p>Every mechanism Spring gives you to control <em>which</em> bean gets injected, <em>how</em> it's named, <em>when</em> it's created, and <em>how many</em> instances exist. This is the section where "it just works" DI magic from Section 1 gets fully demystified — critical for debugging real production wiring issues and for backend interview rounds.</p>
+  <div class="meta-row">
+    <span class="meta-pill">Videos 13–31</span>
+    <span class="meta-pill">~2.5 hrs runtime</span>
+    <span class="meta-pill">FAANG + Fintech interview focus</span>
+    <span class="meta-pill">Builds on Section 1: IoC/DI</span>
+  </div>
+</div>
+
+<!-- 13 -->
+<section class="topic" id="ambiguity">
+  <div class="topic-head"><span class="topic-num">13</span><h2>Why Spring Gets Confused — NoUniqueBeanDefinitionException</h2></div>
+  <div class="topic-video">Video: Why Spring Gets Confused - NoUniqueBeanDefinitionException Explained</div>
+
+  <p>When two or more beans of the <strong>same type</strong> exist in the container, and you try to autowire that type without disambiguation, Spring cannot decide which one you mean. It throws:</p>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'e1')">Exception</button></div>
+    <div class="tab-content active" id="e1"><pre>org.springframework.beans.factory.NoUniqueBeanDefinitionException:
+No qualifying bean of type 'com.growthscript.PaymentGateway' available:
+expected single matching bean but found 2: stripeGateway,razorpayGateway</pre></div>
+  </div>
+
+  <p>This is a <strong>startup-time (fail-fast) exception</strong> — the app refuses to boot rather than silently guessing, which is exactly the "eager singleton creation" behavior from Section 1's ApplicationContext discussion in action.</p>
+
+  <h4>Four Ways to Resolve It</h4>
+  <ol>
+    <li>Mark one implementation <code>@Primary</code> (sets the default).</li>
+    <li>Use <code>@Qualifier("beanName")</code> at the injection point to be explicit.</li>
+    <li>Rename the injection point's variable/parameter to match a bean's name exactly (Spring falls back to name-based matching).</li>
+    <li>Inject a <code>List&lt;PaymentGateway&gt;</code> or <code>Map&lt;String,PaymentGateway&gt;</code> if you actually want <strong>all</strong> implementations (common in Strategy-pattern-style designs).</li>
+  </ol>
+
+  <div class="box tip">
+    <div class="box-title">💡 Strategy Pattern Tie-In</div>
+    <p>A very common real-world/interview scenario: injecting <code>Map&lt;String, PaymentGateway&gt;</code> auto-populates the map with bean name → bean instance for every implementation, letting you dynamically dispatch by a string key (e.g., from a request parameter) without a giant if-else/switch chain. This is a favorite "design this" interview follow-up after explaining NoUniqueBeanDefinitionException.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>If you inject a List&lt;PaymentGateway&gt; instead of a single PaymentGateway, does Spring still throw NoUniqueBeanDefinitionException?</div>
+      <div class="qa-a"><p>No. Collection-typed injection points (<code>List&lt;T&gt;</code>, <code>Set&lt;T&gt;</code>, <code>Map&lt;String,T&gt;</code>, arrays) are a special case — Spring recognizes you explicitly want <strong>every</strong> matching bean, not one, so it collects them all instead of throwing. Ordering in a <code>List</code> can be controlled via <code>@Order</code> or by implementing <code>Ordered</code> on the beans.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Does @Primary suppress NoUniqueBeanDefinitionException permanently, or only in specific cases?</div>
+      <div class="qa-a"><p>It resolves ambiguity only when the ambiguity is a "default vs alternative" situation — i.e., when there's no more specific <code>@Qualifier</code> at the injection point. If a <code>@Qualifier</code> is present, it takes precedence over <code>@Primary</code>. If <em>two</em> beans are both marked <code>@Primary</code>, the exception still occurs since Spring can't determine a single default among primaries.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 14 -->
+<section class="topic" id="naming">
+  <div class="topic-head"><span class="topic-num">14</span><h2>Naming Your Beans — Creating Custom Bean Names</h2></div>
+  <div class="topic-video">Video: Naming Your Beans - Creating Custom Bean Names</div>
+
+  <p>Every bean has a name in the container's registry — used internally for lookup, logging, and for <code>@Qualifier</code>-based disambiguation.</p>
+
+  <table>
+    <tr><th>Registration Style</th><th>Default Name</th><th>Custom Name Syntax</th></tr>
+    <tr><td><code>@Component</code></td><td>Class name with lowercase first letter (<code>StripeGateway</code> → <code>stripeGateway</code>)</td><td><code>@Component("customName")</code></td></tr>
+    <tr><td><code>@Service</code>/<code>@Repository</code>/<code>@Controller</code></td><td>Same rule as <code>@Component</code></td><td><code>@Service("customName")</code></td></tr>
+    <tr><td><code>@Bean</code> method</td><td>Method name</td><td><code>@Bean("customName")</code> or <code>@Bean(name="customName")</code></td></tr>
+  </table>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'n1')">Custom Names</button></div>
+    <div class="tab-content active" id="n1"><pre><span class="an">@Component</span>(<span class="str">"stripe"</span>)
+<span class="kw">public class</span> <span class="cl">StripeGateway implements</span> PaymentGateway { }
+
+<span class="an">@Component</span>(<span class="str">"razorpay"</span>)
+<span class="kw">public class</span> <span class="cl">RazorpayGateway implements</span> PaymentGateway { }
+
+<span class="cm">// injection using the custom name via @Qualifier</span>
+<span class="an">@Service</span>
+<span class="kw">public class</span> <span class="cl">OrderService</span> {
+    <span class="kw">public</span> <span class="mt">OrderService</span>(<span class="an">@Qualifier</span>(<span class="str">"razorpay"</span>) PaymentGateway gateway) { }
+}</pre></div>
+  </div>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Uniqueness Requirement</div>
+    <p>Bean names must be unique within the container. Registering two beans with the same explicit name throws a <code>BeanDefinitionStoreException</code> ("already registered") at startup.</p>
+  </div>
+</section>
+
+<!-- 15 -->
+<section class="topic" id="primary">
+  <div class="topic-head"><span class="topic-num">15</span><h2>@Primary — Choosing the "Default" Bean</h2></div>
+  <div class="topic-video">Video: @Primary - Choosing the 'Default' Bean</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'p1')">@Primary</button></div>
+    <div class="tab-content active" id="p1"><pre><span class="an">@Component</span>
+<span class="an">@Primary</span>   <span class="cm">// this becomes the DEFAULT choice when ambiguous</span>
+<span class="kw">public class</span> <span class="cl">StripeGateway implements</span> PaymentGateway { }
+
+<span class="an">@Component</span>
+<span class="kw">public class</span> <span class="cl">RazorpayGateway implements</span> PaymentGateway { }
+
+<span class="an">@Service</span>
+<span class="kw">public class</span> <span class="cl">OrderService</span> {
+    <span class="cm">// no @Qualifier needed — Spring picks StripeGateway automatically</span>
+    <span class="kw">public</span> <span class="mt">OrderService</span>(PaymentGateway gateway) { }
+}</pre></div>
+  </div>
+
+  <p><strong>Precedence rule:</strong> <code>@Qualifier</code> at the injection point always overrides <code>@Primary</code> — <code>@Primary</code> is only a fallback default, not a hard override.</p>
+
+  <div class="box tip">
+    <div class="box-title">💡 When to Use @Primary vs @Qualifier</div>
+    <p>Use <code>@Primary</code> when there's a genuinely "usual" choice that 90% of injection points want (e.g., a default <code>ObjectMapper</code> or default <code>DataSource</code>). Use <code>@Qualifier</code> everywhere you need to be explicit about a non-default choice. Mixing both is normal and expected in real codebases.</p>
+  </div>
+</section>
+
+<!-- 16 -->
+<section class="topic" id="import">
+  <div class="topic-head"><span class="topic-num">16</span><h2>Modular Config Made Easy with @Import</h2></div>
+  <div class="topic-video">Video: Modular Config Made Easy with @Import</div>
+
+  <p><code>@Import</code> lets one <code>@Configuration</code> class explicitly pull in bean definitions from another <code>@Configuration</code> class (or regular <code>@Component</code> classes) that may live outside the normal component-scan path — useful for modularizing large configuration into focused, single-responsibility config classes.</p>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'i1')">@Import</button></div>
+    <div class="tab-content active" id="i1"><pre><span class="an">@Configuration</span>
+<span class="kw">public class</span> <span class="cl">SecurityConfig</span> {
+    <span class="an">@Bean</span>
+    <span class="kw">public</span> PasswordEncoder <span class="mt">passwordEncoder</span>() {
+        <span class="kw">return new</span> BCryptPasswordEncoder();
+    }
+}
+
+<span class="an">@Configuration</span>
+<span class="an">@Import</span>({SecurityConfig.<span class="kw">class</span>, DatabaseConfig.<span class="kw">class</span>})  <span class="cm">// pulls both in</span>
+<span class="kw">public class</span> <span class="cl">AppConfig</span> {
+    <span class="cm">// AppConfig's context now also has all beans from SecurityConfig + DatabaseConfig</span>
+}</pre></div>
+  </div>
+
+  <div class="box info">
+    <div class="box-title">ℹ Real-World Use Case</div>
+    <p>Large Spring Boot apps often split configuration by concern — <code>SecurityConfig</code>, <code>DatabaseConfig</code>, <code>KafkaConfig</code>, <code>SwaggerConfig</code> — each self-contained. Since <code>@ComponentScan</code> normally picks these up automatically if they're in scanned packages anyway, <code>@Import</code> becomes essential specifically when a config class lives <strong>outside</strong> the scanned package tree (e.g., a shared config module imported from a separate JAR/library) or when you want to make the composition of a config explicit and traceable rather than implicit via scanning.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What's the difference between @Import and @ComponentScan for pulling in configuration?</div>
+      <div class="qa-a"><p><code>@ComponentScan</code> is <strong>implicit and broad</strong> — it scans an entire package tree and registers anything annotated with a stereotype. <code>@Import</code> is <strong>explicit and targeted</strong> — you name the exact configuration class(es) to bring in, regardless of package location. <code>@Import</code> is preferred when you want traceable, intentional composition rather than "magic" package-based discovery, and it's the only option when the class lives outside your scanned base package.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 17 -->
+<section class="topic" id="component">
+  <div class="topic-head"><span class="topic-num">17</span><h2>Bean Creation the Easy Way — @Component</h2></div>
+  <div class="topic-video">Video: Bean Creation the Easy Way - @Component</div>
+
+  <p><code>@Component</code> is the most generic stereotype annotation — marking a class as a candidate for auto-detection during <strong>classpath component scanning</strong>. Spring Boot's <code>@ComponentScan</code> (bundled inside <code>@SpringBootApplication</code>) scans the package of your main class and all sub-packages by default, registering every <code>@Component</code>-annotated (and meta-annotated) class it finds as a bean — no manual <code>@Bean</code> method required.</p>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Package Placement Matters</div>
+    <p>If a <code>@Component</code> class lives in a package <strong>outside</strong> the main application class's package tree, it will <strong>not</strong> be picked up automatically — a very common real bug for beginners restructuring a project. Fix by either moving the class into scope, or explicitly widening scan scope: <code>@ComponentScan(basePackages = {"com.growthscript.app","com.growthscript.shared"})</code>.</p>
+  </div>
+</section>
+
+<!-- 18 -->
+<section class="topic" id="lifecycle">
+  <div class="topic-head"><span class="topic-num">18</span><h2>Bean Lifecycle Hooks — @PostConstruct & @PreDestroy</h2></div>
+  <div class="topic-video">Video: Bean Lifecycle Hooks - @PostConstruct & @PreDestroy</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'l1')">Lifecycle Hooks</button></div>
+    <div class="tab-content active" id="l1"><pre><span class="an">@Component</span>
+<span class="kw">public class</span> <span class="cl">CacheWarmerService</span> {
+
+    <span class="kw">private</span> Map&lt;String, String&gt; cache;
+
+    <span class="an">@PostConstruct</span>  <span class="cm">// runs AFTER constructor + DI is fully complete</span>
+    <span class="kw">public void</span> <span class="mt">init</span>() {
+        cache = <span class="kw">new</span> HashMap&lt;&gt;();
+        cache.put(<span class="str">"warmup"</span>, <span class="str">"done"</span>);
+        System.<span class="mt">out</span>.println(<span class="str">"Cache warmed up at startup"</span>);
+    }
+
+    <span class="an">@PreDestroy</span>  <span class="cm">// runs just before the bean is destroyed (container shutdown)</span>
+    <span class="kw">public void</span> <span class="mt">cleanup</span>() {
+        cache.clear();
+        System.<span class="mt">out</span>.println(<span class="str">"Cache cleared on shutdown"</span>);
+    }
+}</pre></div>
+  </div>
+
+  <p>These come from <strong>JSR-250</strong> (a standard Java annotation set, not Spring-proprietary), which is why they work identically across other Java EE/Jakarta EE-compliant frameworks too. Common use cases: warming caches, validating required configuration is present, opening resources like connection pools/socket connections (<code>@PostConstruct</code>), and flushing buffers, closing connections, deregistering from external systems (<code>@PreDestroy</code>).</p>
+
+  <div class="box danger">
+    <div class="box-title">⚠ Only Fires for Singleton Beans by Default</div>
+    <p><code>@PreDestroy</code> is only guaranteed to run for <strong>singleton-scoped</strong> beans, since the container owns their full lifecycle including shutdown. For <strong>prototype-scoped</strong> beans, Spring hands off the instance after creation and never calls destruction callbacks — you must clean those up manually.</p>
+  </div>
+
+  <h4>Alternative / Equivalent Mechanisms</h4>
+  <table>
+    <tr><th>Mechanism</th><th>How</th><th>Notes</th></tr>
+    <tr><td><code>@PostConstruct</code>/<code>@PreDestroy</code></td><td>Annotate a method directly</td><td>Preferred — clean, standard, no interface coupling</td></tr>
+    <tr><td><code>InitializingBean</code>/<code>DisposableBean</code></td><td>Implement Spring interfaces (<code>afterPropertiesSet()</code>/<code>destroy()</code>)</td><td>Couples your class to Spring API directly — avoided in modern code</td></tr>
+    <tr><td><code>@Bean(initMethod=..., destroyMethod=...)</code></td><td>Specify method names in the <code>@Bean</code> annotation</td><td>Best for third-party classes you can't annotate directly</td></tr>
+  </table>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>What's the exact order if a bean has @PostConstruct, InitializingBean, AND a custom init-method all at once?</div>
+      <div class="qa-a"><p>The order is fixed: <strong>(1) <code>@PostConstruct</code> methods first, (2) <code>InitializingBean.afterPropertiesSet()</code> second, (3) the custom <code>init-method</code> specified via <code>@Bean(initMethod=...)</code> last.</strong> In practice, using more than one of these on the same bean is a code smell — pick one consistently, typically <code>@PostConstruct</code> for your own classes.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Why might @PostConstruct throw an exception, and what happens if it does?</div>
+      <div class="qa-a"><p>If validation logic inside <code>@PostConstruct</code> fails (e.g., a required external config value is missing, a connection can't be established), throwing an exception there <strong>fails the entire application startup</strong> — the ApplicationContext refuses to complete initialization. This is intentional and desirable: it's far better to crash loudly at deploy time than to serve traffic with a half-broken dependency.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 19 -->
+<section class="topic" id="bean-vs-component">
+  <div class="topic-head"><span class="topic-num">19</span><h2>@Bean vs @Component — What's the Difference?</h2></div>
+  <div class="topic-video">Video: @Bean vs @Component - What's the Difference?</div>
+
+  <table>
+    <tr><th></th><th>@Component</th><th>@Bean</th></tr>
+    <tr><td><strong>Applied to</strong></td><td>A class</td><td>A method (inside a <code>@Configuration</code> class)</td></tr>
+    <tr><td><strong>Discovery</strong></td><td>Classpath scanning (<code>@ComponentScan</code>)</td><td>Explicit method invocation registered at config-processing time</td></tr>
+    <tr><td><strong>Works for 3rd-party classes?</strong></td><td>❌ No — you can't add annotations to a library's source</td><td>✅ Yes — you control what the factory method returns</td></tr>
+    <tr><td><strong>Custom construction logic</strong></td><td>❌ Limited to what constructor injection allows</td><td>✅ Full imperative Java code — conditionals, builders, factory calls</td></tr>
+    <tr><td><strong>Multiple beans of same type easily?</strong></td><td>❌ Awkward</td><td>✅ Trivial — just write multiple <code>@Bean</code> methods returning the same type</td></tr>
+    <tr><td><strong>Verbosity</strong></td><td>Minimal — one annotation</td><td>More verbose — needs a config class + method</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 One-Line Answer for Interviews</div>
+    <p>"<code>@Component</code> is for classes I own and can annotate directly, discovered by scanning. <code>@Bean</code> is for when I need explicit control over object creation — usually third-party classes, conditional logic, or multiple differently-configured instances of the same type."</p>
+  </div>
+</section>
+
+<!-- 20 -->
+<section class="topic" id="stereotypes">
+  <div class="topic-head"><span class="topic-num">20</span><h2>Meet Spring's Stereotypes — @Component, @Service, @Repository, @Controller</h2></div>
+  <div class="topic-video">Video: Meet Spring's Stereotypes - @Component, @Service, @Repository, @Controller</div>
+
+  <div class="diagram">              @Component  (generic base stereotype)
+                    ▲
+     ┌──────────────┼───────────────┬───────────────────┐
+     │               │                │                    │
+ @Service       @Repository      @Controller        @RestController
+(business logic) (data access,   (Spring MVC:       (=@Controller + @ResponseBody,
+                  exception       handles requests,   returns response body
+                  translation)    returns views)       directly as JSON/XML)</div>
+
+  <table>
+    <tr><th>Annotation</th><th>Layer</th><th>Extra Behavior Beyond @Component</th></tr>
+    <tr><td><code>@Component</code></td><td>Generic / utility</td><td>None — base stereotype</td></tr>
+    <tr><td><code>@Service</code></td><td>Business/service layer</td><td>None functionally — purely semantic/documentation value for readers and tools</td></tr>
+    <tr><td><code>@Repository</code></td><td>Data access layer (DAO)</td><td><strong>Persistence Exception Translation</strong> — a <code>PersistenceExceptionTranslationPostProcessor</code> wraps the bean, catching JPA/Hibernate/JDBC-specific exceptions and rethrowing them as Spring's unified, unchecked <code>DataAccessException</code> hierarchy</td></tr>
+    <tr><td><code>@Controller</code></td><td>Web/presentation layer</td><td>Recognized by <code>DispatcherServlet</code> for request mapping; return values resolved as view names by default</td></tr>
+    <tr><td><code>@RestController</code></td><td>REST API layer</td><td><code>@Controller</code> + <code>@ResponseBody</code> combined — every method's return value is serialized directly into the HTTP response body (JSON typically), not resolved as a view</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 Persistence Exception Translation, Explained</div>
+    <p>Without <code>@Repository</code>, a DAO method might leak a driver-specific checked exception like <code>SQLException</code> or a Hibernate-specific <code>ConstraintViolationException</code> straight up to your service layer, tightly coupling business code to a specific persistence technology. <code>@Repository</code>'s exception translation converts these into Spring's consistent, technology-agnostic <code>DataAccessException</code> subtypes (e.g. <code>DataIntegrityViolationException</code>), so your service/business layer can catch one consistent exception hierarchy regardless of whether you're using JPA, plain JDBC, or MongoDB underneath.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Is @Service functionally different from @Component at all?</div>
+      <div class="qa-a"><p>As of current Spring versions, no — <code>@Service</code> adds zero extra runtime behavior over <code>@Component</code>; it's meta-annotated with <code>@Component</code> and exists purely to communicate architectural intent to developers and tools (some static analysis / AOP pointcuts do target <code>@Service</code> specifically by convention, but that's project-specific usage, not framework-guaranteed behavior). Using the semantically correct stereotype is still considered best practice for code readability and team conventions.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Why does @RestController exist instead of just always adding @ResponseBody to every method?</div>
+      <div class="qa-a"><p>Pure convenience/DRY — before <code>@RestController</code> existed (Spring 4.0+), REST API classes had to write <code>@Controller</code> at the class level plus <code>@ResponseBody</code> on <em>every single method</em>, which was repetitive boilerplate for API-only classes where 100% of methods return response bodies rather than view names. <code>@RestController</code> collapses both into one class-level annotation.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 21-22 -->
+<section class="topic" id="method-wiring">
+  <div class="topic-head"><span class="topic-num">21–22</span><h2>Method-Based Bean Wiring — Theory & Hands-On Demo</h2></div>
+  <div class="topic-video">Videos: Method-Based Bean Wiring - Theory · Hands-On Demo</div>
+
+  <p>"Method-based wiring" refers to injecting dependencies directly as <strong>parameters of a <code>@Bean</code> factory method</strong> — Spring resolves each parameter from the container by type (and name/qualifier if needed) before invoking the method, exactly like constructor injection does for regular components.</p>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'mw1')">Method Parameter Wiring</button></div>
+    <div class="tab-content active" id="mw1"><pre><span class="an">@Configuration</span>
+<span class="kw">public class</span> <span class="cl">AppConfig</span> {
+
+    <span class="an">@Bean</span>
+    <span class="kw">public</span> DataSource <span class="mt">dataSource</span>() {
+        <span class="kw">return new</span> HikariDataSource();
+    }
+
+    <span class="cm">// Spring resolves 'dataSource' param from the container BEFORE calling this method</span>
+    <span class="an">@Bean</span>
+    <span class="kw">public</span> JdbcTemplate <span class="mt">jdbcTemplate</span>(DataSource dataSource) {
+        <span class="kw">return new</span> JdbcTemplate(dataSource);
+    }
+
+    <span class="cm">// works across DIFFERENT @Configuration classes too — Spring resolves</span>
+    <span class="cm">// from the WHOLE container, not just this config class</span>
+    <span class="an">@Bean</span>
+    <span class="kw">public</span> UserRepository <span class="mt">userRepository</span>(JdbcTemplate jdbcTemplate,
+                                          <span class="an">@Qualifier</span>(<span class="str">"auditLogger"</span>) Logger logger) {
+        <span class="kw">return new</span> UserRepository(jdbcTemplate, logger);
+    }
+}</pre></div>
+  </div>
+
+  <p>This is functionally equivalent to calling one <code>@Bean</code> method from inside another (as shown in Section 1's CGLIB discussion) but is generally <strong>preferred</strong> because it works correctly regardless of which <code>@Configuration</code> class each bean is declared in, and it doesn't rely on the CGLIB proxy interception subtlety — Spring's container simply resolves each parameter the same way it resolves constructor arguments anywhere else.</p>
+
+  <div class="box tip">
+    <div class="box-title">💡 Method-Parameter Wiring vs Direct Method-Call Wiring</div>
+    <p>Prefer <strong>method-parameter wiring</strong> (<code>public Bean method(Dependency d)</code>) over <strong>direct method calls</strong> (<code>public Bean method() { return new Bean(dependency()); }</code>) inside the same config class. Parameter-based wiring is more explicit, testable, works across configuration classes without depending on CGLIB proxy semantics, and is what most style guides / the Spring team itself recommend.</p>
+  </div>
+</section>
+
+<!-- 23-24 -->
+<section class="topic" id="autowiring">
+  <div class="topic-head"><span class="topic-num">23–24</span><h2>Autowiring Demo — Field, Setter & Constructor Injection</h2></div>
+  <div class="topic-video">Videos: Autowiring Demo - Field vs Setter Injection · Autowiring Demo - Constructor Injection</div>
+
+  <p>This is a hands-on reinforcement of the three DI styles from Section 1's IoC/DI theory — now with the mechanics of <code>@Autowired</code> itself examined closely.</p>
+
+  <h4>@Autowired Attributes</h4>
+  <table>
+    <tr><th>Attribute</th><th>Purpose</th></tr>
+    <tr><td><code>required</code> (default <code>true</code>)</td><td>If <code>true</code> and no matching bean exists, throws <code>NoSuchBeanDefinitionException</code> at startup. Set <code>required = false</code> to allow the dependency to remain <code>null</code> if absent (rarely recommended — prefer <code>Optional&lt;T&gt;</code> or <code>ObjectProvider&lt;T&gt;</code> instead for explicit optionality).</td></tr>
+  </table>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'aw1')">Optional Dependency</button>
+      <button class="tab-btn" onclick="showTab(this,'aw2')">Multiple Constructors</button>
+    </div>
+    <div class="tab-content active" id="aw1"><pre><span class="an">@Service</span>
+<span class="kw">public class</span> <span class="cl">NotificationService</span> {
+    <span class="kw">private final</span> Optional&lt;SmsGateway&gt; smsGateway;  <span class="cm">// clean way to express "optional"</span>
+
+    <span class="kw">public</span> <span class="mt">NotificationService</span>(Optional&lt;SmsGateway&gt; smsGateway) {
+        <span class="kw">this</span>.smsGateway = smsGateway;
+    }
+
+    <span class="kw">public void</span> <span class="mt">notifyUser</span>(String msg) {
+        smsGateway.<span class="mt">ifPresent</span>(gw -&gt; gw.<span class="mt">send</span>(msg));
+    }
+}</pre></div>
+    <div class="tab-content" id="aw2"><pre><span class="an">@Component</span>
+<span class="kw">public class</span> <span class="cl">ReportGenerator</span> {
+
+    <span class="cm">// Spring MUST know which constructor to use when there's more than one —</span>
+    <span class="cm">// mark exactly ONE with @Autowired</span>
+    <span class="an">@Autowired</span>
+    <span class="kw">public</span> <span class="mt">ReportGenerator</span>(ReportFormatter formatter) {
+        <span class="cm">// primary DI-eligible constructor</span>
+    }
+
+    <span class="kw">public</span> <span class="mt">ReportGenerator</span>() {
+        <span class="cm">// convenience no-arg constructor, NOT used by Spring for autowiring</span>
+    }
+}</pre></div>
+  </div>
+
+  <div class="box warn">
+    <div class="box-title">⚠ The "Single Constructor" Rule</div>
+    <p>If a class has exactly <strong>one</strong> constructor, Spring implicitly uses it for autowiring — <code>@Autowired</code> is optional there. If a class has <strong>multiple</strong> constructors, Spring cannot guess which one to use for DI and throws an error at startup <em>unless</em> exactly one constructor is explicitly annotated <code>@Autowired</code>.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Between field, setter, and constructor injection, which does Spring resolve first if a bean uses more than one style simultaneously?</div>
+      <div class="qa-a"><p>Mixing styles on one bean is discouraged, but the underlying order is: the bean is <strong>instantiated via its constructor first</strong> (constructor-injected dependencies must be available at this exact moment), <strong>then</strong> field and setter injection are applied via reflection/setter calls as a subsequent step, before <code>@PostConstruct</code> fires. This ordering is exactly why <code>@PostConstruct</code> — not the constructor — is the safe place to rely on field/setter-injected dependencies.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Can @Autowired be used on a static field or method?</div>
+      <div class="qa-a"><p>No — Spring does not support dependency injection into <code>static</code> members. Static fields belong to the class, not to any bean instance, and DI is fundamentally about wiring instance-level object graphs. Attempting it doesn't throw an error, but the field silently remains unset/null, which is a subtle and confusing bug — a common "gotcha" interview question.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 25-26 -->
+<section class="topic" id="primary-qualifier">
+  <div class="topic-head"><span class="topic-num">25–26</span><h2>Autowiring with @Primary & Targeting the Right Bean with @Qualifier</h2></div>
+  <div class="topic-video">Videos: Autowiring with @Primary - Which Bean Wins? · Targeting the Right Bean with @Qualifier</div>
+
+  <h4>Resolution Priority — Full Order</h4>
+  <ol>
+    <li><strong>Only one candidate bean exists</strong> → inject it, no ambiguity.</li>
+    <li><strong>@Qualifier present at injection point</strong> → always wins, matched by exact name/qualifier value.</li>
+    <li><strong>No @Qualifier, but one candidate is @Primary</strong> → the primary bean is injected.</li>
+    <li><strong>No @Qualifier, no @Primary, but injection point's variable name matches a bean name exactly</strong> → matched by name as a final fallback.</li>
+    <li><strong>Still ambiguous</strong> → <code>NoUniqueBeanDefinitionException</code> at startup.</li>
+  </ol>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'q1')">@Qualifier overriding @Primary</button></div>
+    <div class="tab-content active" id="q1"><pre><span class="an">@Component</span> <span class="an">@Primary</span>
+<span class="kw">public class</span> <span class="cl">StripeGateway implements</span> PaymentGateway { }
+
+<span class="an">@Component</span>(<span class="str">"razorpay"</span>)
+<span class="kw">public class</span> <span class="cl">RazorpayGateway implements</span> PaymentGateway { }
+
+<span class="an">@Service</span>
+<span class="kw">public class</span> <span class="cl">InternationalOrderService</span> {
+    <span class="kw">private final</span> PaymentGateway gateway;
+
+    <span class="kw">public</span> <span class="mt">InternationalOrderService</span>(
+            <span class="an">@Qualifier</span>(<span class="str">"razorpay"</span>) PaymentGateway gateway) {  <span class="cm">// wins over @Primary</span>
+        <span class="kw">this</span>.gateway = gateway;
+    }
+}</pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 Custom Qualifier Annotations (Advanced but Interview-Relevant)</div>
+    <p>Instead of stringly-typed <code>@Qualifier("razorpay")</code>, you can create a <strong>custom, type-safe qualifier annotation</strong> using meta-annotation with <code>@Qualifier</code>, e.g. <code>@RazorpayPayment</code>. This gives compile-time safety (typos in string qualifiers only fail at runtime) and is a pattern Spring itself uses internally (e.g. <code>@Lazy</code>, <code>@Async</code> follow similar meta-annotation patterns). Worth mentioning if an interviewer pushes on "how would you make this more robust."</p>
+  </div>
+</section>
+
+<!-- 27 -->
+<section class="topic" id="dynamic">
+  <div class="topic-head"><span class="topic-num">27</span><h2>Dynamic Bean Registration — Programmatic Style</h2></div>
+  <div class="topic-video">Video: Dynamic Bean Registration - Programmatic Style</div>
+
+  <p>Beyond declarative annotations, Spring allows <strong>registering beans imperatively at runtime</strong> using the low-level <code>ApplicationContext</code>/<code>BeanFactory</code> APIs — useful when bean definitions depend on values only known at runtime (e.g., dynamically discovered plugins, tenant-specific beans in a multi-tenant system, or beans built from external configuration data).</p>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'d1')">GenericApplicationContext</button>
+      <button class="tab-btn" onclick="showTab(this,'d2')">BeanDefinitionRegistryPostProcessor</button>
+    </div>
+    <div class="tab-content active" id="d1"><pre><span class="kw">public static void</span> <span class="mt">main</span>(String[] args) {
+    GenericApplicationContext context = <span class="kw">new</span> GenericApplicationContext();
+
+    <span class="cm">// register a bean by supplying a factory lambda — fully programmatic</span>
+    context.<span class="mt">registerBean</span>(<span class="str">"stripeGateway"</span>, StripeGateway.<span class="kw">class</span>,
+            () -&gt; <span class="kw">new</span> StripeGateway(<span class="str">"sk_live_xxx"</span>));
+
+    context.<span class="mt">refresh</span>();  <span class="cm">// finalizes and starts the context</span>
+
+    StripeGateway gw = context.<span class="mt">getBean</span>(StripeGateway.<span class="kw">class</span>);
+}</pre></div>
+    <div class="tab-content" id="d2"><pre><span class="cm">// hooking into the container's bootstrap process itself to register</span>
+<span class="cm">// beans conditionally, based on runtime-discovered data</span>
+<span class="an">@Component</span>
+<span class="kw">public class</span> <span class="cl">DynamicGatewayRegistrar implements</span> BeanDefinitionRegistryPostProcessor {
+
+    <span name="Override">@Override</span>
+    <span class="kw">public void</span> <span class="mt">postProcessBeanDefinitionRegistry</span>(BeanDefinitionRegistry registry) {
+        <span class="cm">// e.g., loop over configured payment providers from a properties file</span>
+        <span class="cm">// and register one gateway bean per provider dynamically</span>
+        BeanDefinitionBuilder builder =
+            BeanDefinitionBuilder.<span class="mt">genericBeanDefinition</span>(RazorpayGateway.<span class="kw">class</span>);
+        registry.<span class="mt">registerBeanDefinition</span>(<span class="str">"razorpayGateway"</span>, builder.<span class="mt">getBeanDefinition</span>());
+    }
+}</pre></div>
+  </div>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Use Sparingly</div>
+    <p>Programmatic registration bypasses the readability of declarative annotations and is harder to trace/debug (you can't just <code>Ctrl+click</code> to a <code>@Bean</code> definition — it's assembled at runtime). Reserve it genuinely dynamic scenarios: plugin architectures, multi-tenancy, or framework-level infrastructure code — not everyday application beans.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Give a real production scenario where programmatic bean registration is the right tool.</div>
+      <div class="qa-a"><p>A multi-tenant SaaS backend where each tenant has its own database connection/schema, and the set of tenants is only known at runtime (loaded from a config table). Rather than hardcoding a fixed number of <code>@Bean</code> methods, a <code>BeanDefinitionRegistryPostProcessor</code> can loop over the discovered tenant list at startup and register one <code>DataSource</code> bean per tenant dynamically. Another common example: a plugin system where JARs are dropped into a directory at runtime and each exposes a service that needs to become a Spring-managed bean.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 28-29 -->
+<section class="topic" id="singleton">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">28–29</span><h2>Singleton Scope & Eager vs Lazy Initialization</h2></div>
+  <div class="topic-video">Videos: Singleton Scope - One Bean to Rule Them All · Eager vs Lazy - When is Your Singleton Created?</div>
+
+  <p><strong>Singleton</strong> is Spring's <strong>default bean scope</strong> — exactly <strong>one shared instance per Spring IoC container</strong>, reused for every injection point that requests it.</p>
+
+  <div class="diagram">Container starts
+      │
+      ▼
+ [ Bean Definition: OrderService, scope=singleton ]
+      │
+      ▼
+ One instance created  ──────┬──── injected into ControllerA
+                              ├──── injected into ControllerB
+                              └──── injected into SchedulerJob
+                   (ALL THREE share the exact same object reference)</div>
+
+  <div class="box danger">
+    <div class="box-title">⚠ Thread-Safety Implication</div>
+    <p>Because a singleton bean is <strong>shared across every concurrent HTTP request thread</strong> in a web app, <strong>mutable instance state on a singleton is a classic concurrency bug</strong>. If <code>OrderService</code> has a mutable field like <code>private int requestCount;</code> that's incremented per request, you have a race condition. Singleton beans should be <strong>stateless</strong>, or use thread-safe constructs (<code>AtomicInteger</code>, <code>ThreadLocal</code>, or externalize state to a database/cache) if state is unavoidable. This is one of the most commonly asked "gotcha" questions for backend interviews.</p>
+  </div>
+
+  <h3>Eager vs Lazy Initialization</h3>
+  <table>
+    <tr><th></th><th>Eager (default)</th><th>Lazy (<code>@Lazy</code>)</th></tr>
+    <tr><td>When created</td><td>At container startup, during <code>ApplicationContext</code> refresh</td><td>On first actual use (first injection/<code>getBean()</code> call)</td></tr>
+    <tr><td>Startup time</td><td>Slower — all singletons built upfront</td><td>Faster — deferred cost</td></tr>
+    <tr><td>Error detection</td><td>Fail-fast — misconfiguration caught immediately at boot</td><td>Errors surface later, potentially in production traffic — riskier</td></tr>
+    <tr><td>Typical use</td><td>Production default — always preferred</td><td>Rarely-used beans, expensive-to-construct beans not needed on every request, faster local dev iteration</td></tr>
+  </table>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'lz1')">@Lazy on a bean</button>
+      <button class="tab-btn" onclick="showTab(this,'lz2')">Global lazy init</button>
+    </div>
+    <div class="tab-content active" id="lz1"><pre><span class="an">@Component</span>
+<span class="an">@Lazy</span>  <span class="cm">// only instantiated the first time it's actually needed</span>
+<span class="kw">public class</span> <span class="cl">ExpensiveReportBuilder</span> {
+    <span class="kw">public</span> <span class="mt">ExpensiveReportBuilder</span>() {
+        <span class="cm">// simulate a heavy startup cost, e.g. loading a large ML model</span>
+    }
+}</pre></div>
+    <div class="tab-content" id="lz2"><pre><span class="cm"># application.properties — globally defer ALL singleton creation until first use</span>
+<span class="cm"># mainly useful to speed up local dev iteration; NOT recommended for production</span>
+spring.main.lazy-initialization=<span class="kw">true</span></pre></div>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why is global lazy initialization (spring.main.lazy-initialization=true) discouraged for production?</div>
+      <div class="qa-a"><p>Two reasons: (1) it defeats the fail-fast principle — a misconfigured bean now fails <strong>during live request handling</strong> instead of at deploy time, which is far worse for reliability and incident response, and (2) it can introduce <strong>unpredictable latency spikes</strong> for whichever unlucky request happens to trigger a heavy bean's first-time construction, rather than paying that cost once, upfront, during a controlled startup/readiness-probe window before traffic is routed to the pod.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How would you make a singleton service that legitimately needs per-request state, safely?</div>
+      <div class="qa-a"><p>Options in order of preference: (1) <strong>avoid instance state entirely</strong> — pass all needed data as method parameters and return values, keeping the bean purely stateless (the ideal and most scalable design); (2) if per-request context truly must be "ambient" (like a request ID for logging), use <strong>request-scoped beans</strong> with a scoped-proxy, or <code>ThreadLocal</code> storage cleaned up per request (common in tracing/MDC logging setups); (3) for shared mutable counters/caches, use thread-safe types like <code>AtomicInteger</code>, <code>ConcurrentHashMap</code>, or push the state out to an external store (Redis) entirely.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Does @Lazy affect eager vs lazy for non-singleton scopes too?</div>
+      <div class="qa-a"><p>The eager-vs-lazy distinction is specifically about <strong>singleton</strong> creation timing (container startup vs first use), because singletons are the only scope Spring pre-instantiates by default in the first place. Prototype-scoped beans are already inherently "lazy" in the sense that a new instance is only ever created when explicitly requested — <code>@Lazy</code> has no meaningful additional effect there.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 30 -->
+<section class="topic" id="prototype">
+  <div class="topic-head"><span class="topic-num">30</span><h2>Prototype Scope — Fresh Bean Every Time</h2></div>
+  <div class="topic-video">Video: Prototype Scope - Fresh Bean Every Time</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'pr1')">@Scope prototype</button></div>
+    <div class="tab-content active" id="pr1"><pre><span class="an">@Component</span>
+<span class="an">@Scope</span>(<span class="str">"prototype"</span>)  <span class="cm">// or ConfigurableBeanFactory.SCOPE_PROTOTYPE constant</span>
+<span class="kw">public class</span> <span class="cl">PdfReportGenerator</span> {
+    <span class="kw">private</span> List&lt;String&gt; entries = <span class="kw">new</span> ArrayList&lt;&gt;();  <span class="cm">// safe: unique per instance</span>
+
+    <span class="kw">public void</span> <span class="mt">addEntry</span>(String e) { entries.<span class="mt">add</span>(e); }
+}</pre></div>
+  </div>
+
+  <p>Every call to <code>context.getBean(PdfReportGenerator.class)</code> or every fresh injection returns a <strong>brand new instance</strong>. Unlike singleton, the container does <strong>not</strong> manage the full lifecycle after creation — no automatic <code>@PreDestroy</code> calls; you own cleanup.</p>
+
+  <h4>The Prototype-Injected-Into-Singleton Trap (revisited from Section 1)</h4>
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'pr2')">❌ Broken</button>
+      <button class="tab-btn" onclick="showTab(this,'pr3')">✅ Fixed with ObjectProvider</button>
+    </div>
+    <div class="tab-content active" id="pr2"><pre><span class="an">@Service</span>  <span class="cm">// singleton by default</span>
+<span class="kw">public class</span> <span class="cl">ReportService</span> {
+    <span class="kw">private final</span> PdfReportGenerator generator;  <span class="cm">// injected ONCE, at ReportService creation</span>
+
+    <span class="kw">public</span> <span class="mt">ReportService</span>(PdfReportGenerator generator) {
+        <span class="kw">this</span>.generator = generator;  <span class="cm">// BUG: same instance reused forever!</span>
+    }
+}</pre></div>
+    <div class="tab-content" id="pr3"><pre><span class="an">@Service</span>
+<span class="kw">public class</span> <span class="cl">ReportService</span> {
+    <span class="kw">private final</span> ObjectProvider&lt;PdfReportGenerator&gt; generatorProvider;
+
+    <span class="kw">public</span> <span class="mt">ReportService</span>(ObjectProvider&lt;PdfReportGenerator&gt; generatorProvider) {
+        <span class="kw">this</span>.generatorProvider = generatorProvider;
+    }
+
+    <span class="kw">public void</span> <span class="mt">generate</span>() {
+        PdfReportGenerator freshGenerator = generatorProvider.<span class="mt">getObject</span>();  <span class="cm">// NEW instance every call</span>
+        freshGenerator.<span class="mt">addEntry</span>(<span class="str">"row 1"</span>);
+    }
+}</pre></div>
+  </div>
+
+  <table>
+    <tr><th>Aspect</th><th>Singleton</th><th>Prototype</th></tr>
+    <tr><td>Instances per container</td><td>One</td><td>New one per request/lookup</td></tr>
+    <tr><td>Default scope?</td><td>✅ Yes</td><td>No — must opt-in via <code>@Scope</code></td></tr>
+    <tr><td>Container manages destruction?</td><td>✅ Yes</td><td>❌ No — caller's responsibility</td></tr>
+    <tr><td>Thread-safety concern</td><td>High if stateful — shared across threads</td><td>Low — each caller gets its own instance</td></tr>
+    <tr><td>Typical use case</td><td>Stateless services, repositories, controllers</td><td>Stateful helper/builder objects, non-thread-safe objects</td></tr>
+  </table>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>What are all the correct ways to get a fresh prototype instance inside a singleton, ranked by preference?</div>
+      <div class="qa-a"><ul>
+        <li><strong>ObjectProvider&lt;T&gt;</strong> (Spring's modern, recommended approach) — inject it, call <code>.getObject()</code> whenever a fresh instance is needed.</li>
+        <li><strong>ObjectFactory&lt;T&gt;</strong> — older, more limited predecessor to ObjectProvider (fewer convenience methods like <code>ifAvailable</code>/<code>stream</code>).</li>
+        <li><strong>@Lookup method injection</strong> — declare an abstract method annotated <code>@Lookup</code> that Spring overrides at runtime via CGLIB to return a fresh bean each call. More "magic," less explicit.</li>
+        <li><strong>Scoped proxy</strong> (<code>@Scope(proxyMode = ScopedProxyMode.TARGET_CLASS)</code> on the prototype bean) — the singleton holds a proxy that transparently delegates each method call to a fresh prototype instance behind the scenes. Powerful but can obscure what's actually happening for newer team members.</li>
+        <li><strong>Directly calling <code>ApplicationContext.getBean()</code></strong> — technically works but couples your class directly to the Spring API (Service Locator anti-pattern) — generally avoided.</li>
+      </ul></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>If you don't clean up a prototype bean's resources manually, what happens?</div>
+      <div class="qa-a"><p>Nothing automatic — the container forgets about the prototype instance entirely once handed off, so if it holds an unmanaged resource (open file handle, socket, thread), you get a <strong>resource leak</strong> unless you explicitly close/clean it up in your own code, e.g., via try-with-resources if the bean is <code>AutoCloseable</code>, or a manual cleanup call at the end of its use.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 31 -->
+<section class="topic" id="advice">
+  <div class="topic-head"><span class="topic-num">31</span><h2>An Advice</h2></div>
+  <div class="topic-video">Video: An Advice</div>
+
+  <div class="box tip">
+    <div class="box-title">💡 Section Wrap-Up Principles</div>
+    <ul>
+      <li>Default to <strong>constructor injection</strong> and <strong>singleton scope</strong> unless you have a specific, deliberate reason to deviate — these are the safe, idiomatic defaults for the vast majority of Spring beans.</li>
+      <li>Keep singleton beans <strong>stateless</strong>. If you catch yourself adding a mutable instance field to a <code>@Service</code>, stop and ask whether that state belongs in a database, cache, request-scoped bean, or method parameter instead.</li>
+      <li>Reach for <code>@Qualifier</code>/<code>@Primary</code> disambiguation <em>before</em> reaching for programmatic bean registration — the declarative tools cover 95% of real-world ambiguity scenarios.</li>
+      <li>Understanding <em>why</em> each annotation exists (not just its syntax) is what separates a candidate who can debug an unfamiliar Spring codebase in an interview/on-call scenario from one who's only memorized flashcards.</li>
+    </ul>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- MASTER Q&A -->
+<section class="topic" id="interview-master">
+  <span class="section-badge">🎯 Rapid-Fire Round</span>
+  <div class="topic-head"><h2>Master Interview Q&A Bank — Section 2</h2></div>
+  <p class="dim">Backend-developer-focused rapid-fire questions on beans, autowiring, and scopes — the single most heavily tested area of Spring Core in real interviews.</p>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>A singleton bean depends on a prototype bean. Walk through exactly what goes wrong with naive field injection, and fix it live.</div>
+      <div class="qa-a"><p>Naive field/constructor injection resolves the prototype dependency <strong>once</strong>, at the moment the singleton itself is constructed (since the singleton is only built once, dependency resolution for it also only happens once). Every subsequent use of that field returns the <em>same</em> prototype instance forever — defeating "fresh instance every time." Fix: inject <code>ObjectProvider&lt;PrototypeBean&gt;</code> instead of the bean directly, and call <code>.getObject()</code> at the point of actual use inside a method, so a fresh lookup happens on every call.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Explain the full bean resolution algorithm Spring uses when injecting a type with multiple candidates.</div>
+      <div class="qa-a"><p>(1) Collect all beans matching the required type. (2) If exactly one, inject it — done. (3) If a <code>@Qualifier</code> is present at the injection point, filter to the bean(s) matching that qualifier value; if exactly one match remains, inject it. (4) If no qualifier and exactly one candidate is marked <code>@Primary</code>, inject that one. (5) If still ambiguous, try matching the injection point's field/parameter name against a bean's registered name. (6) If still ambiguous, throw <code>NoUniqueBeanDefinitionException</code>. For collection types (<code>List</code>/<code>Set</code>/<code>Map</code>), skip all of this and inject every matching bean instead.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What's the practical difference between @Component-based beans and @Bean-method beans when it comes to scope?</div>
+      <div class="qa-a"><p>None — scope (<code>singleton</code>/<code>prototype</code>/<code>request</code>/etc.) is configured identically for both via <code>@Scope</code>, whether it's placed on the <code>@Component</code> class itself or on the <code>@Bean</code> method. The registration mechanism (scanning vs explicit factory method) is orthogonal to scope behavior.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why does Spring make singleton the default scope rather than prototype?</div>
+      <div class="qa-a"><p>Most application components — services, repositories, controllers — are naturally <strong>stateless</strong>: their behavior doesn't depend on per-call mutable state, only on the (typically immutable) collaborators injected at construction time. For such components, creating a new instance per use wastes memory and CPU for zero benefit, since there's nothing instance-specific to isolate. Singleton reuse is both a memory/performance optimization and reflects how most well-designed OOP service classes should actually behave. Prototype exists specifically as an escape hatch for the minority of genuinely stateful component types.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>How would you unit test a class using constructor injection versus one using field injection?</div>
+      <div class="qa-a"><p>Constructor injection: trivial — <code>new MyService(mockDependency)</code> directly in a plain JUnit test, no Spring context, no reflection tricks, fast test execution. Field injection: requires either starting a (slow) Spring test context with <code>@SpringBootTest</code>/<code>@ContextConfiguration</code>, or using Mockito's <code>@InjectMocks</code> which uses reflection to forcibly set private fields — workable, but slower to set up and more fragile (breaks silently if field names change unexpectedly, and can't easily test with <code>final</code> immutable fields). This is the single most concrete, practical argument for constructor injection in an interview.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>You need a bean whose implementation is chosen at runtime based on a request header (e.g., "region: US" vs "region: EU"). Design this using what you've learned.</div>
+      <div class="qa-a"><p>Register each regional implementation as a named bean (custom <code>@Component("usGateway")</code>, <code>@Component("euGateway")</code>), then inject a <code>Map&lt;String, PaymentGateway&gt;</code> into the dispatching service — Spring auto-populates it keyed by bean name. At request time, look up <code>gatewayMap.get(region + "Gateway")</code> to dynamically dispatch without hardcoding a switch statement or relying on <code>ApplicationContext.getBean()</code> lookups. This combines the stereotype-naming, multiple-implementation, and collection-injection concepts from this section into one realistic system design answer.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What's the risk of overusing @Primary across a large codebase?</div>
+      <div class="qa-a"><p>It can silently mask ambiguity that should have been made explicit — a new implementation added later might unexpectedly become "the" default for dozens of injection points across the codebase without any of them being touched, since <code>@Primary</code> is a global, implicit default rather than a per-injection-point decision. In large teams, explicit <code>@Qualifier</code> usage at genuinely ambiguous injection points is often safer and more self-documenting than relying heavily on <code>@Primary</code>.</p></div>
+    </div>
+  </div>
+
+  <div class="box info" style="margin-top:28px;">
+    <div class="box-title">ℹ Next Section</div>
+    <p>Paste the next section's video list whenever you're ready, and I'll build the next HTML notes doc in this same design system.</p>
+  </div>
+
+  <footer>GrowthScript Engineering — Spring Boot Interview Bible · Section 2 of N</footer>
+</section>
+
+</main>
+</div>
+
+<script>
+function applySpringCoreTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  document.body.setAttribute('data-theme', theme);
+  localStorage.setItem('theme', theme);
+  const btn = document.getElementById('theme-toggle-btn');
+  if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+}
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme') || document.body.getAttribute('data-theme') || 'dark';
+  applySpringCoreTheme(cur === 'dark' ? 'light' : 'dark');
+}
+function showTab(btn, id){
+  const block = btn.closest('.code-block');
+  block.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  block.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  block.querySelector('#'+id).classList.add('active');
+}
+document.querySelectorAll('.qa-q').forEach(q=>{
+  q.addEventListener('click', ()=> q.parentElement.classList.toggle('open'));
+});
+(function(){
+  const savedTheme = localStorage.getItem('theme') || document.documentElement.getAttribute('data-theme') || 'dark';
+  applySpringCoreTheme(savedTheme);
+  const btn = document.getElementById('theme-toggle-btn');
+  if (btn) btn.addEventListener('click', toggleTheme);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Section 4: Spring Data JPA, Lombok, DTOs, CORS & Docker | GrowthScript Engineering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117; --bg-elev:#151b23; --bg-card:#1a2230; --border:#2a3441;
+  --text:#e6edf3; --text-dim:#9aa7b5; --text-faint:#6e7c8c;
+  --accent:#3fb950; --accent-soft:rgba(63,185,80,.12);
+  --blue:#58a6ff; --blue-soft:rgba(88,166,255,.12);
+  --warn:#f0883e; --warn-soft:rgba(240,136,62,.12);
+  --danger:#f85149; --danger-soft:rgba(248,81,73,.12);
+  --code-bg:#0a0e14; --sidebar-w:290px; --radius:10px;
+  --shadow:0 4px 16px rgba(0,0,0,.35);
+}
+[data-theme="light"]{
+  --bg:#f6f8fa; --bg-elev:#ffffff; --bg-card:#ffffff; --border:#d8dee4;
+  --text:#1b2430; --text-dim:#4b5563; --text-faint:#8a96a3;
+  --accent:#1a7f37; --accent-soft:rgba(26,127,55,.08);
+  --blue:#0969da; --blue-soft:rgba(9,105,218,.08);
+  --warn:#9a6700; --warn-soft:rgba(154,103,0,.08);
+  --danger:#cf222e; --danger-soft:rgba(207,34,46,.08);
+  --code-bg:#0d1117; --shadow:0 2px 10px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); line-height:1.65; font-size:15.5px; transition:background .2s,color .2s;}
+code, pre, .mono{font-family:'Space Mono',monospace;}
+a{color:var(--blue); text-decoration:none;}
+a:hover{text-decoration:underline;}
+.wrapper{display:flex; min-height:100vh;}
+.sidebar{width:var(--sidebar-w); flex-shrink:0; background:var(--bg-elev); border-right:1px solid var(--border); position:sticky; top:0; height:100vh; overflow-y:auto; padding:22px 16px 40px;}
+.sidebar::-webkit-scrollbar{width:6px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border); border-radius:3px;}
+.brand{display:flex; align-items:center; gap:10px; margin-bottom:4px;}
+.brand-badge{width:34px; height:34px; border-radius:8px; background:var(--accent); display:flex; align-items:center; justify-content:center; color:#0d1117; font-weight:800; font-family:'Space Mono',monospace; font-size:15px; flex-shrink:0;}
+.brand-text{font-weight:800; font-size:14.5px; letter-spacing:.2px;}
+.brand-sub{font-size:11px; color:var(--text-faint); margin-top:1px;}
+.theme-toggle{margin:16px 0 20px; width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; font-size:12.5px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px;}
+.nav-group{margin-bottom:6px;}
+.nav-label{font-size:10.5px; text-transform:uppercase; letter-spacing:.9px; color:var(--text-faint); font-weight:700; margin:18px 4px 8px;}
+.nav-link{display:block; padding:7px 10px; border-radius:7px; font-size:13px; color:var(--text-dim); border-left:2px solid transparent; margin-bottom:1px;}
+.nav-link:hover{background:var(--accent-soft); color:var(--text); text-decoration:none;}
+.nav-link.sub{padding-left:22px; font-size:12.3px;}
+.main{flex:1; min-width:0; padding:44px 56px 120px; max-width:980px;}
+.header-block{margin-bottom:44px; padding-bottom:28px; border-bottom:1px solid var(--border);}
+.eyebrow{font-family:'Space Mono',monospace; font-size:11.5px; color:var(--accent); font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:10px;}
+.header-block h1{font-size:32px; font-weight:800; letter-spacing:-.5px; margin-bottom:12px;}
+.header-block p{color:var(--text-dim); font-size:15px; max-width:680px;}
+.meta-row{display:flex; gap:18px; margin-top:16px; flex-wrap:wrap;}
+.meta-pill{font-size:11.5px; padding:5px 11px; border-radius:20px; background:var(--bg-card); border:1px solid var(--border); color:var(--text-dim); font-family:'Space Mono',monospace;}
+section.topic{margin-bottom:56px; scroll-margin-top:24px;}
+.topic-head{display:flex; align-items:baseline; gap:12px; margin-bottom:6px;}
+.topic-num{font-family:'Space Mono',monospace; color:var(--accent); font-weight:700; font-size:14px;}
+h2{font-size:23px; font-weight:800; letter-spacing:-.3px;}
+.topic-video{font-size:12px; color:var(--text-faint); margin-bottom:20px; margin-top:2px; font-family:'Space Mono',monospace;}
+h3{font-size:17.5px; font-weight:700; margin:26px 0 12px; color:var(--text);}
+h4{font-weight:700; margin:18px 0 8px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.4px; font-size:12.5px;}
+p{margin-bottom:13px; color:var(--text); font-size:15px;}
+p.dim{color:var(--text-dim);}
+ul, ol{margin:0 0 15px 22px;}
+li{margin-bottom:7px; font-size:14.8px;}
+strong{color:var(--text); font-weight:700;}
+.hl{color:var(--accent); font-weight:700;}
+.box{border-radius:var(--radius); padding:16px 18px; margin:18px 0; border:1px solid var(--border); font-size:14.3px;}
+.box-title{font-weight:700; font-size:12.5px; text-transform:uppercase; letter-spacing:.5px; margin-bottom:7px; display:flex; align-items:center; gap:7px;}
+.tip{background:var(--accent-soft); border-color:rgba(63,185,80,.3);} .tip .box-title{color:var(--accent);}
+.warn{background:var(--warn-soft); border-color:rgba(240,136,62,.3);} .warn .box-title{color:var(--warn);}
+.info{background:var(--blue-soft); border-color:rgba(88,166,255,.3);} .info .box-title{color:var(--blue);}
+.danger{background:var(--danger-soft); border-color:rgba(248,81,73,.3);} .danger .box-title{color:var(--danger);}
+.code-block{background:var(--code-bg); border-radius:var(--radius); overflow:hidden; margin:16px 0; border:1px solid var(--border); box-shadow:var(--shadow);}
+.tabs{display:flex; background:rgba(255,255,255,.03); border-bottom:1px solid rgba(255,255,255,.08); overflow-x:auto;}
+.tab-btn{padding:9px 16px; font-family:'Space Mono',monospace; font-size:12px; color:#8a96a3; background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap;}
+.tab-btn.active{color:#e6edf3; border-bottom-color:var(--accent);}
+.tab-content{display:none; padding:16px 18px; overflow-x:auto;}
+.tab-content.active{display:block;}
+.tab-content pre{color:#c9d1d9; font-size:13px; line-height:1.65; white-space:pre;}
+.tab-content .kw{color:#ff7b72;} .tab-content .str{color:#a5d6ff;} .tab-content .cm{color:#8b949e; font-style:italic;}
+.tab-content .an{color:#d2a8ff;} .tab-content .cl{color:#79c0ff;} .tab-content .mt{color:#d2a8ff;}
+table{width:100%; border-collapse:collapse; margin:16px 0; font-size:13.8px;}
+th{text-align:left; padding:9px 12px; background:var(--bg-card); border-bottom:2px solid var(--border); font-size:11.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--text-dim);}
+td{padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top;}
+tr:hover td{background:var(--accent-soft);}
+.qa-wrap{margin-top:18px;}
+.qa-item{border:1px solid var(--border); border-radius:var(--radius); margin-bottom:10px; overflow:hidden; background:var(--bg-card);}
+.qa-q{padding:14px 46px 14px 18px; cursor:pointer; font-weight:600; font-size:14.3px; position:relative; display:flex; align-items:center; gap:10px;}
+.qa-q:hover{background:var(--accent-soft);}
+.qa-tag{font-family:'Space Mono',monospace; font-size:9.5px; padding:2px 7px; border-radius:4px; font-weight:700; flex-shrink:0; text-transform:uppercase; letter-spacing:.3px;}
+.tag-faang{background:rgba(248,81,73,.15); color:var(--danger);}
+.tag-core{background:rgba(88,166,255,.15); color:var(--blue);}
+.qa-q::after{content:'+'; position:absolute; right:18px; top:50%; transform:translateY(-50%); font-size:20px; color:var(--text-faint); font-weight:400;}
+.qa-item.open .qa-q::after{content:'−';}
+.qa-a{max-height:0; overflow:hidden; transition:max-height .25s ease; padding:0 18px;}
+.qa-item.open .qa-a{max-height:1200px; padding:2px 18px 18px;}
+.qa-a p{font-size:14px; color:var(--text-dim);}
+.qa-a ul{margin-top:6px;}
+.qa-a li{color:var(--text-dim); font-size:13.8px;}
+.divider{height:1px; background:var(--border); margin:44px 0;}
+.section-badge{display:inline-block; background:var(--accent); color:#0d1117; font-family:'Space Mono',monospace; font-weight:700; font-size:11px; padding:4px 10px; border-radius:6px; margin-bottom:14px;}
+.diagram{background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin:18px 0; font-family:'Space Mono',monospace; font-size:12.5px; color:var(--text-dim); overflow-x:auto; white-space:pre; line-height:1.5;}
+footer{margin-top:60px; padding-top:24px; border-top:1px solid var(--border); color:var(--text-faint); font-size:12px;}
+@media(max-width:900px){
+  .sidebar{position:fixed; left:-100%; z-index:50; transition:left .2s; box-shadow:var(--shadow);}
+  .sidebar.open{left:0;}
+  .main{padding:24px 20px 100px;}
+  .mobile-toggle{display:block !important;}
+}
+.mobile-toggle{display:none; position:fixed; top:16px; left:16px; z-index:60; background:var(--accent); color:#0d1117; border:none; border-radius:8px; width:40px; height:40px; font-size:18px; font-weight:700;}
+</style>
+<link rel="stylesheet" href="../style-guide.css">
+</head>
+<body data-theme="dark">
+
+<button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark/light mode" aria-label="Toggle theme">☀️</button>
+<button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="wrapper">
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-badge">G</div>
+    <div>
+      <div class="brand-text">GrowthScript Eng.</div>
+      <div class="brand-sub">Spring Boot Bible</div>
+    </div>
+  </div>
+  <button class="theme-toggle" onclick="toggleTheme()">🌗 Toggle Theme</button>
+
+  <div class="nav-group">
+    <div class="nav-label">Section 04 · Data Layer</div>
+    <a class="nav-link" href="#why-jpa">62–64. Why JPA, Spring Data JPA, ORM</a>
+    <a class="nav-link" href="#entity">65. @Entity, @Table, @Column</a>
+    <a class="nav-link" href="#interfaces">66–68. Repository Interface Hierarchy</a>
+    <a class="nav-link" href="#lombok">69. Lombok</a>
+    <a class="nav-link" href="#dto">70–71. DTO Pattern</a>
+    <a class="nav-link" href="#job-portal">72. Job Portal UI Setup</a>
+    <a class="nav-link" href="#cors">73–74. CORS</a>
+    <a class="nav-link" href="#docker">75–81. Docker & Docker Compose</a>
+    <a class="nav-link" href="#ddl-auto">82–85. ddl-auto & JPA Buddy</a>
+    <a class="nav-link" href="#contact-api">86–87. Contact Us REST API Demo</a>
+    <a class="nav-link" href="#interview-master">Master Interview Q&A Bank</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="nav-header"><a href="../index.html" class="back-home">← Back to Notes Hub</a></div>
+
+<div class="header-block">
+  <div class="eyebrow">Java Backend Engineer · Spring Boot Course</div>
+  <h1>Section 4 — Spring Data JPA, Lombok, DTOs, CORS & Docker</h1>
+  <p>The full data-access layer: why ORM exists, entity mapping, the Spring Data repository hierarchy, Lombok boilerplate elimination, the DTO pattern, CORS from first principles, and containerizing MySQL with Docker/Docker Compose so your Spring Boot app never depends on a manually-installed local database again.</p>
+  <div class="meta-row">
+    <span class="meta-pill">Videos 62–87</span>
+    <span class="meta-pill">~4.5 hrs runtime</span>
+    <span class="meta-pill">FAANG + Fintech interview focus</span>
+    <span class="meta-pill">Builds on Sections 1–3</span>
+  </div>
+</div>
+
+<!-- 62-64 -->
+<section class="topic" id="why-jpa">
+  <div class="topic-head"><span class="topic-num">62–64</span><h2>Stop Writing SQL Like It's 1999 — Meet Spring Data JPA & ORM</h2></div>
+  <div class="topic-video">Videos: Stop Writing SQL Like It's 1999! · Meet Spring Data JPA - The Matchmaker for Java + DB · ORM - Your Database Translator Friend</div>
+
+  <h3>The Problem with Raw JDBC</h3>
+  <p>Plain JDBC forces you to hand-write repetitive, error-prone boilerplate for every single database operation:</p>
+  <ul>
+    <li>Manually opening/closing <code>Connection</code>, <code>Statement</code>, <code>ResultSet</code> objects (and handling the try-with-resources/leak risk every single time).</li>
+    <li>Manually mapping each <code>ResultSet</code> row into a Java object, column by column, with hardcoded string column names.</li>
+    <li>Manually writing every CRUD SQL statement by hand, even for the most trivial "get by id" or "save" operations.</li>
+    <li>No object-graph awareness — a "customer with their orders" query has to be manually joined and manually re-assembled into nested Java objects.</li>
+  </ul>
+
+  <h3>What Is ORM (Object-Relational Mapping)?</h3>
+  <p><strong>ORM</strong> is a technique that automatically <strong>translates between the object-oriented world (Java classes/objects) and the relational world (database tables/rows)</strong>, so you work with plain Java objects and the ORM tool generates and executes the underlying SQL for you.</p>
+
+  <div class="diagram">   JAVA WORLD                    ORM LAYER (Hibernate)              RELATIONAL WORLD
+┌───────────────┐                                            ┌───────────────────┐
+│ class User {   │      ◄── translates / maps ──►             │ TABLE users        │
+│   Long id;      │                                            │  id  BIGINT PK      │
+│   String name;  │                                            │  name VARCHAR       │
+│   String email; │                                            │  email VARCHAR      │
+│ }               │                                            └───────────────────┘
+└───────────────┘
+  userRepository.save(user)  ──▶  Hibernate generates:  INSERT INTO users (name,email) VALUES (?,?)</div>
+
+  <table>
+    <tr><th>Layer</th><th>What It Is</th><th>Role</th></tr>
+    <tr><td><strong>JPA</strong> (Jakarta Persistence API)</td><td>A <em>specification</em> (interfaces/annotations) — <code>javax.persistence</code>/<code>jakarta.persistence</code> — no implementation of its own</td><td>Defines the standard contract: <code>@Entity</code>, <code>EntityManager</code>, JPQL, etc.</td></tr>
+    <tr><td><strong>Hibernate</strong></td><td>The most popular concrete <em>implementation</em> of the JPA specification</td><td>Actually generates and executes SQL, manages the persistence context/first-level cache, dirty checking</td></tr>
+    <tr><td><strong>Spring Data JPA</strong></td><td>A Spring abstraction layer built <em>on top of</em> JPA/Hibernate</td><td>Eliminates boilerplate DAO code — auto-generates repository implementations from interface method signatures</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 The Layering, Stated Precisely for Interviews</div>
+    <p>"JPA is a <strong>specification</strong>, Hibernate is the most common <strong>implementation</strong> of that specification, and Spring Data JPA is a <strong>further abstraction on top of JPA</strong> that removes even the need to write DAO implementation code by hand." This three-layer distinction is asked constantly and candidates frequently conflate JPA and Hibernate as the same thing — don't.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Could you swap Hibernate for a different JPA implementation without changing your Spring Data JPA repository code?</div>
+      <div class="qa-a"><p>In principle, yes — this is the entire point of JPA being a specification rather than a concrete implementation. Alternatives like EclipseLink or OpenJPA also implement the JPA spec. Since your repository interfaces and <code>@Entity</code> classes are written against JPA's standard annotations/interfaces (not Hibernate-specific APIs), switching the implementation JAR is largely a drop-in change. In practice, most real projects unavoidably lean on some Hibernate-specific features/behaviors over time (e.g., specific dialects, Hibernate-only annotations like <code>@DynamicUpdate</code>), which reduces true portability — worth mentioning as the practical caveat.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What specific problems does an ORM solve versus writing SQL directly with JdbcTemplate?</div>
+      <div class="qa-a"><p>ORM eliminates manual result-set-to-object mapping, auto-generates CRUD SQL from method signatures/annotations, manages object relationships (lazy/eager loading of associations) without manual joins, provides a first-level cache and automatic "dirty checking" (detecting changed fields and generating UPDATE statements automatically on flush), and gives you a database-agnostic query abstraction (JPQL) that doesn't hardcode vendor-specific SQL syntax. The trade-off: less direct control over the exact generated SQL, and a learning curve around lazy-loading and the persistence-context lifecycle that trips up many developers (N+1 query problem, <code>LazyInitializationException</code>).</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 65 -->
+<section class="topic" id="entity">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">65</span><h2>Creating an Entity Class — @Entity, @Table, @Column</h2></div>
+  <div class="topic-video">Video: Creating Entity class using @Entity, @Table, @Column annotations</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'e1')">Contact.java</button></div>
+    <div class="tab-content active" id="e1"><pre><span class="an">@Entity</span>                              <span class="cm">// marks this class as a JPA-managed persistent entity</span>
+<span class="an">@Table</span>(name = <span class="str">"contact_msg"</span>)          <span class="cm">// maps to a specific table name (defaults to class name if omitted)</span>
+<span class="kw">public class</span> <span class="cl">Contact</span> {
+
+    <span class="an">@Id</span>                                  <span class="cm">// marks the primary key field</span>
+    <span class="an">@GeneratedValue</span>(strategy = GenerationType.IDENTITY)  <span class="cm">// PK auto-generated by the DB (auto-increment)</span>
+    <span class="an">@Column</span>(name = <span class="str">"contact_id"</span>)
+    <span class="kw">private</span> String contactId;
+
+    <span class="an">@Column</span>(name = <span class="str">"name"</span>, nullable = <span class="kw">false</span>, length = <span class="mt">100</span>)
+    <span class="kw">private</span> String name;
+
+    <span class="an">@Column</span>(<span class="mt">unique</span> = <span class="kw">true</span>, nullable = <span class="kw">false</span>)
+    <span class="kw">private</span> String email;
+
+    <span class="an">@Column</span>(name = <span class="str">"created_at"</span>, updatable = <span class="kw">false</span>)
+    <span class="kw">private</span> LocalDateTime createdAt;
+
+    <span class="cm">// no-arg constructor REQUIRED by JPA (used via reflection to instantiate entities)</span>
+    <span class="kw">public</span> <span class="mt">Contact</span>() {}
+
+    <span class="cm">// getters/setters — Hibernate uses these (or direct field access, configurable)</span>
+    <span class="cm">// to read/write entity state</span>
+}</pre></div>
+  </div>
+
+  <table>
+    <tr><th>Annotation</th><th>Purpose</th></tr>
+    <tr><td><code>@Entity</code></td><td>Registers the class as a JPA-managed persistent type — required on every entity</td></tr>
+    <tr><td><code>@Table(name=...)</code></td><td>Optional — overrides the default table name (which otherwise defaults to the class's simple name)</td></tr>
+    <tr><td><code>@Id</code></td><td>Marks the primary key field — <strong>mandatory</strong> on every entity</td></tr>
+    <tr><td><code>@GeneratedValue</code></td><td>Configures how the PK value is generated (see strategies table below)</td></tr>
+    <tr><td><code>@Column</code></td><td>Optional — customizes the mapped column's name, nullability, length, uniqueness; if omitted, defaults are inferred from the field name/type</td></tr>
+  </table>
+
+  <h4>@GeneratedValue Strategies</h4>
+  <table>
+    <tr><th>Strategy</th><th>How It Works</th><th>Trade-off</th></tr>
+    <tr><td><code>IDENTITY</code></td><td>Delegates to the database's native auto-increment column</td><td>Simple and widely supported (MySQL), but <strong>disables JDBC batch inserts</strong> in Hibernate since the ID is only known after each individual insert executes</td></tr>
+    <tr><td><code>SEQUENCE</code></td><td>Uses a database sequence object to pre-allocate IDs</td><td>Supports batching (better insert performance); requires DB support for sequences (PostgreSQL, Oracle — not native in MySQL)</td></tr>
+    <tr><td><code>TABLE</code></td><td>Simulates a sequence using a dedicated database table</td><td>Portable across any DB, but slowest — extra table lookup per ID generation</td></tr>
+    <tr><td><code>AUTO</code></td><td>Lets Hibernate pick the best strategy for the configured dialect</td><td>Convenient default, but less explicit/predictable — many teams prefer being explicit in production</td></tr>
+  </table>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Why the No-Arg Constructor Is Mandatory</div>
+    <p>JPA providers (Hibernate) instantiate entities using <strong>reflection</strong>, calling a no-argument constructor before populating fields — this is why every <code>@Entity</code> class must expose a public or protected no-arg constructor, even if you also define other constructors for your own convenience in application code.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why does GenerationType.IDENTITY disable Hibernate's batch insert optimization?</div>
+      <div class="qa-a"><p>With <code>IDENTITY</code>, the database itself assigns the primary key only <strong>after</strong> the row is physically inserted — Hibernate cannot know the ID in advance. Since JDBC batching requires Hibernate to queue up multiple INSERT statements and flush them together, but it needs each entity's generated ID immediately (for the persistence context and any cascading operations that reference it), Hibernate is forced to execute each INSERT individually and synchronously to retrieve the ID right away, defeating batching. <code>SEQUENCE</code> avoids this because IDs can be pre-allocated in batches from the database sequence before any INSERT executes, letting Hibernate group real INSERT statements together.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What happens if you don't put @Column on a field at all — does the column mapping just break?</div>
+      <div class="qa-a"><p>No — <code>@Column</code> is entirely optional. If omitted, Hibernate infers sensible defaults: the column name matches the field name (subject to the active naming strategy, e.g. converting camelCase to snake_case), nullable defaults to <code>true</code>, and length defaults to 255 for String/VARCHAR columns. You only need <code>@Column</code> when you want to override one of these defaults explicitly — e.g., renaming the column, enforcing NOT NULL, or setting a specific length/precision.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 66-68 -->
+<section class="topic" id="interfaces">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">66–68</span><h2>Spring Data & Spring Data JPA — Important Interfaces</h2></div>
+  <div class="topic-video">Videos: Spring Data and Spring Data JPA important interfaces Parts 1–2 · Demo of Spring Data JPA changes</div>
+
+  <div class="diagram">                    Repository&lt;T, ID&gt;   (marker interface — no methods, root of hierarchy)
+                          ▲
+                          │
+                  CrudRepository&lt;T, ID&gt;   (basic CRUD: save, findById, findAll, delete, count...)
+                          ▲
+                          │
+             PagingAndSortingRepository&lt;T, ID&gt;   (adds findAll(Pageable), findAll(Sort))
+                          ▲
+                          │
+                   JpaRepository&lt;T, ID&gt;   (adds JPA-specific batch ops, flush(), saveAndFlush(),
+                                             getReferenceById(), and returns List instead of Iterable)</div>
+
+  <table>
+    <tr><th>Interface</th><th>Key Methods Added</th><th>When You'd Use It Directly</th></tr>
+    <tr><td><code>Repository&lt;T,ID&gt;</code></td><td>None — pure marker interface for Spring to detect a repository bean</td><td>Almost never used directly — mostly a conceptual root</td></tr>
+    <tr><td><code>CrudRepository&lt;T,ID&gt;</code></td><td><code>save()</code>, <code>findById()</code>, <code>findAll()</code>, <code>deleteById()</code>, <code>count()</code>, <code>existsById()</code></td><td>Lightweight cases needing only basic CRUD, no pagination</td></tr>
+    <tr><td><code>PagingAndSortingRepository&lt;T,ID&gt;</code></td><td><code>findAll(Pageable pageable)</code>, <code>findAll(Sort sort)</code></td><td>Need pagination/sorting but not JPA-specific extras</td></tr>
+    <tr><td><code>JpaRepository&lt;T,ID&gt;</code></td><td>Everything above + <code>flush()</code>, <code>saveAndFlush()</code>, <code>deleteAllInBatch()</code>, <code>getReferenceById()</code> (lazy proxy reference)</td><td><strong>The one you use 95% of the time</strong> in real Spring Boot + JPA projects</td></tr>
+  </table>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'r1')">Basic JpaRepository</button>
+      <button class="tab-btn" onclick="showTab(this,'r2')">Derived query methods</button>
+      <button class="tab-btn" onclick="showTab(this,'r3')">Custom @Query</button>
+    </div>
+    <div class="tab-content active" id="r1"><pre><span class="cm">// ZERO implementation code needed — Spring Data JPA generates the</span>
+<span class="cm">// implementation class at runtime via a dynamic proxy</span>
+<span class="kw">public interface</span> <span class="cl">ContactRepository extends</span> JpaRepository&lt;Contact, String&gt; {
+    <span class="cm">// Contact = entity type, String = type of the @Id field</span>
+}</pre></div>
+    <div class="tab-content" id="r2"><pre><span class="kw">public interface</span> <span class="cl">ContactRepository extends</span> JpaRepository&lt;Contact, String&gt; {
+
+    <span class="cm">// Spring Data parses the METHOD NAME itself and generates the SQL —</span>
+    <span class="cm">// no query written anywhere; this is called a "derived query method"</span>
+    List&lt;Contact&gt; <span class="mt">findByEmail</span>(String email);
+
+    List&lt;Contact&gt; <span class="mt">findByNameContainingIgnoreCase</span>(String namePart);
+
+    List&lt;Contact&gt; <span class="mt">findByCreatedAtAfter</span>(LocalDateTime date);
+
+    <span class="kw">boolean</span> <span class="mt">existsByEmail</span>(String email);
+
+    <span class="kw">long</span> <span class="mt">countByStatus</span>(String status);
+}</pre></div>
+    <div class="tab-content" id="r3"><pre><span class="kw">public interface</span> <span class="cl">ContactRepository extends</span> JpaRepository&lt;Contact, String&gt; {
+
+    <span class="an">@Query</span>(<span class="str">"SELECT c FROM Contact c WHERE c.status = :status ORDER BY c.createdAt DESC"</span>)
+    List&lt;Contact&gt; <span class="mt">findRecentByStatus</span>(<span class="an">@Param</span>(<span class="str">"status"</span>) String status);
+
+    <span class="an">@Modifying</span>  <span class="cm">// required for UPDATE/DELETE queries — signals a write, not a read</span>
+    <span class="an">@Query</span>(<span class="str">"UPDATE Contact c SET c.status = :status WHERE c.contactId = :id"</span>)
+    <span class="kw">int</span> <span class="mt">updateStatus</span>(<span class="an">@Param</span>(<span class="str">"id"</span>) String id, <span class="an">@Param</span>(<span class="str">"status"</span>) String status);
+
+    <span class="an">@Query</span>(value = <span class="str">"SELECT * FROM contact_msg WHERE email = ?1"</span>, nativeQuery = <span class="kw">true</span>)  <span class="cm">// raw SQL escape hatch</span>
+    List&lt;Contact&gt; <span class="mt">findByEmailNative</span>(String email);
+}</pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 How Derived Query Methods Actually Work</div>
+    <p>Spring Data JPA parses a method's name at <strong>application startup</strong>, breaking it into keywords (<code>findBy</code>, <code>And</code>, <code>OrderBy</code>, <code>Containing</code>, <code>GreaterThan</code>, etc.) matched against the entity's field names, and builds a corresponding JPQL query — <em>no query is written or executed at compile time; it's parsed once at boot and reused</em>. If the method name doesn't parse against real entity fields, the app fails fast at startup with a clear error, not a runtime surprise.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How does Spring Data JPA actually provide a working implementation for an interface with zero methods bodies?</div>
+      <div class="qa-a"><p>At startup, Spring Data JPA scans for interfaces extending <code>Repository</code> (directly or transitively, e.g. via <code>JpaRepository</code>), and for each one generates a <strong>runtime proxy implementation</strong> (via <code>SimpleJpaRepository</code> as the base implementation, wrapped in a JDK dynamic proxy) that's registered as a Spring bean. Inherited methods like <code>save()</code>/<code>findById()</code> delegate to <code>SimpleJpaRepository</code>'s real implementation using the injected <code>EntityManager</code>. Custom derived-query methods (like <code>findByEmail</code>) are handled by a query-parsing mechanism that translates the method name into JPQL at startup, also executed via the <code>EntityManager</code> under the hood.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>When would you use @Query with JPQL versus a derived query method name?</div>
+      <div class="qa-a"><p>Derived query method names work well for simple conditions but become unreadable and unwieldy past 2-3 conditions (e.g. <code>findByStatusAndCreatedAtBetweenAndNameContainingIgnoreCaseOrderByCreatedAtDesc</code>). <code>@Query</code> with explicit JPQL is preferred once the query logic is non-trivial — joins across entities, aggregate functions, subqueries, or just for readability/maintainability even for moderately complex conditions. Native SQL (<code>nativeQuery = true</code>) is reserved for cases JPQL genuinely can't express — vendor-specific functions, complex window functions, or performance-critical hand-tuned SQL.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why does @Modifying need to be paired with @Query for UPDATE/DELETE, and what does it change about transaction behavior?</div>
+      <div class="qa-a"><p><code>@Query</code> alone assumes a SELECT/read operation by default. <code>@Modifying</code> signals to Spring Data JPA that the query is a bulk UPDATE or DELETE, which changes execution mechanics: it uses <code>Query.executeUpdate()</code> instead of a result-returning execution, and critically, it operates directly against the database, <strong>bypassing the persistence context entirely</strong> — meaning any already-loaded entities in the current session won't automatically reflect the change unless you clear/refresh the persistence context (<code>@Modifying(clearAutomatically = true)</code>) or use <code>flushAutomatically = true</code>. This EntityManager/bulk-update mismatch is a classic source of stale-data bugs.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 69 -->
+<section class="topic" id="lombok">
+  <div class="topic-head"><span class="topic-num">69</span><h2>Lombok — Because Typing Getters, Setters Is Boring</h2></div>
+  <div class="topic-video">Video: Lombok - Because Typing Getters, Setters Is Boring</div>
+
+  <p>Lombok is an <strong>annotation processor</strong> that generates boilerplate Java code (getters, setters, constructors, <code>equals()</code>/<code>hashCode()</code>, <code>toString()</code>) at <strong>compile time</strong> by hooking into the Java compiler's annotation processing phase — the generated code is inserted directly into the bytecode, not visible in your <code>.java</code> source file.</p>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'lb1')">Common Lombok annotations</button>
+      <button class="tab-btn" onclick="showTab(this,'lb2')">Entity with Lombok</button>
+    </div>
+    <div class="tab-content active" id="lb1"><pre><span class="an">@Getter</span> <span class="an">@Setter</span>          <span class="cm">// generates getX()/setX() for every field</span>
+<span class="an">@NoArgsConstructor</span>       <span class="cm">// generates a no-arg constructor (needed by JPA!)</span>
+<span class="an">@AllArgsConstructor</span>      <span class="cm">// generates a constructor with all fields as params</span>
+<span class="an">@ToString</span>                <span class="cm">// generates toString()</span>
+<span class="an">@EqualsAndHashCode</span>       <span class="cm">// generates equals()/hashCode()</span>
+<span class="an">@Builder</span>                 <span class="cm">// generates a fluent builder pattern</span>
+<span class="an">@Data</span>                    <span class="cm">// shortcut = @Getter+@Setter+@ToString+@EqualsAndHashCode+@RequiredArgsConstructor</span>
+<span class="an">@Slf4j</span>                   <span class="cm">// injects a static "log" field (SLF4J Logger) — no manual LoggerFactory boilerplate</span></pre></div>
+    <div class="tab-content" id="lb2"><pre><span class="an">@Entity</span>
+<span class="an">@Table</span>(name = <span class="str">"contact_msg"</span>)
+<span class="an">@Getter</span> <span class="an">@Setter</span>
+<span class="an">@NoArgsConstructor</span> <span class="an">@AllArgsConstructor</span>
+<span class="an">@Builder</span>
+<span class="kw">public class</span> <span class="cl">Contact</span> {
+    <span class="an">@Id</span> <span class="an">@GeneratedValue</span>(strategy = GenerationType.IDENTITY)
+    <span class="kw">private</span> String contactId;
+    <span class="kw">private</span> String name;
+    <span class="kw">private</span> String email;
+}
+<span class="cm">// usage: Contact c = Contact.builder().name("N").email("n@x.com").build();</span></pre></div>
+  </div>
+
+  <div class="box danger">
+    <div class="box-title">⚠ @Data on JPA Entities Is a Common Anti-Pattern</div>
+    <p><code>@Data</code>'s generated <code>equals()</code>/<code>hashCode()</code> and <code>toString()</code> include <strong>all fields by default</strong>, which is dangerous on JPA entities: (1) including lazy-loaded association fields in <code>toString()</code> can trigger unexpected additional queries or <code>LazyInitializationException</code>, (2) field-based <code>equals()</code>/<code>hashCode()</code> can break badly for entities whose ID is only assigned after persisting (two "equal" transient entities with null IDs would incorrectly be considered equal, and worse, an entity's hash code can change after it's already been placed in a <code>HashSet</code> once its ID gets assigned post-persist). Best practice: use <code>@Getter</code>/<code>@Setter</code> explicitly on entities, and if you need <code>equals()</code>/<code>hashCode()</code>, base them only on the <code>@Id</code> field (or a stable business key), not <code>@Data</code>'s all-fields default.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Does Lombok add any runtime overhead or dependency to the final application?</div>
+      <div class="qa-a"><p>No runtime overhead at all — Lombok operates purely at <strong>compile time</strong> via the Java Annotation Processing API, generating actual bytecode directly into the <code>.class</code> file. There is no <code>lombok.jar</code> dependency needed at runtime; it's typically scoped as <code>provided</code>/compile-only in Maven. The generated getters/setters/constructors are indistinguishable from hand-written ones once compiled — decompiling a Lombok-processed class shows completely normal Java bytecode.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Why is @Builder popular for DTOs specifically, beyond just saving typing?</div>
+      <div class="qa-a"><p>The builder pattern makes object construction <strong>self-documenting at the call site</strong> — <code>Contact.builder().name("N").email("n@x.com").build()</code> reads clearly even with many optional fields, versus a long, error-prone positional constructor call where it's easy to swap argument order (e.g. mixing up two adjacent String parameters). It also naturally supports objects with many optional fields without needing telescoping constructor overloads, and pairs well with immutable objects (combine with <code>@Value</code> instead of <code>@Data</code> for a fully immutable DTO).</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 70-71 -->
+<section class="topic" id="dto">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">70–71</span><h2>Introduction to the DTO Pattern & Hands-On</h2></div>
+  <div class="topic-video">Videos: Introduction to DTO pattern · Hands-On - Dressing Your Data in DTOs</div>
+
+  <p>A <strong>DTO (Data Transfer Object)</strong> is a plain object used solely to carry data <strong>across a boundary</strong> (typically the API boundary between client and server) — deliberately decoupled from the JPA <code>@Entity</code> that represents the persistence-layer/database shape.</p>
+
+  <div class="diagram">   CLIENT                    CONTROLLER                 SERVICE               REPOSITORY / DB
+┌──────────┐            ┌─────────────────┐        ┌──────────┐         ┌────────────┐
+│ JSON      │──deserial──▶│ ContactRequest   │──map──▶│ Contact   │──save──▶│ contact_msg │
+│ request   │  ize        │ (DTO)             │        │ (Entity)  │         │ table       │
+└──────────┘            └─────────────────┘        └──────────┘         └────────────┘
+                                                            │
+                                                        map to
+                                                            ▼
+                                                    ┌─────────────────┐
+                                                    │ ContactResponse  │──serialize──▶ JSON response
+                                                    │ (DTO)             │
+                                                    └─────────────────┘</div>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'d1')">Request/Response DTOs</button>
+      <button class="tab-btn" onclick="showTab(this,'d2')">Mapping in the service layer</button>
+    </div>
+    <div class="tab-content active" id="d1"><pre><span class="cm">// what the CLIENT sends — only the fields a client should be able to set</span>
+<span class="an">@Data</span>
+<span class="kw">public class</span> <span class="cl">ContactRequestDto</span> {
+    <span class="an">@NotBlank</span> <span class="kw">private</span> String name;
+    <span class="an">@Email</span> <span class="kw">private</span> String email;
+    <span class="an">@NotBlank</span> <span class="kw">private</span> String message;
+    <span class="cm">// deliberately NO contactId, NO createdAt, NO internal status field —</span>
+    <span class="cm">// clients cannot set fields that are server-controlled</span>
+}
+
+<span class="cm">// what the SERVER sends back — only the fields the client actually needs to see</span>
+<span class="an">@Data</span> <span class="an">@Builder</span>
+<span class="kw">public class</span> <span class="cl">ContactResponseDto</span> {
+    <span class="kw">private</span> String contactId;
+    <span class="kw">private</span> String name;
+    <span class="kw">private</span> String status;
+    <span class="cm">// deliberately NO email exposed here, e.g. if this is a public-facing summary view</span>
+}</pre></div>
+    <div class="tab-content" id="d2"><pre><span class="an">@Service</span>
+<span class="kw">public class</span> <span class="cl">ContactService</span> {
+
+    <span class="kw">public</span> ContactResponseDto <span class="mt">createContact</span>(ContactRequestDto request) {
+        Contact entity = Contact.<span class="mt">builder</span>()
+                .name(request.<span class="mt">getName</span>())
+                .email(request.<span class="mt">getEmail</span>())
+                .message(request.<span class="mt">getMessage</span>())
+                .status(<span class="str">"PENDING"</span>)   <span class="cm">// server-controlled field, not from the DTO</span>
+                .build();
+
+        Contact saved = contactRepository.<span class="mt">save</span>(entity);
+
+        <span class="kw">return</span> ContactResponseDto.<span class="mt">builder</span>()
+                .contactId(saved.<span class="mt">getContactId</span>())
+                .name(saved.<span class="mt">getName</span>())
+                .status(saved.<span class="mt">getStatus</span>())
+                .build();
+    }
+}</pre></div>
+  </div>
+
+  <h4>Why DTOs Exist — The Full Case</h4>
+  <table>
+    <tr><th>Reason</th><th>Explanation</th></tr>
+    <tr><td><strong>Security</strong></td><td>Prevents "over-posting" — a client cannot set fields like <code>id</code>, <code>role</code>, <code>isAdmin</code>, or internal status flags that should only ever be set server-side</td></tr>
+    <tr><td><strong>Decoupling</strong></td><td>The API contract can evolve independently of the database schema — renaming a DB column doesn't have to break the public API response shape</td></tr>
+    <tr><td><strong>Avoiding lazy-loading issues</strong></td><td>Serializing an entity directly outside a transaction risks <code>LazyInitializationException</code> on unfetched associations; a DTO only carries already-resolved, flattened data</td></tr>
+    <tr><td><strong>Avoiding infinite recursion</strong></td><td>Bidirectional JPA relationships (e.g. <code>Order</code> ↔ <code>Customer</code>) serialize infinitely if entities are returned directly; DTOs break the cycle by design</td></tr>
+    <tr><td><strong>Tailored views</strong></td><td>Different endpoints can expose different subsets/shapes of the same underlying entity (a public summary vs an internal admin detail view) without touching the entity itself</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 Mapping Boilerplate — MapStruct as the Production Answer</div>
+    <p>Manually writing entity↔DTO mapping code (as above) is fine for small projects but becomes tedious and error-prone at scale. In production codebases, <strong>MapStruct</strong> (a compile-time code-generation mapping library, conceptually similar to Lombok) is the standard tool — you declare a mapper interface and MapStruct generates the actual field-by-field mapping implementation at compile time, with zero reflection overhead at runtime. Worth naming if an interviewer asks "how would you avoid writing this mapping code by hand at scale."</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Explain "over-posting" as a concrete security vulnerability and how DTOs prevent it.</div>
+      <div class="qa-a"><p>Over-posting (also called mass assignment) happens when a controller binds an incoming request body <strong>directly onto an entity</strong> that has more fields than the client is meant to control. If a <code>User</code> entity has a <code>role</code> field and the controller does <code>@RequestBody User user</code>, a malicious client could include <code>"role": "ADMIN"</code> in their JSON payload during signup and silently grant themselves admin privileges, because Jackson will happily deserialize and set that field if it's present in the entity. A request DTO that <strong>simply doesn't declare a <code>role</code> field at all</strong> makes this structurally impossible — there's no field for Jackson to bind that value into, regardless of what the client sends.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Isn't returning entities directly simpler? Why is the extra DTO mapping layer worth the complexity?</div>
+      <div class="qa-a"><p>It is simpler for a toy/prototype app, which is exactly why many tutorials skip DTOs early on. But the moment a real API has more than one consumer, needs to hide internal fields, or the database schema needs to change independently of the public contract, returning entities directly becomes a liability — you end up either breaking clients on every schema change, leaking internal data, or hacking around lazy-loading exceptions with <code>@JsonIgnore</code> sprinkled across entity fields (which itself couples persistence concerns to serialization concerns). The DTO layer's small upfront mapping cost buys long-term flexibility and safety — a trade-off virtually every production Spring Boot codebase makes.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 72 -->
+<section class="topic" id="job-portal">
+  <div class="topic-head"><span class="topic-num">72</span><h2>Job Portal UI — Setting Up the Stage</h2></div>
+  <div class="topic-video">Video: Job Portal UI - Setting Up the Stage</div>
+
+  <p>This video sets up the frontend companion application (a Job Portal UI) that the course uses as a realistic client consuming the Spring Boot backend being built — the concrete motivation for the very next topic, CORS, since the UI (running on its own origin/port, e.g. <code>localhost:4200</code> or <code>3000</code>) will need to call the API (running on <code>localhost:8080</code>) across origins.</p>
+
+  <div class="box info">
+    <div class="box-title">ℹ Why This Matters Structurally</div>
+    <p>Having a real separate frontend origin is precisely what makes CORS a real, tangible problem rather than an abstract concept — a browser-based frontend and a Spring Boot backend running on different ports are, by the browser's definition, <strong>different origins</strong>, and the browser's Same-Origin Policy blocks cross-origin requests unless the server explicitly opts in via CORS headers — the exact topic covered next.</p>
+  </div>
+</section>
+
+<!-- 73-74 -->
+<section class="topic" id="cors">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">73–74</span><h2>CORS — Browser's Overprotective Parent (and Fixing the Drama)</h2></div>
+  <div class="topic-video">Videos: CORS - Browser's Overprotective Parent · Let Them Talk! Fixing CORS Drama</div>
+
+  <h3>What CORS Actually Is</h3>
+  <p><strong>CORS (Cross-Origin Resource Sharing)</strong> is a <strong>browser security mechanism</strong> — not a server-side or network-level restriction — that enforces the <strong>Same-Origin Policy</strong>: by default, JavaScript running on one origin cannot make requests to a different origin unless that origin explicitly allows it via specific response headers.</p>
+
+  <p>An <strong>origin</strong> = <code>scheme + host + port</code>. All three must match exactly for two URLs to be considered the "same origin":</p>
+  <table>
+    <tr><th>URL A</th><th>URL B</th><th>Same Origin?</th></tr>
+    <tr><td>http://localhost:3000</td><td>http://localhost:8080</td><td>❌ No — different port</td></tr>
+    <tr><td>http://api.growthscript.com</td><td>https://api.growthscript.com</td><td>❌ No — different scheme</td></tr>
+    <tr><td>http://app.growthscript.com</td><td>http://api.growthscript.com</td><td>❌ No — different host (subdomain counts)</td></tr>
+    <tr><td>http://localhost:8080/users</td><td>http://localhost:8080/orders</td><td>✅ Yes — same scheme+host+port, path irrelevant</td></tr>
+  </table>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Critical Misconception: CORS Is Enforced by the BROWSER, Not the Server</div>
+    <p>This is the single most common CORS misunderstanding. The server <strong>always</strong> processes the request and can send back a response — CORS headers don't prevent the request from reaching the server. What happens is: the <strong>browser</strong> inspects the response's CORS headers, and if they don't permit the requesting origin, the browser <strong>blocks JavaScript from reading the response</strong>, throwing a CORS error in the console. Tools like Postman or <code>curl</code> never hit CORS errors at all, precisely because CORS enforcement lives in the browser's JavaScript engine, not the HTTP protocol itself or the server.</p>
+  </div>
+
+  <h3>Simple Requests vs Preflight Requests</h3>
+  <div class="diagram">SIMPLE REQUEST (GET/POST/HEAD with simple headers/content-type):
+Browser ──actual request, with Origin header──▶ Server
+Browser ◄──response with Access-Control-Allow-Origin header──── Server
+   │
+   ▼ Browser checks header, allows or blocks JS from reading the response
+
+PREFLIGHT REQUEST (PUT/DELETE/PATCH, custom headers, or JSON content-type):
+Browser ──OPTIONS request (preflight, sent automatically first)──▶ Server
+Browser ◄──Access-Control-Allow-Origin/Methods/Headers response──── Server
+   │
+   ▼ Browser checks preflight response
+   ├── Allowed  ──▶ Browser sends the REAL request
+   └── Blocked  ──▶ Real request never sent at all; CORS error thrown</div>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'c1')">Per-controller @CrossOrigin</button>
+      <button class="tab-btn" onclick="showTab(this,'c2')">Global CORS config (recommended)</button>
+    </div>
+    <div class="tab-content active" id="c1"><pre><span class="an">@RestController</span>
+<span class="an">@RequestMapping</span>(<span class="str">"/api/v1/contacts"</span>)
+<span class="an">@CrossOrigin</span>(origins = <span class="str">"http://localhost:4200"</span>)  <span class="cm">// only THIS controller, not global</span>
+<span class="kw">public class</span> <span class="cl">ContactController</span> { ... }</pre></div>
+    <div class="tab-content" id="c2"><pre><span class="an">@Configuration</span>
+<span class="kw">public class</span> <span class="cl">CorsConfig implements</span> WebMvcConfigurer {
+
+    <span name="Override">@Override</span>
+    <span class="kw">public void</span> <span class="mt">addCorsMappings</span>(CorsRegistry registry) {
+        registry.<span class="mt">addMapping</span>(<span class="str">"/api/**"</span>)               <span class="cm">// applies to ALL /api/** endpoints</span>
+                .<span class="mt">allowedOrigins</span>(<span class="str">"http://localhost:4200"</span>)
+                .<span class="mt">allowedMethods</span>(<span class="str">"GET"</span>, <span class="str">"POST"</span>, <span class="str">"PUT"</span>, <span class="str">"DELETE"</span>)
+                .<span class="mt">allowedHeaders</span>(<span class="str">"*"</span>)
+                .<span class="mt">allowCredentials</span>(<span class="kw">true</span>)   <span class="cm">// required if the client sends cookies/auth headers</span>
+                .<span class="mt">maxAge</span>(<span class="mt">3600</span>);          <span class="cm">// how long the browser can CACHE the preflight response</span>
+    }
+}</pre></div>
+  </div>
+
+  <div class="box danger">
+    <div class="box-title">⚠ allowedOrigins("*") + allowCredentials(true) Is Illegal — and Dangerous by Design</div>
+    <p>The CORS spec <strong>explicitly forbids</strong> combining a wildcard origin (<code>"*"</code>) with <code>allowCredentials(true)</code> — browsers will reject this configuration outright. The reasoning: allowing credentialed requests (cookies, Authorization headers) from <em>literally any</em> origin would let any malicious website make authenticated requests to your API on behalf of a logged-in user, defeating the entire purpose of CORS as a security boundary. If credentials are needed, you must list specific allowed origins explicitly — never a wildcard.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>A frontend developer says "just disable CORS on the backend" — how do you respond, and is that even possible?</div>
+      <div class="qa-a"><p>Correct the framing first: CORS isn't a "feature to disable" on the backend — it's enforced entirely by the <strong>browser</strong> based on response headers the server chooses to send (or not send). What people mean by "disabling CORS" is actually "configure the server to send permissive <code>Access-Control-Allow-*</code> headers" — which is a legitimate, standard configuration task (as shown above), not a hack or workaround. It's important to push back gently and clarify the mental model, since "disable CORS" phrasing reflects a common but incorrect understanding of where the restriction actually lives.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why does a preflight OPTIONS request get sent for a JSON POST but not for a simple form POST?</div>
+      <div class="qa-a"><p>The CORS spec defines a narrow set of "simple request" conditions: method must be GET/HEAD/POST, and if POST, the <code>Content-Type</code> must be one of <code>application/x-www-form-urlencoded</code>, <code>multipart/form-data</code>, or <code>text/plain</code> — with only a small whitelist of allowed headers. A JSON POST uses <code>Content-Type: application/json</code>, which falls <strong>outside</strong> that simple-request whitelist, so the browser is required to send a preflight <code>OPTIONS</code> request first to check whether the actual request would be permitted, before risking any potentially state-changing side effect on the server with a request the origin might not actually be authorized to make.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Does a CORS misconfiguration ever expose a real security vulnerability, or is it purely an annoyance during development?</div>
+      <div class="qa-a"><p>It's a genuine security boundary, not just developer friction. An overly permissive CORS policy (e.g., reflecting any <code>Origin</code> header back as allowed, combined with <code>allowCredentials(true)</code>) can let a malicious website make authenticated requests to your API using a victim's existing session cookies, potentially exfiltrating sensitive data or performing state-changing actions on the victim's behalf — a variant of Cross-Site Request Forgery enabled by CORS misconfiguration. This is exactly why the wildcard-plus-credentials combination is spec-forbidden, and why production CORS configs should always enumerate exact trusted origins rather than reflecting arbitrary ones.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 75-81 -->
+<section class="topic" id="docker">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">75–81</span><h2>Docker & Docker Compose — Containerizing MySQL for Local Dev</h2></div>
+  <div class="topic-video">Videos: Docker Desktop Setup · Docker Demystified · Spinning Up MySQL in Seconds · Spring Boot Meets MySQL via Docker · Persistent Volumes · Spring Boot Docker Compose Support · Changing Docker Compose Defaults</div>
+
+  <h3>Why Docker, Conceptually</h3>
+  <p>Before Docker, running a database locally meant installing MySQL directly on your OS — version conflicts between projects, "works on my machine" inconsistencies, and messy uninstalls. <strong>Docker packages an application and all its dependencies (OS libraries, runtime, config) into a single portable, isolated <em>container</em></strong> that runs identically across any machine with Docker installed.</p>
+
+  <table>
+    <tr><th>Concept</th><th>Meaning</th></tr>
+    <tr><td><strong>Image</strong></td><td>A read-only, versioned template/blueprint (e.g. <code>mysql:8.0</code>) — built once, run many times</td></tr>
+    <tr><td><strong>Container</strong></td><td>A running (or stopped) <strong>instance</strong> of an image — isolated process with its own filesystem view, analogous to an object instantiated from a class</td></tr>
+    <tr><td><strong>Dockerfile</strong></td><td>A text file of instructions describing how to build a custom image layer by layer</td></tr>
+    <tr><td><strong>Volume</strong></td><td>Persistent storage that survives container deletion — critical for databases, since a container's own filesystem is ephemeral/deleted when the container is removed</td></tr>
+    <tr><td><strong>Docker Compose</strong></td><td>A YAML-based tool for defining and running <strong>multi-container</strong> applications (e.g., your Spring Boot app + MySQL + Redis together) with a single command</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 Container vs Virtual Machine — Classic Interview Question</div>
+    <p>A VM virtualizes an entire machine including its own OS kernel, making it heavyweight (gigabytes, slow to boot). A container shares the <strong>host machine's OS kernel</strong> and only isolates the application layer (filesystem, processes, network namespace) — making containers far lighter (megabytes), faster to start (seconds vs minutes), and able to run many more instances per host than VMs.</p>
+  </div>
+
+  <h4>Running MySQL in Docker</h4>
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'dk1')">docker run — MySQL container</button>
+      <button class="tab-btn" onclick="showTab(this,'dk2')">With a named volume (persistence)</button>
+    </div>
+    <div class="tab-content active" id="dk1"><pre><span class="cm"># pulls the mysql:8.0 image (if not cached) and starts a container</span>
+docker run --name growthscript-mysql \
+  -e MYSQL_ROOT_PASSWORD=secret \
+  -e MYSQL_DATABASE=jobportal \
+  -p 3306:3306 \
+  -d mysql:8.0
+
+<span class="cm"># -d      = detached mode (runs in background)</span>
+<span class="cm"># -p 3306:3306 = maps host port 3306 -> container port 3306</span>
+<span class="cm"># -e      = environment variables MySQL's image reads on first boot</span></pre></div>
+    <div class="tab-content" id="dk2"><pre><span class="cm"># WITHOUT a volume: deleting the container wipes ALL your data — bad for a DB!</span>
+docker run --name growthscript-mysql \
+  -e MYSQL_ROOT_PASSWORD=secret \
+  -e MYSQL_DATABASE=jobportal \
+  -p 3306:3306 \
+  -v mysql-data:/var/lib/mysql \    <span class="cm"># named volume persists data on the HOST</span>
+  -d mysql:8.0
+
+<span class="cm"># now: docker rm growthscript-mysql  -- container gone, but data in "mysql-data" volume survives</span></pre></div>
+  </div>
+
+  <h4>Docker Compose — Declarative Multi-Container Setup</h4>
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'dc1')">docker-compose.yml</button>
+      <button class="tab-btn" onclick="showTab(this,'dc2')">Spring Boot's built-in Docker Compose support</button>
+    </div>
+    <div class="tab-content active" id="dc1"><pre><span class="kw">version:</span> <span class="str">'3.8'</span>
+<span class="kw">services:</span>
+  <span class="kw">mysql:</span>
+    <span class="kw">image:</span> mysql:8.0
+    <span class="kw">environment:</span>
+      <span class="kw">MYSQL_ROOT_PASSWORD:</span> secret
+      <span class="kw">MYSQL_DATABASE:</span> jobportal
+    <span class="kw">ports:</span>
+      - <span class="str">"3306:3306"</span>
+    <span class="kw">volumes:</span>
+      - mysql-data:/var/lib/mysql
+
+<span class="kw">volumes:</span>
+  <span class="kw">mysql-data:</span>   <span class="cm"># declared once, referenced above</span></pre></div>
+    <div class="tab-content" id="dc2"><pre><span class="cm">&lt;!-- pom.xml — Spring Boot 3.1+ has NATIVE Docker Compose integration --&gt;</span>
+<span class="kw">&lt;dependency&gt;</span>
+    <span class="kw">&lt;groupId&gt;</span>org.springframework.boot<span class="kw">&lt;/groupId&gt;</span>
+    <span class="kw">&lt;artifactId&gt;</span>spring-boot-docker-compose<span class="kw">&lt;/artifactId&gt;</span>
+    <span class="kw">&lt;scope&gt;</span>runtime<span class="kw">&lt;/scope&gt;</span>
+<span class="kw">&lt;/dependency&gt;</span>
+
+<span class="cm">&lt;!-- with a docker-compose.yml in the project root, Spring Boot AUTOMATICALLY
+     starts the container(s) on "mvn spring-boot:run" / app startup, and
+     stops them on shutdown — no manual "docker-compose up" needed! --&gt;</span></pre></div>
+  </div>
+
+  <div class="box info">
+    <div class="box-title">ℹ "Changing Docker Compose Defaults" — Customizing Spring Boot's Auto-Managed Compose</div>
+    <p>Spring Boot's Docker Compose integration ships with sensible defaults (e.g., it stops containers on app shutdown by default). These are overridable via properties like <code>spring.docker.compose.lifecycle-management=start-only</code> (leave containers running after app shutdown, useful to avoid slow MySQL restarts on every dev iteration), or <code>spring.docker.compose.file=custom-compose.yml</code> to point at a non-default compose file location.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why does a Docker volume matter specifically for a database container, and what happens without one?</div>
+      <div class="qa-a"><p>A container's own writable filesystem layer is <strong>ephemeral</strong> — tied to that specific container instance. If you <code>docker rm</code> a MySQL container without a volume, every table and row inside it is <strong>permanently lost</strong>, since the data was only ever written to that container's disposable layer. A <strong>named volume</strong> (or bind mount) stores the actual MySQL data files on the <em>host machine</em>, outside the container's lifecycle — so you can freely stop, remove, and recreate the container (e.g., to upgrade the MySQL image version) while the underlying data persists untouched, and the new container just re-attaches to the same volume.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What's the practical benefit of Spring Boot's native Docker Compose support over manually running docker-compose up?</div>
+      <div class="qa-a"><p>It removes an entire manual step from the developer workflow and reduces "forgot to start the DB" friction — the moment you run/debug the Spring Boot app (even from an IDE), Spring Boot detects the <code>docker-compose.yml</code>, automatically starts the declared services if they're not already running, waits for them to become healthy/ready (via container health checks) before the app itself finishes starting, and can automatically inject the correct connection URL/credentials as Spring properties. This tightens the local dev inner loop considerably compared to manually orchestrating <code>docker-compose up</code> in a separate terminal before every run.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 82-85 -->
+<section class="topic" id="ddl-auto">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">82–85</span><h2>Contact Us Page, ddl-auto & JPA Buddy</h2></div>
+  <div class="topic-video">Videos: Contact Us page intro · How Hibernate Creates Your Tables - Understanding ddl-auto · Hands-on Demo · Meet JPA Buddy</div>
+
+  <h3>ddl-auto — Hibernate's Schema Generation Modes</h3>
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'dd1')">application.properties</button></div>
+    <div class="tab-content active" id="dd1"><pre>spring.jpa.hibernate.ddl-auto=update</pre></div>
+  </div>
+
+  <table>
+    <tr><th>Value</th><th>Behavior</th><th>Recommended Environment</th></tr>
+    <tr><td><code>none</code></td><td>Hibernate does nothing to the schema — you manage it entirely yourself</td><td><strong>Production</strong> — the only safe choice</td></tr>
+    <tr><td><code>validate</code></td><td>Hibernate checks the existing schema matches your entity mappings, but makes <strong>zero changes</strong> — throws an error at startup if mismatched</td><td>Production/staging, as a safety check against schema drift</td></tr>
+    <tr><td><code>update</code></td><td>Hibernate compares entities to the existing schema and applies <strong>additive</strong> changes (new tables/columns) — never drops or renames anything, which means it also never removes obsolete columns</td><td>Local development only</td></tr>
+    <tr><td><code>create</code></td><td>Drops and recreates the entire schema fresh <strong>every application startup</strong> — all data lost every restart</td><td>Local development / quick experiments only</td></tr>
+    <tr><td><code>create-drop</code></td><td>Same as <code>create</code>, but additionally drops the schema when the application shuts down</td><td>Automated integration tests with an ephemeral DB</td></tr>
+  </table>
+
+  <div class="box danger">
+    <div class="box-title">⚠ Never Use update or create in Production</div>
+    <p>This is one of the most common and most dangerous real-world Spring Boot misconfigurations. <code>update</code>'s "additive-only" behavior sounds safe but is unpredictable in practice — Hibernate's schema-diffing heuristics can miss subtle type/constraint mismatches, and it will <strong>never clean up columns you've since removed from your entity</strong>, leading to schema drift over time. <code>create</code>/<code>create-drop</code> in production would catastrophically wipe all data on every deploy/restart. The industry-standard production approach is <code>ddl-auto=validate</code> (or <code>none</code>) combined with a dedicated, version-controlled schema migration tool — <strong>Flyway</strong> or <strong>Liquibase</strong> — which apply explicit, reviewable, ordered SQL migration scripts instead of relying on Hibernate's automatic inference.</p>
+  </div>
+
+  <h3>JPA Buddy</h3>
+  <p><strong>JPA Buddy</strong> is a popular IntelliJ IDEA plugin that accelerates JPA/Hibernate development: generating entity classes from an existing database schema (reverse engineering), generating Flyway/Liquibase migration scripts from entity changes, visual entity-relationship diagrams, and DTO/mapper scaffolding — reducing a lot of the manual boilerplate covered earlier in this section.</p>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why is ddl-auto=validate preferred in production over update, when both seem "safe" (neither drops data)?</div>
+      <div class="qa-a"><p><code>update</code> still <strong>actively modifies</strong> the production schema automatically on every deploy, based on Hibernate's own interpretation of your entity mappings — this is unpredictable and unreviewable: there's no diff to inspect before it runs, no rollback plan, and no guarantee Hibernate's inferred DDL matches exactly what a DBA would write by hand (e.g., missing indexes, wrong column types/precision, missing NOT NULL constraints that Hibernate doesn't always enforce identically to a hand-written migration). <code>validate</code> makes zero changes — it purely <strong>verifies</strong> that entities and the actual schema already agree, failing loudly at startup if they don't. This forces schema changes to go through an explicit, reviewed, version-controlled migration tool (Flyway/Liquibase) instead of implicit auto-DDL — a core production-reliability practice interviewers specifically probe for.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What's the relationship between Flyway/Liquibase and ddl-auto — do they work together?</div>
+      <div class="qa-a"><p>They're alternative, mutually exclusive approaches to the same problem (schema evolution), and mixing them is a recipe for conflicts. Flyway/Liquibase apply <strong>versioned, ordered SQL migration scripts</strong> that are checked into source control, reviewed in pull requests, and applied deterministically in the same order across every environment (dev → staging → production) — giving you an auditable history of every schema change, unlike Hibernate's implicit <code>update</code> inference. The standard production setup is <code>ddl-auto=validate</code> (Hibernate only <em>checks</em> the schema matches, never changes it) paired with Flyway/Liquibase actually owning and applying all schema changes.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 86-87 -->
+<section class="topic" id="contact-api">
+  <div class="topic-head"><span class="topic-num">86–87</span><h2>Creating the Contact Us REST API & Testing It</h2></div>
+  <div class="topic-video">Videos: Creating new REST API for Contact Us scenario · Does It Work? Testing the Contact API with Postman & UI</div>
+
+  <p>This is the section's capstone — wiring together every concept covered so far into one complete, working vertical slice: <code>@Entity</code> → <code>JpaRepository</code> → DTO-based <code>@Service</code> → <code>@RestController</code> with <code>ResponseEntity</code>, running against a Dockerized MySQL instance, callable cross-origin from the Job Portal UI thanks to the CORS config, and verified end-to-end with Postman.</p>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'ca1')">Full vertical slice</button></div>
+    <div class="tab-content active" id="ca1"><pre><span class="an">@RestController</span>
+<span class="an">@RequestMapping</span>(<span class="str">"/api/v1/contacts"</span>)
+<span class="an">@RequiredArgsConstructor</span>  <span class="cm">// Lombok: generates a constructor for all FINAL fields — constructor injection!</span>
+<span class="kw">public class</span> <span class="cl">ContactController</span> {
+
+    <span class="kw">private final</span> ContactService contactService;
+
+    <span class="an">@PostMapping</span>
+    <span class="kw">public</span> ResponseEntity&lt;ContactResponseDto&gt; <span class="mt">create</span>(
+            <span class="an">@Valid</span> <span class="an">@RequestBody</span> ContactRequestDto request) {
+        ContactResponseDto response = contactService.<span class="mt">createContact</span>(request);
+        <span class="kw">return</span> ResponseEntity.<span class="mt">status</span>(HttpStatus.CREATED).<span class="mt">body</span>(response);
+    }
+
+    <span class="an">@GetMapping</span>(<span class="str">"/{id}"</span>)
+    <span class="kw">public</span> ResponseEntity&lt;ContactResponseDto&gt; <span class="mt">getById</span>(<span class="an">@PathVariable</span> String id) {
+        <span class="kw">return</span> ResponseEntity.<span class="mt">ok</span>(contactService.<span class="mt">getContact</span>(id));
+    }
+}</pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 @RequiredArgsConstructor — Lombok + Constructor Injection, the Idiomatic Combo</div>
+    <p>This annotation generates a constructor for every <code>final</code> field automatically — meaning you get all the constructor-injection benefits established back in Section 1 (immutability, testability, fail-fast wiring) <strong>without</strong> hand-writing the constructor at all. This exact combination — <code>@RequiredArgsConstructor</code> + <code>final</code> fields — is the single most common dependency-injection pattern you'll see across real-world production Spring Boot codebases.</p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- MASTER Q&A -->
+<section class="topic" id="interview-master">
+  <span class="section-badge">🎯 Rapid-Fire Round</span>
+  <div class="topic-head"><h2>Master Interview Q&A Bank — Section 4</h2></div>
+  <p class="dim">The data-access-layer questions that come up in nearly every Java backend interview — JPA internals, N+1 queries, transactions, and the persistence context.</p>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>What is the N+1 query problem, and how would you detect and fix it?</div>
+      <div class="qa-a"><p>It occurs when fetching a list of N parent entities triggers <strong>1 query for the parents plus N additional queries</strong> — one per parent — to lazily fetch each one's associated child collection, instead of one efficient join. E.g., fetching 50 <code>Order</code>s then accessing <code>order.getItems()</code> on each inside a loop triggers 50 separate SELECT statements for items. <strong>Detection:</strong> enable <code>spring.jpa.show-sql=true</code> (or better, a tool like p6spy/datasource-proxy) and count queries during a suspicious operation, or use Hibernate's statistics. <strong>Fixes:</strong> use <code>JOIN FETCH</code> in a JPQL query to eagerly fetch the association in a single query, use <code>@EntityGraph</code> to declare fetch plans declaratively, or in some cases switch the association's default fetch type — though changing default fetch type is a blunt, less-targeted fix compared to query-specific <code>JOIN FETCH</code>.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Explain the Persistence Context and the difference between managed, transient, and detached entity states.</div>
+      <div class="qa-a"><p>The <strong>Persistence Context</strong> (managed internally by the <code>EntityManager</code>) is a first-level cache/tracking mechanism holding every entity currently "managed" within the current transaction/session. <strong>Transient</strong> — a plain <code>new Entity()</code> not yet associated with any persistence context or saved to the DB. <strong>Managed</strong> — an entity currently tracked by an active persistence context (after <code>save()</code>/<code>find()</code> within a transaction); any field changes to a managed entity are automatically detected via <strong>dirty checking</strong> and flushed to the DB as an UPDATE at transaction commit, without needing an explicit <code>save()</code> call. <strong>Detached</strong> — an entity that was once managed but whose persistence context has since closed (e.g., transaction ended); changes to a detached entity are no longer automatically tracked or persisted unless explicitly re-attached via <code>merge()</code>.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What's the difference between save() and saveAndFlush() in JpaRepository?</div>
+      <div class="qa-a"><p><code>save()</code> hands the entity to the persistence context, but the actual SQL INSERT/UPDATE is typically <strong>deferred</strong> until the persistence context is flushed (usually at transaction commit, or automatically before certain queries that might need the change visible). <code>saveAndFlush()</code> forces an <strong>immediate</strong> flush to the database right after saving — useful when you need the generated ID or a database-level constraint check (e.g. a unique index violation) to surface immediately, rather than waiting until commit time.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why does accessing a lazy-loaded association outside a transaction throw LazyInitializationException?</div>
+      <div class="qa-a"><p>A <code>FetchType.LAZY</code> association isn't loaded from the database when the parent entity is fetched — Hibernate instead injects a <strong>proxy object</strong> that only triggers the actual SQL query the first time a getter on that association is called. If the persistence context/transaction has already closed by the time that getter is called (e.g., the entity was returned from a <code>@Transactional</code> service method and the association is accessed later in the controller), Hibernate has no active session to run the lazy-load query against, and throws <code>LazyInitializationException</code>. Fixes: fetch the needed data eagerly within the transaction (<code>JOIN FETCH</code>/<code>@EntityGraph</code>), map to a DTO <em>within</em> the transactional service method (before the session closes), or in specific cases use <code>@Transactional</code> at a wider scope — though widening transaction scope purely to work around lazy loading is generally discouraged in favor of explicit fetching.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What does @Transactional actually do under the hood in a Spring service method?</div>
+      <div class="qa-a"><p><code>@Transactional</code> is implemented via <strong>AOP proxying</strong> — Spring wraps the annotated bean in a proxy that, before the method executes, begins a database transaction (or joins an existing one, per the configured propagation), and after the method completes, either <strong>commits</strong> the transaction (if the method returned normally) or <strong>rolls it back</strong> (by default, only on unchecked/<code>RuntimeException</code>s — checked exceptions do NOT trigger rollback unless explicitly configured via <code>rollbackFor</code>). Because it's proxy-based AOP, <code>@Transactional</code> has a well-known limitation: calling a <code>@Transactional</code> method from <em>within the same class</em> (self-invocation) bypasses the proxy entirely and the transactional behavior silently does not apply — a classic "gotcha" interview question.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How would you paginate a large result set efficiently using Spring Data JPA?</div>
+      <div class="qa-a"><p>Have the repository method accept a <code>Pageable</code> parameter and return <code>Page&lt;T&gt;</code>: <code>Page&lt;Contact&gt; findByStatus(String status, Pageable pageable)</code>. Spring Data JPA translates this into a <code>LIMIT</code>/<code>OFFSET</code>-based (or keyset, in newer versions) SQL query automatically, and <code>Page&lt;T&gt;</code> conveniently bundles the content, total element count, and total page count together. The controller typically builds the <code>Pageable</code> from request query params (<code>page</code>, <code>size</code>, <code>sort</code>) using Spring MVC's built-in <code>Pageable</code> argument resolver. For very large offsets on huge tables, plain offset-based pagination degrades in performance (the DB must still scan/skip all preceding rows) — keyset/cursor-based pagination (filtering by "last seen ID/timestamp" instead of an offset) is the more scalable alternative worth mentioning for senior-level system design discussions.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What's the difference between @OneToMany, @ManyToOne, @OneToOne, and @ManyToMany, and which side owns the relationship?</div>
+      <div class="qa-a"><p>These map JPA entity associations to foreign-key relationships. The <strong>owning side</strong> is the one holding the actual foreign key column and is responsible for the relationship being persisted correctly — typically the <code>@ManyToOne</code> side (e.g., many <code>Order</code>s reference one <code>Customer</code>; <code>Order</code> owns the FK). The inverse/non-owning side uses <code>mappedBy</code> to point back at the owning side's field, and changes made only on the inverse side without also updating the owning side won't be persisted — a very common source of "why didn't my relationship save?" bugs, and a strong signal an interviewer is checking whether a candidate understands owning-vs-inverse mapping rather than just knowing the annotation names.</p></div>
+    </div>
+  </div>
+
+  <div class="box info" style="margin-top:28px;">
+    <div class="box-title">ℹ Next Section</div>
+    <p>Paste the next section's video list whenever you're ready, and I'll build the next HTML notes doc in this same design system.</p>
+  </div>
+
+  <footer>GrowthScript Engineering — Spring Boot Interview Bible · Section 4 of N</footer>
+</section>
+
+</main>
+</div>
+
+<script>
+function applySpringCoreTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  document.body.setAttribute('data-theme', theme);
+  localStorage.setItem('theme', theme);
+  const btn = document.getElementById('theme-toggle-btn');
+  if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+}
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme') || document.body.getAttribute('data-theme') || 'dark';
+  applySpringCoreTheme(cur === 'dark' ? 'light' : 'dark');
+}
+function showTab(btn, id){
+  const block = btn.closest('.code-block');
+  block.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  block.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  block.querySelector('#'+id).classList.add('active');
+}
+document.querySelectorAll('.qa-q').forEach(q=>{
+  q.addEventListener('click', ()=> q.parentElement.classList.toggle('open'));
+});
+(function(){
+  const savedTheme = localStorage.getItem('theme') || document.documentElement.getAttribute('data-theme') || 'dark';
+  applySpringCoreTheme(savedTheme);
+  const btn = document.getElementById('theme-toggle-btn');
+  if (btn) btn.addEventListener('click', toggleTheme);
+})();
+</script>
+</body>
+</html>

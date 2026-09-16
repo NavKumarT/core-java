@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Section 3: Mastering Spring Boot REST API Development | GrowthScript Engineering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117; --bg-elev:#151b23; --bg-card:#1a2230; --border:#2a3441;
+  --text:#e6edf3; --text-dim:#9aa7b5; --text-faint:#6e7c8c;
+  --accent:#3fb950; --accent-soft:rgba(63,185,80,.12);
+  --blue:#58a6ff; --blue-soft:rgba(88,166,255,.12);
+  --warn:#f0883e; --warn-soft:rgba(240,136,62,.12);
+  --danger:#f85149; --danger-soft:rgba(248,81,73,.12);
+  --code-bg:#0a0e14; --sidebar-w:290px; --radius:10px;
+  --shadow:0 4px 16px rgba(0,0,0,.35);
+}
+[data-theme="light"]{
+  --bg:#f6f8fa; --bg-elev:#ffffff; --bg-card:#ffffff; --border:#d8dee4;
+  --text:#1b2430; --text-dim:#4b5563; --text-faint:#8a96a3;
+  --accent:#1a7f37; --accent-soft:rgba(26,127,55,.08);
+  --blue:#0969da; --blue-soft:rgba(9,105,218,.08);
+  --warn:#9a6700; --warn-soft:rgba(154,103,0,.08);
+  --danger:#cf222e; --danger-soft:rgba(207,34,46,.08);
+  --code-bg:#0d1117; --shadow:0 2px 10px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); line-height:1.65; font-size:15.5px; transition:background .2s,color .2s;}
+code, pre, .mono{font-family:'Space Mono',monospace;}
+a{color:var(--blue); text-decoration:none;}
+a:hover{text-decoration:underline;}
+.wrapper{display:flex; min-height:100vh;}
+.sidebar{width:var(--sidebar-w); flex-shrink:0; background:var(--bg-elev); border-right:1px solid var(--border); position:sticky; top:0; height:100vh; overflow-y:auto; padding:22px 16px 40px;}
+.sidebar::-webkit-scrollbar{width:6px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border); border-radius:3px;}
+.brand{display:flex; align-items:center; gap:10px; margin-bottom:4px;}
+.brand-badge{width:34px; height:34px; border-radius:8px; background:var(--accent); display:flex; align-items:center; justify-content:center; color:#0d1117; font-weight:800; font-family:'Space Mono',monospace; font-size:15px; flex-shrink:0;}
+.brand-text{font-weight:800; font-size:14.5px; letter-spacing:.2px;}
+.brand-sub{font-size:11px; color:var(--text-faint); margin-top:1px;}
+.theme-toggle{margin:16px 0 20px; width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; font-size:12.5px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px;}
+.nav-group{margin-bottom:6px;}
+.nav-label{font-size:10.5px; text-transform:uppercase; letter-spacing:.9px; color:var(--text-faint); font-weight:700; margin:18px 4px 8px;}
+.nav-link{display:block; padding:7px 10px; border-radius:7px; font-size:13px; color:var(--text-dim); border-left:2px solid transparent; margin-bottom:1px;}
+.nav-link:hover{background:var(--accent-soft); color:var(--text); text-decoration:none;}
+.nav-link.sub{padding-left:22px; font-size:12.3px;}
+.main{flex:1; min-width:0; padding:44px 56px 120px; max-width:980px;}
+.header-block{margin-bottom:44px; padding-bottom:28px; border-bottom:1px solid var(--border);}
+.eyebrow{font-family:'Space Mono',monospace; font-size:11.5px; color:var(--accent); font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:10px;}
+.header-block h1{font-size:32px; font-weight:800; letter-spacing:-.5px; margin-bottom:12px;}
+.header-block p{color:var(--text-dim); font-size:15px; max-width:680px;}
+.meta-row{display:flex; gap:18px; margin-top:16px; flex-wrap:wrap;}
+.meta-pill{font-size:11.5px; padding:5px 11px; border-radius:20px; background:var(--bg-card); border:1px solid var(--border); color:var(--text-dim); font-family:'Space Mono',monospace;}
+section.topic{margin-bottom:56px; scroll-margin-top:24px;}
+.topic-head{display:flex; align-items:baseline; gap:12px; margin-bottom:6px;}
+.topic-num{font-family:'Space Mono',monospace; color:var(--accent); font-weight:700; font-size:14px;}
+h2{font-size:23px; font-weight:800; letter-spacing:-.3px;}
+.topic-video{font-size:12px; color:var(--text-faint); margin-bottom:20px; margin-top:2px; font-family:'Space Mono',monospace;}
+h3{font-size:17.5px; font-weight:700; margin:26px 0 12px; color:var(--text);}
+h4{font-weight:700; margin:18px 0 8px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.4px; font-size:12.5px;}
+p{margin-bottom:13px; color:var(--text); font-size:15px;}
+p.dim{color:var(--text-dim);}
+ul, ol{margin:0 0 15px 22px;}
+li{margin-bottom:7px; font-size:14.8px;}
+strong{color:var(--text); font-weight:700;}
+.hl{color:var(--accent); font-weight:700;}
+.box{border-radius:var(--radius); padding:16px 18px; margin:18px 0; border:1px solid var(--border); font-size:14.3px;}
+.box-title{font-weight:700; font-size:12.5px; text-transform:uppercase; letter-spacing:.5px; margin-bottom:7px; display:flex; align-items:center; gap:7px;}
+.tip{background:var(--accent-soft); border-color:rgba(63,185,80,.3);} .tip .box-title{color:var(--accent);}
+.warn{background:var(--warn-soft); border-color:rgba(240,136,62,.3);} .warn .box-title{color:var(--warn);}
+.info{background:var(--blue-soft); border-color:rgba(88,166,255,.3);} .info .box-title{color:var(--blue);}
+.danger{background:var(--danger-soft); border-color:rgba(248,81,73,.3);} .danger .box-title{color:var(--danger);}
+.code-block{background:var(--code-bg); border-radius:var(--radius); overflow:hidden; margin:16px 0; border:1px solid var(--border); box-shadow:var(--shadow);}
+.tabs{display:flex; background:rgba(255,255,255,.03); border-bottom:1px solid rgba(255,255,255,.08); overflow-x:auto;}
+.tab-btn{padding:9px 16px; font-family:'Space Mono',monospace; font-size:12px; color:#8a96a3; background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap;}
+.tab-btn.active{color:#e6edf3; border-bottom-color:var(--accent);}
+.tab-content{display:none; padding:16px 18px; overflow-x:auto;}
+.tab-content.active{display:block;}
+.tab-content pre{color:#c9d1d9; font-size:13px; line-height:1.65; white-space:pre;}
+.tab-content .kw{color:#ff7b72;} .tab-content .str{color:#a5d6ff;} .tab-content .cm{color:#8b949e; font-style:italic;}
+.tab-content .an{color:#d2a8ff;} .tab-content .cl{color:#79c0ff;} .tab-content .mt{color:#d2a8ff;}
+table{width:100%; border-collapse:collapse; margin:16px 0; font-size:13.8px;}
+th{text-align:left; padding:9px 12px; background:var(--bg-card); border-bottom:2px solid var(--border); font-size:11.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--text-dim);}
+td{padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top;}
+tr:hover td{background:var(--accent-soft);}
+.qa-wrap{margin-top:18px;}
+.qa-item{border:1px solid var(--border); border-radius:var(--radius); margin-bottom:10px; overflow:hidden; background:var(--bg-card);}
+.qa-q{padding:14px 46px 14px 18px; cursor:pointer; font-weight:600; font-size:14.3px; position:relative; display:flex; align-items:center; gap:10px;}
+.qa-q:hover{background:var(--accent-soft);}
+.qa-tag{font-family:'Space Mono',monospace; font-size:9.5px; padding:2px 7px; border-radius:4px; font-weight:700; flex-shrink:0; text-transform:uppercase; letter-spacing:.3px;}
+.tag-faang{background:rgba(248,81,73,.15); color:var(--danger);}
+.tag-core{background:rgba(88,166,255,.15); color:var(--blue);}
+.qa-q::after{content:'+'; position:absolute; right:18px; top:50%; transform:translateY(-50%); font-size:20px; color:var(--text-faint); font-weight:400;}
+.qa-item.open .qa-q::after{content:'−';}
+.qa-a{max-height:0; overflow:hidden; transition:max-height .25s ease; padding:0 18px;}
+.qa-item.open .qa-a{max-height:1200px; padding:2px 18px 18px;}
+.qa-a p{font-size:14px; color:var(--text-dim);}
+.qa-a ul{margin-top:6px;}
+.qa-a li{color:var(--text-dim); font-size:13.8px;}
+.divider{height:1px; background:var(--border); margin:44px 0;}
+.section-badge{display:inline-block; background:var(--accent); color:#0d1117; font-family:'Space Mono',monospace; font-weight:700; font-size:11px; padding:4px 10px; border-radius:6px; margin-bottom:14px;}
+.diagram{background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin:18px 0; font-family:'Space Mono',monospace; font-size:12.5px; color:var(--text-dim); overflow-x:auto; white-space:pre; line-height:1.5;}
+footer{margin-top:60px; padding-top:24px; border-top:1px solid var(--border); color:var(--text-faint); font-size:12px;}
+@media(max-width:900px){
+  .sidebar{position:fixed; left:-100%; z-index:50; transition:left .2s; box-shadow:var(--shadow);}
+  .sidebar.open{left:0;}
+  .main{padding:24px 20px 100px;}
+  .mobile-toggle{display:block !important;}
+}
+.mobile-toggle{display:none; position:fixed; top:16px; left:16px; z-index:60; background:var(--accent); color:#0d1117; border:none; border-radius:8px; width:40px; height:40px; font-size:18px; font-weight:700;}
+</style>
+<link rel="stylesheet" href="../style-guide.css">
+</head>
+<body data-theme="dark">
+
+<button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark/light mode" aria-label="Toggle theme">☀️</button>
+<button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="wrapper">
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-badge">G</div>
+    <div>
+      <div class="brand-text">GrowthScript Eng.</div>
+      <div class="brand-sub">Spring Boot Bible</div>
+    </div>
+  </div>
+  <button class="theme-toggle" onclick="toggleTheme()">🌗 Toggle Theme</button>
+
+  <div class="nav-group">
+    <div class="nav-label">Section 03 · REST APIs</div>
+    <a class="nav-link" href="#sb-intro">32–33. App UI & Spring Boot Intro</a>
+    <a class="nav-link" href="#first-endpoint">34. First REST Endpoint</a>
+    <a class="nav-link" href="#starters">35. Spring Boot Starters</a>
+    <a class="nav-link" href="#restcontroller">36. @RestController Magic</a>
+    <a class="nav-link" href="#sba">37. Decoding @SpringBootApplication</a>
+    <a class="nav-link" href="#autoconfig">38. Auto-Configuration</a>
+    <a class="nav-link" href="#best-practices">39. REST API Best Practices</a>
+    <a class="nav-link" href="#http-anatomy">40. HTTP Request/Response Anatomy</a>
+    <a class="nav-link" href="#pathvariable">41–42. @PathVariable</a>
+    <a class="nav-link" href="#postman">43. Postman</a>
+    <a class="nav-link" href="#requestmapping">44. @RequestMapping</a>
+    <a class="nav-link" href="#requestparam">45. @RequestParam</a>
+    <a class="nav-link" href="#requestheader">46. @RequestHeader</a>
+    <a class="nav-link" href="#requestbody">47. @RequestBody</a>
+    <a class="nav-link" href="#requestentity">48. RequestEntity</a>
+    <a class="nav-link" href="#responseentity">49. ResponseEntity</a>
+    <a class="nav-link" href="#versioning">50–54. API Versioning</a>
+    <a class="nav-link" href="#interview-master">Master Interview Q&A Bank</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="nav-header"><a href="../index.html" class="back-home">← Back to Notes Hub</a></div>
+
+<div class="header-block">
+  <div class="eyebrow">Java Backend Engineer · Spring Boot Course</div>
+  <h1>Section 3 — Mastering Spring Boot REST API Development</h1>
+  <p>From "Hello World" endpoint to production-grade REST design: Spring Boot's auto-configuration machinery, every request/response annotation you'll actually use (<code>@PathVariable</code>, <code>@RequestParam</code>, <code>@RequestHeader</code>, <code>@RequestBody</code>, <code>ResponseEntity</code>), REST best practices, and the API versioning strategies that come up constantly in system design interviews.</p>
+  <div class="meta-row">
+    <span class="meta-pill">Videos 32–54</span>
+    <span class="meta-pill">~3.5 hrs runtime</span>
+    <span class="meta-pill">FAANG + Fintech interview focus</span>
+    <span class="meta-pill">Builds on Sections 1–2</span>
+  </div>
+</div>
+
+<!-- 32-33 -->
+<section class="topic" id="sb-intro">
+  <div class="topic-head"><span class="topic-num">32–33</span><h2>First Look at the App UI & Spring Boot — The Hero of Spring</h2></div>
+  <div class="topic-video">Videos: First Look at Our Application UI · Introduction to Spring Boot - The HERO of Spring Framework</div>
+
+  <p>Spring Boot is called the "hero" of the Spring ecosystem because it solves the single biggest historical complaint about Spring: <strong>too much configuration overhead</strong> to get a working application running. It layers three things on top of core Spring:</p>
+  <ol>
+    <li><strong>Auto-configuration</strong> — inspects the classpath and configures beans automatically based on what's present.</li>
+    <li><strong>Starter dependencies</strong> — curated dependency bundles so you never hand-pick 15 individually-versioned JARs.</li>
+    <li><strong>Embedded servers</strong> — Tomcat/Jetty/Undertow bundled in, producing a self-contained executable JAR — no separate application server installation/deployment required.</li>
+  </ol>
+
+  <div class="box tip">
+    <div class="box-title">💡 The Mental Model to State in Interviews</div>
+    <p>"Spring Boot doesn't replace Spring — every annotation and container concept from Spring Core (IoC, DI, beans, ApplicationContext) still applies underneath. Spring Boot's job is purely to eliminate the configuration ceremony required to get a Spring application running in production, via auto-configuration, starters, and embedded servers."</p>
+  </div>
+</section>
+
+<!-- 34 -->
+<section class="topic" id="first-endpoint">
+  <div class="topic-head"><span class="topic-num">34</span><h2>Creating Your First Spring Boot REST Endpoint</h2></div>
+  <div class="topic-video">Video: Creating Your First Spring Boot REST Endpoint</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'fe1')">HelloController.java</button></div>
+    <div class="tab-content active" id="fe1"><pre><span class="an">@RestController</span>
+<span class="kw">public class</span> <span class="cl">HelloController</span> {
+
+    <span class="an">@GetMapping</span>(<span class="str">"/hello"</span>)
+    <span class="kw">public</span> String <span class="mt">sayHello</span>() {
+        <span class="kw">return</span> <span class="str">"Hello, GrowthScript!"</span>;
+    }
+}</pre></div>
+  </div>
+
+  <p>Three moving parts make this work with zero XML/manual servlet config: <strong>@RestController</strong> registers the class as a Spring-managed bean whose method return values are serialized directly to the HTTP response body; <strong>@GetMapping</strong> maps HTTP GET requests on <code>/hello</code> to this method; the <strong>embedded Tomcat server</strong> (brought in transitively by <code>spring-boot-starter-web</code>) is what actually listens on port 8080 and routes the incoming request to Spring MVC's <code>DispatcherServlet</code>, which in turn invokes this method.</p>
+
+  <div class="diagram">Browser/Postman ──GET /hello──▶ Embedded Tomcat (port 8080)
+                                        │
+                                        ▼
+                              DispatcherServlet (Front Controller)
+                                        │
+                          (consults HandlerMapping registry)
+                                        │
+                                        ▼
+                         HelloController.sayHello() invoked
+                                        │
+                                        ▼
+                    "Hello, GrowthScript!" written directly to
+                     response body (via HttpMessageConverter)</div>
+</section>
+
+<!-- 35 -->
+<section class="topic" id="starters">
+  <div class="topic-head"><span class="topic-num">35</span><h2>What Are Spring Boot Starters?</h2></div>
+  <div class="topic-video">Video: What are Spring Boot Starters?</div>
+
+  <p>A <strong>starter</strong> is a special Maven artifact that has <strong>no code of its own</strong> — it's purely a POM declaring a curated set of transitive dependencies known to work well together, at compatible versions, for a specific purpose.</p>
+
+  <table>
+    <tr><th>Starter</th><th>Brings In</th></tr>
+    <tr><td><code>spring-boot-starter-web</code></td><td>Spring MVC, embedded Tomcat, Jackson (JSON), validation basics</td></tr>
+    <tr><td><code>spring-boot-starter-data-jpa</code></td><td>Hibernate, Spring Data JPA, JDBC core, HikariCP connection pool</td></tr>
+    <tr><td><code>spring-boot-starter-security</code></td><td>Spring Security core + auto-configuration</td></tr>
+    <tr><td><code>spring-boot-starter-test</code></td><td>JUnit 5, Mockito, AssertJ, Spring Test — bundled as <code>test</code> scope</td></tr>
+    <tr><td><code>spring-boot-starter-validation</code></td><td>Hibernate Validator (Bean Validation / JSR-380 — <code>@NotNull</code>, <code>@Size</code>, etc.)</td></tr>
+    <tr><td><code>spring-boot-starter-actuator</code></td><td>Production-ready monitoring endpoints (health, metrics, env)</td></tr>
+  </table>
+
+  <div class="box info">
+    <div class="box-title">ℹ Naming Convention</div>
+    <p>Official Spring Boot starters follow <code>spring-boot-starter-*</code>. Third-party libraries that provide their own Spring Boot starter follow the reverse convention <code>*-spring-boot-starter</code> (e.g. <code>mybatis-spring-boot-starter</code>) — a subtle naming distinction some interviewers ask about to check real hands-on exposure.</p>
+  </div>
+</section>
+
+<!-- 36 -->
+<section class="topic" id="restcontroller">
+  <div class="topic-head"><span class="topic-num">36</span><h2>The Magic of @RestController</h2></div>
+  <div class="topic-video">Video: The Magic of @RestController</div>
+
+  <p><code>@RestController</code> = <code>@Controller</code> + <code>@ResponseBody</code>. The critical mechanism to understand: without <code>@ResponseBody</code>, Spring MVC treats a controller method's return <code>String</code> as a <strong>logical view name</strong> to be resolved by a <code>ViewResolver</code> (e.g., a Thymeleaf template named "hello"). With <code>@ResponseBody</code> present, Spring instead passes the return value to an <strong>HttpMessageConverter</strong> (Jackson, by default, for JSON) which serializes it directly into the HTTP response body.</p>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'rc1')">Object serialization</button></div>
+    <div class="tab-content active" id="rc1"><pre><span class="an">@RestController</span>
+<span class="kw">public class</span> <span class="cl">UserController</span> {
+
+    <span class="an">@GetMapping</span>(<span class="str">"/users/1"</span>)
+    <span class="kw">public</span> User <span class="mt">getUser</span>() {
+        <span class="kw">return new</span> User(<span class="str">"Nikhil"</span>, <span class="str">"Backend Engineer"</span>);
+        <span class="cm">// Jackson's MappingJackson2HttpMessageConverter automatically</span>
+        <span class="cm">// serializes this POJO into: {"name":"Nikhil","role":"Backend Engineer"}</span>
+    }
+}</pre></div>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How does Spring know to convert a Java object to JSON specifically, and could it return XML instead?</div>
+      <div class="qa-a"><p>Spring MVC uses <strong>content negotiation</strong> — it inspects the request's <code>Accept</code> header (and other factors like URL suffix or a configured default) to decide which registered <code>HttpMessageConverter</code> to use for serialization. Jackson's JSON converter is registered by default when <code>spring-boot-starter-web</code> is on the classpath and is the default choice absent other signals. If <code>jackson-dataformat-xml</code> is also on the classpath and the client sends <code>Accept: application/xml</code>, Spring can serialize the same object as XML instead — no code change to the controller required, since serialization is entirely decoupled from business logic via the message converter abstraction.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 37 -->
+<section class="topic" id="sba">
+  <div class="topic-head"><span class="topic-num">37</span><h2>Launching Your App — Decoding @SpringBootApplication</h2></div>
+  <div class="topic-video">Video: Launching Your App - Decoding @SpringBootApplication</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'sba1')">Effective expansion</button></div>
+    <div class="tab-content active" id="sba1"><pre><span class="cm">// @SpringBootApplication is EXACTLY equivalent to writing all three:</span>
+<span class="an">@Configuration</span>          <span class="cm">// this class is itself a source of bean definitions</span>
+<span class="an">@EnableAutoConfiguration</span> <span class="cm">// triggers classpath-based auto-configuration</span>
+<span class="an">@ComponentScan</span>          <span class="cm">// scans current package + sub-packages for components</span>
+<span class="kw">public class</span> <span class="cl">EazyBankApplication</span> {
+    <span class="kw">public static void</span> <span class="mt">main</span>(String[] args) {
+        SpringApplication.<span class="mt">run</span>(EazyBankApplication.<span class="kw">class</span>, args);
+    }
+}</pre></div>
+  </div>
+
+  <table>
+    <tr><th>Component Annotation</th><th>Role</th></tr>
+    <tr><td><code>@Configuration</code></td><td>Marks the main class as eligible to define <code>@Bean</code> methods (also enables CGLIB proxying discussed in Section 1)</td></tr>
+    <tr><td><code>@EnableAutoConfiguration</code></td><td>The core "magic" switch — activates Spring Boot's conditional auto-configuration classes based on classpath contents (detailed next)</td></tr>
+    <tr><td><code>@ComponentScan</code></td><td>Scans the package containing the annotated class (and all sub-packages) for <code>@Component</code>/<code>@Service</code>/<code>@Repository</code>/<code>@Controller</code> classes</td></tr>
+  </table>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Main Class Placement Matters</div>
+    <p>Because <code>@ComponentScan</code>'s default base package is derived from the main application class's package, the main class should sit at the <strong>root</strong> of your project's package structure (e.g. <code>com.growthscript</code>), with all other packages as sub-packages beneath it. Placing it in a leaf package silently excludes sibling packages from scanning — a very common real bug.</p>
+  </div>
+</section>
+
+<!-- 38 -->
+<section class="topic" id="autoconfig">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">38</span><h2>Auto-Configuration — Spring Boot Working Behind the Curtain</h2></div>
+  <div class="topic-video">Video: Auto-Configuration - Spring Boot Working Behind the Curtain</div>
+
+  <p><strong>Auto-configuration</strong> is Spring Boot's mechanism for automatically registering beans based on what's present on the classpath, what beans already exist in the context, and what properties are set — <em>without you writing any explicit <code>@Bean</code> methods</em>.</p>
+
+  <h4>How It Actually Works, Step by Step</h4>
+  <ol>
+    <li>At startup, Spring Boot scans <code>META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports</code> (in modern Boot 3.x; the older mechanism used <code>spring.factories</code>) inside every JAR on the classpath, collecting a list of candidate auto-configuration classes.</li>
+    <li>Each candidate class is a normal <code>@Configuration</code> class, but annotated with <strong>conditional annotations</strong> that gate whether it actually activates.</li>
+    <li>Spring evaluates each condition; only auto-configuration classes whose conditions are satisfied contribute beans to the context.</li>
+  </ol>
+
+  <table>
+    <tr><th>Conditional Annotation</th><th>Activates When...</th></tr>
+    <tr><td><code>@ConditionalOnClass</code></td><td>A specific class is present on the classpath (e.g., only configure a <code>DataSource</code> if a JDBC driver class exists)</td></tr>
+    <tr><td><code>@ConditionalOnMissingBean</code></td><td>No bean of that type is <em>already</em> defined — this is exactly how your own custom <code>@Bean</code> silently and safely overrides Spring Boot's default</td></tr>
+    <tr><td><code>@ConditionalOnProperty</code></td><td>A specific <code>application.properties</code>/<code>.yml</code> key is set to a given value (or just present)</td></tr>
+    <tr><td><code>@ConditionalOnWebApplication</code></td><td>The app is detected as a web application (servlet or reactive)</td></tr>
+    <tr><td><code>@ConditionalOnBean</code></td><td>Another specific bean already exists in the context</td></tr>
+  </table>
+
+  <div class="diagram">spring-boot-starter-data-jpa on classpath?
+        │
+        ▼ YES
+@ConditionalOnClass(DataSource.class) — is javax.sql.DataSource on classpath? YES
+        │
+        ▼
+DataSourceAutoConfiguration activates
+        │
+        ▼
+@ConditionalOnMissingBean(DataSource.class) — did YOU define your own DataSource bean?
+        │
+   ┌────┴─────┐
+  NO           YES
+   │             │
+   ▼             ▼
+Boot creates   Boot backs off — YOUR bean wins,
+default        auto-config silently does nothing
+HikariCP
+DataSource</div>
+
+  <div class="box tip">
+    <div class="box-title">💡 The Golden Rule of Auto-Configuration</div>
+    <p><strong>"You always win."</strong> Every Spring Boot default bean is guarded by <code>@ConditionalOnMissingBean</code>, meaning the moment you define your own bean of that type, Boot's auto-configured default silently steps aside. This is precisely why you can override literally any Spring Boot default — <code>ObjectMapper</code>, <code>DataSource</code>, <code>RestTemplate</code>, security filter chains — just by defining your own <code>@Bean</code>.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How would you debug why a particular auto-configuration class did or didn't activate?</div>
+      <div class="qa-a"><p>Set <code>--debug</code> as a startup flag (or <code>debug=true</code> in <code>application.properties</code>) — Spring Boot prints a detailed <strong>"Conditions Evaluation Report"</strong> on startup, listing every auto-configuration class as either "Positive matches" (activated, with the exact condition that passed) or "Negative matches" (skipped, with the exact condition that failed and why). This is the single most useful real-world debugging tool for auto-configuration mysteries and is worth naming by name in an interview.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Can you write your own custom auto-configuration? When would that be appropriate?</div>
+      <div class="qa-a"><p>Yes — this is exactly how third-party Spring Boot starters work (e.g., a company-internal shared library that auto-configures a standard <code>RestTemplate</code> with company-wide interceptors/timeouts for every microservice). You create a <code>@AutoConfiguration</code>-annotated class (Boot 3.x) with the appropriate <code>@Conditional*</code> guards, then register it in <code>META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports</code> inside your library JAR. Appropriate when you want to give consuming teams "it just works" defaults for a cross-cutting concern, the same way Spring Boot itself does for <code>DataSource</code>/<code>ObjectMapper</code>/etc.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What's the difference between @Conditional, @ConditionalOnBean, and @ConditionalOnMissingBean?</div>
+      <div class="qa-a"><p><code>@Conditional</code> is the low-level, general-purpose building block — you supply a custom <code>Condition</code> implementation with arbitrary matching logic. <code>@ConditionalOnBean</code>/<code>@ConditionalOnMissingBean</code> are specific, ready-made conditions built on top of it, checking presence/absence of a bean of a given type in the context at the point of evaluation. Ordering matters for these two — auto-configuration classes are carefully ordered (via <code>@AutoConfigureOrder</code>/<code>@AutoConfigureAfter</code>/<code>@AutoConfigureBefore</code>) so that "on missing bean" checks run after user-defined beans and higher-priority auto-configurations have already been registered.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 39 -->
+<section class="topic" id="best-practices">
+  <div class="topic-head"><span class="topic-num">39</span><h2>REST API Best Practices</h2></div>
+  <div class="topic-video">Video: REST API Best Practices</div>
+
+  <table>
+    <tr><th>Practice</th><th>Why It Matters</th></tr>
+    <tr><td>Use <strong>nouns, not verbs</strong>, in URIs (<code>/orders</code>, not <code>/getOrders</code>)</td><td>HTTP methods already express the verb — the URI should identify a resource</td></tr>
+    <tr><td>Use the <strong>correct HTTP method</strong> for the operation's semantics</td><td>GET=read (safe, idempotent), POST=create, PUT=full update (idempotent), PATCH=partial update, DELETE=remove (idempotent)</td></tr>
+    <tr><td>Use <strong>plural resource names</strong> (<code>/users/42</code>, not <code>/user/42</code>)</td><td>Consistency and convention across the industry</td></tr>
+    <tr><td>Return <strong>correct HTTP status codes</strong></td><td>200 OK, 201 Created, 204 No Content, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 409 Conflict, 500 Internal Server Error — each communicates precise semantic meaning to clients</td></tr>
+    <tr><td><strong>Version your API</strong></td><td>Prevents breaking existing clients when the contract changes (deep dive later in this section)</td></tr>
+    <tr><td>Use <strong>pagination</strong> for large collections</td><td>Prevents unbounded response sizes and memory/latency issues at scale</td></tr>
+    <tr><td>Support <strong>filtering, sorting</strong> via query params</td><td><code>/orders?status=PENDING&amp;sort=createdAt,desc</code> — keeps endpoints flexible without proliferating one-off routes</td></tr>
+    <tr><td>Use <strong>consistent, structured error responses</strong></td><td>A standard error body shape (code, message, timestamp, path) makes client-side error handling predictable</td></tr>
+    <tr><td><strong>Idempotency</strong> for PUT/DELETE</td><td>Calling the same request multiple times produces the same end state — critical for safe retries over unreliable networks</td></tr>
+    <tr><td><strong>HATEOAS</strong> (optional, advanced)</td><td>Responses include hyperlinks to related/next actions, letting clients discover the API dynamically rather than hardcoding URLs</td></tr>
+  </table>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Common REST Design Mistakes Interviewers Probe For</div>
+    <ul>
+      <li>Using GET for state-changing operations (breaks caching/idempotency assumptions and is a CSRF risk).</li>
+      <li>Returning 200 OK for everything, including errors, with the "real" error status buried in the response body.</li>
+      <li>Deeply nested URIs beyond 2–3 levels (<code>/users/1/orders/5/items/3/reviews/9</code>) — usually a sign resources should be flattened or accessed by their own top-level endpoints with filters.</li>
+      <li>Not handling partial failures consistently in batch endpoints.</li>
+    </ul>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>What's the difference between PUT and PATCH, and why does idempotency matter for each?</div>
+      <div class="qa-a"><p><strong>PUT</strong> replaces the <em>entire</em> resource with the payload provided — calling it twice with the same body leaves the resource in the same final state (idempotent). <strong>PATCH</strong> applies a <em>partial</em> update (e.g., "increment counter by 1" or "set only the email field") — it is <strong>not inherently idempotent</strong> unless deliberately designed that way (e.g., "set email to X" is idempotent; "increment counter by 1" is not, since repeating it changes the result each time). This distinction matters heavily for safe client-side retry logic over flaky networks — clients can safely retry idempotent operations blindly, but must be more careful retrying non-idempotent ones (e.g., using idempotency keys).</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Why is GET considered a "safe" method in addition to idempotent?</div>
+      <div class="qa-a"><p>"Safe" (per the HTTP spec) means the method causes <strong>no server-side state change at all</strong> — it's purely a read. "Idempotent" is a weaker guarantee — repeating the call produces the same end state, but state may still have changed on the first call (e.g., DELETE is idempotent — deleting an already-deleted resource still leaves it deleted — but not safe, since the first call did change state). GET is both safe and idempotent; DELETE and PUT are idempotent but not safe; POST is neither by default.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 40 -->
+<section class="topic" id="http-anatomy">
+  <div class="topic-head"><span class="topic-num">40</span><h2>Anatomy of an HTTP Request and Response</h2></div>
+  <div class="topic-video">Video: Anatomy of an HTTP Request and Response</div>
+
+  <div class="diagram">HTTP REQUEST                             HTTP RESPONSE
+┌─────────────────────────────┐         ┌─────────────────────────────┐
+│ POST /api/v1/orders HTTP/1.1 │  Request │ HTTP/1.1 201 Created         │  Status
+│                               │  Line    │                               │  Line
+├─────────────────────────────┤         ├─────────────────────────────┤
+│ Host: api.growthscript.com   │         │ Content-Type: application/json│
+│ Content-Type: application/json│ Headers │ Location: /orders/9182        │  Headers
+│ Authorization: Bearer eyJ...  │         │ X-Request-Id: abc-123         │
+├─────────────────────────────┤         ├─────────────────────────────┤
+│ {                             │  Body    │ {                             │  Body
+│   "productId": 42,            │  (optional)│  "orderId": 9182,            │
+│   "quantity": 2                │        │   "status": "CONFIRMED"       │
+│ }                              │         │ }                             │
+└─────────────────────────────┘         └─────────────────────────────┘</div>
+
+  <p>Every piece of this maps to a specific Spring MVC annotation you'll cover in this section: the <strong>request line's path segments</strong> → <code>@PathVariable</code>; <strong>query string</strong> → <code>@RequestParam</code>; <strong>headers</strong> → <code>@RequestHeader</code>; <strong>body</strong> → <code>@RequestBody</code>; and the full response (status + headers + body together) → <code>ResponseEntity</code>.</p>
+
+  <h4>Common Status Code Ranges</h4>
+  <table>
+    <tr><th>Range</th><th>Meaning</th><th>Examples</th></tr>
+    <tr><td>2xx</td><td>Success</td><td>200 OK, 201 Created, 202 Accepted, 204 No Content</td></tr>
+    <tr><td>3xx</td><td>Redirection</td><td>301 Moved Permanently, 304 Not Modified</td></tr>
+    <tr><td>4xx</td><td>Client error</td><td>400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 409 Conflict, 422 Unprocessable Entity, 429 Too Many Requests</td></tr>
+    <tr><td>5xx</td><td>Server error</td><td>500 Internal Server Error, 502 Bad Gateway, 503 Service Unavailable, 504 Gateway Timeout</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 401 vs 403 — A Frequently Confused Pair</div>
+    <p><strong>401 Unauthorized</strong> actually means "unauthenticated" — the server doesn't know who you are (missing/invalid credentials). <strong>403 Forbidden</strong> means "authenticated, but you don't have permission" — the server knows exactly who you are and has decided you're not allowed. This exact distinction is asked constantly in backend and security interviews.</p>
+  </div>
+</section>
+
+<!-- 41-42 -->
+<section class="topic" id="pathvariable">
+  <div class="topic-head"><span class="topic-num">41–42</span><h2>Working with @PathVariable</h2></div>
+  <div class="topic-video">Videos: Working with @PathVariable - Part 1 & Part 2</div>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'pv1')">Basic</button>
+      <button class="tab-btn" onclick="showTab(this,'pv2')">Multiple + custom names</button>
+      <button class="tab-btn" onclick="showTab(this,'pv3')">Optional path variable</button>
+    </div>
+    <div class="tab-content active" id="pv1"><pre><span class="an">@RestController</span>
+<span class="an">@RequestMapping</span>(<span class="str">"/api/v1/users"</span>)
+<span class="kw">public class</span> <span class="cl">UserController</span> {
+
+    <span class="an">@GetMapping</span>(<span class="str">"/{id}"</span>)
+    <span class="kw">public</span> User <span class="mt">getUser</span>(<span class="an">@PathVariable</span> Long id) {
+        <span class="cm">// Spring extracts "42" from /api/v1/users/42, converts to Long automatically</span>
+        <span class="kw">return</span> userService.<span class="mt">findById</span>(id);
+    }
+}</pre></div>
+    <div class="tab-content" id="pv2"><pre><span class="an">@GetMapping</span>(<span class="str">"/{userId}/orders/{orderId}"</span>)
+<span class="kw">public</span> Order <span class="mt">getOrder</span>(
+        <span class="an">@PathVariable</span>(<span class="str">"userId"</span>) Long userId,   <span class="cm">// explicit name binding</span>
+        <span class="an">@PathVariable</span> Long orderId) {         <span class="cm">// implicit — matches {orderId} by param name</span>
+    <span class="kw">return</span> orderService.<span class="mt">find</span>(userId, orderId);
+}</pre></div>
+    <div class="tab-content" id="pv3"><pre><span class="an">@GetMapping</span>({<span class="str">"/reports"</span>, <span class="str">"/reports/{year}"</span>})
+<span class="kw">public</span> List&lt;Report&gt; <span class="mt">getReports</span>(
+        <span class="an">@PathVariable</span>(required = <span class="kw">false</span>) Integer year) {
+    <span class="kw">return</span> year != <span class="kw">null</span> ? reportService.<span class="mt">byYear</span>(year) : reportService.<span class="mt">all</span>();
+}</pre></div>
+  </div>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Type Conversion Failures</div>
+    <p>If a client calls <code>/users/abc</code> where <code>id</code> is typed <code>Long</code>, Spring's <code>ConversionService</code> throws a <code>MethodArgumentTypeMismatchException</code>, which by default returns <strong>400 Bad Request</strong> — worth knowing precisely which exception fires here, since it's a common thing to handle explicitly in a <code>@ControllerAdvice</code> global exception handler (covered in later sections).</p>
+  </div>
+</section>
+
+<!-- 43 -->
+<section class="topic" id="postman">
+  <div class="topic-head"><span class="topic-num">43</span><h2>Installing Postman & Testing APIs</h2></div>
+  <div class="topic-video">Video: Installing Postman & Testing APIs</div>
+
+  <p>Postman is the industry-standard GUI HTTP client for manually exercising REST APIs during development — sending requests with custom methods, headers, query params, and bodies, and inspecting the full response (status, headers, body, timing).</p>
+
+  <div class="box info">
+    <div class="box-title">ℹ Interview-Relevant Postman Concepts</div>
+    <ul>
+      <li><strong>Collections</strong> — organized groups of saved requests, often exported and version-controlled alongside a repo for team-shared API contracts.</li>
+      <li><strong>Environments</strong> — variable sets (e.g., <code>{{baseUrl}}</code>) swapped between local/staging/prod without rewriting requests.</li>
+      <li><strong>Pre-request scripts / Tests tab</strong> — JavaScript run before/after a request, commonly used to auto-fetch and inject auth tokens, or assert response correctness — a lightweight form of API testing/automation.</li>
+      <li><strong>Newman</strong> — Postman's CLI runner, letting collections run in CI/CD pipelines as automated smoke tests.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 44 -->
+<section class="topic" id="requestmapping">
+  <div class="topic-head"><span class="topic-num">44</span><h2>Mastering @RequestMapping</h2></div>
+  <div class="topic-video">Video: Mastering @RequestMapping</div>
+
+  <p><code>@RequestMapping</code> is the <strong>general-purpose, original</strong> mapping annotation — <code>@GetMapping</code>, <code>@PostMapping</code>, <code>@PutMapping</code>, <code>@PatchMapping</code>, and <code>@DeleteMapping</code> are all just method-specific shorthand/meta-annotations built on top of it (e.g., <code>@GetMapping</code> = <code>@RequestMapping(method = RequestMethod.GET)</code>).</p>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'rm1')">Class + method level</button>
+      <button class="tab-btn" onclick="showTab(this,'rm2')">Content negotiation attributes</button>
+    </div>
+    <div class="tab-content active" id="rm1"><pre><span class="an">@RestController</span>
+<span class="an">@RequestMapping</span>(<span class="str">"/api/v1/orders"</span>)   <span class="cm">// class-level base path</span>
+<span class="kw">public class</span> <span class="cl">OrderController</span> {
+
+    <span class="an">@RequestMapping</span>(method = RequestMethod.GET)        <span class="cm">// -> GET /api/v1/orders</span>
+    <span class="kw">public</span> List&lt;Order&gt; <span class="mt">getAll</span>() { ... }
+
+    <span class="an">@RequestMapping</span>(value = <span class="str">"/{id}"</span>, method = RequestMethod.GET) <span class="cm">// -> GET /api/v1/orders/{id}</span>
+    <span class="kw">public</span> Order <span class="mt">getOne</span>(<span class="an">@PathVariable</span> Long id) { ... }
+}</pre></div>
+    <div class="tab-content" id="rm2"><pre><span class="an">@RequestMapping</span>(
+    value = <span class="str">"/orders"</span>,
+    method = RequestMethod.POST,
+    consumes = <span class="str">"application/json"</span>,   <span class="cm">// only matches requests WITH this Content-Type</span>
+    produces = <span class="str">"application/json"</span>    <span class="cm">// sets the response Content-Type</span>
+)
+<span class="kw">public</span> Order <span class="mt">createOrder</span>(<span class="an">@RequestBody</span> Order order) { ... }</pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 Why the Shorthand Annotations Are Preferred Today</div>
+    <p>Modern Spring code almost universally prefers <code>@GetMapping</code>/<code>@PostMapping</code>/etc. over raw <code>@RequestMapping(method=...)</code> — purely for readability and to reduce boilerplate. Knowing that they're built <em>on top of</em> <code>@RequestMapping</code> (rather than being unrelated) is what interviewers are actually testing when they ask about this.</p>
+  </div>
+</section>
+
+<!-- 45 -->
+<section class="topic" id="requestparam">
+  <div class="topic-head"><span class="topic-num">45</span><h2>Capture Query Params with @RequestParam</h2></div>
+  <div class="topic-video">Video: Capture Query Params with @RequestParam</div>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'rp1')">Required & optional params</button>
+      <button class="tab-btn" onclick="showTab(this,'rp2')">Multi-value param</button>
+    </div>
+    <div class="tab-content active" id="rp1"><pre><span class="cm">// GET /api/v1/orders?status=PENDING&page=0&size=20</span>
+<span class="an">@GetMapping</span>(<span class="str">"/orders"</span>)
+<span class="kw">public</span> List&lt;Order&gt; <span class="mt">search</span>(
+        <span class="an">@RequestParam</span> String status,                          <span class="cm">// required by default — 400 if missing</span>
+        <span class="an">@RequestParam</span>(defaultValue = <span class="str">"0"</span>) <span class="kw">int</span> page,       <span class="cm">// optional, falls back to default</span>
+        <span class="an">@RequestParam</span>(required = <span class="kw">false</span>) Integer size) {   <span class="cm">// optional, stays null if absent</span>
+    <span class="kw">return</span> orderService.<span class="mt">search</span>(status, page, size);
+}</pre></div>
+    <div class="tab-content" id="rp2"><pre><span class="cm">// GET /api/v1/orders?tags=urgent&tags=international</span>
+<span class="an">@GetMapping</span>(<span class="str">"/orders"</span>)
+<span class="kw">public</span> List&lt;Order&gt; <span class="mt">searchByTags</span>(<span class="an">@RequestParam</span> List&lt;String&gt; tags) {
+    <span class="cm">// tags = ["urgent", "international"]</span>
+    <span class="kw">return</span> orderService.<span class="mt">findByTags</span>(tags);
+}</pre></div>
+  </div>
+
+  <p><strong>@PathVariable vs @RequestParam — when to use which:</strong> path variables identify a <em>specific resource</em> as part of the URI's hierarchical structure (<code>/orders/{id}</code>); request/query params express <em>optional filters, sorting, or pagination</em> on a collection endpoint (<code>/orders?status=PENDING</code>). A resource's identity belongs in the path; optional query modifiers belong in the query string.</p>
+</section>
+
+<!-- 46 -->
+<section class="topic" id="requestheader">
+  <div class="topic-head"><span class="topic-num">46</span><h2>Getting Header Data with @RequestHeader</h2></div>
+  <div class="topic-video">Video: Getting Header Data with @RequestHeader</div>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'rh1')">Individual headers</button>
+      <button class="tab-btn" onclick="showTab(this,'rh2')">All headers as a Map</button>
+    </div>
+    <div class="tab-content active" id="rh1"><pre><span class="an">@GetMapping</span>(<span class="str">"/profile"</span>)
+<span class="kw">public</span> UserProfile <span class="mt">getProfile</span>(
+        <span class="an">@RequestHeader</span>(<span class="str">"Authorization"</span>) String authToken,
+        <span class="an">@RequestHeader</span>(value = <span class="str">"X-Request-Id"</span>, required = <span class="kw">false</span>) String requestId) {
+    <span class="kw">return</span> profileService.<span class="mt">resolve</span>(authToken);
+}</pre></div>
+    <div class="tab-content" id="rh2"><pre><span class="an">@GetMapping</span>(<span class="str">"/debug-headers"</span>)
+<span class="kw">public</span> Map&lt;String, String&gt; <span class="mt">allHeaders</span>(
+        <span class="an">@RequestHeader</span> Map&lt;String, String&gt; headers) {
+    <span class="kw">return</span> headers;  <span class="cm">// every incoming header, injected as a map</span>
+}</pre></div>
+  </div>
+
+  <p>Common real-world uses: reading <code>Authorization</code> bearer tokens manually (though normally Spring Security handles this transparently), correlation/tracing IDs (<code>X-Request-Id</code>, <code>X-B3-TraceId</code> for distributed tracing), <code>Accept-Language</code> for i18n, and custom API-key headers.</p>
+</section>
+
+<!-- 47 -->
+<section class="topic" id="requestbody">
+  <div class="topic-head"><span class="topic-num">47</span><h2>Reading Payloads with @RequestBody</h2></div>
+  <div class="topic-video">Video: Reading Payloads with @RequestBody</div>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'rb1')">POJO deserialization</button>
+      <button class="tab-btn" onclick="showTab(this,'rb2')">With Bean Validation</button>
+    </div>
+    <div class="tab-content active" id="rb1"><pre><span class="an">@PostMapping</span>(<span class="str">"/orders"</span>)
+<span class="kw">public</span> Order <span class="mt">create</span>(<span class="an">@RequestBody</span> OrderRequest request) {
+    <span class="cm">// Jackson deserializes the JSON body into an OrderRequest instance</span>
+    <span class="cm">// BEFORE this method body even runs</span>
+    <span class="kw">return</span> orderService.<span class="mt">create</span>(request);
+}
+
+<span class="kw">public class</span> <span class="cl">OrderRequest</span> {
+    <span class="kw">private</span> Long productId;
+    <span class="kw">private int</span> quantity;
+    <span class="cm">// getters/setters — Jackson requires either these or a no-arg constructor</span>
+    <span class="cm">// + setters, OR a @JsonCreator-annotated constructor for immutable DTOs</span>
+}</pre></div>
+    <div class="tab-content" id="rb2"><pre><span class="an">@PostMapping</span>(<span class="str">"/orders"</span>)
+<span class="kw">public</span> Order <span class="mt">create</span>(<span class="an">@Valid</span> <span class="an">@RequestBody</span> OrderRequest request) {
+    <span class="cm">// @Valid triggers Bean Validation (JSR-380) on annotated fields BEFORE this runs</span>
+    <span class="kw">return</span> orderService.<span class="mt">create</span>(request);
+}
+
+<span class="kw">public class</span> <span class="cl">OrderRequest</span> {
+    <span class="an">@NotNull</span>
+    <span class="kw">private</span> Long productId;
+
+    <span class="an">@Min</span>(1) <span class="an">@Max</span>(100)
+    <span class="kw">private int</span> quantity;
+}
+<span class="cm">// a failed validation throws MethodArgumentNotValidException -> 400 Bad Request</span></pre></div>
+  </div>
+
+  <div class="box warn">
+    <div class="box-title">⚠ @RequestBody Is Fundamentally Different From @ModelAttribute</div>
+    <p><code>@RequestBody</code> deserializes the <strong>entire request body</strong> (typically JSON) into one object using an <code>HttpMessageConverter</code>. <code>@ModelAttribute</code> instead binds individual <strong>form fields or query parameters</strong> into an object's properties via Spring's data binder — used for traditional HTML form submissions, not JSON APIs. Mixing these up is a common junior-developer mistake worth being able to explain clearly.</p>
+  </div>
+</section>
+
+<!-- 48 -->
+<section class="topic" id="requestentity">
+  <div class="topic-head"><span class="topic-num">48</span><h2>Going Deeper with RequestEntity</h2></div>
+  <div class="topic-video">Video: Going Deeper with RequestEntity</div>
+
+  <p><code>RequestEntity&lt;T&gt;</code> represents the <strong>entire incoming HTTP request</strong> — method, URI, headers, AND body — as a single object, giving you full low-level access in one parameter instead of separately injecting <code>@RequestHeader</code>/<code>@RequestBody</code>/etc.</p>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'re1')">RequestEntity as a parameter</button></div>
+    <div class="tab-content active" id="re1"><pre><span class="an">@PostMapping</span>(<span class="str">"/orders"</span>)
+<span class="kw">public</span> ResponseEntity&lt;Order&gt; <span class="mt">create</span>(RequestEntity&lt;OrderRequest&gt; requestEntity) {
+    HttpHeaders headers = requestEntity.<span class="mt">getHeaders</span>();
+    OrderRequest body = requestEntity.<span class="mt">getBody</span>();
+    HttpMethod method = requestEntity.<span class="mt">getMethod</span>();
+    URI uri = requestEntity.<span class="mt">getUrl</span>();
+
+    Order order = orderService.<span class="mt">create</span>(body);
+    <span class="kw">return</span> ResponseEntity.<span class="mt">ok</span>(order);
+}</pre></div>
+  </div>
+
+  <div class="box info">
+    <div class="box-title">ℹ Server-Side vs Client-Side Usage</div>
+    <p><code>RequestEntity</code> shows up in two very different contexts: (1) as a controller <strong>method parameter</strong> (server-side, as above — relatively uncommon in practice since individual annotations are usually cleaner), and (2) far more commonly, as something <strong>you build yourself</strong> when making outgoing HTTP calls with Spring's <code>RestTemplate</code>/<code>RestClient</code> as a client — e.g. <code>RequestEntity.post(uri).header(...).body(...)</code>. Knowing both usages shows depth.</p>
+  </div>
+</section>
+
+<!-- 49 -->
+<section class="topic" id="responseentity">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">49</span><h2>Tailored Responses with ResponseEntity</h2></div>
+  <div class="topic-video">Video: Tailored Responses with ResponseEntity</div>
+
+  <p><code>ResponseEntity&lt;T&gt;</code> gives you full control over the <strong>status code, headers, AND body</strong> of the HTTP response — unlike returning a plain object (which always returns 200 OK with default headers), or a plain <code>String</code> (ambiguous with view-name resolution outside <code>@RestController</code>).</p>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'res1')">Common patterns</button>
+      <button class="tab-btn" onclick="showTab(this,'res2')">201 Created with Location header</button>
+      <button class="tab-btn" onclick="showTab(this,'res3')">Custom headers + status</button>
+    </div>
+    <div class="tab-content active" id="res1"><pre><span class="an">@GetMapping</span>(<span class="str">"/{id}"</span>)
+<span class="kw">public</span> ResponseEntity&lt;Order&gt; <span class="mt">getOrder</span>(<span class="an">@PathVariable</span> Long id) {
+    <span class="kw">return</span> orderService.<span class="mt">findById</span>(id)
+            .<span class="mt">map</span>(ResponseEntity::<span class="mt">ok</span>)                       <span class="cm">// 200 OK + body</span>
+            .<span class="mt">orElseGet</span>(() -&gt; ResponseEntity.<span class="mt">notFound</span>().<span class="mt">build</span>()); <span class="cm">// 404, no body</span>
+}</pre></div>
+    <div class="tab-content" id="res2"><pre><span class="an">@PostMapping</span>
+<span class="kw">public</span> ResponseEntity&lt;Order&gt; <span class="mt">create</span>(<span class="an">@Valid</span> <span class="an">@RequestBody</span> OrderRequest request) {
+    Order created = orderService.<span class="mt">create</span>(request);
+    URI location = ServletUriComponentsBuilder
+            .<span class="mt">fromCurrentRequest</span>().<span class="mt">path</span>(<span class="str">"/{id}"</span>)
+            .<span class="mt">buildAndExpand</span>(created.<span class="mt">getId</span>()).<span class="mt">toUri</span>();
+
+    <span class="kw">return</span> ResponseEntity.<span class="mt">created</span>(location).<span class="mt">body</span>(created);  <span class="cm">// 201 + Location header</span>
+}</pre></div>
+    <div class="tab-content" id="res3"><pre><span class="an">@GetMapping</span>(<span class="str">"/export"</span>)
+<span class="kw">public</span> ResponseEntity&lt;Resource&gt; <span class="mt">exportCsv</span>() {
+    <span class="kw">return</span> ResponseEntity.<span class="mt">status</span>(HttpStatus.OK)
+            .<span class="mt">header</span>(<span class="str">"Content-Disposition"</span>, <span class="str">"attachment; filename=orders.csv"</span>)
+            .<span class="mt">contentType</span>(MediaType.<span class="mt">parseMediaType</span>(<span class="str">"text/csv"</span>))
+            .<span class="mt">body</span>(csvResource);
+}</pre></div>
+  </div>
+
+  <table>
+    <tr><th>Return Type</th><th>Status Control</th><th>Header Control</th><th>When to Use</th></tr>
+    <tr><td>Plain object (<code>Order</code>)</td><td>❌ Always 200 (or 500 on exception)</td><td>❌ No</td><td>Simple, always-200 read endpoints</td></tr>
+    <tr><td><code>ResponseEntity&lt;Order&gt;</code></td><td>✅ Full control</td><td>✅ Full control</td><td>Anything needing a specific status (201, 404, 204) or custom headers — the production-grade default</td></tr>
+  </table>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why should a POST that creates a resource return ResponseEntity with 201 and a Location header, rather than just 200 with the object?</div>
+      <div class="qa-a"><p>Per REST/HTTP semantics, <strong>201 Created</strong> precisely communicates "a new resource now exists" — distinct from 200 OK's generic "request succeeded." The <strong>Location header</strong> is the standard, discoverable way to tell the client exactly where the newly created resource can be retrieved (<code>GET</code>'d) going forward, without the client having to guess or parse it out of the response body. This is a textbook REST best-practices question that also validates whether a candidate actually understands HTTP status code semantics versus just returning 200 for everything.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>How would you globally standardize error responses across every controller, instead of building ResponseEntity manually in every catch block?</div>
+      <div class="qa-a"><p>Use a centralized <code>@ControllerAdvice</code> (or <code>@RestControllerAdvice</code>) class with <code>@ExceptionHandler</code> methods per exception type. This keeps individual controller methods focused purely on business logic — they simply throw meaningful exceptions — while a single, testable, cross-cutting component maps each exception type to a consistent <code>ResponseEntity</code> with the right status code and a standard error body shape (this pattern is covered in depth in later exception-handling sections of the course).</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 50-54 -->
+<section class="topic" id="versioning">
+  <span class="section-badge">Deep Dive — Common System Design Topic</span>
+  <div class="topic-head"><span class="topic-num">50–54</span><h2>API Versioning — Why It Matters & Every Strategy</h2></div>
+  <div class="topic-video">Videos: Why API Versioning Matters · API Versioning Strategies · Traditional Methods · ApiVersionConfigurer Parts 1–2</div>
+
+  <h3>Why Versioning Matters</h3>
+  <p>Once an API is live, external and internal clients build hard dependencies on its exact contract (URL shape, request/response fields, status codes). Any breaking change — renaming a field, changing a type, removing an endpoint — <strong>breaks every client still using the old contract</strong>. Versioning lets you evolve the API while keeping old clients working until they can migrate, avoiding a "big bang" coordinated release across every consumer simultaneously.</p>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Breaking vs Non-Breaking Changes</div>
+    <p><strong>Non-breaking (usually safe without a version bump):</strong> adding a new optional field to a response, adding a new endpoint, adding a new optional query param. <strong>Breaking (requires a new version):</strong> removing/renaming a field, changing a field's type, changing required-ness of a request field, changing URL structure, changing error response shape.</p>
+  </div>
+
+  <h3>Versioning Strategies — Compared</h3>
+  <table>
+    <tr><th>Strategy</th><th>Example</th><th>Pros</th><th>Cons</th></tr>
+    <tr><td><strong>URI Path Versioning</strong></td><td><code>/api/v1/orders</code>, <code>/api/v2/orders</code></td><td>Extremely explicit, cacheable, easy to route/document, easiest for clients to understand</td><td>"Pollutes" the URI — technically the same resource now has two different identifiers across versions</td></tr>
+    <tr><td><strong>Query Parameter Versioning</strong></td><td><code>/api/orders?version=2</code></td><td>Keeps the base URI stable</td><td>Easy to forget/omit; not RESTfully "clean" — a resource's identity shouldn't depend on an optional param</td></tr>
+    <tr><td><strong>Custom Header Versioning</strong></td><td><code>X-API-Version: 2</code></td><td>Keeps URIs completely clean; version is metadata, not identity</td><td>Less visible/discoverable — can't just paste a URL into a browser and see the version; requires header tooling for testing</td></tr>
+    <tr><td><strong>Media Type / Accept Header Versioning (Content Negotiation)</strong></td><td><code>Accept: application/vnd.growthscript.v2+json</code></td><td>Most "correct" per REST/HATEOAS purists — versioning is a content-negotiation concern</td><td>Most complex to implement and document; poor tooling ergonomics; steep learning curve for API consumers</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 What Real Companies Actually Use</div>
+    <p><strong>URI path versioning is overwhelmingly the industry default</strong> (Stripe, GitHub, Twitter/X APIs, most fintech APIs) specifically because of its simplicity, cacheability at the CDN/proxy level, and ease of routing at the API Gateway/load-balancer layer without needing to inspect headers. Header/media-type versioning shows up more in strict REST/HATEOAS-purist shops or specific enterprise API standards. Know the trade-offs, but default to recommending URI versioning unless asked to defend an alternative.</p>
+  </div>
+
+  <h3>Traditional (Manual) Implementation</h3>
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'v1')">URI path — separate controllers</button>
+      <button class="tab-btn" onclick="showTab(this,'v2')">Custom header — manual check</button>
+    </div>
+    <div class="tab-content active" id="v1"><pre><span class="an">@RestController</span>
+<span class="an">@RequestMapping</span>(<span class="str">"/api/v1/orders"</span>)
+<span class="kw">public class</span> <span class="cl">OrderControllerV1</span> {
+    <span class="an">@GetMapping</span>(<span class="str">"/{id}"</span>)
+    <span class="kw">public</span> OrderV1Response <span class="mt">getOrder</span>(<span class="an">@PathVariable</span> Long id) { ... }
+}
+
+<span class="an">@RestController</span>
+<span class="an">@RequestMapping</span>(<span class="str">"/api/v2/orders"</span>)
+<span class="kw">public class</span> <span class="cl">OrderControllerV2</span> {
+    <span class="an">@GetMapping</span>(<span class="str">"/{id}"</span>)
+    <span class="kw">public</span> OrderV2Response <span class="mt">getOrder</span>(<span class="an">@PathVariable</span> Long id) {
+        <span class="cm">// e.g. v2 renames "orderStatus" -> "status", adds a new "currency" field</span>
+    }
+}</pre></div>
+    <div class="tab-content" id="v2"><pre><span class="an">@GetMapping</span>(value = <span class="str">"/orders/{id}"</span>, headers = <span class="str">"X-API-Version=1"</span>)
+<span class="kw">public</span> OrderV1Response <span class="mt">getOrderV1</span>(<span class="an">@PathVariable</span> Long id) { ... }
+
+<span class="an">@GetMapping</span>(value = <span class="str">"/orders/{id}"</span>, headers = <span class="str">"X-API-Version=2"</span>)
+<span class="kw">public</span> OrderV2Response <span class="mt">getOrderV2</span>(<span class="an">@PathVariable</span> Long id) { ... }
+<span class="cm">// Spring MVC routes based on the "headers" attribute matching at request-mapping time</span></pre></div>
+  </div>
+
+  <p>The "traditional" approach works but scales poorly: duplicated controller classes per version, or a proliferation of <code>headers=</code>/<code>params=</code> attributes scattered across method signatures. This motivates a more structured, centralized approach.</p>
+
+  <h3>Modern Approach — ApiVersionConfigurer</h3>
+  <p>Newer Spring Framework versions (Spring 7 / Spring Boot 4-era) introduce first-class API versioning support via <code>ApiVersionConfigurer</code>, configured centrally in a <code>WebMvcConfigurer</code>, plus a dedicated <code>@RequestMapping(version = "...")</code>-style attribute — removing the need to manually branch on headers/params in every method signature.</p>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'v3')">Central configuration</button>
+      <button class="tab-btn" onclick="showTab(this,'v4')">Controller usage</button>
+    </div>
+    <div class="tab-content active" id="v3"><pre><span class="an">@Configuration</span>
+<span class="kw">public class</span> <span class="cl">WebConfig implements</span> WebMvcConfigurer {
+
+    <span name="Override">@Override</span>
+    <span class="kw">public void</span> <span class="mt">configureApiVersioning</span>(ApiVersionConfigurer configurer) {
+        configurer
+            .<span class="mt">useRequestHeader</span>(<span class="str">"X-API-Version"</span>)  <span class="cm">// centralize the versioning STRATEGY here</span>
+            .<span class="mt">setDefaultVersion</span>(<span class="str">"1"</span>)
+            .<span class="mt">addSupportedVersions</span>(<span class="str">"1"</span>, <span class="str">"2"</span>);
+    }
+}</pre></div>
+    <div class="tab-content" id="v4"><pre><span class="an">@RestController</span>
+<span class="an">@RequestMapping</span>(<span class="str">"/orders"</span>)
+<span class="kw">public class</span> <span class="cl">OrderController</span> {
+
+    <span class="an">@GetMapping</span>(value = <span class="str">"/{id}"</span>, version = <span class="str">"1"</span>)
+    <span class="kw">public</span> OrderV1Response <span class="mt">getOrderV1</span>(<span class="an">@PathVariable</span> Long id) { ... }
+
+    <span class="an">@GetMapping</span>(value = <span class="str">"/{id}"</span>, version = <span class="str">"2"</span>)
+    <span class="kw">public</span> OrderV2Response <span class="mt">getOrderV2</span>(<span class="an">@PathVariable</span> Long id) { ... }
+}</pre></div>
+  </div>
+
+  <div class="box info">
+    <div class="box-title">ℹ Why This Matters for Interviews</div>
+    <p>The key architectural insight to communicate — regardless of which specific API surface a given Spring version exposes — is that <strong>the versioning strategy (header vs URI vs param) should be configured in exactly one central place</strong>, not scattered as ad-hoc conditionals across every controller method. This is the same "convention over configuration, centralized cross-cutting concern" philosophy that runs through Spring Boot's whole design (compare to how <code>@ControllerAdvice</code> centralizes error handling, or how a single security filter chain centralizes auth rules).</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How would you deprecate and eventually remove an old API version without breaking existing clients?</div>
+      <div class="qa-a"><p>A staged rollout: (1) ship the new version alongside the old one (both live simultaneously), (2) communicate a deprecation timeline to consumers, often via a <code>Deprecation</code>/<code>Sunset</code> HTTP response header on the old version's responses so clients can programmatically detect it, (3) monitor actual traffic/usage on the deprecated version to know when it's safe to remove, (4) only remove the old version's routes after usage has dropped to zero (or the deadline passed and consumers were given ample warning) — never remove a version based purely on a calendar date without checking real traffic first.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Is URI path versioning "unRESTful," and does that matter practically?</div>
+      <div class="qa-a"><p>REST purists argue a resource should have exactly one canonical URI, and encoding a version into the path technically means <code>/v1/orders/5</code> and <code>/v2/orders/5</code> are "different resources" by URI identity, even though they represent the same underlying entity. In practice, this theoretical purity rarely outweighs URI versioning's practical benefits (simplicity, cacheability, discoverability, gateway-level routing) — which is exactly why it dominates real-world industry usage despite the objection. Good interview answers acknowledge the theoretical critique while explaining the pragmatic trade-off.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Design an API versioning approach for a microservice sitting behind an API Gateway.</div>
+      <div class="qa-a"><p>URI path versioning is typically the best fit here specifically because API Gateways (Kong, AWS API Gateway, Spring Cloud Gateway) route and cache based on URL path patterns very naturally — a gateway rule like <code>/v1/** → order-service-v1-upstream</code> is trivial to express, monitor, and gradually shift traffic weights on (e.g., canary releasing v2 to 5% of traffic) without needing to inspect and branch on request headers at the gateway layer, which is comparatively more complex to configure and observe.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- MASTER Q&A -->
+<section class="topic" id="interview-master">
+  <span class="section-badge">🎯 Rapid-Fire Round</span>
+  <div class="topic-head"><h2>Master Interview Q&A Bank — Section 3</h2></div>
+  <p class="dim">High-frequency REST API and Spring MVC questions for backend/full-stack interviews at product companies and fintechs.</p>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Walk through the complete request lifecycle for a Spring Boot REST call, from socket to response.</div>
+      <div class="qa-a"><p>(1) Embedded Tomcat accepts the TCP connection and parses the raw HTTP request. (2) The request reaches Spring MVC's <strong>DispatcherServlet</strong> (the Front Controller). (3) DispatcherServlet consults <strong>HandlerMapping</strong> to find the matching controller method based on URL pattern + HTTP method + content-type/headers. (4) Any registered <strong>HandlerInterceptors</strong> run their <code>preHandle</code> (e.g., auth checks, logging). (5) Method arguments are resolved via <strong>HandlerMethodArgumentResolvers</strong> — this is where <code>@PathVariable</code>/<code>@RequestParam</code>/<code>@RequestBody</code> extraction and Bean Validation happen. (6) The controller method executes business logic. (7) The return value is converted by an <strong>HttpMessageConverter</strong> (e.g., Jackson) into the response body, or resolved as a view if not a <code>@RestController</code>. (8) Interceptors' <code>postHandle</code>/<code>afterCompletion</code> run. (9) The response is written back through Tomcat to the client.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How does Spring Boot decide port 8080 and how would you change it, and what happens if the port is already in use?</div>
+      <div class="qa-a"><p>8080 is the embedded Tomcat's built-in default. Override via <code>server.port=9090</code> in <code>application.properties</code>, an environment variable (<code>SERVER_PORT</code>), or a command-line arg (<code>--server.port=9090</code>) — externalized configuration always wins over hardcoded defaults, following Spring Boot's property precedence order. If the port is already bound by another process, the embedded server fails to start and throws a <code>BindException</code>/<code>PortInUseException</code>, crashing the application at startup (another example of fail-fast behavior) — setting <code>server.port=0</code> tells Spring Boot to bind to any available random free port instead, commonly used in integration tests running multiple app instances in parallel.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What's the difference between @RequestParam, @PathVariable, @RequestHeader, and @RequestBody at a glance?</div>
+      <div class="qa-a"><p><code>@PathVariable</code> — extracts a segment from the URI path, identifying a specific resource. <code>@RequestParam</code> — extracts a query-string parameter, typically optional filters/pagination. <code>@RequestHeader</code> — extracts an HTTP header value. <code>@RequestBody</code> — deserializes the entire request payload (usually JSON) into a Java object. All four can be combined freely on a single controller method, each pulling from its own distinct part of the HTTP request.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>A client reports intermittent 404s on an endpoint that works fine in Postman. What would you check?</div>
+      <div class="qa-a"><p>Systematic checklist: (1) verify the exact HTTP method matches (GET vs POST mismatches are the most common cause), (2) check for trailing-slash mismatches or case-sensitivity in the path, (3) confirm the <code>Accept</code>/<code>Content-Type</code> headers match what the <code>produces</code>/<code>consumes</code> attributes expect — a mismatched <code>consumes</code> on a POST also yields 404/415 depending on Spring version, (4) check if the request is being intercepted/rewritten by an API Gateway, load balancer, or reverse proxy before it even reaches the app, and (5) confirm the client isn't hitting a stale/cached DNS entry or wrong environment (staging vs prod) entirely.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Why does Spring Boot prefer returning DTOs (Data Transfer Objects) instead of JPA entities directly from a REST controller?</div>
+      <div class="qa-a"><p>Several reasons commonly cited: (1) <strong>decoupling</strong> — the API contract shouldn't be tightly bound to the database schema; they can evolve independently, (2) <strong>avoiding lazy-loading serialization issues</strong> — serializing a JPA entity with lazy-fetched associations outside a transaction throws <code>LazyInitializationException</code>, (3) <strong>security</strong> — entities may carry sensitive fields (password hashes, internal flags) that should never be exposed in a response, (4) <strong>avoiding infinite recursion</strong> in bidirectional JPA relationships during JSON serialization. DTOs give explicit, controlled control over exactly what crosses the API boundary.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How would you implement request-level rate limiting information in your API responses?</div>
+      <div class="qa-a"><p>Use custom response headers via <code>ResponseEntity</code> — conventionally <code>X-RateLimit-Limit</code> (max requests allowed), <code>X-RateLimit-Remaining</code> (requests left in the current window), and <code>X-RateLimit-Reset</code> (when the window resets), returned alongside a <strong>429 Too Many Requests</strong> status once the limit is exceeded. The actual limiting logic itself typically lives in a <code>HandlerInterceptor</code> or a Servlet <code>Filter</code> (running before the controller method executes), backed by a shared counter store like Redis for correctness across multiple app instances in a horizontally scaled deployment.</p></div>
+    </div>
+  </div>
+
+  <div class="box info" style="margin-top:28px;">
+    <div class="box-title">ℹ Next Section</div>
+    <p>Paste the next section's video list whenever you're ready, and I'll build the next HTML notes doc in this same design system.</p>
+  </div>
+
+  <footer>GrowthScript Engineering — Spring Boot Interview Bible · Section 3 of N</footer>
+</section>
+
+</main>
+</div>
+
+<script>
+function applySpringCoreTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  document.body.setAttribute('data-theme', theme);
+  localStorage.setItem('theme', theme);
+  const btn = document.getElementById('theme-toggle-btn');
+  if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+}
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme') || document.body.getAttribute('data-theme') || 'dark';
+  applySpringCoreTheme(cur === 'dark' ? 'light' : 'dark');
+}
+function showTab(btn, id){
+  const block = btn.closest('.code-block');
+  block.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  block.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  block.querySelector('#'+id).classList.add('active');
+}
+document.querySelectorAll('.qa-q').forEach(q=>{
+  q.addEventListener('click', ()=> q.parentElement.classList.toggle('open'));
+});
+(function(){
+  const savedTheme = localStorage.getItem('theme') || document.documentElement.getAttribute('data-theme') || 'dark';
+  applySpringCoreTheme(savedTheme);
+  const btn = document.getElementById('theme-toggle-btn');
+  if (btn) btn.addEventListener('click', toggleTheme);
+})();
+</script>
+</body>
+</html>
