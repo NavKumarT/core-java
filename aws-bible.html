@@ -1,0 +1,2034 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS for Java Full-Stack Bible — GrowthScript Engineering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy:#0F172A; --navy-mid:#1E293B; --brand:#1B4FD8; --brand-soft:#EFF3FE; --brand-mid:#DBEAFE;
+    --accent2:#7C3AED; --accent2-soft:#F5F3FF; --success:#059669; --success-soft:#ECFDF5;
+    --success-border:#A7F3D0; --warn:#D97706; --warn-soft:#FFFBEB; --warn-border:#FDE68A;
+    --warn-text:#78350F; --warn-text-strong:#92400E; --danger:#E11D48; --danger-soft:#FFF1F2;
+    --danger-border:#FECDD3; --purple:#9333EA; --purple-soft:#FDF4FF;
+    --text-1:#0F172A; --text-2:#334155; --text-3:#64748B; --text-4:#94A3B8;
+    --border:#E2E8F0; --border-strong:#CBD5E1; --surface:#FFFFFF; --page:#F8FAFC; --code-bg:#F1F5F9;
+    --sidebar-w:240px; --radius-sm:6px; --radius:10px; --radius-lg:14px;
+    --syn-kw:#6D28D9; --syn-cm:#94A3B8; --syn-st:#059669; --syn-ty:#D97706; --syn-fn:#1B4FD8;
+    color-scheme:light;
+  }
+  [data-theme="dark"] {
+    --navy:#E2E8F0; --navy-mid:#CBD5E1; --brand:#6D9BFF; --brand-soft:#1A2540; --brand-mid:#2A3B66;
+    --accent2:#A78BFA; --accent2-soft:#2A2150; --success:#34D399; --success-soft:#103326;
+    --success-border:#1D5C44; --warn:#FBBF24; --warn-soft:#3A2A0A; --warn-border:#5C4310;
+    --warn-text:#FDE68A; --warn-text-strong:#FCD34D; --danger:#FB7185; --danger-soft:#3A1620;
+    --danger-border:#5C2330; --purple:#D8B4FE; --purple-soft:#2A1A40;
+    --text-1:#E8ECF2; --text-2:#B6C0CE; --text-3:#8895A7; --text-4:#647082;
+    --border:#2A3441; --border-strong:#3D4859; --surface:#161D29; --page:#0D1219; --code-bg:#0F1722;
+    --syn-kw:#C4A7FF; --syn-cm:#6B7888; --syn-st:#6EE7B7; --syn-ty:#FCD34D; --syn-fn:#7FB3FF;
+    color-scheme:dark;
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family:'Inter',-apple-system,sans-serif; background:var(--page); color:var(--text-1); font-size:15px; line-height:1.7; -webkit-font-smoothing:antialiased; display:flex; min-height:100vh; transition:background 0.2s,color 0.2s; }
+  .sidebar { width:var(--sidebar-w); flex-shrink:0; position:sticky; top:0; height:100vh; overflow-y:auto; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:0 0 32px; transition:background 0.2s,border-color 0.2s; }
+  .sidebar-brand { padding:16px 20px 14px; border-bottom:1px solid var(--border); margin-bottom:8px; position:sticky; top:0; background:var(--surface); z-index:10; display:flex; flex-direction:column; gap:10px; }
+  .brand-row { display:flex; flex-direction:column; }
+  .sidebar-logo { font-family:'Space Mono',monospace; font-size:12px; font-weight:700; color:var(--brand); letter-spacing:0.04em; display:block; margin-bottom:2px; }
+  .sidebar-tagline { font-size:11px; color:var(--text-4); }
+  .sidebar-group { padding:12px 0 4px; }
+  .sidebar-group-label { font-family:'Space Mono',monospace; font-size:9.5px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-4); padding:0 20px; margin-bottom:4px; display:block; }
+  .sidebar-link { display:flex; align-items:center; gap:8px; padding:6px 20px; font-size:13px; color:var(--text-2); text-decoration:none; border-left:2px solid transparent; transition:all 0.12s; line-height:1.4; }
+  .sidebar-link:hover { color:var(--brand); background:var(--brand-soft); border-left-color:var(--brand-mid); }
+  .sidebar-link.active { color:var(--brand); background:var(--brand-soft); border-left-color:var(--brand); font-weight:500; }
+  .sidebar-link .sl-dot { width:5px; height:5px; border-radius:50%; background:var(--border-strong); flex-shrink:0; }
+  .sidebar-link.active .sl-dot,.sidebar-link:hover .sl-dot { background:var(--brand); }
+  .sidebar-sub-link { display:flex; align-items:center; gap:8px; padding:4px 20px 4px 34px; font-size:12px; color:var(--text-3); text-decoration:none; border-left:2px solid transparent; transition:all 0.12s; }
+  .sidebar-sub-link:hover { color:var(--brand); background:var(--brand-soft); }
+  .theme-toggle { display:flex; align-items:center; background:var(--page); border:1px solid var(--border); border-radius:20px; padding:3px; width:fit-content; }
+  .theme-toggle-btn { display:flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; border:none; background:transparent; color:var(--text-3); cursor:pointer; font-size:13px; transition:all 0.15s; }
+  .theme-toggle-btn.active { background:var(--surface); color:var(--brand); box-shadow:0 1px 3px rgba(0,0,0,0.1); }
+  .main { flex:1; min-width:0; padding:48px 64px 80px 64px; max-width:1100px; }
+  .page-title-block { padding-bottom:36px; border-bottom:1px solid var(--border); margin-bottom:52px; }
+  .page-eyebrow { font-family:'Space Mono',monospace; font-size:11px; font-weight:700; letter-spacing:0.1em; color:var(--text-4); text-transform:uppercase; margin-bottom:10px; display:block; }
+  .page-title-block h1 { font-size:30px; font-weight:600; color:var(--navy); letter-spacing:-0.02em; line-height:1.2; margin-bottom:10px; }
+  .page-title-block > p { font-size:15px; color:var(--text-2); max-width:680px; line-height:1.65; }
+  .tc-row { display:flex; gap:16px; margin-top:18px; flex-wrap:wrap; }
+  .tc-pill { font-size:12px; color:var(--text-3); display:flex; align-items:center; gap:5px; }
+  .tc-pill span { width:6px; height:6px; border-radius:50%; background:var(--brand); display:inline-block; }
+  .section { margin-bottom:60px; scroll-margin-top:32px; }
+  .section-header { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+  .section-eyebrow { font-family:'Space Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.1em; color:var(--text-4); text-transform:uppercase; white-space:nowrap; }
+  .section-rule { flex:1; height:1px; background:var(--border); }
+  .section h2 { font-size:21px; font-weight:600; color:var(--navy); letter-spacing:-0.02em; margin-bottom:8px; }
+  .section-intro { font-size:14.5px; color:var(--text-2); margin-bottom:28px; max-width:760px; line-height:1.7; }
+  .sub-heading { font-size:14px; font-weight:600; color:var(--navy); margin:28px 0 10px; display:flex; align-items:center; gap:8px; }
+  .sub-heading::after { content:''; flex:1; height:1px; background:var(--border); }
+  .section-divider { height:1px; background:var(--border); margin:48px 0; }
+  .body-p { font-size:14px; color:var(--text-2); margin-bottom:14px; line-height:1.7; }
+  .split-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px; }
+  .rule-card { background:var(--page); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
+  .rule-card-label { font-family:'Space Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-4); margin-bottom:10px; display:block; }
+  .rule-list { list-style:none; }
+  .rule-list li { font-size:13px; color:var(--text-2); padding-left:18px; position:relative; margin-bottom:6px; line-height:1.6; }
+  .rule-list li::before { content:'→'; position:absolute; left:0; color:var(--brand); font-size:11px; top:2px; }
+  .rule-list li.no::before  { content:'✗'; color:var(--danger);  font-size:12px; }
+  .rule-list li.yes::before { content:'✓'; color:var(--success); font-size:12px; }
+  .tip-box { display:flex; gap:10px; background:var(--brand-soft); border:1px solid var(--brand-mid); border-radius:var(--radius); padding:11px 14px; margin-top:14px; }
+  .tip-icon { flex-shrink:0; font-size:14px; margin-top:2px; }
+  .tip-text { font-size:12.5px; color:var(--navy-mid); line-height:1.6; }
+  .tip-text strong { color:var(--brand); font-weight:600; }
+  [data-theme="dark"] .tip-text { color:var(--text-2); }
+  .warn-box { display:flex; gap:10px; background:var(--warn-soft); border:1px solid var(--warn-border); border-radius:var(--radius); padding:11px 14px; margin-top:12px; }
+  .warn-text { font-size:12.5px; color:var(--warn-text); line-height:1.6; }
+  .warn-text strong { color:var(--warn-text-strong); font-weight:600; }
+  .danger-box { display:flex; gap:10px; background:var(--danger-soft); border:1px solid var(--danger-border); border-radius:var(--radius); padding:11px 14px; margin-top:12px; }
+  .danger-text { font-size:12.5px; color:var(--danger); line-height:1.6; }
+  .danger-text strong { font-weight:600; }
+  pre { background:var(--code-bg); border-top:1px solid var(--border); padding:14px 16px; overflow-x:auto; font-family:'Space Mono',monospace; font-size:12px; line-height:1.8; color:var(--text-1); }
+  code.inline { font-family:'Space Mono',monospace; font-size:11.5px; background:var(--code-bg); padding:1px 5px; border-radius:4px; color:var(--text-1); }
+  .kw { color:var(--syn-kw); font-weight:700; }
+  .cm { color:var(--syn-cm); font-style:italic; }
+  .st { color:var(--syn-st); }
+  .ty { color:var(--syn-ty); }
+  .fn { color:var(--syn-fn); }
+  .an { color:var(--syn-ty); font-weight:600; }
+  .code-pair { margin-top:14px; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  .code-pair-tabs { display:flex; border-bottom:1px solid var(--border); }
+  .cpt { flex:1; padding:7px 14px; font-size:12px; font-weight:600; color:var(--text-3); text-align:center; cursor:pointer; transition:all 0.12s; user-select:none; }
+  .cpt.bad { border-right:1px solid var(--border); }
+  .cpt.bad.active  { background:var(--danger-soft); color:var(--danger); }
+  .cpt.good.active { background:var(--success-soft); color:var(--success); }
+  .code-pane { display:none; }
+  .code-pane.active { display:block; }
+  .code-pane pre { border-top:none; border-radius:0; }
+  .code-tabs-wrap { border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; margin-top:14px; }
+  .code-tabs-header { display:flex; overflow-x:auto; border-bottom:1px solid var(--border); background:var(--page); }
+  .ct-tab { padding:9px 16px; font-size:12px; font-weight:500; color:var(--text-3); cursor:pointer; white-space:nowrap; border-right:1px solid var(--border); transition:all 0.12s; font-family:'Space Mono',monospace; user-select:none; flex-shrink:0; }
+  .ct-tab:hover { color:var(--brand); background:var(--brand-soft); }
+  .ct-tab.active { color:var(--brand); background:var(--surface); border-bottom:2px solid var(--brand); font-weight:700; }
+  .ct-pane { display:none; }
+  .ct-pane.active { display:block; }
+  .ct-pane pre { border-top:none; border-radius:0; font-size:12px; }
+  .step-list { display:flex; flex-direction:column; gap:8px; margin-bottom:18px; }
+  .step-item { display:flex; gap:12px; align-items:flex-start; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:10px 14px; }
+  .step-num { flex-shrink:0; width:22px; height:22px; border-radius:50%; background:var(--brand); color:#fff; font-family:'Space Mono',monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:2px; }
+  .step-body { font-size:13px; color:var(--text-2); line-height:1.6; }
+  .step-body strong { color:var(--navy); }
+  .code-block-wrap { border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-top:12px; margin-bottom:4px; }
+  .code-block-label { font-family:'Space Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-4); background:var(--page); padding:7px 14px; border-bottom:1px solid var(--border); display:block; }
+  .code-block-wrap pre { border-top:none; }
+  .ref-table { width:100%; border-collapse:collapse; font-size:13px; margin-top:14px; border-radius:var(--radius); overflow:hidden; border:1px solid var(--border); }
+  .ref-table th { background:var(--page); color:var(--navy); font-weight:600; text-align:left; padding:10px 14px; border-bottom:2px solid var(--border); font-family:'Space Mono',monospace; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; }
+  .ref-table td { padding:9px 14px; border-bottom:1px solid var(--border); color:var(--text-2); vertical-align:top; line-height:1.6; }
+  .ref-table tr:last-child td { border-bottom:none; }
+  .ref-table tr:hover td { background:var(--brand-soft); }
+  .ref-table .yes { color:var(--success); font-weight:600; }
+  .ref-table .no  { color:var(--danger);  font-weight:600; }
+  .cheat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; }
+  .cheat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
+  .cheat-card h4 { font-size:12.5px; font-weight:600; color:var(--navy); margin-bottom:8px; }
+  .cheat-card ul { list-style:none; }
+  .cheat-card li { font-size:12px; color:var(--text-2); padding-left:13px; position:relative; line-height:1.55; margin-bottom:4px; }
+  .cheat-card li::before { content:'→'; position:absolute; left:0; color:var(--brand); font-size:10.5px; top:1px; }
+  /* Thread state diagram */
+  .state-diagram { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; overflow-x:auto; margin-bottom:6px; }
+  /* Concept pill tags */
+  .tag-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .tag { font-size:11.5px; font-weight:500; padding:3px 10px; border-radius:20px; border:1px solid var(--border); color:var(--text-2); background:var(--page); font-family:'Space Mono',monospace; }
+  .tag-brand  { background:var(--brand-soft);   border-color:var(--brand-mid);      color:var(--brand);   }
+  .tag-warn   { background:var(--warn-soft);    border-color:var(--warn-border);    color:var(--warn);    }
+  .tag-danger { background:var(--danger-soft);  border-color:var(--danger-border);  color:var(--danger);  }
+  .tag-green  { background:var(--success-soft); border-color:var(--success-border); color:var(--success); }
+  /* Comparison table accent rows */
+  .ref-table tr.accent td { background:var(--brand-soft); font-weight:500; }
+  .page-footer { border-top:1px solid var(--border); padding:20px 0 0; display:flex; justify-content:space-between; align-items:center; }
+  .footer-brand { font-family:'Space Mono',monospace; font-size:11px; font-weight:700; color:var(--brand); }
+  .footer-note  { font-size:11.5px; color:var(--text-4); }
+  @media(max-width:860px){
+    body{flex-direction:column;}
+    .sidebar{width:100%;height:auto;position:static;border-right:none;border-bottom:1px solid var(--border);padding-bottom:0;}
+    .sidebar-group{display:flex;flex-wrap:wrap;padding:8px 16px;gap:4px;}
+    .sidebar-group-label{display:none;}
+    .sidebar-link{padding:5px 10px;border-left:none;border-radius:20px;border:1px solid var(--border);font-size:12px;}
+    .sidebar-link:hover,.sidebar-link.active{background:var(--brand-soft);border-color:var(--brand-mid);}
+    .sidebar-sub-link{display:none;}
+    .main{padding:32px 20px 60px;}
+    .split-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-row">
+      <span class="sidebar-logo">GS // AWS Bible</span>
+      <span class="sidebar-tagline">Interview Reference</span>
+    </div>
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <button class="theme-toggle-btn active" id="btn-light">☀️</button>
+      <button class="theme-toggle-btn" id="btn-dark">🌙</button>
+    </div>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Foundations</span>
+    <a href="#foundations" class="sidebar-link active"><span class="sl-dot"></span>Cloud Computing &amp; AWS Basics</a>
+    <a href="#foundations" class="sidebar-sub-link">IaaS / PaaS / SaaS, Regions &amp; AZs</a>
+    <a href="#iam" class="sidebar-link"><span class="sl-dot"></span>IAM — Identity &amp; Access</a>
+    <a href="#iam" class="sidebar-sub-link">Users, Roles, Policies</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Compute &amp; Storage</span>
+    <a href="#ec2" class="sidebar-link"><span class="sl-dot"></span>EC2 — Virtual Servers</a>
+    <a href="#ec2" class="sidebar-sub-link">Instance types, pricing models</a>
+    <a href="#ec2-storage" class="sidebar-link"><span class="sl-dot"></span>EBS, EFS, AMI &amp; Snapshots</a>
+    <a href="#s3" class="sidebar-link"><span class="sl-dot"></span>S3 — Object Storage</a>
+    <a href="#s3" class="sidebar-sub-link">Presigned URLs (Java SDK)</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Networking</span>
+    <a href="#vpc" class="sidebar-link"><span class="sl-dot"></span>VPC — Virtual Private Cloud</a>
+    <a href="#vpc" class="sidebar-sub-link">Security Groups vs NACLs</a>
+    <a href="#load-balancing" class="sidebar-link"><span class="sl-dot"></span>Load Balancing &amp; Auto Scaling</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Databases</span>
+    <a href="#rds" class="sidebar-link"><span class="sl-dot"></span>RDS — Managed Relational DB</a>
+    <a href="#rds" class="sidebar-sub-link">Multi-AZ vs Read Replicas</a>
+    <a href="#dynamodb" class="sidebar-link"><span class="sl-dot"></span>DynamoDB — NoSQL</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Serverless &amp; Messaging</span>
+    <a href="#lambda" class="sidebar-link"><span class="sl-dot"></span>Lambda &amp; Serverless</a>
+    <a href="#lambda" class="sidebar-sub-link">Java cold starts</a>
+    <a href="#api-gateway" class="sidebar-link"><span class="sl-dot"></span>API Gateway</a>
+    <a href="#sqs-sns" class="sidebar-link"><span class="sl-dot"></span>SQS &amp; SNS — Decoupling</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Deploying Java Apps</span>
+    <a href="#deployment-strategies" class="sidebar-link"><span class="sl-dot"></span>Deployment Strategies</a>
+    <a href="#deployment-strategies" class="sidebar-sub-link">EB vs ECS vs EC2 vs Lambda</a>
+    <a href="#containers" class="sidebar-link"><span class="sl-dot"></span>Containers — ECS, Fargate, ECR</a>
+    <a href="#cicd" class="sidebar-link"><span class="sl-dot"></span>CI/CD Pipelines</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Operations</span>
+    <a href="#cloudformation" class="sidebar-link"><span class="sl-dot"></span>CloudFormation &amp; IaC</a>
+    <a href="#cloudwatch" class="sidebar-link"><span class="sl-dot"></span>CloudWatch &amp; Observability</a>
+    <a href="#route53-cloudfront" class="sidebar-link"><span class="sl-dot"></span>Route 53 &amp; CloudFront</a>
+    <a href="#security" class="sidebar-link"><span class="sl-dot"></span>Security Best Practices</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Java Integration</span>
+    <a href="#sdk-java" class="sidebar-link"><span class="sl-dot"></span>AWS SDK for Java &amp; Spring Cloud</a>
+    <a href="#architecture" class="sidebar-link"><span class="sl-dot"></span>Designing a Full-Stack Architecture</a>
+    <a href="#cost" class="sidebar-link"><span class="sl-dot"></span>Cost Optimization</a>
+  </div>
+  <div class="sidebar-group">
+    <span class="sidebar-group-label">Reference</span>
+    <a href="#faang-qa" class="sidebar-link"><span class="sl-dot"></span>Real Interview Rapid-Fire Q&amp;A</a>
+    <a href="#cheatsheet" class="sidebar-link"><span class="sl-dot"></span>Interview Cheatsheet</a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+<div class="page-title-block">
+  <span class="page-eyebrow">For Java Full-Stack Roles — Zero Prior AWS Experience Assumed</span>
+  <h1>AWS Bible</h1>
+  <p>A complete, from-first-principles AWS reference for Java full-stack interviews — every core service explained with WHY it exists, HOW it fits a real Spring Boot deployment, and the production-level details (security groups vs NACLs, Multi-AZ vs read replicas, cold starts, presigned URLs) that interviewers actually probe for when they ask "what AWS services have you used?"</p>
+  <div class="tc-row">
+    <span class="tc-pill"><span></span>IAM &amp; Security</span>
+    <span class="tc-pill"><span></span>EC2 / S3 / RDS</span>
+    <span class="tc-pill"><span></span>VPC Networking</span>
+    <span class="tc-pill"><span></span>Deploying Spring Boot</span>
+    <span class="tc-pill"><span></span>Lambda &amp; Serverless</span>
+    <span class="tc-pill"><span></span>CI/CD &amp; IaC</span>
+  </div>
+</div>
+<!-- ═══ SECTION 1: FOUNDATIONS ═══ -->
+<section class="section" id="foundations">
+  <div class="section-header"><span class="section-eyebrow">Start Here</span><span class="section-rule"></span></div>
+  <h2>Cloud Computing &amp; AWS Basics</h2>
+  <p class="section-intro">If you've never touched AWS, start here — everything else in this document is really just "here's a specific tool that solves one piece of the puzzle below." Get this mental model solid first.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">What "the cloud" actually means</span>
+      <ul class="rule-list">
+        <li>Instead of buying, racking, and maintaining physical servers, you RENT compute/storage/networking from a provider (AWS, Azure, GCP) who owns and runs massive data centers</li>
+        <li>You pay for what you use (pay-as-you-go), and capacity can scale up or down in minutes instead of the weeks/months a physical server purchase would take</li>
+        <li>AWS (Amazon Web Services) is the largest cloud provider — launched 2006, originally built to run Amazon's own e-commerce infrastructure</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">The three service models — IaaS, PaaS, SaaS</span>
+      <ul class="rule-list">
+        <li><strong>IaaS</strong> (Infrastructure as a Service) — you get raw virtual machines, storage, and networking; YOU manage the OS, runtime, and app (e.g. <strong>EC2</strong> — a virtual server you fully configure)</li>
+        <li><strong>PaaS</strong> (Platform as a Service) — AWS manages the OS/runtime; you just deploy your code (e.g. <strong>Elastic Beanstalk</strong>, <strong>Lambda</strong>)</li>
+        <li><strong>SaaS</strong> (Software as a Service) — a fully finished application you just use (e.g. Gmail, Salesforce — not something you build ON, but might integrate WITH)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">AWS Global Infrastructure — Regions, Availability Zones, Edge Locations</span>
+<pre>REGION (e.g. us-east-1, ap-south-1)
+│  A geographic area (e.g. "N. Virginia", "Mumbai") — pick based on WHERE your users are
+│  (for latency) and DATA RESIDENCY / compliance requirements
+│
+├─ Availability Zone (AZ) — e.g. us-east-1a
+│  One or more physically SEPARATE data centers within a Region, with independent
+│  power, cooling, and networking — but connected by low-latency links
+├─ Availability Zone — e.g. us-east-1b
+├─ Availability Zone — e.g. us-east-1c
+│  (most Regions have 3+ AZs — deploying across multiple AZs is THE fundamental
+│   pattern for high availability: if one data center has an outage, others keep serving)
+│
+└─ Edge Locations — hundreds of smaller, CDN-focused sites globally, much more numerous
+   than Regions/AZs — used by CloudFront to cache content physically close to end users</pre>
+  </div>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Why Region/AZ choice is a genuine interview topic</span>
+      <ul class="rule-list">
+        <li>"Design a highly-available app" ALWAYS means "deploy across multiple AZs" — one AZ is a single point of failure</li>
+        <li>Some services are REGIONAL (S3 buckets, most managed services), others are tied to a specific AZ (an EC2 instance, an EBS volume)</li>
+        <li>Cross-region data transfer costs money and adds latency — a real factor in "why did you pick this Region" questions</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">The Shared Responsibility Model</span>
+      <ul class="rule-list">
+        <li>AWS is responsible for security <strong>OF</strong> the cloud — physical data centers, hardware, the underlying network</li>
+        <li>YOU are responsible for security <strong>IN</strong> the cloud — your data, IAM configuration, OS patching (for EC2), network configuration (security groups, VPC), application-level security</li>
+        <li>This split SHIFTS depending on the service — for Lambda (serverless), AWS manages far more (no OS to patch); for EC2, you manage far more</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview framing:</strong> a huge fraction of "what AWS services have you used" answers, even from people with real experience, are really just naming services. What actually impresses an interviewer when you have LIMITED hands-on time is being able to explain the SHAPE of a typical deployment — "a Spring Boot app running on [compute service], talking to [database service], behind a [load balancer], with [storage service] for files, secured by [IAM roles + security groups]." This document is built to give you exactly that shape, service by service.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 2: IAM ═══ -->
+<section class="section" id="iam">
+  <div class="section-header"><span class="section-eyebrow">The Foundation of AWS Security</span><span class="section-rule"></span></div>
+  <h2>IAM — Identity and Access Management</h2>
+  <p class="section-intro">IAM controls WHO (or WHAT) can do WHAT in your AWS account. It's free, it's the very first thing every AWS account has, and it underlies literally every other security question you'll be asked — "how would you secure X" almost always has "with an IAM policy" as part of the answer.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Users, Groups, Roles — the core entities</span>
+      <ul class="rule-list">
+        <li><strong>IAM User</strong> — represents a PERSON (or an application with long-term credentials) — has a permanent username/password and/or access keys</li>
+        <li><strong>IAM Group</strong> — a collection of users, for attaching the same permissions to many people at once (e.g. a "Developers" group)</li>
+        <li><strong>IAM Role</strong> — a set of permissions ASSUMED TEMPORARILY, not tied to one specific person — the critical mechanism for letting AWS SERVICES (EC2, Lambda) securely act on your behalf</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Policies — the actual permission documents</span>
+      <ul class="rule-list">
+        <li>A JSON document specifying WHO can do WHAT to WHICH resources, and under what conditions</li>
+        <li>Attached to Users, Groups, or Roles — the entity's EFFECTIVE permissions are the union of everything attached to it</li>
+        <li><strong>Principle of Least Privilege</strong> — grant ONLY the specific permissions needed, nothing broader — the single most repeated AWS security best practice in every interview guide</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'iam-policy')">Reading a real IAM policy JSON</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'iam-roleforec2')">Why EC2/Lambda use ROLES, not USER credentials</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'iam-mfa')">MFA &amp; root account best practices</div>
+    </div>
+    <div id="iam-policy" class="ct-pane active"><pre>{
+  <span class="st">"Version"</span>: <span class="st">"2012-10-17"</span>,
+  <span class="st">"Statement"</span>: [
+    {
+      <span class="st">"Effect"</span>: <span class="st">"Allow"</span>,               <span class="cm">// Allow or Deny — Deny ALWAYS wins if both apply</span>
+      <span class="st">"Action"</span>: [<span class="st">"s3:GetObject"</span>, <span class="st">"s3:PutObject"</span>], <span class="cm">// which API calls are permitted</span>
+      <span class="st">"Resource"</span>: <span class="st">"arn:aws:s3:::my-app-bucket/uploads/*"</span>, <span class="cm">// WHICH resources — scoped to one bucket's "uploads/" folder</span>
+      <span class="st">"Condition"</span>: {                       <span class="cm">// OPTIONAL extra constraints</span>
+        <span class="st">"IpAddress"</span>: { <span class="st">"aws:SourceIp"</span>: <span class="st">"203.0.113.0/24"</span> } <span class="cm">// e.g. only from this IP range</span>
+      }
+    }
+  ]
+}
+<span class="cm">// ARN = Amazon Resource Name — AWS's universal way of uniquely naming any</span>
+<span class="cm">// resource: arn:partition:service:region:account-id:resource — you'll see</span>
+<span class="cm">// this format EVERYWHERE across every AWS service</span></pre></div>
+    <div id="iam-roleforec2" class="ct-pane"><pre><span class="cm">// BAD PRACTICE (but sadly common in real codebases): hardcoding long-term</span>
+<span class="cm">// IAM USER access keys directly into application code or config files</span>
+<span class="cm">// aws.accessKeyId=AKIAIOSFODNN7EXAMPLE       // NEVER do this</span>
+<span class="cm">// aws.secretAccessKey=wJalrXUtnFEMI/K7MDENG  // credentials leak into git history, logs, etc.</span>
+
+<span class="cm">// CORRECT PRODUCTION PATTERN: attach an IAM ROLE directly to the EC2</span>
+<span class="cm">// instance (or Lambda function, or ECS task). AWS automatically injects</span>
+<span class="cm">// TEMPORARY, auto-rotating credentials — your code never sees a static</span>
+<span class="cm">// secret at all. The AWS SDK picks these up automatically:</span>
+
+<span class="ty">S3Client</span> s3 = <span class="ty">S3Client</span>.<span class="fn">builder</span>()
+    .<span class="fn">region</span>(<span class="ty">Region</span>.US_EAST_1)
+    .<span class="fn">build</span>(); <span class="cm">// no credentials specified -&gt; SDK's DEFAULT credential chain finds the</span>
+                 <span class="cm">// instance/task role automatically. This is THE standard, expected answer</span>
+                 <span class="cm">// to "how do you handle AWS credentials in your app" in an interview</span></pre></div>
+    <div id="iam-mfa" class="ct-pane"><pre><span class="cm">// Foundational IAM hygiene practices, frequently asked directly:</span>
+
+<span class="cm">// 1. NEVER use the ROOT account (the one created when you sign up) for</span>
+<span class="cm">//    day-to-day work — it has UNRESTRICTED access with no way to limit it.</span>
+<span class="cm">//    Create individual IAM users (or better, federated/SSO identities) instead.</span>
+
+<span class="cm">// 2. Enable MFA (Multi-Factor Authentication) — especially on the root</span>
+<span class="cm">//    account and any highly-privileged users — a second factor (phone app,</span>
+<span class="cm">//    hardware key) beyond just a password</span>
+
+<span class="cm">// 3. Rotate access keys regularly, and prefer IAM ROLES over long-term</span>
+<span class="cm">//    access keys wherever the workload runs ON an AWS service (EC2, Lambda, ECS)</span>
+
+<span class="cm">// 4. Use IAM POLICY conditions and resource scoping (as shown in the JSON</span>
+<span class="cm">//    tab) rather than broad wildcard ("*") permissions — least privilege, always</span></pre></div>
+  </div>
+
+  <div class="warn-box">
+    <span class="tip-icon">⚠️</span>
+    <span class="warn-text"><strong>Interview one-liner you should have ready:</strong> "For anything running ON AWS infrastructure — EC2, Lambda, ECS — I use an IAM ROLE attached to that resource rather than embedding IAM USER access keys in code or config. Roles issue short-lived, auto-rotating credentials, which the AWS SDK picks up automatically via its default credential provider chain." This single sentence answers a very commonly asked security question, even without hands-on experience.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 3: EC2 ═══ -->
+<section class="section" id="ec2">
+  <div class="section-header"><span class="section-eyebrow">Amazon Elastic Compute Cloud</span><span class="section-rule"></span></div>
+  <h2>EC2 — Virtual Servers</h2>
+  <p class="section-intro">EC2 gives you a virtual machine ("instance") in the cloud — the closest thing to "just a server," and historically the most common place to run a Java/Spring Boot application before container-based approaches became popular.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Core concepts</span>
+      <ul class="rule-list">
+        <li><strong>AMI</strong> (Amazon Machine Image) — the template an instance boots from: OS + any pre-installed software (Amazon Linux, Ubuntu, Windows, or a custom AMI you've baked yourself)</li>
+        <li><strong>Instance Type</strong> — the hardware profile: CPU/memory/network ratio. Families: <code class="inline">t</code> (burstable, cheap, general purpose), <code class="inline">m</code> (balanced), <code class="inline">c</code> (compute-optimized), <code class="inline">r</code> (memory-optimized) — e.g. <code class="inline">t3.medium</code>, <code class="inline">m5.large</code></li>
+        <li><strong>Key Pair</strong> — SSH public/private key for secure login — AWS keeps the public key, you keep the private key (never uploaded, never recoverable if lost)</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Stop vs Terminate — a classic interview distinction</span>
+      <ul class="rule-list">
+        <li><strong>Stop</strong> — instance shuts down gracefully; EBS root volume is PRESERVED; you're NOT billed for compute while stopped (still billed for the attached EBS storage); can be restarted later with the same data</li>
+        <li><strong>Terminate</strong> — instance is permanently destroyed; by default the root EBS volume is DELETED too (unless "delete on termination" is disabled); cannot be undone</li>
+      </ul>
+    </div>
+  </div>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th>Pricing Model</th><th>How it works</th><th>Best for</th></tr></thead>
+    <tbody>
+      <tr><td>On-Demand</td><td>Pay per hour/second, no commitment</td><td>Unpredictable workloads, short-term testing, getting started</td></tr>
+      <tr><td>Reserved Instances</td><td>1 or 3-year commitment for a significant discount (up to ~70%)</td><td>Steady, predictable, long-running production workloads</td></tr>
+      <tr><td>Savings Plans</td><td>Commit to a $/hour SPEND (not a specific instance type) for 1-3 years</td><td>Similar discount to Reserved, but more flexible across instance families</td></tr>
+      <tr><td>Spot Instances</td><td>Bid on AWS's SPARE capacity — up to ~90% cheaper, but can be reclaimed with ~2 min notice</td><td>Fault-tolerant, interruptible workloads: batch jobs, CI/CD runners, stateless workers — NEVER for a primary production database</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'ec2-launch')">Launching a Spring Boot app on EC2 — the manual flow</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ec2-userdata')">User Data — bootstrapping on first launch</div>
+    </div>
+    <div id="ec2-launch" class="ct-pane active"><pre><span class="cm">// The classic (pre-container) way to run a Java app on EC2 — conceptually:</span>
+<span class="cm">// 1. Launch an EC2 instance from an Amazon Linux AMI</span>
+<span class="cm">// 2. SSH in using your key pair</span>
+<span class="cm">// 3. Install a JDK (e.g. via yum/apt or a pre-baked custom AMI)</span>
+<span class="cm">// 4. Copy your Spring Boot .jar onto the instance (via scp, S3 download, or CI/CD)</span>
+<span class="cm">// 5. Run it, typically as a systemd service so it restarts automatically on reboot/crash:</span>
+
+<span class="cm">// /etc/systemd/system/myapp.service</span>
+[Unit]
+Description=My Spring Boot App
+After=network.target
+
+[Service]
+User=ec2-user
+ExecStart=/usr/bin/java -jar /opt/myapp/myapp.jar
+Restart=always
+SuccessExitStatus=143
+
+[Install]
+WantedBy=multi-user.target
+
+<span class="cm">// sudo systemctl enable myapp && sudo systemctl start myapp</span></pre></div>
+    <div id="ec2-userdata" class="ct-pane"><pre><span class="cm">// EC2 "User Data" — a shell script you attach at LAUNCH time, run ONCE</span>
+<span class="cm">// automatically on first boot — the standard way to bootstrap an instance</span>
+<span class="cm">// without manual SSH steps, and the basis for Auto Scaling Group instances</span>
+<span class="cm">// (covered in the Load Balancing &amp; Auto Scaling section) configuring themselves identically</span>
+
+#!/bin/bash
+yum update -y
+yum install -y java-17-amazon-corretto
+aws s3 cp s3://my-deployment-bucket/myapp.jar /opt/myapp/myapp.jar <span class="cm">// pull the latest build from S3</span>
+systemctl enable myapp
+systemctl start myapp
+
+<span class="cm">// This is exactly the mechanism that lets an Auto Scaling Group spin up a</span>
+<span class="cm">// brand new, fully-configured, running instance with ZERO manual steps —</span>
+<span class="cm">// every new instance runs this same script on boot</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview framing:</strong> if asked "how would you run a Spring Boot app on AWS," EC2-with-systemd is the most fundamental answer — but be ready to immediately follow up with "though in practice I'd lean toward Elastic Beanstalk or ECS/Fargate for easier scaling and deployment automation" (covered in the Deployment Strategies section) — showing you know the manual approach exists AND why production teams usually reach for something higher-level.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 4: EC2 STORAGE ═══ -->
+<section class="section" id="ec2-storage">
+  <div class="section-header"><span class="section-eyebrow">Where Instance Data Lives</span><span class="section-rule"></span></div>
+  <h2>EBS, EFS, AMI &amp; Snapshots</h2>
+  <p class="section-intro">EC2 instances need somewhere to store their OS and data — AWS offers several distinctly different storage options, and knowing which fits which use case is a genuine interview differentiator.</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th></th><th>EBS</th><th>Instance Store</th><th>EFS</th></tr></thead>
+    <tbody>
+      <tr><td>What it is</td><td>Network-attached virtual disk (like a cloud "hard drive")</td><td>Physically attached local disk on the host hardware</td><td>Managed, shared NETWORK file system (NFS)</td></tr>
+      <tr><td>Persistence</td><td>Persists independently of the instance's lifecycle</td><td>EPHEMERAL — data is LOST if the instance stops or terminates</td><td>Persists independently, fully managed</td></tr>
+      <tr><td>Attach to multiple instances?</td><td>No (one instance at a time, with rare exceptions)</td><td>No</td><td>YES — many EC2 instances can mount the SAME EFS filesystem simultaneously</td></tr>
+      <tr><td>Typical use</td><td>Root volumes, databases, general persistent storage</td><td>Temporary caches, buffers, scratch space — never anything you can't afford to lose</td><td>Shared config/content across a fleet of instances, e.g. shared uploads directory</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'ecs-snapshot')">Snapshots — point-in-time EBS backups</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ecs-ami')">Creating a custom AMI</div>
+    </div>
+    <div id="ecs-snapshot" class="ct-pane active"><pre><span class="cm">// A SNAPSHOT is a point-in-time, INCREMENTAL backup of an EBS volume, stored in S3</span>
+<span class="cm">// "Incremental" means: after the FIRST full snapshot, each subsequent</span>
+<span class="cm">// snapshot only stores the BLOCKS THAT CHANGED since the last one — much</span>
+<span class="cm">// cheaper and faster than a full copy every time, though restoring still</span>
+<span class="cm">// reconstructs the FULL volume by combining the chain of snapshots</span>
+
+<span class="cm">// Common uses:</span>
+<span class="cm">// - Scheduled backups of a database running on EC2 (though RDS automates</span>
+<span class="cm">//   this for you natively — covered in the RDS section)</span>
+<span class="cm">// - Creating a NEW volume pre-populated with data (e.g. cloning an environment)</span>
+<span class="cm">// - The underlying mechanism behind creating a custom AMI (next tab)</span></pre></div>
+    <div id="ecs-ami" class="ct-pane"><pre><span class="cm">// A CUSTOM AMI lets you "bake" a fully-configured instance (OS + JDK +</span>
+<span class="cm">// your app + any dependencies already installed) into a reusable template —</span>
+<span class="cm">// so new instances launch ALREADY CONFIGURED, without running a lengthy</span>
+<span class="cm">// User Data script every single boot</span>
+
+<span class="cm">// Typical flow:</span>
+<span class="cm">// 1. Launch a base EC2 instance, install everything needed (JDK, your app,</span>
+<span class="cm">//    monitoring agents, etc.)</span>
+<span class="cm">// 2. "Create Image" from that instance — AWS snapshots its EBS volume(s)</span>
+<span class="cm">//    and registers a new AMI from that snapshot</span>
+<span class="cm">// 3. Use THIS custom AMI (instead of a bare Amazon Linux AMI) in your Auto</span>
+<span class="cm">//    Scaling Group's launch template — new instances boot ready-to-serve traffic</span>
+<span class="cm">//    almost immediately, a meaningfully faster and more reliable pattern</span>
+<span class="cm">//    than "boot bare OS, then run a big install script every time"</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "EBS is a persistent, single-instance network disk — the default choice for a root volume or a database. Instance Store is fast but ephemeral — fine for scratch space, never for anything you need to survive a stop/terminate. EFS is the one to reach for when MULTIPLE instances need to share the same files, like a common uploads directory across an Auto Scaling fleet."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 5: S3 ═══ -->
+<section class="section" id="s3">
+  <div class="section-header"><span class="section-eyebrow">Simple Storage Service</span><span class="section-rule"></span></div>
+  <h2>S3 — Object Storage</h2>
+  <p class="section-intro">The single most-used AWS service across the entire industry, and one of the most likely to have a genuinely detailed follow-up question — especially "how would a Java app let users upload a file to S3."</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Core concepts</span>
+      <ul class="rule-list">
+        <li><strong>Bucket</strong> — a globally-unique-named container for objects (files) — think of it as a top-level "drive"</li>
+        <li><strong>Object</strong> — a file plus metadata, identified by a KEY (its full "path" within the bucket, e.g. <code class="inline">uploads/2024/receipt.pdf</code>) — S3 is technically a flat key-value store; "folders" are a UI convenience, not a real filesystem hierarchy</li>
+        <li>Effectively unlimited storage, 11 nines of durability (99.999999999%) — achieved by redundantly storing objects across multiple AZs automatically</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Storage Classes — the same durability, different cost/access trade-offs</span>
+      <ul class="rule-list">
+        <li><strong>S3 Standard</strong> — frequently accessed data, higher cost, millisecond access</li>
+        <li><strong>S3 Standard-IA</strong> (Infrequent Access) — cheaper storage, small retrieval fee — for data accessed occasionally</li>
+        <li><strong>S3 Glacier</strong> / <strong>Glacier Deep Archive</strong> — very cheap, but retrieval takes minutes to HOURS — for long-term archives/compliance data</li>
+        <li><strong>Lifecycle Policies</strong> automate moving objects between classes over time (e.g. "move to Glacier after 90 days") — a real cost-optimization talking point</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'s3-presigned')">Presigned URLs — the standard file-upload pattern</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'s3-upload')">Direct upload/download from Java (server-side)</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'s3-versioning')">Versioning &amp; MFA Delete</div>
+    </div>
+    <div id="s3-presigned" class="ct-pane active"><pre><span class="cm">// PROBLEM: you want users to upload files (e.g. profile photos) DIRECTLY to</span>
+<span class="cm">// S3 from the browser — but you don't want to hand out real AWS credentials</span>
+<span class="cm">// to every client, and routing large file bytes THROUGH your Spring Boot</span>
+<span class="cm">// server first wastes bandwidth and server resources</span>
+
+<span class="cm">// SOLUTION: a PRESIGNED URL — your backend (which HAS legitimate AWS</span>
+<span class="cm">// credentials, via its IAM role) generates a temporary, cryptographically-</span>
+<span class="cm">// signed URL that grants time-limited access to ONE specific S3 operation —</span>
+<span class="cm">// then hands that URL to the client, who uploads/downloads directly</span>
+
+<span class="ty">S3Presigner</span> presigner = <span class="ty">S3Presigner</span>.<span class="fn">create</span>();
+
+<span class="ty">PutObjectRequest</span> objectRequest = <span class="ty">PutObjectRequest</span>.<span class="fn">builder</span>()
+    .<span class="fn">bucket</span>(<span class="st">"my-app-uploads"</span>)
+    .<span class="fn">key</span>(<span class="st">"profile-photos/"</span> + userId + <span class="st">".jpg"</span>)
+    .<span class="fn">build</span>();
+
+<span class="ty">PutObjectPresignRequest</span> presignRequest = <span class="ty">PutObjectPresignRequest</span>.<span class="fn">builder</span>()
+    .<span class="fn">signatureDuration</span>(<span class="ty">Duration</span>.<span class="fn">ofMinutes</span>(15)) <span class="cm">// SHORT-lived — expires quickly, limiting exposure</span>
+    .<span class="fn">putObjectRequest</span>(objectRequest)
+    .<span class="fn">build</span>();
+
+<span class="ty">PresignedPutObjectRequest</span> presignedRequest = presigner.<span class="fn">presignPutObject</span>(presignRequest);
+<span class="ty">String</span> uploadUrl = presignedRequest.<span class="fn">url</span>().<span class="fn">toString</span>(); <span class="cm">// hand THIS to the frontend — it PUTs the file bytes directly to this URL</span>
+
+<span class="cm">// The URL grants access ONLY to that exact operation on that exact key,</span>
+<span class="cm">// only for the duration specified — never broader than that</span></pre></div>
+    <div id="s3-upload" class="ct-pane"><pre><span class="cm">// When the SERVER itself needs to read/write S3 (e.g. generating a report</span>
+<span class="cm">// and storing it, or processing an uploaded file server-side)</span>
+
+<span class="ty">S3Client</span> s3 = <span class="ty">S3Client</span>.<span class="fn">builder</span>().<span class="fn">region</span>(<span class="ty">Region</span>.US_EAST_1).<span class="fn">build</span>(); <span class="cm">// picks up the instance/task IAM role automatically</span>
+
+<span class="cm">// Upload</span>
+s3.<span class="fn">putObject</span>(
+    <span class="ty">PutObjectRequest</span>.<span class="fn">builder</span>().<span class="fn">bucket</span>(<span class="st">"my-bucket"</span>).<span class="fn">key</span>(<span class="st">"reports/summary.pdf"</span>).<span class="fn">build</span>(),
+    <span class="ty">RequestBody</span>.<span class="fn">fromFile</span>(<span class="ty">Paths</span>.<span class="fn">get</span>(<span class="st">"/tmp/summary.pdf"</span>))
+);
+
+<span class="cm">// Download</span>
+<span class="ty">ResponseBytes</span>&lt;<span class="ty">GetObjectResponse</span>&gt; object = s3.<span class="fn">getObjectAsBytes</span>(
+    <span class="ty">GetObjectRequest</span>.<span class="fn">builder</span>().<span class="fn">bucket</span>(<span class="st">"my-bucket"</span>).<span class="fn">key</span>(<span class="st">"reports/summary.pdf"</span>).<span class="fn">build</span>()
+);
+<span class="kw">byte</span>[] fileBytes = object.<span class="fn">asByteArray</span>();</pre></div>
+    <div id="s3-versioning" class="ct-pane"><pre><span class="cm">// VERSIONING — when enabled on a bucket, every overwrite/delete keeps the</span>
+<span class="cm">// PREVIOUS version instead of destroying it — protects against accidental</span>
+<span class="cm">// overwrite or deletion, at the cost of storing every version (real $ impact)</span>
+
+<span class="cm">// A "delete" on a versioned bucket doesn't actually remove the object —</span>
+<span class="cm">// it adds a "delete marker" as the latest version; the old versions remain</span>
+<span class="cm">// recoverable until explicitly purged (often via a lifecycle rule)</span>
+
+<span class="cm">// MFA DELETE — an extra layer specifically for versioned buckets: requires</span>
+<span class="cm">// multi-factor auth to PERMANENTLY delete a version or to disable</span>
+<span class="cm">// versioning itself — protects against a compromised/mistaken single credential</span>
+<span class="cm">// causing irreversible data loss on business-critical buckets</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "For user file uploads, I'd avoid routing bytes through the Spring Boot server entirely — instead, generate a short-lived presigned URL server-side (using the app's IAM role, never a hardcoded credential) and let the client upload directly to S3. It's more scalable, and the app never needs to see or hold the raw file data at all." This is consistently the answer interviewers are fishing for on file-upload design questions.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 6: VPC ═══ -->
+<section class="section" id="vpc">
+  <div class="section-header"><span class="section-eyebrow">Your Private Network in AWS</span><span class="section-rule"></span></div>
+  <h2>VPC — Virtual Private Cloud</h2>
+  <p class="section-intro">A VPC is your own logically isolated slice of the AWS network — like having your own private data center network, but software-defined. This is consistently the topic where "no hands-on experience" shows most obviously, so it's worth extra attention here.</p>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">The anatomy of a typical production VPC</span>
+<pre>VPC (e.g. 10.0.0.0/16 — up to ~65,000 IP addresses)
+│
+├─ PUBLIC SUBNET (e.g. 10.0.1.0/24) — in Availability Zone A
+│    Contains: Load Balancer, NAT Gateway
+│    Route table sends 0.0.0.0/0 traffic -&gt; Internet Gateway (direct internet access)
+│
+├─ PRIVATE SUBNET (e.g. 10.0.2.0/24) — in Availability Zone A
+│    Contains: EC2 instances / ECS tasks running your Spring Boot app
+│    Route table sends 0.0.0.0/0 traffic -&gt; NAT Gateway (OUTBOUND internet only,
+│    e.g. to call a 3rd-party API — nothing can initiate a connection INTO this subnet from the internet)
+│
+└─ PRIVATE SUBNET (e.g. 10.0.3.0/24) — in Availability Zone B
+     Contains: RDS database — typically has NO internet route at all, reachable
+     only from within the VPC</pre>
+  </div>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">The core building blocks</span>
+      <ul class="rule-list">
+        <li><strong>CIDR block</strong> — the IP address range for the VPC (e.g. <code class="inline">10.0.0.0/16</code>), subdivided into smaller ranges for each subnet</li>
+        <li><strong>Subnet</strong> — a slice of the VPC tied to ONE specific AZ; marked "public" or "private" based on its ROUTE TABLE, not any inherent property</li>
+        <li><strong>Internet Gateway (IGW)</strong> — attached to the VPC, provides the path for PUBLIC subnets to reach (and be reached from) the internet</li>
+        <li><strong>NAT Gateway</strong> — sits in a public subnet, lets PRIVATE subnet resources initiate OUTBOUND internet connections (e.g. downloading a package, calling an external API) WITHOUT being reachable from the internet themselves</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Why the app server usually goes in a PRIVATE subnet</span>
+      <ul class="rule-list">
+        <li>Nothing on the public internet can directly initiate a connection to it — all inbound traffic is forced through the Load Balancer first</li>
+        <li>The database goes in an even MORE restricted private subnet — often with no internet route at all, reachable only from the app tier</li>
+        <li>This "public subnet has only the load balancer, everything else is private" layout is THE standard reference architecture — describing it, even without having built it, demonstrates real understanding</li>
+      </ul>
+    </div>
+  </div>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th></th><th>Security Groups</th><th>Network ACLs (NACLs)</th></tr></thead>
+    <tbody>
+      <tr><td>Applies to</td><td>Individual instances/resources (the ENI level)</td><td>The whole SUBNET</td></tr>
+      <tr><td>Stateful or stateless?</td><td><strong>Stateful</strong> — if inbound traffic is allowed, the RETURN outbound traffic is automatically allowed too, no matching rule needed</td><td><strong>Stateless</strong> — inbound and outbound rules are evaluated COMPLETELY independently; you must explicitly allow the return traffic too</td></tr>
+      <tr><td>Rule types</td><td>ALLOW rules only — you cannot explicitly deny</td><td>Both ALLOW and DENY rules — evaluated in numbered order</td></tr>
+      <tr><td>Typical use</td><td>The default, day-to-day tool — "only allow port 8080 from the load balancer's security group"</td><td>An extra, coarser-grained layer — e.g. explicitly BLOCKING a known-bad IP range at the subnet level</td></tr>
+    </tbody>
+  </table>
+
+  <div class="danger-box">
+    <span class="tip-icon">🚫</span>
+    <span class="danger-text"><strong>The single most-asked VPC interview distinction:</strong> "Security Groups are STATEFUL, NACLs are STATELESS." Concretely: if you allow inbound port 443 on a Security Group, the response traffic going back out is automatically permitted — you don't need a matching outbound rule. With a NACL, you'd need BOTH an inbound rule allowing 443 in AND an outbound rule allowing the ephemeral return ports out, or the connection breaks. Being able to state this crisply, unprompted, is one of the highest-value single facts in this entire document.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 7: LOAD BALANCING & AUTO SCALING ═══ -->
+<section class="section" id="load-balancing">
+  <div class="section-header"><span class="section-eyebrow">Distributing Traffic, Handling Growth</span><span class="section-rule"></span></div>
+  <h2>Load Balancing &amp; Auto Scaling</h2>
+  <p class="section-intro">These two services are almost always discussed together — a Load Balancer distributes incoming traffic across multiple instances; an Auto Scaling Group automatically adjusts HOW MANY instances exist based on demand. Together, they're the standard answer to "how does your app handle traffic spikes and stay available."</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Types of Load Balancer</span>
+      <ul class="rule-list">
+        <li><strong>ALB</strong> (Application Load Balancer) — operates at Layer 7 (HTTP/HTTPS) — can route based on URL path, hostname, headers; the standard choice for a REST API/web app</li>
+        <li><strong>NLB</strong> (Network Load Balancer) — operates at Layer 4 (TCP/UDP) — ultra-high performance, static IP support; used for extreme throughput or non-HTTP protocols</li>
+        <li><strong>CLB</strong> (Classic Load Balancer) — the legacy, original ELB — largely superseded by ALB/NLB for new workloads</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Health Checks — how the LB knows an instance is alive</span>
+      <ul class="rule-list">
+        <li>The LB periodically pings a configured endpoint (e.g. <code class="inline">/actuator/health</code> — Spring Boot Actuator's standard health endpoint) on each registered instance</li>
+        <li>Instances failing health checks are automatically taken OUT of rotation — no traffic routed to them — until they recover</li>
+        <li>This is exactly why every production Spring Boot app should expose a real health endpoint, not just rely on "the process is running"</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">How they work together — the standard scaling flow</span>
+<pre>Internet
+   │
+   ▼
+Application Load Balancer  (public subnet, single stable DNS name/entry point)
+   │  routes traffic to healthy targets only
+   ▼
+Target Group  (the set of instances currently registered as valid destinations)
+   │
+   ├─ EC2 instance 1 (private subnet, AZ-a) — Spring Boot app
+   ├─ EC2 instance 2 (private subnet, AZ-b) — Spring Boot app
+   └─ EC2 instance 3 (private subnet, AZ-a) — Spring Boot app  ← Auto Scaling
+                                                                  ADDED this one
+                                                                  automatically
+                                                                  when CPU crossed
+                                                                  a threshold
+
+Auto Scaling Group (ASG): watches a CloudWatch metric (e.g. average CPU > 70%),
+launches NEW instances from a Launch Template when scaling OUT, terminates
+instances when scaling IN — the LB's target group updates automatically as
+instances join/leave</pre>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'as-policies')">Scaling policies</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'as-min-max-desired')">Min / Max / Desired capacity</div>
+    </div>
+    <div id="as-policies" class="ct-pane active"><pre><span class="cm">// TARGET TRACKING — the simplest, most common: "keep average CPU near 50%"</span>
+<span class="cm">// AWS automatically adds/removes instances to maintain that target — similar</span>
+<span class="cm">// to a thermostat</span>
+
+<span class="cm">// STEP SCALING — more granular control: define specific actions for specific</span>
+<span class="cm">// metric thresholds, e.g. "CPU &gt; 70% for 5 min -&gt; add 2 instances", "CPU &gt; 90% -&gt; add 4"</span>
+
+<span class="cm">// SCHEDULED SCALING — for predictable traffic patterns, e.g. "scale up to</span>
+<span class="cm">// 10 instances every weekday at 8am, scale down to 2 at 8pm" — common for</span>
+<span class="cm">// business apps with well-known usage patterns</span></pre></div>
+    <div id="as-min-max-desired" class="ct-pane"><pre><span class="cm">// Every Auto Scaling Group is configured with three numbers:</span>
+<span class="cm">// MIN     — the floor; ASG never scales below this, even at zero load</span>
+<span class="cm">//           (typically >= 2, spread across different AZs, for high availability)</span>
+<span class="cm">// MAX      — the ceiling; a safety limit against runaway scaling (and runaway cost)</span>
+<span class="cm">// DESIRED  — the current TARGET the ASG is actively trying to maintain,</span>
+<span class="cm">//            adjusted automatically by scaling policies within [MIN, MAX]</span>
+
+<span class="cm">// Example: min=2, max=10, desired=2 at idle. A traffic spike triggers a</span>
+<span class="cm">// scaling policy that raises "desired" to 5 -&gt; ASG launches 3 more instances</span>
+<span class="cm">// automatically to match, registers them with the target group once their</span>
+<span class="cm">// health checks pass, and they start receiving traffic</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "A Load Balancer distributes traffic and hides HOW MANY instances exist behind one stable endpoint; an Auto Scaling Group changes how many instances actually exist, based on real-time metrics. Together they mean the app can absorb a traffic spike by adding capacity automatically, and the Load Balancer's health checks ensure traffic only ever reaches instances that are actually healthy."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 8: RDS ═══ -->
+<section class="section" id="rds">
+  <div class="section-header"><span class="section-eyebrow">Relational Database Service</span><span class="section-rule"></span></div>
+  <h2>RDS — Managed Relational Databases</h2>
+  <p class="section-intro">RDS runs a real relational database (MySQL, PostgreSQL, MariaDB, Oracle, SQL Server) for you — AWS handles patching, backups, and failover, while you connect exactly like you would to any JDBC-compatible database. This is what almost every Spring Boot + AWS shop uses for its primary datastore.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">What RDS manages FOR you</span>
+      <ul class="rule-list">
+        <li>Automated backups and point-in-time recovery (restore to any second within your retention window)</li>
+        <li>OS and database engine patching (with a configurable maintenance window)</li>
+        <li>Automated failover for high availability (Multi-AZ, next tab)</li>
+        <li>Storage auto-scaling as your data grows</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">What it DOESN'T change for your app code</span>
+      <ul class="rule-list">
+        <li>It's still just MySQL/Postgres under the hood — your Spring Boot <code class="inline">application.properties</code> JDBC URL, Hibernate dialect, and JPA repositories work exactly as if it were a local database</li>
+        <li>The ONLY real difference from a Java code perspective is the connection endpoint (an RDS DNS name) and network/security configuration (VPC, security groups)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'rds-multiaz')">Multi-AZ — high availability</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'rds-readreplica')">Read Replicas — read scalability</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'rds-springconfig')">Connecting from Spring Boot</div>
+    </div>
+    <div id="rds-multiaz" class="ct-pane active"><pre><span class="cm">// MULTI-AZ: a SYNCHRONOUS standby replica in a DIFFERENT Availability Zone —</span>
+<span class="cm">// purely for DISASTER RECOVERY / HIGH AVAILABILITY, not for extra read capacity</span>
+
+<span class="cm">// - Your app connects to ONE endpoint (the primary) — you never talk to</span>
+<span class="cm">//   the standby directly</span>
+<span class="cm">// - Every write is synchronously replicated to the standby BEFORE being</span>
+<span class="cm">//   acknowledged — guarantees zero data loss on failover, at a small</span>
+<span class="cm">//   latency cost per write</span>
+<span class="cm">// - If the primary AZ has an outage, RDS AUTOMATICALLY fails over to the</span>
+<span class="cm">//   standby (typically 60-120 seconds) and updates the DNS endpoint to</span>
+<span class="cm">//   point at it — your app just sees a brief connection blip, then</span>
+<span class="cm">//   traffic resumes against the (now-primary) standby</span>
+
+<span class="cm">// THIS IS THE KEY DISTINCTION interviewers check for: Multi-AZ is about</span>
+<span class="cm">// AVAILABILITY (surviving an outage), NOT about scaling read throughput</span></pre></div>
+    <div id="rds-readreplica" class="ct-pane"><pre><span class="cm">// READ REPLICAS: ASYNCHRONOUS copies used to OFFLOAD READ traffic from the</span>
+<span class="cm">// primary — for SCALING, not disaster recovery</span>
+
+<span class="cm">// - You can create MULTIPLE read replicas (unlike Multi-AZ's single standby)</span>
+<span class="cm">// - Your APPLICATION CODE must explicitly route read-only queries to a</span>
+<span class="cm">//   replica's endpoint — RDS does NOT do this automatically like Multi-AZ failover does</span>
+<span class="cm">// - Replication is ASYNCHRONOUS -&gt; replicas can lag slightly behind the</span>
+<span class="cm">//   primary (usually milliseconds, but under heavy load it can grow) —</span>
+<span class="cm">//   a real consideration for "read your own write" consistency requirements</span>
+<span class="cm">// - Can even be promoted to a STANDALONE writable database if needed</span>
+
+<span class="cm">// A common Spring Boot pattern: separate DataSource beans for primary</span>
+<span class="cm">// (writes) vs replica (reads), or a routing DataSource that picks based on</span>
+<span class="cm">// whether the current transaction is read-only</span></pre></div>
+    <div id="rds-springconfig" class="ct-pane"><pre><span class="cm"># application.properties — connecting to RDS is IDENTICAL to any JDBC database,</span>
+<span class="cm"># the endpoint is just an RDS-provided DNS name</span>
+spring.datasource.url=jdbc:mysql://mydb.abc123xyz.us-east-1.rds.amazonaws.com:3306/myapp
+spring.datasource.username=${DB_USERNAME}   <span class="cm"># NEVER hardcode — inject from Secrets Manager / Parameter Store</span>
+spring.datasource.password=${DB_PASSWORD}   <span class="cm"># (covered in the Security Best Practices section)</span>
+spring.jpa.hibernate.ddl-auto=validate      <span class="cm"># NEVER "update" or "create" in production — use a migration</span>
+                                             <span class="cm"># tool like Flyway/Liquibase for schema changes instead</span></pre></div>
+  </div>
+
+  <div class="danger-box">
+    <span class="tip-icon">🚫</span>
+    <span class="danger-text"><strong>The #1 RDS interview trap:</strong> confusing Multi-AZ with Read Replicas. Multi-AZ = ONE synchronous standby, for AVAILABILITY, automatic failover, same endpoint. Read Replicas = MULTIPLE asynchronous copies, for READ SCALING, requires your app to route reads there explicitly, separate endpoints, possible replication lag. You can — and in serious production systems often DO — use both together: Multi-AZ for the primary's resilience, plus read replicas for scaling reads.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 9: DYNAMODB ═══ -->
+<section class="section" id="dynamodb">
+  <div class="section-header"><span class="section-eyebrow">Amazon's NoSQL Service</span><span class="section-rule"></span></div>
+  <h2>DynamoDB — NoSQL</h2>
+  <p class="section-intro">A fully-managed, serverless key-value/document NoSQL database — fundamentally different design philosophy than RDS, and a common "when would you choose X over Y" interview question for anyone coming from a relational background.</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th></th><th>RDS (Relational)</th><th>DynamoDB (NoSQL)</th></tr></thead>
+    <tbody>
+      <tr><td>Schema</td><td>Fixed, defined upfront — tables, columns, types, foreign keys</td><td>Flexible — each item can have different attributes</td></tr>
+      <tr><td>Querying</td><td>Rich SQL — arbitrary joins, aggregations, ad-hoc queries</td><td>Fast lookups by KEY — complex queries/joins are awkward or impossible</td></tr>
+      <tr><td>Scaling</td><td>Vertical (bigger instance) primarily; read replicas for reads</td><td>Horizontal — scales near-infinitely by design, built for massive throughput</td></tr>
+      <tr><td>Consistency</td><td>Strong (ACID transactions)</td><td>Eventually consistent by default; STRONGLY consistent reads available as an option</td></tr>
+      <tr><td>Best for</td><td>Complex relational data, reporting, ad-hoc queries, transactional integrity</td><td>Simple access patterns at massive scale — session stores, shopping carts, IoT data, gaming leaderboards</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">Partition Key &amp; Sort Key — the core of DynamoDB's data model</span>
+<pre><span class="cm">// Every DynamoDB table has a PARTITION KEY (required) that determines WHICH</span>
+<span class="cm">// physical partition an item lives on — good key selection (high cardinality,</span>
+<span class="cm">// evenly distributed values) is critical for avoiding "hot partitions"</span>
+
+<span class="cm">// An OPTIONAL SORT KEY lets multiple items share the same partition key,</span>
+<span class="cm">// ordered/queryable by that sort key — e.g.:</span>
+
+<span class="cm">// Table: OrderHistory</span>
+<span class="cm">// Partition Key: customerId       Sort Key: orderDate</span>
+<span class="cm">// {customerId: "u123", orderDate: "2024-01-15", total: 59.99}</span>
+<span class="cm">// {customerId: "u123", orderDate: "2024-02-03", total: 22.50}</span>
+<span class="cm">// -&gt; querying "all orders for customer u123, sorted by date" is EXTREMELY fast —</span>
+<span class="cm">// exactly the kind of "known access pattern, needs massive scale" use case DynamoDB targets</span></pre>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "I'd reach for RDS when the data is genuinely relational and I need complex queries or strong transactional guarantees — a typical CRUD business app. I'd reach for DynamoDB when I know my access patterns in advance, need very low, predictable latency at massive scale, and can design around key-based lookups rather than ad-hoc joins — session storage or high-throughput event data are classic fits." Being able to articulate WHEN to pick each, not just define them, is what separates a real answer here.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 10: LAMBDA ═══ -->
+<section class="section" id="lambda">
+  <div class="section-header"><span class="section-eyebrow">Serverless Compute</span><span class="section-rule"></span></div>
+  <h2>Lambda &amp; Serverless</h2>
+  <p class="section-intro">Lambda runs your code in response to an event, WITHOUT you provisioning or managing any server at all — you upload code (or a container image), AWS handles everything else, and you pay only for the milliseconds your code actually executes.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">The core model</span>
+      <ul class="rule-list">
+        <li>A Lambda function is TRIGGERED by an event: an API Gateway HTTP request, a new file landing in S3, a message arriving in SQS, a scheduled CloudWatch Event, and many more</li>
+        <li>Each invocation runs in an isolated, ephemeral environment — no server to patch, no OS to manage, scales automatically from zero to thousands of concurrent invocations</li>
+        <li>Billing is per-invocation and per-millisecond of execution time — genuinely $0 when nothing is happening, unlike an always-running EC2 instance</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">The Java-specific catch: COLD STARTS</span>
+      <ul class="rule-list">
+        <li>When a NEW execution environment is needed (first invocation, or after scaling up), AWS must initialize the runtime AND your code before it can run — this is a "cold start"</li>
+        <li>Java's JVM startup + classloading + (for Spring apps) full application context initialization makes Java's cold start noticeably SLOWER than lighter runtimes (Node.js, Python, Go) — often 1-5+ seconds for a Spring Boot app vs tens of milliseconds for Node</li>
+        <li>"Warm" invocations (reusing an already-initialized environment) are fast — the cold start penalty only hits the FIRST request to a fresh environment</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'lambda-handler')">A basic Java Lambda handler</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'lambda-coldstart-fix')">Mitigating cold starts for Java</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'lambda-whenuse')">Lambda vs a "normal" server — when to use which</div>
+    </div>
+    <div id="lambda-handler" class="ct-pane active"><pre><span class="kw">public class</span> <span class="ty">OrderHandler</span> <span class="kw">implements</span> <span class="ty">RequestHandler</span>&lt;<span class="ty">APIGatewayProxyRequestEvent</span>, <span class="ty">APIGatewayProxyResponseEvent</span>&gt; {
+
+    <span class="an">@Override</span>
+    <span class="kw">public</span> <span class="ty">APIGatewayProxyResponseEvent</span> <span class="fn">handleRequest</span>(<span class="ty">APIGatewayProxyRequestEvent</span> input, <span class="ty">Context</span> context) {
+        <span class="ty">String</span> orderId = input.<span class="fn">getPathParameters</span>().<span class="fn">get</span>(<span class="st">"id"</span>);
+        <span class="ty">Order</span> order = <span class="fn">lookupOrder</span>(orderId); <span class="cm">// your business logic</span>
+
+        <span class="kw">return</span> <span class="kw">new</span> <span class="ty">APIGatewayProxyResponseEvent</span>()
+            .<span class="fn">withStatusCode</span>(200)
+            .<span class="fn">withBody</span>(<span class="fn">toJson</span>(order));
+    }
+}
+<span class="cm">// Packaged as a .jar, uploaded to Lambda, configured to trigger on an API</span>
+<span class="cm">// Gateway route — this IS a complete, deployable REST endpoint, no server involved</span></pre></div>
+    <div id="lambda-coldstart-fix" class="ct-pane"><pre><span class="cm">// Real, commonly-cited mitigation strategies for Java cold starts:</span>
+
+<span class="cm">// 1. PROVISIONED CONCURRENCY — pay AWS to keep N execution environments</span>
+<span class="cm">//    pre-initialized and warm at all times, eliminating cold starts for</span>
+<span class="cm">//    that reserved capacity (at an ongoing cost, even when idle)</span>
+
+<span class="cm">// 2. Use a LIGHTER framework than full Spring Boot for latency-sensitive</span>
+<span class="cm">//    Lambdas — e.g. plain Java, Micronaut, or Quarkus, which have</span>
+<span class="cm">//    dramatically faster startup than a full Spring ApplicationContext</span>
+
+<span class="cm">// 3. GraalVM NATIVE IMAGE — compile the Java app AHEAD OF TIME into a</span>
+<span class="cm">//    native binary — near-instant startup, no JVM warm-up at all (Spring</span>
+<span class="cm">//    Boot 3+ has first-class GraalVM native image support for exactly this reason)</span>
+
+<span class="cm">// 4. Minimize dependencies and avoid heavy static initialization in the</span>
+<span class="cm">//    Lambda's init phase — every unnecessary class loaded adds to cold-start time</span></pre></div>
+    <div id="lambda-whenuse" class="ct-pane"><pre><span class="cm">// Lambda / serverless fits well:</span>
+<span class="cm">// - Event-driven, sporadic, or unpredictable workloads (image processing</span>
+<span class="cm">//   on S3 upload, scheduled cleanup jobs, webhook handlers)</span>
+<span class="cm">// - Workloads where "pay $0 when idle" genuinely matters</span>
+<span class="cm">// - Simple, focused, stateless functions</span>
+
+<span class="cm">// A traditional server (EC2/ECS) fits better:</span>
+<span class="cm">// - Consistently high, steady traffic (Lambda's per-invocation cost can</span>
+<span class="cm">//   exceed a running server's cost at high, sustained volume)</span>
+<span class="cm">// - Latency-critical APIs where cold starts are unacceptable (unless</span>
+<span class="cm">//   paying for provisioned concurrency)</span>
+<span class="cm">// - Long-running processes (Lambda has a hard 15-minute MAXIMUM execution</span>
+<span class="cm">//   time per invocation)</span>
+<span class="cm">// - A full, complex Spring Boot monolith — usually a more natural fit as a</span>
+<span class="cm">//   traditional deployment than shoehorned into Lambda's execution model</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "Lambda is great for event-driven, bursty, or infrequent workloads where paying $0 at idle matters — but Java's JVM startup means cold starts are a real, well-known trade-off, mitigated with provisioned concurrency, lighter frameworks, or GraalVM native images. For a steady-traffic Spring Boot REST API, I'd more likely reach for ECS/Fargate or EC2 first." Naming the cold-start trade-off unprompted is exactly the kind of production-awareness interviewers are listening for.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 11: API GATEWAY ═══ -->
+<section class="section" id="api-gateway">
+  <div class="section-header"><span class="section-eyebrow">The Front Door for APIs</span><span class="section-rule"></span></div>
+  <h2>API Gateway</h2>
+  <p class="section-intro">A fully managed service for creating, publishing, and securing APIs — most commonly paired with Lambda for a fully serverless backend, but can also route to EC2, ECS, or any HTTP endpoint.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">What it handles for you</span>
+      <ul class="rule-list">
+        <li>Request routing — maps HTTP methods + paths (e.g. <code class="inline">GET /orders/{id}</code>) to a backend (typically a Lambda function)</li>
+        <li>Authentication/authorization — integrates with IAM, Cognito, or custom Lambda authorizers to gate access before a request ever reaches your code</li>
+        <li>Throttling &amp; rate limiting — protects backends from being overwhelmed, configurable per API key/client</li>
+        <li>Request/response transformation, caching, and automatic API documentation generation</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">REST API vs HTTP API — the two flavors</span>
+      <ul class="rule-list">
+        <li><strong>REST API</strong> — the original, more feature-rich option (request validation, more auth options, usage plans) — higher cost, slightly higher latency</li>
+        <li><strong>HTTP API</strong> — newer, leaner, cheaper, lower latency — covers the common cases (Lambda/HTTP proxy integration, JWT auth) without the extra features most simple APIs never use</li>
+        <li>Default recommendation for a new, simple serverless API today: HTTP API, unless you specifically need a REST API feature</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">The classic fully-serverless request flow</span>
+<pre>Client
+   │  HTTPS request
+   ▼
+API Gateway  (validates auth, applies throttling, routes by path/method)
+   │
+   ▼
+Lambda function  (your Java business logic — e.g. the OrderHandler from the Lambda section)
+   │
+   ▼
+DynamoDB / RDS  (data access)</pre>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text">This API Gateway → Lambda → DynamoDB/RDS chain is THE reference architecture for "fully serverless REST API," and interviewers frequently ask you to sketch exactly this shape. Even without having built one, being able to draw and narrate this flow demonstrates real conceptual understanding.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 12: SQS & SNS ═══ -->
+<section class="section" id="sqs-sns">
+  <div class="section-header"><span class="section-eyebrow">Decoupling Services</span><span class="section-rule"></span></div>
+  <h2>SQS &amp; SNS — Messaging &amp; Decoupling</h2>
+  <p class="section-intro">Both let services communicate ASYNCHRONOUSLY instead of calling each other directly — a foundational pattern for resilient microservices, and a very commonly asked "how would you design X to be resilient" topic.</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th></th><th>SQS (Simple Queue Service)</th><th>SNS (Simple Notification Service)</th></tr></thead>
+    <tbody>
+      <tr><td>Model</td><td>QUEUE — point-to-point</td><td>PUB/SUB — one-to-many "fan-out"</td></tr>
+      <tr><td>Consumers</td><td>A message is consumed by exactly ONE consumer (in a standard queue setup), then removed</td><td>EVERY subscriber to the topic receives a copy of the message</td></tr>
+      <tr><td>Use case</td><td>A work queue — distribute tasks among a pool of workers, each task handled once</td><td>Broadcasting an event to multiple independent, interested systems at once</td></tr>
+      <tr><td>Typical pairing</td><td>Often the SUBSCRIBER at the end of an SNS fan-out — "SNS → multiple SQS queues"</td><td>Publishes to multiple SQS queues, Lambda functions, email, or HTTP endpoints simultaneously</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">The classic "fan-out" pattern — SNS + multiple SQS queues</span>
+<pre>Order Service
+   │  publishes ONE "OrderPlaced" event
+   ▼
+SNS Topic: "order-events"
+   │
+   ├──▶ SQS Queue: "inventory-service-queue"  → Inventory Service reserves stock
+   ├──▶ SQS Queue: "email-service-queue"      → Email Service sends confirmation
+   └──▶ SQS Queue: "analytics-service-queue"  → Analytics Service records the event
+
+<span class="cm">// The Order Service publishes ONCE and knows NOTHING about who's listening —</span>
+<span class="cm">// new subscribers (e.g. a future Fraud Detection service) can be added later</span>
+<span class="cm">// with ZERO changes to the Order Service itself. This is the whole point:</span>
+<span class="cm">// producers and consumers are fully decoupled</span></pre>
+  </div>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Why decoupling matters (the actual interview point)</span>
+      <ul class="rule-list">
+        <li>Without a queue: if the Inventory Service is down, the Order Service's direct call fails, and the whole order might fail too — a tightly-coupled failure</li>
+        <li>With SQS in between: the message just waits in the queue until Inventory Service is back up and processes it — the Order Service never even notices the outage</li>
+        <li>This is the standard answer to "how would you make Service A resilient to Service B being temporarily unavailable"</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Dead Letter Queues (DLQ)</span>
+      <ul class="rule-list">
+        <li>A message that repeatedly FAILS processing (consumer keeps throwing an error) is moved to a separate DLQ after a configured number of retries, instead of endlessly retrying or being silently dropped</li>
+        <li>Lets you inspect/alert on poison messages without blocking the main queue — a genuine production-hardening detail worth mentioning</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'sqs-send')">Sending a message from Java</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'sqs-spring')">Consuming with Spring Cloud AWS</div>
+    </div>
+    <div id="sqs-send" class="ct-pane active"><pre><span class="ty">SqsClient</span> sqs = <span class="ty">SqsClient</span>.<span class="fn">builder</span>().<span class="fn">region</span>(<span class="ty">Region</span>.US_EAST_1).<span class="fn">build</span>();
+
+sqs.<span class="fn">sendMessage</span>(<span class="ty">SendMessageRequest</span>.<span class="fn">builder</span>()
+    .<span class="fn">queueUrl</span>(<span class="st">"https://sqs.us-east-1.amazonaws.com/123456789/order-queue"</span>)
+    .<span class="fn">messageBody</span>(<span class="fn">toJson</span>(orderEvent))
+    .<span class="fn">build</span>());</pre></div>
+    <div id="sqs-spring" class="ct-pane"><pre><span class="cm">// Spring Cloud AWS provides an annotation-driven listener — no manual</span>
+<span class="cm">// polling loop needed, very similar in feel to a @KafkaListener</span>
+
+<span class="an">@Component</span>
+<span class="kw">public class</span> <span class="ty">InventoryListener</span> {
+
+    <span class="an">@SqsListener</span>(<span class="st">"inventory-service-queue"</span>)
+    <span class="kw">public void</span> <span class="fn">handleOrderPlaced</span>(<span class="ty">OrderEvent</span> event) {
+        <span class="fn">reserveStock</span>(event.<span class="fn">getOrderId</span>(), event.<span class="fn">getItems</span>());
+        <span class="cm">// on successful return, Spring Cloud AWS deletes the message from the queue</span>
+        <span class="cm">// automatically; an uncaught exception leaves it for retry / eventual DLQ</span>
+    }
+}</pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "SQS is for point-to-point work distribution — a task gets picked up by exactly one worker. SNS is for fan-out broadcast — every subscriber gets a copy. Combining them (SNS publishing into multiple SQS queues) is the standard way to decouple a microservices system, so one service's outage doesn't cascade into another's."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 13: DEPLOYMENT STRATEGIES ═══ -->
+<section class="section" id="deployment-strategies">
+  <div class="section-header"><span class="section-eyebrow">The Question You WILL Be Asked</span><span class="section-rule"></span></div>
+  <h2>Deployment Strategies — Where Does Your Spring Boot App Actually Run?</h2>
+  <p class="section-intro">"How would you deploy a Spring Boot application on AWS?" is close to a guaranteed question in a full-stack Java + AWS interview. There isn't one right answer — there are several valid approaches with real trade-offs, and being able to compare them is the actual signal interviewers want.</p>
+
+  <table class="ref-table" style="margin-bottom:20px;">
+    <thead><tr><th>Approach</th><th>Control vs Effort</th><th>Best for</th></tr></thead>
+    <tbody>
+      <tr><td>EC2 (direct)</td><td>Maximum control, maximum manual effort — you manage OS, scaling, deployments yourself</td><td>Specific OS-level requirements, full customization needs, or learning fundamentals</td></tr>
+      <tr><td>Elastic Beanstalk</td><td>Low effort — upload a .jar/.war, AWS provisions EC2 + Load Balancer + Auto Scaling for you automatically</td><td>Fast iteration, small teams, monoliths, "I just want it running" simplicity</td></tr>
+      <tr><td>ECS / Fargate</td><td>Container-based; Fargate removes server management entirely, fine-grained scaling control</td><td>Microservices, teams already using Docker, need for precise resource control per service</td></tr>
+      <tr><td>Lambda</td><td>Zero server management, pay-per-invocation, but Java cold starts are a real constraint</td><td>Event-driven workloads, APIs with bursty/unpredictable traffic, background jobs</td></tr>
+      <tr><td>EKS (Kubernetes)</td><td>Highest complexity and control — full Kubernetes on AWS</td><td>Organizations already standardized on Kubernetes, complex multi-cloud/portability needs</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'ds-eb')">Elastic Beanstalk — the fastest path</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ds-comparison')">"Which would YOU choose?" — a real answer</div>
+    </div>
+    <div id="ds-eb" class="ct-pane active"><pre><span class="cm">// Elastic Beanstalk is a PLATFORM — you give it your application artifact,</span>
+<span class="cm">// it handles provisioning EC2 instances, a Load Balancer, an Auto Scaling</span>
+<span class="cm">// Group, security groups, and health monitoring — all automatically</span>
+
+<span class="cm">// The workflow, conceptually:</span>
+<span class="cm">// 1. Build your Spring Boot app: ./mvnw clean package -&gt; produces target/myapp.jar</span>
+<span class="cm">// 2. Create an Elastic Beanstalk "Application" and "Environment" (Platform: Java/Corretto)</span>
+<span class="cm">// 3. Upload the .jar directly (via console, CLI, or the "eb deploy" CLI command)</span>
+<span class="cm">// 4. Elastic Beanstalk provisions EVERYTHING underneath: EC2 instances running</span>
+<span class="cm">//    your jar, an ALB in front, an Auto Scaling Group, CloudWatch alarms</span>
+
+<span class="cm">// You can still SEE and customize the underlying EC2 instances if needed —</span>
+<span class="cm">// Elastic Beanstalk is a convenience layer OVER EC2/ALB/ASG, not a black box —</span>
+<span class="cm">// which is exactly why it's a great "I have limited AWS experience but need</span>
+<span class="cm">// results fast" starting point, and a completely legitimate production choice</span>
+<span class="cm">// for many real companies too, not just a toy/learning tool</span></pre></div>
+    <div id="ds-comparison" class="ct-pane"><pre><span class="cm">// A genuinely strong interview answer walks through the TRADE-OFF, not just</span>
+<span class="cm">// a single memorized choice:</span>
+
+<span class="cm">// "For a straightforward monolithic Spring Boot API, Elastic Beanstalk gets</span>
+<span class="cm">// you to production fastest with sane defaults — load balancing and auto</span>
+<span class="cm">// scaling configured automatically. If the system is genuinely broken into</span>
+<span class="cm">// microservices, or the team is already using Docker, I'd lean toward ECS</span>
+<span class="cm">// with Fargate — no EC2 patching to worry about, and each service scales</span>
+<span class="cm">// independently. I'd only reach for raw EC2 directly if there's a specific</span>
+<span class="cm">// OS-level requirement Beanstalk/ECS can't accommodate. And for event-driven</span>
+<span class="cm">// pieces — a webhook handler, a scheduled batch job, image processing on S3</span>
+<span class="cm">// upload — Lambda is usually the better fit than forcing them into the main</span>
+<span class="cm">// app's always-on deployment."</span>
+
+<span class="cm">// This kind of layered, trade-off-aware answer is what interviewers are</span>
+<span class="cm">// actually listening for — far more than naming the "correct" single service</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text">If you genuinely have zero hands-on AWS deployment experience, the HONEST and still-strong answer is: "I haven't personally deployed to production on AWS yet, but conceptually here's how I'd approach it for a Spring Boot app: [walk through the comparison above]." Interviewers consistently rate a well-reasoned trade-off discussion far higher than a memorized "correct" answer recited without understanding — this section is built to make that honest answer a genuinely strong one.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 14: CONTAINERS ═══ -->
+<section class="section" id="containers">
+  <div class="section-header"><span class="section-eyebrow">Docker on AWS</span><span class="section-rule"></span></div>
+  <h2>Containers — ECS, Fargate &amp; ECR</h2>
+  <p class="section-intro">Containerizing a Spring Boot app (packaging it with Docker) has become the dominant modern deployment pattern — consistent behavior from a developer's laptop through to production, and AWS has purpose-built services for running containers at scale.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">The core pieces</span>
+      <ul class="rule-list">
+        <li><strong>ECR</strong> (Elastic Container Registry) — AWS's private Docker image registry — you push your built image here, ECS/EKS pulls from it</li>
+        <li><strong>ECS</strong> (Elastic Container Service) — AWS's own container ORCHESTRATOR — schedules containers ("tasks") onto compute, handles restarts, integrates natively with ALB/CloudWatch/IAM</li>
+        <li><strong>Task Definition</strong> — the blueprint for a container: which image, how much CPU/memory, environment variables, port mappings — analogous to a Kubernetes Pod spec, but ECS-specific</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">ECS Launch Types: EC2 vs Fargate</span>
+      <ul class="rule-list">
+        <li><strong>ECS on EC2</strong> — YOU manage a fleet of EC2 instances that ECS schedules containers onto; more control, can use Spot/Reserved instances for cost savings, but you patch the underlying hosts</li>
+        <li><strong>ECS on Fargate</strong> — fully SERVERLESS containers — no EC2 instances to manage at all, AWS handles the underlying compute; simpler operations, typically higher $/vCPU cost than well-utilized EC2</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'ct-dockerfile')">Dockerizing a Spring Boot app</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'ct-taskdef')">A simplified ECS Task Definition</div>
+    </div>
+    <div id="ct-dockerfile" class="ct-pane active"><pre><span class="cm"># Dockerfile — a common multi-stage build pattern (keeps the final image small)</span>
+FROM eclipse-temurin:17-jdk AS build
+WORKDIR /app
+COPY . .
+RUN ./mvnw clean package -DskipTests
+
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+COPY --from=build /app/target/myapp.jar app.jar
+EXPOSE 8080
+ENTRYPOINT [<span class="st">"java"</span>, <span class="st">"-jar"</span>, <span class="st">"app.jar"</span>]
+
+<span class="cm"># Build & push to ECR:</span>
+<span class="cm"># docker build -t myapp .</span>
+<span class="cm"># docker tag myapp:latest 123456789.dkr.ecr.us-east-1.amazonaws.com/myapp:latest</span>
+<span class="cm"># docker push 123456789.dkr.ecr.us-east-1.amazonaws.com/myapp:latest</span></pre></div>
+    <div id="ct-taskdef" class="ct-pane"><pre>{
+  <span class="st">"family"</span>: <span class="st">"myapp-task"</span>,
+  <span class="st">"requiresCompatibilities"</span>: [<span class="st">"FARGATE"</span>],
+  <span class="st">"cpu"</span>: <span class="st">"512"</span>,                      <span class="cm">// 0.5 vCPU</span>
+  <span class="st">"memory"</span>: <span class="st">"1024"</span>,                  <span class="cm">// 1 GB — Spring Boot apps typically need at least this much</span>
+  <span class="st">"executionRoleArn"</span>: <span class="st">"arn:aws:iam::123456789:role/ecsTaskExecutionRole"</span>, <span class="cm">// pulls the image, writes logs</span>
+  <span class="st">"taskRoleArn"</span>: <span class="st">"arn:aws:iam::123456789:role/myapp-task-role"</span>,         <span class="cm">// what YOUR CODE can access (S3, DynamoDB, etc.)</span>
+  <span class="st">"containerDefinitions"</span>: [{
+    <span class="st">"name"</span>: <span class="st">"myapp"</span>,
+    <span class="st">"image"</span>: <span class="st">"123456789.dkr.ecr.us-east-1.amazonaws.com/myapp:latest"</span>,
+    <span class="st">"portMappings"</span>: [{ <span class="st">"containerPort"</span>: 8080 }],
+    <span class="st">"environment"</span>: [{ <span class="st">"name"</span>: <span class="st">"SPRING_PROFILES_ACTIVE"</span>, <span class="st">"value"</span>: <span class="st">"prod"</span> }],
+    <span class="st">"logConfiguration"</span>: { <span class="st">"logDriver"</span>: <span class="st">"awslogs"</span>, <span class="st">"options"</span>: {<span class="st">"awslogs-group"</span>: <span class="st">"/ecs/myapp"</span>} }
+  }]
+}
+<span class="cm">// Note the TWO separate IAM roles — execution role (ECS's own permissions</span>
+<span class="cm">// to pull the image/write logs) vs task role (YOUR app's permissions to</span>
+<span class="cm">// call other AWS services) — a genuinely common point of confusion worth knowing</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "I'd containerize the Spring Boot app with a multi-stage Dockerfile, push the image to ECR, and run it on ECS with Fargate for a microservices setup — no EC2 patching, and each service can scale independently behind its own ALB target group. If cost at high, steady scale becomes a concern, ECS-on-EC2 with Reserved or Spot Instances is the natural next optimization."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 15: CI/CD ═══ -->
+<section class="section" id="cicd">
+  <div class="section-header"><span class="section-eyebrow">Automating Deployment</span><span class="section-rule"></span></div>
+  <h2>CI/CD Pipelines on AWS</h2>
+  <p class="section-intro">Manually building and uploading a jar every time doesn't scale to a real team — AWS's native CI/CD services automate the build → test → deploy pipeline, though many teams also use GitHub Actions/Jenkins/GitLab CI that simply CALL these same AWS services.</p>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">The standard AWS-native pipeline</span>
+<pre>Git push (CodeCommit / GitHub)
+   │
+   ▼
+CodePipeline  (orchestrates the whole flow, triggers on each commit)
+   │
+   ├─▶ CodeBuild   — runs `mvn clean package`, runs tests, builds a Docker image, pushes to ECR
+   │
+   └─▶ CodeDeploy  — deploys the new version to EC2 / ECS / Lambda, following a
+                      configured deployment strategy (see below)</pre>
+  </div>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">The three services, briefly</span>
+      <ul class="rule-list">
+        <li><strong>CodePipeline</strong> — the overall orchestrator: defines STAGES (source → build → test → deploy) and triggers automatically on a new commit</li>
+        <li><strong>CodeBuild</strong> — a managed build environment: compiles code, runs tests, produces build artifacts (a jar, or a Docker image) — think "Jenkins build agent, but managed"</li>
+        <li><strong>CodeDeploy</strong> — automates the actual deployment to EC2, ECS, or Lambda, including the rollout STRATEGY</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Deployment strategies — how the new version rolls out</span>
+      <ul class="rule-list">
+        <li><strong>In-place / rolling</strong> — update instances one batch at a time; simple, but a brief mixed-version state during rollout</li>
+        <li><strong>Blue/Green</strong> — deploy the NEW version to entirely separate infrastructure, then SWITCH traffic over once healthy — near-zero downtime, and instant ROLLBACK is just switching traffic back</li>
+        <li><strong>Canary</strong> — shift a small percentage of traffic (e.g. 10%) to the new version first, monitor for errors, then gradually increase — limits the "blast radius" of a bad deploy</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "For zero-downtime deploys, I'd favor a blue/green strategy — spin up the new version alongside the old one, run health checks against it, then cut the load balancer over. If something's wrong, rolling back is just switching traffic back to the known-good environment, rather than trying to undo a partially-completed rolling update." Naming blue/green specifically (not just "I'd use CI/CD") is a strong, concrete signal.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 16: CLOUDFORMATION & IAC ═══ -->
+<section class="section" id="cloudformation">
+  <div class="section-header"><span class="section-eyebrow">Infrastructure as Code</span><span class="section-rule"></span></div>
+  <h2>CloudFormation &amp; Infrastructure as Code</h2>
+  <p class="section-intro">Manually clicking through the AWS Console to create a VPC, EC2 instances, an RDS database, and IAM roles is slow, error-prone, and impossible to reliably reproduce. Infrastructure as Code (IaC) defines all of that infrastructure in a text file, version-controlled just like application code.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Why IaC matters (the real interview point)</span>
+      <ul class="rule-list">
+        <li><strong>Reproducibility</strong> — spin up an identical staging environment from the same template used for production</li>
+        <li><strong>Version control</strong> — infrastructure changes go through the same code review / git history as application code</li>
+        <li><strong>Disaster recovery</strong> — if a whole environment is lost, re-running the template rebuilds it, rather than hoping someone remembers every manual click that was ever made</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">CloudFormation vs CDK vs Terraform</span>
+      <ul class="rule-list">
+        <li><strong>CloudFormation</strong> — AWS's native IaC service; templates in YAML/JSON; AWS-only</li>
+        <li><strong>AWS CDK</strong> (Cloud Development Kit) — define infrastructure using REAL programming languages (Java, TypeScript, Python) that COMPILE DOWN to a CloudFormation template — lets Java developers define infra in Java itself, a genuinely relevant tool to mention</li>
+        <li><strong>Terraform</strong> — a third-party (HashiCorp) tool, multi-cloud (works across AWS/Azure/GCP), extremely widely adopted in the industry — often the answer when a company isn't AWS-exclusive</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">A minimal CloudFormation template — an S3 bucket</span>
+<pre><span class="st">AWSTemplateFormatVersion</span>: <span class="st">'2010-09-09'</span>
+<span class="st">Resources</span>:
+  <span class="st">MyAppBucket</span>:
+    <span class="st">Type</span>: <span class="st">AWS::S3::Bucket</span>
+    <span class="st">Properties</span>:
+      <span class="st">BucketName</span>: <span class="st">my-app-uploads-bucket</span>
+      <span class="st">VersioningConfiguration</span>:
+        <span class="st">Status</span>: <span class="st">Enabled</span>
+
+<span class="cm"># A "Stack" is a running instance of a template — CloudFormation tracks</span>
+<span class="cm"># every resource it created FOR that stack, so deleting the stack cleanly</span>
+<span class="cm"># tears down everything it provisioned — no orphaned resources left behind</span>
+<span class="cm"># (a real, common source of surprise AWS bills when infra is created manually)</span></pre>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "I'd define the VPC, security groups, RDS instance, and ECS service in CloudFormation or the CDK rather than clicking through the console — it means the whole environment is reproducible, reviewable, and can be torn down cleanly with zero orphaned resources. For a Java shop specifically, CDK is appealing since you write the infrastructure definitions in Java itself."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 17: CLOUDWATCH ═══ -->
+<section class="section" id="cloudwatch">
+  <div class="section-header"><span class="section-eyebrow">Seeing What's Actually Happening</span><span class="section-rule"></span></div>
+  <h2>CloudWatch &amp; Observability</h2>
+  <p class="section-intro">AWS's native monitoring service — metrics, logs, and alarms across virtually every AWS resource, plus your own application's custom metrics and logs.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">The three pillars</span>
+      <ul class="rule-list">
+        <li><strong>Metrics</strong> — numeric time-series data: CPU utilization, request count, latency, custom application metrics (e.g. "orders processed per minute")</li>
+        <li><strong>Logs</strong> — CloudWatch Logs collects application/system log output (e.g. everything your Spring Boot app writes to stdout when running on ECS/Lambda) into searchable log groups</li>
+        <li><strong>Alarms</strong> — trigger an action (SNS notification, Auto Scaling action, or a Lambda function) when a metric crosses a defined threshold — this is exactly what feeds Auto Scaling's scaling policies</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">CloudWatch vs CloudTrail — a common mix-up</span>
+      <ul class="rule-list">
+        <li><strong>CloudWatch</strong> — monitors PERFORMANCE and OPERATIONAL health: "is CPU high, are there errors, is latency spiking"</li>
+        <li><strong>CloudTrail</strong> — logs API-level AUDIT activity: "WHO made WHAT change to WHICH resource, and WHEN" — critical for security investigations and compliance, not performance monitoring</li>
+        <li>Interview shorthand: CloudWatch = "is it working right now," CloudTrail = "who did what, historically"</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">Spring Boot Actuator → CloudWatch — the standard observability pairing</span>
+<pre><span class="cm">// Spring Boot Actuator already exposes rich metrics (JVM memory, HTTP</span>
+<span class="cm">// request timings, custom @Timed/@Counted metrics via Micrometer) — the</span>
+<span class="cm">// micrometer-registry-cloudwatch2 dependency ships these straight into</span>
+<span class="cm">// CloudWatch automatically, with almost no custom code</span>
+
+<span class="cm">// application.properties</span>
+management.metrics.export.cloudwatch.namespace=MyApp
+management.metrics.export.cloudwatch.step=1m
+management.endpoints.web.exposure.include=health,info,metrics
+
+<span class="cm">// This is exactly the "health,info,metrics" endpoint the Load Balancer's</span>
+<span class="cm">// health check (from the Load Balancing section) and CloudWatch dashboards</span>
+<span class="cm">// both plug into — the same Actuator setup does double duty</span></pre>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "I'd expose Spring Boot Actuator's health and metrics endpoints, feed them into CloudWatch via Micrometer, and set alarms on key thresholds — error rate, p99 latency, CPU — that notify via SNS and feed the Auto Scaling Group's scaling policies. For anything security or audit-related — who changed a security group, who deleted a resource — that's CloudTrail, not CloudWatch."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 18: ROUTE 53 & CLOUDFRONT ═══ -->
+<section class="section" id="route53-cloudfront">
+  <div class="section-header"><span class="section-eyebrow">DNS &amp; Content Delivery</span><span class="section-rule"></span></div>
+  <h2>Route 53 &amp; CloudFront</h2>
+  <p class="section-intro">Two services that usually sit at the very FRONT of a user's request — before it ever reaches your Load Balancer or app servers.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Route 53 — DNS as a service</span>
+      <ul class="rule-list">
+        <li>Translates a domain name (<code class="inline">api.myapp.com</code>) into an IP address / resource — the entry point for literally every request</li>
+        <li>Supports advanced ROUTING POLICIES beyond simple DNS: <strong>Weighted</strong> (split traffic by percentage, e.g. for A/B testing or gradual rollout), <strong>Latency-based</strong> (route to the Region closest to the user), <strong>Failover</strong> (route to a backup Region if the primary is unhealthy), <strong>Geolocation</strong> (route based on the user's location)</li>
+        <li>Also functions as a domain registrar (you can buy domains directly through it)</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">CloudFront — AWS's CDN</span>
+      <ul class="rule-list">
+        <li>Caches content at Edge Locations physically close to users worldwide — dramatically reduces latency for static assets (JS/CSS/images) and can also cache/accelerate dynamic API responses</li>
+        <li>Sits in front of S3 (for static frontend hosting — a very common React/Angular deployment pattern) or in front of an ALB (for a full application, including API responses)</li>
+        <li>Reduces load on your actual origin servers — repeat requests for the same content are served straight from the edge cache, never reaching your backend at all</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">The classic "React frontend + Spring Boot API" deployment shape</span>
+<pre>User
+   │
+   ▼
+Route 53  (myapp.com -&gt; resolves to CloudFront)
+   │
+   ▼
+CloudFront (CDN)
+   ├─▶ Static assets (JS/CSS/images) ──▶ S3 bucket (React build output, hosted as a static website)
+   └─▶ /api/* requests ───────────────▶ Application Load Balancer ──▶ Spring Boot app (ECS/EC2)
+
+<span class="cm">// This is genuinely how a huge fraction of real "full-stack Java + React"</span>
+<span class="cm">// production deployments are shaped — one CloudFront distribution, path-based</span>
+<span class="cm">// routing splitting static content from API traffic</span></pre>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "For the frontend, I'd build the React app and host the static files in S3, put CloudFront in front for CDN caching and HTTPS, and route API paths through to the Spring Boot backend behind an ALB — all under one domain managed by Route 53. It keeps static asset delivery fast and cheap, completely separate from the application's compute."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 19: SECURITY BEST PRACTICES ═══ -->
+<section class="section" id="security">
+  <div class="section-header"><span class="section-eyebrow">Production Hardening</span><span class="section-rule"></span></div>
+  <h2>Security Best Practices</h2>
+  <p class="section-intro">Beyond IAM fundamentals (covered earlier), these are the specific, concrete practices that come up when an interviewer asks "how would you secure this application in production."</p>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'sec-secrets')">Secrets Manager vs Parameter Store</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'sec-encryption')">Encryption — at rest &amp; in transit</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'sec-waf')">WAF &amp; DDoS protection</div>
+    </div>
+    <div id="sec-secrets" class="ct-pane active"><pre><span class="cm">// NEVER hardcode database passwords, API keys, or other secrets in</span>
+<span class="cm">// application.properties / environment variables checked into git</span>
+
+<span class="cm">// SECRETS MANAGER — purpose-built for secrets: automatic ROTATION support</span>
+<span class="cm">// (e.g. auto-rotate an RDS password on a schedule, with zero app downtime),</span>
+<span class="cm">// fine-grained IAM access control, but costs per-secret per-month</span>
+
+<span class="cm">// PARAMETER STORE (part of Systems Manager) — simpler, FREE for standard</span>
+<span class="cm">// parameters, supports encrypted "SecureString" values too — a fine choice</span>
+<span class="cm">// for config values and secrets that don't need automatic rotation</span>
+
+<span class="cm">// Spring Boot integration (via Spring Cloud AWS) — secrets are injected</span>
+<span class="cm">// as regular Spring properties, application code never touches the AWS API directly:</span>
+<span class="cm">// spring.config.import=aws-secretsmanager:my-app/prod/db-credentials</span>
+<span class="cm">// -&gt; ${db-credentials.password} is now usable exactly like any other property</span></pre></div>
+    <div id="sec-encryption" class="ct-pane"><pre><span class="cm">// ENCRYPTION AT REST — protects data sitting in storage (disk, S3, database files)</span>
+<span class="cm">// - S3: enable default bucket encryption (SSE-S3 or SSE-KMS)</span>
+<span class="cm">// - RDS: enable encryption at creation time (CANNOT be enabled retroactively</span>
+<span class="cm">//   on an existing unencrypted instance — must snapshot, then restore as encrypted)</span>
+<span class="cm">// - EBS volumes: enable encryption at creation</span>
+
+<span class="cm">// ENCRYPTION IN TRANSIT — protects data MOVING over the network</span>
+<span class="cm">// - HTTPS/TLS for all client-facing traffic (ALB listener on 443, with an</span>
+<span class="cm">//   ACM-issued certificate — AWS Certificate Manager provides free, auto-renewing TLS certs)</span>
+<span class="cm">// - TLS for database connections too (JDBC URL with sslmode=require, or equivalent)</span>
+
+<span class="cm">// KMS (Key Management Service) — manages the encryption KEYS underlying</span>
+<span class="cm">// most of the above — you rarely handle raw key material yourself, KMS does it</span></pre></div>
+    <div id="sec-waf" class="ct-pane"><pre><span class="cm">// WAF (Web Application Firewall) — sits in front of an ALB or CloudFront,</span>
+<span class="cm">// filters malicious HTTP traffic based on RULES:</span>
+<span class="cm">// - SQL injection / XSS pattern detection</span>
+<span class="cm">// - Rate-based rules (block an IP making too many requests too fast)</span>
+<span class="cm">// - IP allow/block lists, geographic restrictions</span>
+<span class="cm">// - AWS Managed Rule Groups — pre-built rule sets maintained by AWS for</span>
+<span class="cm">//   common threats, so you don't have to author every rule yourself</span>
+
+<span class="cm">// SHIELD — AWS's DDoS protection</span>
+<span class="cm">// - Shield Standard: automatic, FREE, protects against common network/transport</span>
+<span class="cm">//   layer DDoS attacks, enabled by default for every AWS customer</span>
+<span class="cm">// - Shield Advanced: paid tier, more sophisticated attack mitigation +</span>
+<span class="cm">//   24/7 DDoS response team access, for businesses where an attack means real $ loss</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "Credentials go in Secrets Manager or Parameter Store, never in code or plain environment variables in source control. Data is encrypted at rest (RDS, S3, EBS) and in transit (TLS everywhere, via ACM-issued certificates on the ALB). For the app itself, IAM roles with least-privilege scoping, security groups restricting inbound traffic to only what's needed, and a WAF in front of anything public-facing." This is a compact, complete answer that covers the whole security surface without hands-on experience.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 20: AWS SDK FOR JAVA ═══ -->
+<section class="section" id="sdk-java">
+  <div class="section-header"><span class="section-eyebrow">Where Code Meets Cloud</span><span class="section-rule"></span></div>
+  <h2>AWS SDK for Java &amp; Spring Cloud AWS</h2>
+  <p class="section-intro">Everything covered so far is "what the services do" — this section is specifically "how your Java code actually talks to them," tying the whole document back to code you could plausibly write.</p>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">AWS SDK for Java v2</span>
+      <ul class="rule-list">
+        <li>The official, low-level Java client library for every AWS service — <code class="inline">S3Client</code>, <code class="inline">SqsClient</code>, <code class="inline">DynamoDbClient</code>, etc., all seen in earlier sections</li>
+        <li>v2 (the current major version) is built on top of Java's async/non-blocking capabilities and supports both synchronous and asynchronous clients — v1 is legacy at this point</li>
+        <li>Uses the DEFAULT CREDENTIAL PROVIDER CHAIN automatically — checks environment variables, then the instance/task IAM role, then a few other sources, in order — exactly why the earlier code examples never manually specify credentials</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Spring Cloud AWS</span>
+      <ul class="rule-list">
+        <li>A Spring-idiomatic LAYER on top of the raw SDK — auto-configures clients as Spring beans, integrates secrets/config injection, and provides annotation-driven abstractions (like <code class="inline">@SqsListener</code>, seen earlier)</li>
+        <li>The goal: your business logic depends on Spring abstractions, not directly on raw AWS SDK calls scattered everywhere — cleaner, more testable, more idiomatic for a Spring shop</li>
+        <li>Knowing this exists — even without deep hands-on use — signals you understand how AWS fits into a REAL Spring Boot codebase, not just "I called some SDK methods once"</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'sdk-dependency')">Maven dependency &amp; auto-configuration</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'sdk-s3repo')">A clean S3-backed service, Spring-style</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'sdk-localstack')">Testing locally — LocalStack</div>
+    </div>
+    <div id="sdk-dependency" class="ct-pane active"><pre><span class="cm">&lt;!-- pom.xml — Spring Cloud AWS starter for S3 --&gt;</span>
+&lt;dependency&gt;
+    &lt;groupId&gt;io.awspring.cloud&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-cloud-aws-starter-s3&lt;/artifactId&gt;
+&lt;/dependency&gt;
+
+<span class="cm">// With this on the classpath, an S3Template / S3Client bean is</span>
+<span class="cm">// auto-configured and ready to @Autowire — no manual builder() calls needed</span>
+<span class="cm">// for the common case, exactly like any other Spring Boot starter</span></pre></div>
+    <div id="sdk-s3repo" class="ct-pane"><pre><span class="an">@Service</span>
+<span class="kw">public class</span> <span class="ty">FileStorageService</span> {
+
+    <span class="kw">private final</span> <span class="ty">S3Template</span> s3Template; <span class="cm">// Spring Cloud AWS's higher-level abstraction over S3Client</span>
+
+    <span class="kw">public</span> <span class="ty">FileStorageService</span>(<span class="ty">S3Template</span> s3Template) {
+        <span class="kw">this</span>.s3Template = s3Template; <span class="cm">// constructor injection, standard Spring practice</span>
+    }
+
+    <span class="kw">public void</span> <span class="fn">store</span>(<span class="ty">String</span> bucket, <span class="ty">String</span> key, <span class="ty">InputStream</span> content) {
+        s3Template.<span class="fn">upload</span>(bucket, key, content);
+    }
+
+    <span class="kw">public</span> <span class="ty">InputStream</span> <span class="fn">retrieve</span>(<span class="ty">String</span> bucket, <span class="ty">String</span> key) {
+        <span class="kw">return</span> s3Template.<span class="fn">download</span>(bucket, key).<span class="fn">getInputStream</span>();
+    }
+}
+<span class="cm">// The service layer stays clean and testable — S3 details are isolated</span>
+<span class="cm">// behind this one class, exactly the same "isolate the infrastructure</span>
+<span class="cm">// concern" principle you'd apply to a JPA repository</span></pre></div>
+    <div id="sdk-localstack" class="ct-pane"><pre><span class="cm">// LOCALSTACK — a local, Docker-based EMULATOR of AWS services (S3, SQS,</span>
+<span class="cm">// DynamoDB, Lambda, and dozens more) — lets you develop and integration-test</span>
+<span class="cm">// AWS-dependent code WITHOUT touching a real AWS account or incurring real costs</span>
+
+<span class="cm">// docker run -p 4566:4566 localstack/localstack</span>
+
+<span class="cm">// Point the SDK client at LocalStack instead of real AWS for local dev/tests:</span>
+<span class="ty">S3Client</span> s3 = <span class="ty">S3Client</span>.<span class="fn">builder</span>()
+    .<span class="fn">endpointOverride</span>(<span class="ty">URI</span>.<span class="fn">create</span>(<span class="st">"http://localhost:4566"</span>)) <span class="cm">// LocalStack's endpoint, instead of AWS's real one</span>
+    .<span class="fn">region</span>(<span class="ty">Region</span>.US_EAST_1)
+    .<span class="fn">build</span>();
+
+<span class="cm">// A genuinely great thing to mention: "I could develop and integration-test</span>
+<span class="cm">// S3/SQS-dependent code against LocalStack locally, without needing real</span>
+<span class="cm">// AWS credentials or incurring cost, even before ever touching a live account"</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "I'd use Spring Cloud AWS's starters rather than wiring the raw SDK by hand — it auto-configures the clients as Spring beans and gives annotation-driven abstractions like @SqsListener, keeping AWS-specific code isolated in a thin service layer rather than scattered through business logic. For local development and tests, LocalStack emulates the AWS services so I'm never dependent on a live account just to run the test suite."</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 21: DESIGNING A FULL-STACK ARCHITECTURE ═══ -->
+<section class="section" id="architecture">
+  <div class="section-header"><span class="section-eyebrow">Putting It All Together</span><span class="section-rule"></span></div>
+  <h2>Designing a Full-Stack Architecture on AWS</h2>
+  <p class="section-intro">This is the "whiteboard question" — interviewers frequently ask you to design a complete, production-ready architecture for a Spring Boot + React application. Every service covered in this document has a specific role here; this section shows how they compose into one coherent answer.</p>
+
+  <div class="code-block-wrap">
+    <span class="code-block-label">A complete, production-shaped reference architecture</span>
+<pre>                              Route 53 (DNS)
+                                    │
+                                    ▼
+                              CloudFront (CDN + HTTPS via ACM)
+                          ┌─────────┴──────────┐
+                          ▼                     ▼
+                   S3 (static React        /api/* forwarded to:
+                   build — HTML/JS/CSS)    Application Load Balancer
+                                                  │  (public subnet)
+                                                  ▼
+                                          ┌───────────────────┐
+                                          │   VPC              │
+                                          │  ┌───────────────┐ │
+                                          │  │ Private Subnet │ │
+                                          │  │  ECS/Fargate   │ │  ← Auto Scaling based on
+                                          │  │  Spring Boot   │ │    CloudWatch CPU/request metrics
+                                          │  │  tasks (2+ AZs)│ │
+                                          │  └───────┬───────┘ │
+                                          │          │         │
+                                          │  ┌───────▼───────┐ │
+                                          │  │ Private Subnet │ │
+                                          │  │  RDS (Multi-AZ)│ │
+                                          │  └────────────────┘ │
+                                          └────────────────────┘
+                          ┌──────────────────────────┴──────────────────────────┐
+                          ▼                                                     ▼
+                 SQS/SNS (async jobs:                                 CloudWatch (metrics,
+                 email, notifications)                                 logs, alarms) + CloudTrail
+                          │                                            (audit log)
+                          ▼
+                    Lambda (background
+                    processing, e.g. resize
+                    an uploaded image)</pre>
+  </div>
+
+  <div class="split-grid">
+    <div class="rule-card">
+      <span class="rule-card-label">Walking through it, layer by layer</span>
+      <ul class="rule-list">
+        <li><strong>Edge:</strong> Route 53 resolves the domain, CloudFront caches static assets and terminates HTTPS, routing API paths onward</li>
+        <li><strong>Frontend:</strong> the React build lives in S3, served through CloudFront — no servers involved at all for the static site</li>
+        <li><strong>Backend:</strong> Spring Boot runs as ECS/Fargate tasks across 2+ AZs, behind an ALB, in PRIVATE subnets — nothing reaches them directly from the internet</li>
+        <li><strong>Data:</strong> RDS in Multi-AZ for resilience, in an even more restricted private subnet</li>
+        <li><strong>Async work:</strong> SQS/SNS decouple slow or non-critical operations (sending an email, resizing an image) from the main request path, often processed by Lambda</li>
+        <li><strong>Everything is observed:</strong> CloudWatch for operational health, CloudTrail for audit</li>
+      </ul>
+    </div>
+    <div class="rule-card">
+      <span class="rule-card-label">Security woven throughout (don't forget to mention this)</span>
+      <ul class="rule-list">
+        <li>IAM roles (not hardcoded keys) attached to every ECS task and Lambda function, scoped to least privilege</li>
+        <li>Security groups permit ONLY: internet → ALB (443), ALB → ECS tasks (8080), ECS tasks → RDS (3306/5432) — nothing else</li>
+        <li>Secrets (DB credentials) in Secrets Manager, injected at runtime, never in code</li>
+        <li>Encryption at rest (RDS, S3) and in transit (TLS everywhere via ACM certificates)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="danger-box">
+    <span class="tip-icon">🚫</span>
+    <span class="danger-text"><strong>This is the highest-leverage thing to rehearse before an interview.</strong> If you can draw this diagram from memory and narrate it in under two minutes — naming WHY each piece is there, not just what it's called — you will outperform many candidates who have scattered hands-on experience but can't compose it into one coherent story. Practice saying it out loud, not just reading it.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 22: COST OPTIMIZATION ═══ -->
+<section class="section" id="cost">
+  <div class="section-header"><span class="section-eyebrow">The Business Side of AWS</span><span class="section-rule"></span></div>
+  <h2>Cost Optimization</h2>
+  <p class="section-intro">A surprisingly common interview angle, especially for more senior roles — AWS bills can spiral quickly, and showing cost-awareness signals production maturity beyond "I know how to make it work."</p>
+
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'cost-compute')">Compute cost levers</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'cost-storage')">Storage &amp; data transfer cost levers</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'cost-tools')">Tools for visibility</div>
+    </div>
+    <div id="cost-compute" class="ct-pane active"><pre><span class="cm">// - RIGHT-SIZING: don't run an m5.2xlarge for a workload that fits on a</span>
+<span class="cm">//   t3.medium — CloudWatch utilization metrics reveal genuinely over-provisioned resources</span>
+
+<span class="cm">// - RESERVED INSTANCES / SAVINGS PLANS for steady, predictable production</span>
+<span class="cm">//   load — up to ~70% cheaper than On-Demand for workloads you KNOW will run continuously</span>
+
+<span class="cm">// - SPOT INSTANCES for fault-tolerant, interruptible work — CI/CD build</span>
+<span class="cm">//   agents, batch jobs, non-critical background processing — up to ~90% cheaper</span>
+
+<span class="cm">// - AUTO SCALING scaling IN during low-traffic periods (nights, weekends</span>
+<span class="cm">//   for a B2B app) instead of running peak capacity 24/7</span>
+
+<span class="cm">// - FARGATE SPOT — the serverless-container equivalent of EC2 Spot pricing,</span>
+<span class="cm">//   for interruption-tolerant containerized workloads</span></pre></div>
+    <div id="cost-storage" class="ct-pane"><pre><span class="cm">// - S3 LIFECYCLE POLICIES — automatically transition old objects to cheaper</span>
+<span class="cm">//   storage classes (Standard -&gt; Standard-IA -&gt; Glacier) as they age, or</span>
+<span class="cm">//   delete them entirely after a retention period</span>
+
+<span class="cm">// - DATA TRANSFER is often an UNDERESTIMATED cost — transferring data OUT</span>
+<span class="cm">//   of AWS to the internet costs money (transfer INTO AWS is free); transfer</span>
+<span class="cm">//   BETWEEN AZs also has a small cost; transfer WITHIN the same AZ is free</span>
+<span class="cm">//   -&gt; this is a real, concrete reason architectures try to keep chatty</span>
+<span class="cm">//   internal service-to-service traffic within the same AZ where practical</span>
+
+<span class="cm">// - CLOUDFRONT caching reduces data transfer costs too — a cached response</span>
+<span class="cm">//   served from the edge never touches (and never bills) the origin at all</span></pre></div>
+    <div id="cost-tools" class="ct-pane"><pre><span class="cm">// COST EXPLORER — visualize and analyze spending trends over time, broken</span>
+<span class="cm">// down by service, tag, linked account — the first place to look when a</span>
+<span class="cm">// bill is higher than expected</span>
+
+<span class="cm">// AWS BUDGETS — set spending thresholds and get ALERTED before a runaway</span>
+<span class="cm">// cost becomes a nasty end-of-month surprise, rather than discovering it after the fact</span>
+
+<span class="cm">// TRUSTED ADVISOR — automated recommendations across cost, performance,</span>
+<span class="cm">// security, and fault tolerance — e.g. flags idle/underutilized EC2</span>
+<span class="cm">// instances, unattached EBS volumes still being billed, and similar waste</span>
+
+<span class="cm">// TAGGING resources consistently (Environment=prod, Team=payments, etc.)</span>
+<span class="cm">// is what makes cost breakdowns by team/project/environment possible at all —</span>
+<span class="cm">// a boring-sounding practice that's foundational to any real cost visibility</span></pre></div>
+  </div>
+
+  <div class="tip-box">
+    <span class="tip-icon">💡</span>
+    <span class="tip-text"><strong>Interview one-liner:</strong> "I'd right-size instances based on actual CloudWatch utilization, use Reserved Instances or Savings Plans for the steady-state baseline load and Spot for interruptible work like CI/CD runners, set up S3 lifecycle policies to age out old data automatically, and tag everything consistently so Cost Explorer can actually attribute spend to the right team or project." Even without hands-on billing experience, naming these specific levers signals real production awareness.</span>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 23: REAL INTERVIEW Q&A ═══ -->
+<section class="section" id="faang-qa">
+  <div class="section-header"><span class="section-eyebrow">Real Interview Rapid Fire</span><span class="section-rule"></span></div>
+  <h2>Real Interview Rapid-Fire Q&amp;A</h2>
+  <p class="section-intro">Based on current interview patterns for full-stack Java + AWS roles, these are the questions that come up again and again — organized to be genuinely answerable even without hands-on production experience, as long as you understand the WHY behind each service.</p>
+
+  <p class="sub-heading">Scenario-based questions</p>
+  <div class="code-tabs-wrap">
+    <div class="code-tabs-header">
+      <div class="ct-tab active" onclick="ctSwitch(this,'pq-deploy')">"How would you deploy a Spring Boot app on AWS?"</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pq-secure')">"How would you secure a database connection?"</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pq-upload')">"Design a file-upload feature"</div>
+      <div class="ct-tab" onclick="ctSwitch(this,'pq-resilient')">"Make Service A resilient to Service B going down"</div>
+    </div>
+    <div id="pq-deploy" class="ct-pane active"><pre><span class="cm">// A strong layered answer (from the Deployment Strategies section):</span>
+<span class="cm">// "It depends on the shape of the system. For a straightforward monolith,</span>
+<span class="cm">// Elastic Beanstalk gets me to production fastest with sane defaults —</span>
+<span class="cm">// load balancing and auto scaling configured automatically. For a genuine</span>
+<span class="cm">// microservices system, or if the team already uses Docker, I'd containerize</span>
+<span class="cm">// with a multi-stage Dockerfile and run it on ECS with Fargate — no EC2</span>
+<span class="cm">// patching, independent scaling per service. I'd reach for Lambda for</span>
+<span class="cm">// event-driven pieces specifically, being mindful of Java's cold-start</span>
+<span class="cm">// characteristics for anything latency-sensitive."</span>
+
+<span class="cm">// This shows you know MULTIPLE valid paths and can reason about trade-offs —</span>
+<span class="cm">// far stronger than naming just one "correct" service</span></pre></div>
+    <div id="pq-secure" class="ct-pane"><pre><span class="cm">// "Credentials in Secrets Manager or Parameter Store, injected at runtime —</span>
+<span class="cm">// never hardcoded or committed to source control. Network-level: the RDS</span>
+<span class="cm">// instance sits in a private subnet with no internet route, and a security</span>
+<span class="cm">// group that allows inbound connections ONLY from the application's own</span>
+<span class="cm">// security group on the database port — nothing else can reach it, not even</span>
+<span class="cm">// other things inside the VPC. Encryption at rest on the RDS instance, and</span>
+<span class="cm">// TLS for the JDBC connection itself. If it's a shared/team credential, I'd</span>
+<span class="cm">// also want Secrets Manager's automatic rotation enabled."</span></pre></div>
+    <div id="pq-upload" class="ct-pane"><pre><span class="cm">// "I'd avoid routing the file bytes through the Spring Boot server at all —</span>
+<span class="cm">// the backend generates a short-lived PRESIGNED URL (using its IAM role,</span>
+<span class="cm">// scoped to one specific key and a short expiry) and the client uploads</span>
+<span class="cm">// directly to S3 using that URL. This keeps the app server stateless and</span>
+<span class="cm">// avoids wasting its bandwidth/memory proxying large files. Once uploaded,</span>
+<span class="cm">// an S3 event can trigger a Lambda function for any post-processing needed —</span>
+<span class="cm">// generating a thumbnail, virus scanning, etc — asynchronously, without</span>
+<span class="cm">// blocking the original upload request."</span></pre></div>
+    <div id="pq-resilient" class="ct-pane"><pre><span class="cm">// "Instead of Service A calling Service B synchronously and failing if B is</span>
+<span class="cm">// down, I'd put an SQS queue between them. Service A publishes a message</span>
+<span class="cm">// and moves on immediately — it never blocks on B's availability at all. When</span>
+<span class="cm">// Service B recovers, it picks up right where it left off, processing</span>
+<span class="cm">// whatever queued up while it was down. If a message repeatedly fails</span>
+<span class="cm">// processing, it lands in a Dead Letter Queue after a few retries so it can</span>
+<span class="cm">// be investigated, rather than blocking the rest of the queue indefinitely."</span></pre></div>
+  </div>
+
+  <p class="sub-heading">Short-answer conceptual questions</p>
+  <div class="cheat-grid">
+    <div class="cheat-card">
+      <h4>❓ Security Groups vs NACLs — what's the actual difference?</h4>
+      <ul>
+        <li>Security Groups: instance-level, STATEFUL (return traffic auto-allowed), ALLOW rules only</li>
+        <li>NACLs: subnet-level, STATELESS (must explicitly allow both directions), supports ALLOW and DENY</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Multi-AZ RDS vs Read Replicas — when would you use each?</h4>
+      <ul>
+        <li>Multi-AZ: synchronous standby, for AVAILABILITY/disaster recovery, automatic failover, same endpoint</li>
+        <li>Read Replicas: asynchronous copies, for READ SCALING, app must route reads explicitly, can lag</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Why would you use an IAM Role instead of an IAM User's access keys?</h4>
+      <ul>
+        <li>Roles issue short-lived, auto-rotating credentials — no static secret to leak or manage</li>
+        <li>The AWS SDK's default credential chain picks up an attached instance/task role automatically</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ SQS vs SNS — what's the core difference?</h4>
+      <ul>
+        <li>SQS: point-to-point queue — one message, consumed by exactly one worker</li>
+        <li>SNS: pub/sub fan-out — every subscriber gets a copy of every message</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ What's a cold start, and why does it matter specifically for Java on Lambda?</h4>
+      <ul>
+        <li>The delay when a fresh execution environment must initialize the runtime + your code before running</li>
+        <li>Java's JVM startup + classloading (and Spring's full context init) makes it notably slower than Node/Python — mitigated with provisioned concurrency, lighter frameworks, or GraalVM native images</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ What does "the app runs in a private subnet" actually mean, and why do it?</h4>
+      <ul>
+        <li>The subnet's route table has no path to an Internet Gateway — nothing on the public internet can initiate a connection directly to resources there</li>
+        <li>All inbound traffic is forced through the Load Balancer in the public subnet first — a real reduction in attack surface</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ How does Auto Scaling actually decide to add/remove instances?</h4>
+      <ul>
+        <li>Watches a CloudWatch metric (e.g. average CPU) against a target-tracking, step, or scheduled scaling policy</li>
+        <li>Adjusts the ASG's "desired capacity" within its configured min/max bounds; new instances register with the target group once they pass health checks</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ What's the difference between CloudWatch and CloudTrail?</h4>
+      <ul>
+        <li>CloudWatch: operational monitoring — metrics, logs, alarms — "is it healthy right now"</li>
+        <li>CloudTrail: API-level audit log — "who did what, to which resource, and when" — for security/compliance</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ RDS vs DynamoDB — how would you decide?</h4>
+      <ul>
+        <li>RDS: relational data, complex queries/joins, strong ACID transactions, a typical CRUD business app</li>
+        <li>DynamoDB: known, simple key-based access patterns at massive scale, flexible schema, horizontal scaling by design</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ Why containerize with ECS/Fargate instead of deploying directly to EC2?</h4>
+      <ul>
+        <li>Consistent behavior from local dev through production (the same Docker image everywhere)</li>
+        <li>Fargate removes EC2 patching/management entirely; each service scales independently</li>
+        <li>Easier to run multiple isolated microservices on shared infrastructure without manual instance juggling</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ What is Infrastructure as Code, and why does it matter?</h4>
+      <ul>
+        <li>Defining infrastructure (VPCs, EC2, RDS, IAM) in version-controlled text/code rather than manual console clicks</li>
+        <li>Enables reproducible environments, code review for infra changes, and reliable disaster recovery</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>❓ What's a blue/green deployment, and why prefer it over a rolling update?</h4>
+      <ul>
+        <li>Deploy the new version to entirely separate infrastructure, verify it's healthy, then cut traffic over</li>
+        <li>Rollback is instant (switch traffic back) versus trying to undo a partially-completed rolling update</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<div class="section-divider"></div>
+<!-- ═══ SECTION 24: CHEATSHEET ═══ -->
+<section class="section" id="cheatsheet">
+  <div class="section-header"><span class="section-eyebrow">Interview Reference</span><span class="section-rule"></span></div>
+  <h2>Interview Cheatsheet</h2>
+  <p class="section-intro">One-liners for when you're under pressure. Know these cold.</p>
+
+  <div class="cheat-grid">
+    <div class="cheat-card">
+      <h4>☁️ Cloud basics</h4>
+      <ul>
+        <li>IaaS (EC2) — you manage OS/runtime. PaaS (Beanstalk/Lambda) — AWS manages more</li>
+        <li>Region = geographic area. AZ = independent data center within a Region</li>
+        <li>Shared Responsibility: AWS secures the cloud, YOU secure what's IN it</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🔑 IAM essentials</h4>
+      <ul>
+        <li>Users = people/long-term creds. Roles = temporary, assumed permissions</li>
+        <li>EC2/Lambda/ECS → always use a ROLE, never hardcoded access keys</li>
+        <li>Least privilege — grant only what's needed, nothing broader</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🖥️ EC2 quick facts</h4>
+      <ul>
+        <li>Stop = EBS preserved, no compute billing. Terminate = permanently destroyed</li>
+        <li>On-Demand (flexible) / Reserved (steady, discount) / Spot (interruptible, cheap)</li>
+        <li>EBS = persistent single-instance disk. EFS = shared across many instances</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🪣 S3 essentials</h4>
+      <ul>
+        <li>Flat key-value store — "folders" are a UI convenience only</li>
+        <li>Presigned URL = client uploads directly to S3, server never touches the bytes</li>
+        <li>Lifecycle policies auto-transition objects to cheaper storage classes over time</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🌐 VPC — the #1 fact</h4>
+      <ul>
+        <li>Security Groups: instance-level, STATEFUL, allow-only</li>
+        <li>NACLs: subnet-level, STATELESS, allow + deny</li>
+        <li>Public subnet → has an Internet Gateway route. Private → doesn't (may use NAT for outbound)</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>⚖️ Load Balancing &amp; Auto Scaling</h4>
+      <ul>
+        <li>ALB = Layer 7 (HTTP). NLB = Layer 4 (TCP), extreme throughput</li>
+        <li>Health checks pull unhealthy instances out of rotation automatically</li>
+        <li>ASG: min/max/desired capacity, driven by CloudWatch-metric-based scaling policies</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🗄️ RDS — the #1 fact</h4>
+      <ul>
+        <li>Multi-AZ = synchronous standby, for AVAILABILITY, automatic failover</li>
+        <li>Read Replica = asynchronous copy, for READ SCALING, app must route explicitly</li>
+        <li>Can — and often should — use both together</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>📊 DynamoDB vs RDS</h4>
+      <ul>
+        <li>RDS: relational, joins, ACID — typical business CRUD</li>
+        <li>DynamoDB: known key-based access patterns, massive horizontal scale, flexible schema</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>⚡ Lambda essentials</h4>
+      <ul>
+        <li>Event-driven, pay-per-invocation, scales to zero</li>
+        <li>Java cold starts are real — mitigate with provisioned concurrency, lighter frameworks, or GraalVM native image</li>
+        <li>15-minute max execution time per invocation</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>📨 SQS vs SNS</h4>
+      <ul>
+        <li>SQS: point-to-point queue, one consumer per message</li>
+        <li>SNS: pub/sub fan-out, every subscriber gets a copy</li>
+        <li>Dead Letter Queue catches messages that repeatedly fail processing</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🚀 Deploying Spring Boot</h4>
+      <ul>
+        <li>EC2: max control, max effort. Elastic Beanstalk: fast, sane defaults</li>
+        <li>ECS/Fargate: containerized, no server patching, per-service scaling</li>
+        <li>Lambda: event-driven pieces, mind the cold starts</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🔄 CI/CD &amp; IaC</h4>
+      <ul>
+        <li>CodePipeline (orchestrator) → CodeBuild (compile/test) → CodeDeploy (rollout)</li>
+        <li>Blue/Green: near-zero downtime, instant rollback by switching traffic back</li>
+        <li>CloudFormation/CDK/Terraform — infra as reviewable, reproducible code</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🔒 Security musts</h4>
+      <ul>
+        <li>Secrets Manager / Parameter Store — never hardcode credentials</li>
+        <li>Encrypt at rest (RDS/S3/EBS) and in transit (TLS via ACM)</li>
+        <li>WAF for app-layer threats, Shield for DDoS</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>📈 CloudWatch vs CloudTrail</h4>
+      <ul>
+        <li>CloudWatch: "is it healthy right now" — metrics, logs, alarms</li>
+        <li>CloudTrail: "who did what, when" — API-level audit log</li>
+      </ul>
+    </div>
+    <div class="cheat-card">
+      <h4>🚨 The 5 facts most worth rehearsing</h4>
+      <ul>
+        <li>Security Groups (stateful) vs NACLs (stateless)</li>
+        <li>Multi-AZ (availability) vs Read Replicas (read scaling)</li>
+        <li>IAM Roles (not hardcoded keys) for anything running ON AWS</li>
+        <li>Presigned URLs for direct-to-S3 client uploads</li>
+        <li>The full architecture diagram — practice narrating it end-to-end</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="page-footer">
+  <span class="footer-brand">GrowthScript // AWS for Java Full-Stack Bible</span>
+  <span class="footer-note">IAM · EC2/S3/RDS · VPC Networking · Deployment Strategies · Lambda · CI/CD · Full-Stack Architecture</span>
+</footer>
+</main>
+
+<script>
+function ctSwitch(tab, id) {
+  const wrap = tab.closest('.code-tabs-wrap');
+  wrap.querySelectorAll('.ct-tab').forEach(t => t.classList.remove('active'));
+  wrap.querySelectorAll('.ct-pane').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+function switchTab(tab, id) {
+  const pair = tab.closest('.code-pair');
+  pair.querySelectorAll('.cpt').forEach(t => t.classList.remove('active'));
+  pair.querySelectorAll('.code-pane').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+function toggleTheme() {
+  const html = document.documentElement;
+  const dark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', dark ? 'light' : 'dark');
+  document.getElementById('btn-light').classList.toggle('active',  dark);
+  document.getElementById('btn-dark').classList.toggle('active',  !dark);
+  localStorage.setItem('aws-theme', dark ? 'light' : 'dark');
+}
+(function(){
+  const saved = localStorage.getItem('aws-theme');
+  if (saved === 'dark') {
+    document.documentElement.setAttribute('data-theme','dark');
+    document.getElementById('btn-light').classList.remove('active');
+    document.getElementById('btn-dark').classList.add('active');
+  }
+})();
+const sections  = document.querySelectorAll('section[id]');
+const sideLinks = document.querySelectorAll('.sidebar-link');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const id = e.target.id;
+      sideLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#'+id));
+    }
+  });
+}, { threshold: 0.15, rootMargin: '-60px 0px -60% 0px' });
+sections.forEach(s => obs.observe(s));
+</script>
+</body>
+</html>
