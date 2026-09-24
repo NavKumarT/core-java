@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Section 7: Database Authentication & CSRF Protection | GrowthScript Engineering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117; --bg-elev:#151b23; --bg-card:#1a2230; --border:#2a3441;
+  --text:#e6edf3; --text-dim:#9aa7b5; --text-faint:#6e7c8c;
+  --accent:#3fb950; --accent-soft:rgba(63,185,80,.12);
+  --blue:#58a6ff; --blue-soft:rgba(88,166,255,.12);
+  --warn:#f0883e; --warn-soft:rgba(240,136,62,.12);
+  --danger:#f85149; --danger-soft:rgba(248,81,73,.12);
+  --code-bg:#0a0e14; --sidebar-w:290px; --radius:10px;
+  --shadow:0 4px 16px rgba(0,0,0,.35);
+}
+[data-theme="light"]{
+  --bg:#f6f8fa; --bg-elev:#ffffff; --bg-card:#ffffff; --border:#d8dee4;
+  --text:#1b2430; --text-dim:#4b5563; --text-faint:#8a96a3;
+  --accent:#1a7f37; --accent-soft:rgba(26,127,55,.08);
+  --blue:#0969da; --blue-soft:rgba(9,105,218,.08);
+  --warn:#9a6700; --warn-soft:rgba(154,103,0,.08);
+  --danger:#cf222e; --danger-soft:rgba(207,34,46,.08);
+  --code-bg:#0d1117; --shadow:0 2px 10px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); line-height:1.65; font-size:15.5px; transition:background .2s,color .2s;}
+code, pre, .mono{font-family:'Space Mono',monospace;}
+a{color:var(--blue); text-decoration:none;}
+a:hover{text-decoration:underline;}
+.wrapper{display:flex; min-height:100vh;}
+.sidebar{width:var(--sidebar-w); flex-shrink:0; background:var(--bg-elev); border-right:1px solid var(--border); position:sticky; top:0; height:100vh; overflow-y:auto; padding:22px 16px 40px;}
+.sidebar::-webkit-scrollbar{width:6px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border); border-radius:3px;}
+.brand{display:flex; align-items:center; gap:10px; margin-bottom:4px;}
+.brand-badge{width:34px; height:34px; border-radius:8px; background:var(--accent); display:flex; align-items:center; justify-content:center; color:#0d1117; font-weight:800; font-family:'Space Mono',monospace; font-size:15px; flex-shrink:0;}
+.brand-text{font-weight:800; font-size:14.5px; letter-spacing:.2px;}
+.brand-sub{font-size:11px; color:var(--text-faint); margin-top:1px;}
+.theme-toggle{margin:16px 0 20px; width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; font-size:12.5px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px;}
+.nav-group{margin-bottom:6px;}
+.nav-label{font-size:10.5px; text-transform:uppercase; letter-spacing:.9px; color:var(--text-faint); font-weight:700; margin:18px 4px 8px;}
+.nav-link{display:block; padding:7px 10px; border-radius:7px; font-size:13px; color:var(--text-dim); border-left:2px solid transparent; margin-bottom:1px;}
+.nav-link:hover{background:var(--accent-soft); color:var(--text); text-decoration:none;}
+.nav-link.sub{padding-left:22px; font-size:12.3px;}
+.main{flex:1; min-width:0; padding:44px 56px 120px; max-width:980px;}
+.header-block{margin-bottom:44px; padding-bottom:28px; border-bottom:1px solid var(--border);}
+.eyebrow{font-family:'Space Mono',monospace; font-size:11.5px; color:var(--accent); font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:10px;}
+.header-block h1{font-size:32px; font-weight:800; letter-spacing:-.5px; margin-bottom:12px;}
+.header-block p{color:var(--text-dim); font-size:15px; max-width:680px;}
+.meta-row{display:flex; gap:18px; margin-top:16px; flex-wrap:wrap;}
+.meta-pill{font-size:11.5px; padding:5px 11px; border-radius:20px; background:var(--bg-card); border:1px solid var(--border); color:var(--text-dim); font-family:'Space Mono',monospace;}
+section.topic{margin-bottom:56px; scroll-margin-top:24px;}
+.topic-head{display:flex; align-items:baseline; gap:12px; margin-bottom:6px;}
+.topic-num{font-family:'Space Mono',monospace; color:var(--accent); font-weight:700; font-size:14px;}
+h2{font-size:23px; font-weight:800; letter-spacing:-.3px;}
+.topic-video{font-size:12px; color:var(--text-faint); margin-bottom:20px; margin-top:2px; font-family:'Space Mono',monospace;}
+h3{font-size:17.5px; font-weight:700; margin:26px 0 12px; color:var(--text);}
+h4{font-weight:700; margin:18px 0 8px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.4px; font-size:12.5px;}
+p{margin-bottom:13px; color:var(--text); font-size:15px;}
+p.dim{color:var(--text-dim);}
+ul, ol{margin:0 0 15px 22px;}
+li{margin-bottom:7px; font-size:14.8px;}
+strong{color:var(--text); font-weight:700;}
+.hl{color:var(--accent); font-weight:700;}
+.box{border-radius:var(--radius); padding:16px 18px; margin:18px 0; border:1px solid var(--border); font-size:14.3px;}
+.box-title{font-weight:700; font-size:12.5px; text-transform:uppercase; letter-spacing:.5px; margin-bottom:7px; display:flex; align-items:center; gap:7px;}
+.tip{background:var(--accent-soft); border-color:rgba(63,185,80,.3);} .tip .box-title{color:var(--accent);}
+.warn{background:var(--warn-soft); border-color:rgba(240,136,62,.3);} .warn .box-title{color:var(--warn);}
+.info{background:var(--blue-soft); border-color:rgba(88,166,255,.3);} .info .box-title{color:var(--blue);}
+.danger{background:var(--danger-soft); border-color:rgba(248,81,73,.3);} .danger .box-title{color:var(--danger);}
+.code-block{background:var(--code-bg); border-radius:var(--radius); overflow:hidden; margin:16px 0; border:1px solid var(--border); box-shadow:var(--shadow);}
+.tabs{display:flex; background:rgba(255,255,255,.03); border-bottom:1px solid rgba(255,255,255,.08); overflow-x:auto;}
+.tab-btn{padding:9px 16px; font-family:'Space Mono',monospace; font-size:12px; color:#8a96a3; background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap;}
+.tab-btn.active{color:#e6edf3; border-bottom-color:var(--accent);}
+.tab-content{display:none; padding:16px 18px; overflow-x:auto;}
+.tab-content.active{display:block;}
+.tab-content pre{color:#c9d1d9; font-size:13px; line-height:1.65; white-space:pre;}
+.tab-content .kw{color:#ff7b72;} .tab-content .str{color:#a5d6ff;} .tab-content .cm{color:#8b949e; font-style:italic;}
+.tab-content .an{color:#d2a8ff;} .tab-content .cl{color:#79c0ff;} .tab-content .mt{color:#d2a8ff;}
+table{width:100%; border-collapse:collapse; margin:16px 0; font-size:13.8px;}
+th{text-align:left; padding:9px 12px; background:var(--bg-card); border-bottom:2px solid var(--border); font-size:11.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--text-dim);}
+td{padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top;}
+tr:hover td{background:var(--accent-soft);}
+.qa-wrap{margin-top:18px;}
+.qa-item{border:1px solid var(--border); border-radius:var(--radius); margin-bottom:10px; overflow:hidden; background:var(--bg-card);}
+.qa-q{padding:14px 46px 14px 18px; cursor:pointer; font-weight:600; font-size:14.3px; position:relative; display:flex; align-items:center; gap:10px;}
+.qa-q:hover{background:var(--accent-soft);}
+.qa-tag{font-family:'Space Mono',monospace; font-size:9.5px; padding:2px 7px; border-radius:4px; font-weight:700; flex-shrink:0; text-transform:uppercase; letter-spacing:.3px;}
+.tag-faang{background:rgba(248,81,73,.15); color:var(--danger);}
+.tag-core{background:rgba(88,166,255,.15); color:var(--blue);}
+.qa-q::after{content:'+'; position:absolute; right:18px; top:50%; transform:translateY(-50%); font-size:20px; color:var(--text-faint); font-weight:400;}
+.qa-item.open .qa-q::after{content:'−';}
+.qa-a{max-height:0; overflow:hidden; transition:max-height .25s ease; padding:0 18px;}
+.qa-item.open .qa-a{max-height:1400px; padding:2px 18px 18px;}
+.qa-a p{font-size:14px; color:var(--text-dim);}
+.qa-a ul{margin-top:6px;}
+.qa-a li{color:var(--text-dim); font-size:13.8px;}
+.divider{height:1px; background:var(--border); margin:44px 0;}
+.section-badge{display:inline-block; background:var(--accent); color:#0d1117; font-family:'Space Mono',monospace; font-weight:700; font-size:11px; padding:4px 10px; border-radius:6px; margin-bottom:14px;}
+.diagram{background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin:18px 0; font-family:'Space Mono',monospace; font-size:12.5px; color:var(--text-dim); overflow-x:auto; white-space:pre; line-height:1.5;}
+footer{margin-top:60px; padding-top:24px; border-top:1px solid var(--border); color:var(--text-faint); font-size:12px;}
+@media(max-width:900px){
+  .sidebar{position:fixed; left:-100%; z-index:50; transition:left .2s; box-shadow:var(--shadow);}
+  .sidebar.open{left:0;}
+  .main{padding:24px 20px 100px;}
+  .mobile-toggle{display:block !important;}
+}
+.mobile-toggle{display:none; position:fixed; top:16px; left:16px; z-index:60; background:var(--accent); color:#0d1117; border:none; border-radius:8px; width:40px; height:40px; font-size:18px; font-weight:700;}
+</style>
+</head>
+<body data-theme="dark">
+
+<button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="wrapper">
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-badge">G</div>
+    <div>
+      <div class="brand-text">GrowthScript Eng.</div>
+      <div class="brand-sub">Spring Boot Bible</div>
+    </div>
+  </div>
+  <button class="theme-toggle" onclick="toggleTheme()">🌗 Toggle Theme</button>
+
+  <div class="nav-group">
+    <div class="nav-label">Section 07 · DB Auth & CSRF</div>
+    <a class="nav-link" href="#schema-design">130. Users & Roles Table Design</a>
+    <a class="nav-link" href="#jpa-mapping">131. Mapping Users & Roles with JPA</a>
+    <a class="nav-link" href="#registration-api">132. User Registration REST API</a>
+    <a class="nav-link" href="#derived-queries">133. Magic of Derived Queries</a>
+    <a class="nav-link" href="#duplicate-prevention">134. Preventing Duplicate Users</a>
+    <a class="nav-link" href="#compromised-password">135. CompromisedPasswordChecker</a>
+    <a class="nav-link" href="#custom-provider">136. Custom AuthenticationProvider</a>
+    <a class="nav-link" href="#replacing-inmemory">137. Replacing In-Memory with DB Auth</a>
+    <a class="nav-link" href="#csrf-attack">138. How CSRF Attacks Exploit Apps</a>
+    <a class="nav-link" href="#csrf-solution">139. Solution to CSRF — Theory</a>
+    <a class="nav-link" href="#csrf-demo">140–141. CSRF Protection End-to-End Demo</a>
+    <a class="nav-link" href="#interview-master">Master Interview Q&A Bank</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<div class="header-block">
+  <div class="eyebrow">Java Backend Engineer · Spring Boot Course</div>
+  <h1>Section 7 — Database Authentication & CSRF Protection with Spring Security</h1>
+  <p>Moving Spring Security off toy in-memory users onto a real, normalized database schema — users/roles table design, JPA-backed <code>UserDetailsService</code>, registration with duplicate and compromised-password guards, a custom <code>AuthenticationProvider</code> — then a full first-principles treatment of CSRF: how the attack actually works, why it's fundamentally different from the JWT-based statelessness covered in Section 6, and how Spring Security's token-based defense stops it end to end.</p>
+  <div class="meta-row">
+    <span class="meta-pill">Videos 130–141 (12 videos)</span>
+    <span class="meta-pill">2 hr 3 min runtime</span>
+    <span class="meta-pill">FAANG + Fintech interview focus</span>
+    <span class="meta-pill">Builds on Sections 4 & 6</span>
+  </div>
+</div>
+
+<!-- 130 -->
+<section class="topic" id="schema-design">
+  <div class="topic-head"><span class="topic-num">130</span><h2>Designing Users & Roles Tables for Secure Database Authentication</h2></div>
+  <div class="topic-video">Video: Designing Users & Roles Tables for Secure Database Authentication</div>
+
+  <p>Rather than hardcoding a single role string per user, a production-grade schema models <strong>users and roles as a many-to-many relationship</strong> — the same relational pattern from Section 5, just applied to authentication data specifically.</p>
+
+  <div class="diagram">TABLE users                          TABLE user_roles (join table)          TABLE roles
+┌────┬──────────┬─────────────┐    ┌─────────┬─────────┐               ┌────┬───────────┐
+│ id │ username  │ password_hash│    │ user_id  │ role_id  │               │ id │ name       │
+├────┼──────────┼─────────────┤    ├─────────┼─────────┤               ├────┼───────────┤
+│ 1  │ nikhil    │ $2a$10$...   │◄───│ 1        │ 1         │──────────────▶│ 1  │ ROLE_ADMIN │
+│ 2  │ priya     │ $2a$10$...   │◄───│ 1        │ 2         │──────────────▶│ 2  │ ROLE_USER  │
+│                │              │◄───│ 2        │ 2         │
+└────┴──────────┴─────────────┘    └─────────┴─────────┘               └────┴───────────┘
+
+  a user can hold MULTIPLE roles (nikhil = ADMIN + USER),
+  and a role can belong to MANY users — genuine many-to-many</div>
+
+  <table>
+    <tr><th>Design Decision</th><th>Reasoning</th></tr>
+    <tr><td><strong>Separate <code>roles</code> table</strong> rather than a <code>role</code> string column on <code>users</code></td><td>A user can legitimately hold multiple roles simultaneously (e.g., both <code>ADMIN</code> and <code>USER</code>); a single string column can't express this without hacky comma-separated values</td></tr>
+    <tr><td><strong>Store <code>ROLE_</code>-prefixed names</strong> in the table (e.g., <code>ROLE_ADMIN</code>)</td><td>Matches Spring Security's own <code>hasRole()</code> convention directly (Section 6) — avoids prefix-mismatch bugs at the authorization-check layer</td></tr>
+    <tr><td><strong>Never store the raw password</strong> — only <code>password_hash</code></td><td>Direct continuation of Section 6's hashing discussion; the column name itself should signal it's a hash, not plaintext, as a defensive coding convention</td></tr>
+    <tr><td><strong>Unique constraint on <code>username</code>/<code>email</code></strong></td><td>Database-level guarantee against duplicate accounts — the last line of defense even if application-level duplicate checks (covered later) are somehow bypassed</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 Why Model This as a Real Many-to-Many, Not a Simple Enum</div>
+    <p>A tempting shortcut is a single <code>role</code> column with an enum type (<code>ADMIN</code>, <code>USER</code>). This works only as long as every user has <em>exactly one</em> role forever — a fragile assumption that breaks the moment a real product needs a user who is both a content moderator and a regular member, or a permission system that evolves independently of a fixed enum requiring a code deployment to add a new role. The many-to-many schema costs a little more upfront complexity but scales to real-world authorization requirements without a schema migration later.</p>
+  </div>
+</section>
+
+<!-- 131 -->
+<section class="topic" id="jpa-mapping">
+  <div class="topic-head"><span class="topic-num">131</span><h2>Mapping Users & Roles Using JPA Entities and Repositories</h2></div>
+  <div class="topic-video">Video: Mapping Users & Roles Using JPA Entities and Repositories</div>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'jm1')">Role.java</button>
+      <button class="tab-btn" onclick="showTab(this,'jm2')">User.java (implements UserDetails)</button>
+      <button class="tab-btn" onclick="showTab(this,'jm3')">Repositories</button>
+    </div>
+    <div class="tab-content active" id="jm1"><pre><span class="an">@Entity</span>
+<span class="an">@Table</span>(name = <span class="str">"roles"</span>)
+<span class="an">@Getter</span> <span class="an">@Setter</span> <span class="an">@NoArgsConstructor</span> <span class="an">@AllArgsConstructor</span>
+<span class="kw">public class</span> <span class="cl">Role</span> {
+    <span class="an">@Id</span> <span class="an">@GeneratedValue</span>(strategy = GenerationType.IDENTITY)
+    <span class="kw">private</span> Long id;
+
+    <span class="an">@Column</span>(unique = <span class="kw">true</span>, nullable = <span class="kw">false</span>)
+    <span class="kw">private</span> String name;   <span class="cm">// e.g. "ROLE_ADMIN", "ROLE_USER"</span>
+}</pre></div>
+    <div class="tab-content" id="jm2"><pre><span class="an">@Entity</span>
+<span class="an">@Table</span>(name = <span class="str">"users"</span>)
+<span class="an">@Getter</span> <span class="an">@Setter</span> <span class="an">@NoArgsConstructor</span> <span class="an">@AllArgsConstructor</span>
+<span class="kw">public class</span> <span class="cl">User implements</span> UserDetails {   <span class="cm">// entity DIRECTLY implements Spring Security's contract</span>
+
+    <span class="an">@Id</span> <span class="an">@GeneratedValue</span>(strategy = GenerationType.IDENTITY)
+    <span class="kw">private</span> Long id;
+
+    <span class="an">@Column</span>(unique = <span class="kw">true</span>, nullable = <span class="kw">false</span>)
+    <span class="kw">private</span> String username;
+
+    <span class="an">@Column</span>(name = <span class="str">"password_hash"</span>, nullable = <span class="kw">false</span>)
+    <span class="kw">private</span> String password;
+
+    <span class="an">@ManyToMany</span>(fetch = FetchType.EAGER)   <span class="cm">// EAGER here is deliberate — see box below</span>
+    <span class="an">@JoinTable</span>(
+        name = <span class="str">"user_roles"</span>,
+        joinColumns = <span class="an">@JoinColumn</span>(name = <span class="str">"user_id"</span>),
+        inverseJoinColumns = <span class="an">@JoinColumn</span>(name = <span class="str">"role_id"</span>)
+    )
+    <span class="kw">private</span> Set&lt;Role&gt; roles = <span class="kw">new</span> HashSet&lt;&gt;();
+
+    <span class="cm">// ── UserDetails contract methods ──</span>
+    <span name="Override">@Override</span>
+    <span class="kw">public</span> Collection&lt;? <span class="kw">extends</span> GrantedAuthority&gt; <span class="mt">getAuthorities</span>() {
+        <span class="kw">return</span> roles.<span class="mt">stream</span>()
+                .<span class="mt">map</span>(role -&gt; <span class="kw">new</span> SimpleGrantedAuthority(role.<span class="mt">getName</span>()))
+                .<span class="mt">collect</span>(Collectors.<span class="mt">toSet</span>());
+    }
+    <span name="Override">@Override</span> <span class="kw">public boolean</span> <span class="mt">isAccountNonExpired</span>() { <span class="kw">return true</span>; }
+    <span name="Override">@Override</span> <span class="kw">public boolean</span> <span class="mt">isAccountNonLocked</span>() { <span class="kw">return true</span>; }
+    <span name="Override">@Override</span> <span class="kw">public boolean</span> <span class="mt">isCredentialsNonExpired</span>() { <span class="kw">return true</span>; }
+    <span name="Override">@Override</span> <span class="kw">public boolean</span> <span class="mt">isEnabled</span>() { <span class="kw">return true</span>; }
+}</pre></div>
+    <div class="tab-content" id="jm3"><pre><span class="kw">public interface</span> <span class="cl">UserRepository extends</span> JpaRepository&lt;User, Long&gt; {
+    Optional&lt;User&gt; <span class="mt">findByUsername</span>(String username);   <span class="cm">// derived query — see next topic</span>
+    <span class="kw">boolean</span> <span class="mt">existsByUsername</span>(String username);
+}
+
+<span class="kw">public interface</span> <span class="cl">RoleRepository extends</span> JpaRepository&lt;Role, Long&gt; {
+    Optional&lt;Role&gt; <span class="mt">findByName</span>(String name);
+}</pre></div>
+  </div>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Why FetchType.EAGER Is the Deliberate, Correct Choice Here</div>
+    <p>This directly contradicts Section 5's general guidance to default associations to <code>LAZY</code> — but it's the right call specifically for <code>User.roles</code>. Authorities/roles are needed <strong>immediately, on every single authenticated request</strong> (the authorization check reads them right after <code>UserDetailsService.loadUserByUsername()</code> returns), almost always <em>outside</em> the original transaction/persistence context by the time they're actually consulted by <code>AuthorizationFilter</code>. Lazy-loading them would risk a <code>LazyInitializationException</code> at exactly the security-critical moment. Since the roles collection per user is also small and bounded (unlike, say, an unbounded <code>@OneToMany</code> collection), the N+1/performance cost of eager loading here is negligible — a textbook example of a deliberate, justified exception to a general default, worth explicitly defending if an interviewer probes it.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why have the User entity implement UserDetails directly, rather than a separate adapter/wrapper class?</div>
+      <div class="qa-a"><p>Both are valid, legitimate patterns with a real trade-off. Implementing <code>UserDetails</code> directly on the entity is simpler and avoids an extra mapping layer — appropriate when the entity's shape and Spring Security's expectations genuinely align well. A separate adapter class (wrapping a <code>User</code> entity, implementing <code>UserDetails</code> by delegating to it) is preferable when you want to keep the persistence-layer entity <strong>completely decoupled</strong> from a security-framework interface — useful if the entity is reused elsewhere in ways that shouldn't carry Spring Security baggage, or if you anticipate the entity's shape and the security contract's shape diverging over time (e.g., computing <code>isAccountNonLocked()</code> from more complex business logic than a simple boolean field). This mirrors the general DTO-vs-entity tension from Section 4 — direct implementation trades decoupling for simplicity.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 132 -->
+<section class="topic" id="registration-api">
+  <div class="topic-head"><span class="topic-num">132</span><h2>User Registration REST API</h2></div>
+  <div class="topic-video">Video: User Registration REST API</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'reg1')">AuthController — /register</button></div>
+    <div class="tab-content active" id="reg1"><pre><span class="an">@PostMapping</span>(<span class="str">"/register"</span>)
+<span class="kw">public</span> ResponseEntity&lt;String&gt; <span class="mt">register</span>(<span class="an">@Valid</span> <span class="an">@RequestBody</span> RegisterRequestDto request) {
+
+    <span class="cm">// duplicate check — the NEXT topic covers this in depth</span>
+    <span class="kw">if</span> (userRepository.<span class="mt">existsByUsername</span>(request.<span class="mt">getUsername</span>())) {
+        <span class="kw">throw new</span> DuplicateResourceException(<span class="str">"Username already taken"</span>);  <span class="cm">// Section 5's global handler</span>
+    }
+
+    Role userRole = roleRepository.<span class="mt">findByName</span>(<span class="str">"ROLE_USER"</span>)
+            .<span class="mt">orElseThrow</span>(() -&gt; <span class="kw">new</span> IllegalStateException(<span class="str">"Default role not seeded"</span>));
+
+    User newUser = <span class="kw">new</span> User();
+    newUser.<span class="mt">setUsername</span>(request.<span class="mt">getUsername</span>());
+    newUser.<span class="mt">setPassword</span>(passwordEncoder.<span class="mt">encode</span>(request.<span class="mt">getPassword</span>()));  <span class="cm">// Section 6's BCrypt encoder</span>
+    newUser.<span class="mt">setRoles</span>(Set.<span class="mt">of</span>(userRole));   <span class="cm">// every new signup defaults to plain USER, never ADMIN</span>
+
+    userRepository.<span class="mt">save</span>(newUser);
+    <span class="kw">return</span> ResponseEntity.<span class="mt">status</span>(HttpStatus.CREATED).<span class="mt">body</span>(<span class="str">"User registered successfully"</span>);
+}</pre></div>
+  </div>
+
+  <div class="box danger">
+    <div class="box-title">⚠ Never Let a Registration Endpoint Accept a Client-Supplied Role</div>
+    <p>This is a direct, concrete instance of Section 4's <strong>over-posting</strong> vulnerability. If <code>RegisterRequestDto</code> had a <code>role</code> field and the controller trusted it, any anonymous signup request could simply include <code>"role": "ADMIN"</code> and grant itself administrator access. The role assignment must always be <strong>server-controlled</strong> — hardcoded to a safe default (as above) — with any elevation to a higher-privilege role happening through a separate, properly-authorized admin-only workflow, never through the public self-registration endpoint.</p>
+  </div>
+</section>
+
+<!-- 133 -->
+<section class="topic" id="derived-queries">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">133</span><h2>The Magic of Derived Queries — How Method Names Become Database Queries</h2></div>
+  <div class="topic-video">Video: Magic of Derived Queries - How Method Names Become Database Queries</div>
+
+  <p>This revisits and goes considerably deeper than Section 4's brief introduction to derived query methods — worth the dedicated treatment given how central <code>findByUsername</code>-style methods are to authentication code specifically.</p>
+
+  <div class="diagram">List<Contact> findByStatusAndCreatedAtAfterOrderByCreatedAtDesc(String status, LocalDateTime after)
+       │       │                │              │                     │
+       │       │                │              │                     └─ ORDER BY created_at DESC
+       │       │                │              └─ WHERE created_at > ?
+       │       │                └─ AND
+       │       └─ WHERE status = ?
+       └─ SELECT * FROM ... (query, not a mutation)
+
+PARSED AT APPLICATION STARTUP into:
+SELECT c FROM Contact c WHERE c.status = ?1 AND c.createdAt > ?2 ORDER BY c.createdAt DESC</div>
+
+  <table>
+    <tr><th>Keyword</th><th>SQL Equivalent</th></tr>
+    <tr><td><code>findBy</code> / <code>getBy</code> / <code>queryBy</code></td><td><code>SELECT ... WHERE</code> (interchangeable prefixes — purely stylistic)</td></tr>
+    <tr><td><code>And</code> / <code>Or</code></td><td><code>AND</code> / <code>OR</code> — chaining multiple conditions</td></tr>
+    <tr><td><code>Containing</code> / <code>StartingWith</code> / <code>EndingWith</code></td><td><code>LIKE '%x%'</code> / <code>LIKE 'x%'</code> / <code>LIKE '%x'</code></td></tr>
+    <tr><td><code>IgnoreCase</code></td><td>Case-insensitive comparison</td></tr>
+    <tr><td><code>GreaterThan</code> / <code>LessThan</code> / <code>Between</code></td><td><code>&gt;</code> / <code>&lt;</code> / <code>BETWEEN</code></td></tr>
+    <tr><td><code>In</code> / <code>NotIn</code></td><td><code>IN (...)</code> / <code>NOT IN (...)</code></td></tr>
+    <tr><td><code>OrderBy...Asc/Desc</code></td><td><code>ORDER BY ... ASC/DESC</code></td></tr>
+    <tr><td><code>Top3</code> / <code>First</code></td><td><code>LIMIT</code> — restricts result count</td></tr>
+    <tr><td><code>exists...</code> prefix</td><td>Returns <code>boolean</code> instead of the entity — generates an efficient existence-check query rather than fetching full rows</td></tr>
+    <tr><td><code>count...</code> prefix</td><td>Returns <code>long</code> — generates a <code>COUNT(*)</code> query</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 The Parsing Mechanism, Precisely</div>
+    <p>Spring Data JPA uses a component called <code>PartTree</code> to parse the method name into subject keywords (what to select/count/check-exists), predicate keywords (the <code>WHERE</code> clause conditions, split on <code>And</code>/<code>Or</code>), and sorting keywords — matching each field-name fragment against the target entity's actual declared fields via reflection. This parsing happens <strong>once, at application startup</strong> when Spring Data JPA generates the proxy repository implementation (Section 4's <code>SimpleJpaRepository</code> discussion) — not on every method call — which is why a method name that doesn't match a real entity field fails loudly and immediately at boot, rather than on first invocation at runtime.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>What happens if a derived query method name references a field that doesn't exist on the entity, or is ambiguous?</div>
+      <div class="qa-a"><p>The application fails to start — Spring Data JPA's <code>PartTree</code> parser throws a <code>PropertyReferenceException</code> during the repository proxy's creation at boot, explicitly naming the unresolvable property fragment. This is the same "fail-fast at startup rather than fail at runtime" philosophy established in Section 1 (eager singleton creation) and Section 2 (NoUniqueBeanDefinitionException) — a misconfigured/misspelled derived query method is caught before any traffic is ever served, not the first time some code path happens to call it in production.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Why prefer existsByUsername(String) over checking !findByUsername(username).isEmpty() for a duplicate check?</div>
+      <div class="qa-a"><p><code>existsByUsername</code> compiles to an efficient <code>SELECT CASE WHEN EXISTS(...) THEN true ELSE false END</code>-style query (or similar, database-dependent) that the database can often satisfy via an index lookup alone, without materializing and transferring the full entity's column data. <code>findByUsername(...).isPresent()</code> fetches the <em>entire row</em> just to throw it away — wasted I/O and object-mapping overhead for a question that's fundamentally boolean. For a hot-path check like registration duplicate validation, this is a small but real, easily-avoided performance difference worth knowing to mention.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 134 -->
+<section class="topic" id="duplicate-prevention">
+  <div class="topic-head"><span class="topic-num">134</span><h2>Preventing Duplicate Users Using Derived Query Methods</h2></div>
+  <div class="topic-video">Video: Preventing Duplicate Users Using Derived Query Methods</div>
+
+  <p>This applies the previous topic directly: <code>existsByUsername()</code> guards registration at the <strong>application layer</strong> with a clean, early, client-friendly error — but this must be paired with a <strong>database-level unique constraint</strong> on the <code>username</code> column (from the schema design topic) as defense-in-depth.</p>
+
+  <div class="box danger">
+    <div class="box-title">⚠ Why the Application-Level Check Alone Isn't Sufficient — A Race Condition</div>
+    <p>Between the moment <code>existsByUsername()</code> returns <code>false</code> and the moment <code>save()</code> actually commits, <strong>two concurrent registration requests for the same username can both pass the check</strong> before either has written its row — a classic <strong>TOCTOU (time-of-check to time-of-use) race condition</strong>. Without a database-level unique constraint, both requests would succeed, silently creating two accounts with the same username. With the constraint in place, the second <code>save()</code> throws a <code>DataIntegrityViolationException</code> (Section 4's persistence exception translation) at the database level — which the global exception handler (Section 5) should catch and translate into a clean 409 Conflict, rather than an ugly generic 500.</p>
+  </div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'dup1')">Handling the race at the exception-handler layer</button></div>
+    <div class="tab-content active" id="dup1"><pre><span class="an">@ExceptionHandler</span>(DataIntegrityViolationException.<span class="kw">class</span>)
+<span class="kw">public</span> ResponseEntity&lt;ErrorResponse&gt; <span class="mt">handleDuplicateKey</span>(DataIntegrityViolationException ex) {
+    <span class="cm">// catches the DB-level unique constraint violation that slips past</span>
+    <span class="cm">// the application-level existsByUsername() check under concurrent load</span>
+    ErrorResponse error = ErrorResponse.<span class="mt">builder</span>()
+            .status(HttpStatus.CONFLICT.value())
+            .message(<span class="str">"Username already exists"</span>)
+            .timestamp(LocalDateTime.<span class="mt">now</span>())
+            .build();
+    <span class="kw">return new</span> ResponseEntity&lt;&gt;(error, HttpStatus.CONFLICT);
+}</pre></div>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Given the race condition above, is the existsByUsername() application-level check even worth doing at all?</div>
+      <div class="qa-a"><p>Yes — it's not redundant, it serves a genuinely different purpose than the database constraint. The application-level check produces a <strong>fast, clean, common-case</strong> rejection (a normal duplicate-username attempt, the vast majority of the time, with no real concurrency) without ever touching the database's constraint-violation machinery or triggering a rolled-back transaction. The database constraint exists purely as the correctness backstop for the rare race-condition edge case. This two-layer pattern — an optimistic application-level check for the common path, plus a database constraint as the ultimate correctness guarantee — is a standard, widely-applicable pattern for any uniqueness requirement under concurrent access, not specific to usernames.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 135 -->
+<section class="topic" id="compromised-password">
+  <div class="topic-head"><span class="topic-num">135</span><h2>Enforcing Strong Passwords with CompromisedPasswordChecker</h2></div>
+  <div class="topic-video">Video: Enforcing Strong Passwords with CompromisedPasswordChecker</div>
+
+  <p>A newer Spring Security feature that checks a candidate password against the <strong>"Have I Been Pwned" (HIBP) database</strong> of passwords known to have been exposed in real-world data breaches — going beyond simple strength rules (length, character classes) to catch passwords that are technically "strong-looking" but already compromised and actively used by attackers in credential-stuffing attacks.</p>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'cp1')">Wiring CompromisedPasswordChecker into registration</button></div>
+    <div class="tab-content active" id="cp1"><pre><span class="an">@Bean</span>
+<span class="kw">public</span> CompromisedPasswordChecker <span class="mt">compromisedPasswordChecker</span>() {
+    <span class="kw">return new</span> HaveIBeenPwnedRestApiPasswordChecker();  <span class="cm">// calls the HIBP API under the hood</span>
+}
+
+<span class="cm">// in the registration service:</span>
+CompromisedPasswordDecision decision = compromisedPasswordChecker.<span class="mt">check</span>(request.<span class="mt">getPassword</span>());
+<span class="kw">if</span> (decision.<span class="mt">isCompromised</span>()) {
+    <span class="kw">throw new</span> WeakPasswordException(<span class="str">"This password has appeared in a known data breach — please choose another"</span>);
+}</pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 The Privacy-Preserving Mechanism — k-Anonymity</div>
+    <p>A natural concern: doesn't checking a password against a remote API leak the actual password to a third party? HIBP's Pwned Passwords API uses a clever <strong>k-anonymity</strong> scheme specifically to avoid this: the client SHA-1 hashes the password locally, sends only the <strong>first 5 characters</strong> of that hash to the API, and receives back <em>every</em> known-breached hash suffix that shares that same 5-character prefix (typically hundreds of candidates) — the client then checks locally whether its own full hash appears among them. The full password (and even its full hash) never leaves the checking application — a genuinely elegant, worth-explaining-in-an-interview privacy-preserving design pattern.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why is checking against a breached-password database a meaningfully stronger defense than traditional password complexity rules (uppercase, digit, special character required)?</div>
+      <div class="qa-a"><p>Traditional complexity rules optimize for a password being hard to <em>guess via brute force</em> — but real-world account compromise overwhelmingly happens via <strong>credential stuffing</strong>: attackers take passwords leaked from one breached site and try them against other sites, betting (correctly, very often) that users reuse passwords. A password like <code>Summer2023!</code> satisfies every traditional complexity rule yet might already sit in a breach database used by automated attack tooling. Checking against a real breach corpus directly defends against the attack vector that actually compromises the most accounts in practice, which complexity rules alone do nothing to address.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 136 -->
+<section class="topic" id="custom-provider">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">136</span><h2>Understanding Authentication Flow & Creating a Custom AuthenticationProvider</h2></div>
+  <div class="topic-video">Video: Understanding Authentication Flow & Creating a Custom AuthenticationProvider</div>
+
+  <p>This directly extends Section 6's Internals topic — rather than relying on Spring Security's built-in <code>DaoAuthenticationProvider</code>, this builds a <strong>custom <code>AuthenticationProvider</code></strong> from scratch, useful when authentication logic needs to go beyond a simple username/password/hash check (e.g., additional business rules, account-status checks, audit logging on every login attempt).</p>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'cap1')">CustomAuthenticationProvider.java</button></div>
+    <div class="tab-content active" id="cap1"><pre><span class="an">@Component</span>
+<span class="an">@RequiredArgsConstructor</span>
+<span class="kw">public class</span> <span class="cl">CustomAuthenticationProvider implements</span> AuthenticationProvider {
+
+    <span class="kw">private final</span> UserDetailsService userDetailsService;
+    <span class="kw">private final</span> PasswordEncoder passwordEncoder;
+
+    <span name="Override">@Override</span>
+    <span class="kw">public</span> Authentication <span class="mt">authenticate</span>(Authentication authentication) <span class="kw">throws</span> AuthenticationException {
+        String username = authentication.<span class="mt">getName</span>();
+        String rawPassword = authentication.<span class="mt">getCredentials</span>().<span class="mt">toString</span>();
+
+        UserDetails userDetails = userDetailsService.<span class="mt">loadUserByUsername</span>(username);
+
+        <span class="kw">if</span> (!passwordEncoder.<span class="mt">matches</span>(rawPassword, userDetails.<span class="mt">getPassword</span>())) {
+            <span class="kw">throw new</span> BadCredentialsException(<span class="str">"Invalid username or password"</span>);
+        }
+        <span class="kw">if</span> (!userDetails.<span class="mt">isEnabled</span>()) {
+            <span class="kw">throw new</span> DisabledException(<span class="str">"Account is disabled"</span>);
+        }
+        <span class="cm">// custom business logic can live HERE — e.g. audit-log every login attempt,</span>
+        <span class="cm">// enforce a max-failed-attempts lockout policy, check a "must reset password" flag</span>
+
+        <span class="kw">return new</span> UsernamePasswordAuthenticationToken(
+                userDetails, <span class="kw">null</span>, userDetails.<span class="mt">getAuthorities</span>());  <span class="cm">// the AUTHENTICATED result</span>
+    }
+
+    <span name="Override">@Override</span>
+    <span class="kw">public boolean</span> <span class="mt">supports</span>(Class&lt;?&gt; authentication) {
+        <span class="cm">// tells the ProviderManager whether THIS provider can handle a given</span>
+        <span class="cm">// Authentication type — critical when multiple providers are registered</span>
+        <span class="kw">return</span> UsernamePasswordAuthenticationToken.<span class="kw">class</span>.<span class="mt">isAssignableFrom</span>(authentication);
+    }
+}
+
+<span class="cm">// registering it explicitly (replacing/supplementing the default DaoAuthenticationProvider):</span>
+<span class="an">@Bean</span>
+<span class="kw">public</span> AuthenticationManager <span class="mt">authenticationManager</span>(CustomAuthenticationProvider provider) {
+    <span class="kw">return new</span> ProviderManager(provider);
+}</pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 The supports() Method's Real Purpose</div>
+    <p>In a system with multiple <code>AuthenticationProvider</code> beans registered (e.g., one for username/password, another for API-key-based auth, another for OAuth2), the <code>ProviderManager</code> (which implements <code>AuthenticationManager</code>, per Section 6's diagram) iterates through all registered providers and asks each <code>supports(authentication.getClass())</code> before attempting <code>authenticate()</code> — only providers that return <code>true</code> are actually tried for a given <code>Authentication</code> type. This is what lets multiple, entirely different authentication mechanisms coexist cleanly in one application without each provider needing to know about the others.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>What's a concrete, realistic reason to write a custom AuthenticationProvider instead of just using DaoAuthenticationProvider with a custom UserDetailsService?</div>
+      <div class="qa-a"><p><code>DaoAuthenticationProvider</code> already delegates to your custom <code>UserDetailsService</code> and <code>PasswordEncoder</code>, so a custom provider is only warranted when authentication needs logic that doesn't fit that contract's shape — for example: enforcing a <strong>failed-attempt lockout policy</strong> (tracking and blocking after N consecutive failures, logic that spans multiple login attempts, not just one), <strong>multi-factor authentication</strong> requiring an additional verification step beyond password matching, <strong>audit logging every authentication attempt</strong> (success and failure) to a separate security log table, or supporting an entirely non-password credential type (e.g., a one-time code, an API key) where <code>UserDetailsService</code>'s password-matching-oriented contract doesn't naturally apply at all.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 137 -->
+<section class="topic" id="replacing-inmemory">
+  <div class="topic-head"><span class="topic-num">137</span><h2>Replacing In-Memory Login with DB Authentication</h2></div>
+  <div class="topic-video">Video: Replacing In-Memory Login with DB Authentication</div>
+
+  <p>The capstone connecting every earlier topic: swapping out Section 6's <code>InMemoryUserDetailsManager</code> for a real, JPA-backed <code>UserDetailsService</code> implementation — the "production path" that Section 6 explicitly flagged as the eventual next step.</p>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'db1')">CustomUserDetailsService.java</button></div>
+    <div class="tab-content active" id="db1"><pre><span class="an">@Service</span>
+<span class="an">@RequiredArgsConstructor</span>
+<span class="kw">public class</span> <span class="cl">CustomUserDetailsService implements</span> UserDetailsService {
+
+    <span class="kw">private final</span> UserRepository userRepository;
+
+    <span name="Override">@Override</span>
+    <span class="kw">public</span> UserDetails <span class="mt">loadUserByUsername</span>(String username) <span class="kw">throws</span> UsernameNotFoundException {
+        <span class="kw">return</span> userRepository.<span class="mt">findByUsername</span>(username)   <span class="cm">// the derived query from earlier</span>
+                .<span class="mt">orElseThrow</span>(() -&gt;
+                    <span class="kw">new</span> UsernameNotFoundException(<span class="str">"User not found: "</span> + username));
+        <span class="cm">// User entity already IMPLEMENTS UserDetails directly (from the mapping topic) —</span>
+        <span class="cm">// no separate mapping/adapter step needed here</span>
+    }
+}</pre></div>
+  </div>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Don't Leak Whether a Username Exists via Timing or Message Differences</div>
+    <p>A subtle but real security nuance: if <code>loadUserByUsername</code> throws immediately for a nonexistent username but a <em>different</em> exception/timing profile for "user exists but wrong password," an attacker can use this difference to <strong>enumerate valid usernames</strong> in the system (a username enumeration vulnerability) — useful reconnaissance for a subsequent credential-stuffing or targeted phishing attack. Best practice: ensure both "user not found" and "wrong password" paths present a <strong>uniform, generic error message</strong> to the client ("Invalid username or password," never specifying which part was wrong) and, ideally, similar response timing — Spring Security's default behavior is already reasonably careful about this, but it's worth understanding why the generic message exists rather than "helpfully" splitting it into two more specific error types.</p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 138 -->
+<section class="topic" id="csrf-attack">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">138</span><h2>How CSRF Attacks Can Exploit Your Application</h2></div>
+  <div class="topic-video">Video: How CSRF Attacks Can Exploit Your Application</div>
+
+  <p>Section 6 introduced <em>why</em> CSRF doesn't apply to JWT-in-header authentication. This topic goes back to first principles for the scenario where it <strong>does</strong> apply — traditional, cookie/session-based authentication — walking through the actual attack mechanics in detail.</p>
+
+  <div class="diagram">STEP 1: Victim logs into legitimate-bank.com normally.
+         Browser stores a session cookie for legitimate-bank.com.
+
+STEP 2: Victim, STILL LOGGED IN, visits a malicious site in another tab:
+         evil-site.com contains a hidden, auto-submitting form:
+
+<!--          <form action="https://legitimate-bank.com/api/transfer" method="POST">
+           <input type="hidden" name="toAccount" value="attacker-account-123">
+           <input type="hidden" name="amount" value="5000">
+         </form>
+         <script>document.forms[0].submit()</script> -->
+
+STEP 3: The victim's BROWSER automatically attaches the legitimate-bank.com
+        session cookie to this request — because that's just how cookies work,
+        regardless of which SITE initiated the request.
+
+STEP 4: legitimate-bank.com's server sees a valid session cookie and
+        processes the transfer — with ZERO indication the request didn't
+        genuinely originate from the bank's own UI.
+
+RESULT: Money transferred, entirely without the victim's knowledge or consent.</div>
+
+  <div class="box danger">
+    <div class="box-title">⚠ The Core Insight: The Browser Doesn't Know Who "Asked" for the Cookie to Be Sent</div>
+    <p>The fundamental vulnerability is that <strong>cookies are attached by the browser automatically</strong>, based purely on the destination domain — not based on which page or script initiated the request. The server, seeing a valid session cookie, has no built-in way to distinguish "a request the user genuinely intended, from the bank's own UI" from "a request some unrelated malicious page tricked the user's browser into firing." CSRF protection exists specifically to give the server that missing signal.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Does a CSRF attack require the attacker to steal the victim's session cookie or password?</div>
+      <div class="qa-a"><p>No — and this is precisely what makes CSRF distinct (and often underestimated) compared to attacks like XSS. The attacker never sees, steals, or needs to know the victim's cookie value at all; they only need the victim's <strong>browser</strong> to still be holding a valid session for the target site and to visit a page the attacker controls. The browser does all the "work" of attaching valid credentials on the attacker's behalf, entirely transparently — the attack exploits the browser's trust model, not any credential theft.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Why does CSRF typically only threaten state-changing (POST/PUT/DELETE) requests, not GET requests?</div>
+      <div class="qa-a"><p>This connects directly to the "safe methods" discussion from Section 3 — GET requests are, by HTTP convention and REST best practice, meant to be <strong>side-effect-free reads</strong>. If an application correctly follows this convention, a forged GET request triggered via CSRF can only read data (and even that is usually blocked by the browser's Same-Origin Policy preventing the attacker's page from reading the <em>response</em>, even though the request itself fires) rather than change anything. CSRF becomes a genuine threat specifically when an application violates REST conventions by performing state changes via GET (a real anti-pattern also flagged in Section 3), or — far more commonly and legitimately targeted — via POST/PUT/DELETE requests that a malicious auto-submitting form can trivially forge.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 139 -->
+<section class="topic" id="csrf-solution">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">139</span><h2>Solution to CSRF Attack — Theory</h2></div>
+  <div class="topic-video">Video: Solution to CSRF attack - Theory</div>
+
+  <p>Spring Security's defense is the <strong>Synchronizer Token Pattern</strong>: the server generates a unique, unpredictable, per-session (or per-request) <strong>CSRF token</strong> and requires the client to submit it back — not as a cookie (which would be auto-attached just like the session cookie, defeating the purpose), but explicitly, in a <strong>request header or form field</strong> that a malicious cross-origin page has no way to read or forge.</p>
+
+  <div class="diagram">1. Client requests a page/token: GET /some-form
+        │
+        ▼
+   Server generates a CSRF token, ties it to the session,
+   sends it back embedded in the response (e.g. XSRF-TOKEN cookie
+   readable by JS, PLUS expected back as a custom header)
+        │
+        ▼
+2. Client's legitimate JS reads the token and includes it explicitly
+   in the next state-changing request:
+        POST /api/transfer
+        X-XSRF-TOKEN: ab34f9e1-...     ◄── attacker's page CANNOT read this value
+        Cookie: JSESSIONID=...; XSRF-TOKEN=ab34f9e1-...
+
+3. Server compares the X-XSRF-TOKEN HEADER value against the token
+   tied to the session
+        │
+   ┌────┴────┐
+  MATCH      NO MATCH / MISSING
+   │            │
+   ▼            ▼
+ Request      403 Forbidden — CsrfException
+ proceeds</div>
+
+  <div class="box tip">
+    <div class="box-title">💡 Why This Specifically Defeats CSRF — The Key Asymmetry</div>
+    <p>The entire defense hinges on one asymmetry: a malicious cross-origin page's auto-submitting form <strong>can</strong> trigger the browser to auto-attach cookies (that's just how cookies work, unconditionally) — but it <strong>cannot read</strong> the value of another site's cookie or any of its response data, due to the browser's Same-Origin Policy (the exact mechanism underlying Section 4's CORS discussion). So while the attacker's forged request will still carry the session cookie <em>and even the CSRF cookie itself</em>, the attacker has no way to also correctly populate the required <strong>header</strong> with the matching token value — they'd have to read the cookie's value via JavaScript to do that, which cross-origin restrictions block. The server then rejects the request for missing/incorrect proof of legitimate origin.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>If the CSRF token is ALSO sent as a cookie, doesn't the browser auto-attach that too, defeating the whole point?</div>
+      <div class="qa-a"><p>The cookie being auto-attached is expected and harmless — the actual security check is that the server compares the token in the <strong>header</strong> (or a form field) against the token tied to the session, not merely checking that "a CSRF cookie is present." An attacker's forged cross-origin request will indeed carry the CSRF cookie along automatically (just like the session cookie), but since the attacker's malicious page cannot read that cookie's actual value via JavaScript (blocked by Same-Origin Policy), it cannot construct the matching header the server independently requires. The double-submission pattern (cookie + header, both required to match) — not the cookie's mere presence — is what provides the actual protection; this specific technique is often called the "double-submit cookie" variant of the synchronizer token pattern.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Why doesn't this CSRF defense mechanism apply to (or matter for) a stateless JWT-in-header API, tying back to Section 6?</div>
+      <div class="qa-a"><p>The entire synchronizer token pattern exists to solve one specific problem: distinguishing a legitimate request from a forged one when the browser <strong>automatically</strong> attaches the proof of authentication (a cookie). A JWT sent explicitly via the <code>Authorization</code> header is <strong>never auto-attached by the browser</strong> under any circumstances — a malicious cross-origin page has no mechanism at all to make the victim's browser include a custom header on a forged request, with or without a CSRF token in the mix. The vulnerability CSRF tokens defend against simply doesn't exist in that architecture, which is precisely why Section 6 correctly identified disabling CSRF as safe specifically for token-in-header authentication — not a shortcut, but a decision that matches a genuinely different threat model.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 140-141 -->
+<section class="topic" id="csrf-demo">
+  <div class="topic-head"><span class="topic-num">140–141</span><h2>CSRF Protection End-to-End Demo</h2></div>
+  <div class="topic-video">Videos: CSRF Protection End-to-End Demo Parts 1 & 2</div>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'cd1')">Enabling CSRF with cookie-based token repository</button>
+      <button class="tab-btn" onclick="showTab(this,'cd2')">Frontend — reading and sending the token</button>
+    </div>
+    <div class="tab-content active" id="cd1"><pre><span class="an">@Bean</span>
+<span class="kw">public</span> SecurityFilterChain <span class="mt">filterChain</span>(HttpSecurity http) <span class="kw">throws</span> Exception {
+    http
+        .csrf(csrf -&gt; csrf
+            <span class="cm">// makes the token readable by client-side JS (needed to echo it back</span>
+            <span class="cm">// in a header) — standard for SPA + cookie-session hybrid setups</span>
+            .csrfTokenRepository(CookieCsrfTokenRepository.<span class="mt">withHttpOnlyFalse</span>())
+        )
+        .authorizeHttpRequests(auth -&gt; auth
+            .anyRequest().<span class="mt">authenticated</span>()
+        )
+        .formLogin(Customizer.<span class="mt">withDefaults</span>());
+    <span class="kw">return</span> http.<span class="mt">build</span>();
+}
+<span class="cm">// NOTE: this is the traditional session/cookie-based configuration —</span>
+<span class="cm">// the OPPOSITE of Section 6's stateless JWT config, which correctly disables CSRF instead</span></pre></div>
+    <div class="tab-content" id="cd2"><pre><span class="cm">// client-side JS: read the XSRF-TOKEN cookie value and echo it back</span>
+<span class="cm">// as a header on every state-changing request</span>
+<span class="kw">function</span> <span class="mt">getCsrfToken</span>() {
+    <span class="kw">const</span> match = document.<span class="mt">cookie</span>.<span class="mt">match</span>(<span class="str">/XSRF-TOKEN=([^;]+)/</span>);
+    <span class="kw">return</span> match ? match[<span class="mt">1</span>] : <span class="kw">null</span>;
+}
+
+fetch(<span class="str">'/api/transfer'</span>, {
+    method: <span class="str">'POST'</span>,
+    headers: {
+        <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span>,
+        <span class="str">'X-XSRF-TOKEN'</span>: <span class="mt">getCsrfToken</span>()   <span class="cm">// the header check from the theory topic</span>
+    },
+    credentials: <span class="str">'include'</span>,   <span class="cm">// ensures cookies (session + CSRF) are sent</span>
+    body: JSON.<span class="mt">stringify</span>({ toAccount: <span class="str">'123'</span>, amount: <span class="mt">100</span> })
+});</pre></div>
+  </div>
+
+  <p>The demo verifies the defense concretely: a legitimate request from the app's own frontend — which correctly reads and echoes the token — succeeds; a simulated forged request (e.g., via a plain <code>curl</code> POST carrying only the session cookie but no valid CSRF header, or an actual hidden-form attack page) is rejected with <strong>403 Forbidden</strong>, confirming the theory from the previous topic holds up against a real attack attempt.</p>
+
+  <div class="box info">
+    <div class="box-title">ℹ Tying the Whole Section Together</div>
+    <p>This closes the loop opened in Section 6: that section built a stateless JWT system and correctly disabled CSRF, with a promise that the reasoning would be justified later. This section supplies that justification by building the <em>opposite</em> architecture (stateful, cookie-based sessions) and demonstrating exactly why CSRF protection is mandatory there — giving you working, hands-on experience with both ends of the authentication architecture spectrum and a clear, demonstrated understanding of when each defense applies.</p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- MASTER Q&A -->
+<section class="topic" id="interview-master">
+  <span class="section-badge">🎯 Rapid-Fire Round</span>
+  <div class="topic-head"><h2>Master Interview Q&A Bank — Section 7</h2></div>
+  <p class="dim">Database-backed authentication and CSRF questions frequently follow up on Section 6's JWT material — interviewers often probe whether a candidate understands both architectures and, critically, when each applies.</p>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>A candidate says "I disabled CSRF because it was causing errors in Postman." Why is this a red flag, and what should the correct reasoning sound like?</div>
+      <div class="qa-a"><p>This reveals the candidate disabled a security control to make an <em>immediate annoyance</em> go away, without understanding <em>why</em> the control exists or whether disabling it is actually safe for their architecture — the definition of a dangerous, non-principled security decision. The correct reasoning, as this section and Section 6 establish: CSRF protection defends specifically against a cookie-auto-attachment exploit; if the API is stateless and authenticates via a token explicitly placed in a header (never a cookie), the exploit CSRF defends against structurally cannot occur, so disabling it is safe <em>because of that specific architectural fact</em> — not because it was inconvenient. If the same API used cookie-based sessions instead, disabling CSRF for the same "Postman is annoying" reason would reopen a genuine, exploitable vulnerability.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Design the users/roles data model and authentication flow for a system where permissions need to be much more granular than simple roles — e.g., "can edit only their own orders" or "can approve invoices under $10,000."</div>
+      <div class="qa-a"><p>Coarse roles (ADMIN/USER, from this section's schema) handle broad access tiers well but don't naturally express fine-grained, data-dependent, or conditional rules. A more granular system typically layers: (1) roles/authorities still gate broad feature access at the <code>authorizeHttpRequests</code>/<code>@PreAuthorize</code> level (Section 6), (2) resource-ownership checks live in the <strong>service layer</strong> as explicit business logic (e.g., comparing the authenticated principal's ID against the order's owner ID before allowing an edit) rather than being expressible as a static role, and (3) numeric/conditional business rules (the $10,000 threshold) are plain application logic, evaluated against the current authenticated user's attributes and the resource's data together — not something a role/permission system alone should try to encode. This connects the DB-schema-driven role model from this section to the reality that authorization often needs both declarative (role-based) and imperative (business-logic) layers working together.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Why does registering a role FetchType.EAGER (from this section) not create the same N+1 concern Section 5 warned about for @OneToMany collections?</div>
+      <div class="qa-a"><p>The N+1 concern in Section 5 was specifically about fetching a <strong>list of many parent entities</strong>, each triggering its own separate query for an unbounded child collection — N additional queries for N parents. Here, a single authentication check loads <strong>exactly one <code>User</code></strong> (via <code>loadUserByUsername</code>) and eagerly fetches <em>that one user's</em> small, bounded roles collection — a single additional query (or, with a proper join fetch, zero additional queries), not N of them. The N+1 pattern requires a <em>list</em> of parents in the same operation; a single-entity lookup with an eager association simply doesn't have the multiplicative structure that makes N+1 a genuine performance problem.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Trace what happens end to end if an attacker submits a registration request with a SQL-injection-style payload in the username field, given the codebase built across Sections 4–7.</div>
+      <div class="qa-a"><p>Nothing malicious happens, and it's worth explaining precisely why: the registration endpoint uses <code>@Valid @RequestBody</code> with Bean Validation (Section 5) to shape-check the input first, then the actual persistence goes through <strong>Spring Data JPA's derived query methods and <code>save()</code></strong> (Sections 4 & this section) — which under the hood use <strong>parameterized/prepared statements</strong> via JPA/Hibernate, never raw string concatenation into SQL. A malicious string in the username field is treated purely as <strong>data</strong> — bound as a query parameter value — not as executable SQL syntax, regardless of what characters it contains. This is a good opportunity to demonstrate that "we use an ORM with parameterized queries" is a substantive, correct answer to a classic SQL injection question, not just a buzzword.</p></div>
+    </div>
+  </div>
+
+  <div class="box info" style="margin-top:28px;">
+    <div class="box-title">ℹ Next Section</div>
+    <p>Paste the next section's video list whenever you're ready, and I'll build the next HTML notes doc in this same design system.</p>
+  </div>
+
+  <footer>GrowthScript Engineering — Spring Boot Interview Bible · Section 7 of N</footer>
+</section>
+
+</main>
+</div>
+
+<script>
+function toggleTheme(){
+  const body = document.body;
+  const cur = body.getAttribute('data-theme');
+  body.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+}
+function showTab(btn, id){
+  const block = btn.closest('.code-block');
+  block.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  block.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  block.querySelector('#'+id).classList.add('active');
+}
+document.querySelectorAll('.qa-q').forEach(q=>{
+  q.addEventListener('click', ()=> q.parentElement.classList.toggle('open'));
+});
+</script>
+</body>
+</html>

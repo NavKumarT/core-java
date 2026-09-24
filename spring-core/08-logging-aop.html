@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Section 8: Production Logging & Aspect-Oriented Programming | GrowthScript Engineering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117; --bg-elev:#151b23; --bg-card:#1a2230; --border:#2a3441;
+  --text:#e6edf3; --text-dim:#9aa7b5; --text-faint:#6e7c8c;
+  --accent:#3fb950; --accent-soft:rgba(63,185,80,.12);
+  --blue:#58a6ff; --blue-soft:rgba(88,166,255,.12);
+  --warn:#f0883e; --warn-soft:rgba(240,136,62,.12);
+  --danger:#f85149; --danger-soft:rgba(248,81,73,.12);
+  --code-bg:#0a0e14; --sidebar-w:290px; --radius:10px;
+  --shadow:0 4px 16px rgba(0,0,0,.35);
+}
+[data-theme="light"]{
+  --bg:#f6f8fa; --bg-elev:#ffffff; --bg-card:#ffffff; --border:#d8dee4;
+  --text:#1b2430; --text-dim:#4b5563; --text-faint:#8a96a3;
+  --accent:#1a7f37; --accent-soft:rgba(26,127,55,.08);
+  --blue:#0969da; --blue-soft:rgba(9,105,218,.08);
+  --warn:#9a6700; --warn-soft:rgba(154,103,0,.08);
+  --danger:#cf222e; --danger-soft:rgba(207,34,46,.08);
+  --code-bg:#0d1117; --shadow:0 2px 10px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); line-height:1.65; font-size:15.5px; transition:background .2s,color .2s;}
+code, pre, .mono{font-family:'Space Mono',monospace;}
+a{color:var(--blue); text-decoration:none;}
+a:hover{text-decoration:underline;}
+.wrapper{display:flex; min-height:100vh;}
+.sidebar{width:var(--sidebar-w); flex-shrink:0; background:var(--bg-elev); border-right:1px solid var(--border); position:sticky; top:0; height:100vh; overflow-y:auto; padding:22px 16px 40px;}
+.sidebar::-webkit-scrollbar{width:6px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border); border-radius:3px;}
+.brand{display:flex; align-items:center; gap:10px; margin-bottom:4px;}
+.brand-badge{width:34px; height:34px; border-radius:8px; background:var(--accent); display:flex; align-items:center; justify-content:center; color:#0d1117; font-weight:800; font-family:'Space Mono',monospace; font-size:15px; flex-shrink:0;}
+.brand-text{font-weight:800; font-size:14.5px; letter-spacing:.2px;}
+.brand-sub{font-size:11px; color:var(--text-faint); margin-top:1px;}
+.theme-toggle{margin:16px 0 20px; width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; font-size:12.5px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px;}
+.nav-group{margin-bottom:6px;}
+.nav-label{font-size:10.5px; text-transform:uppercase; letter-spacing:.9px; color:var(--text-faint); font-weight:700; margin:18px 4px 8px;}
+.nav-link{display:block; padding:7px 10px; border-radius:7px; font-size:13px; color:var(--text-dim); border-left:2px solid transparent; margin-bottom:1px;}
+.nav-link:hover{background:var(--accent-soft); color:var(--text); text-decoration:none;}
+.nav-link.sub{padding-left:22px; font-size:12.3px;}
+.main{flex:1; min-width:0; padding:44px 56px 120px; max-width:980px;}
+.header-block{margin-bottom:44px; padding-bottom:28px; border-bottom:1px solid var(--border);}
+.eyebrow{font-family:'Space Mono',monospace; font-size:11.5px; color:var(--accent); font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:10px;}
+.header-block h1{font-size:32px; font-weight:800; letter-spacing:-.5px; margin-bottom:12px;}
+.header-block p{color:var(--text-dim); font-size:15px; max-width:680px;}
+.meta-row{display:flex; gap:18px; margin-top:16px; flex-wrap:wrap;}
+.meta-pill{font-size:11.5px; padding:5px 11px; border-radius:20px; background:var(--bg-card); border:1px solid var(--border); color:var(--text-dim); font-family:'Space Mono',monospace;}
+section.topic{margin-bottom:56px; scroll-margin-top:24px;}
+.topic-head{display:flex; align-items:baseline; gap:12px; margin-bottom:6px;}
+.topic-num{font-family:'Space Mono',monospace; color:var(--accent); font-weight:700; font-size:14px;}
+h2{font-size:23px; font-weight:800; letter-spacing:-.3px;}
+.topic-video{font-size:12px; color:var(--text-faint); margin-bottom:20px; margin-top:2px; font-family:'Space Mono',monospace;}
+h3{font-size:17.5px; font-weight:700; margin:26px 0 12px; color:var(--text);}
+h4{font-weight:700; margin:18px 0 8px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.4px; font-size:12.5px;}
+p{margin-bottom:13px; color:var(--text); font-size:15px;}
+p.dim{color:var(--text-dim);}
+ul, ol{margin:0 0 15px 22px;}
+li{margin-bottom:7px; font-size:14.8px;}
+strong{color:var(--text); font-weight:700;}
+.hl{color:var(--accent); font-weight:700;}
+.box{border-radius:var(--radius); padding:16px 18px; margin:18px 0; border:1px solid var(--border); font-size:14.3px;}
+.box-title{font-weight:700; font-size:12.5px; text-transform:uppercase; letter-spacing:.5px; margin-bottom:7px; display:flex; align-items:center; gap:7px;}
+.tip{background:var(--accent-soft); border-color:rgba(63,185,80,.3);} .tip .box-title{color:var(--accent);}
+.warn{background:var(--warn-soft); border-color:rgba(240,136,62,.3);} .warn .box-title{color:var(--warn);}
+.info{background:var(--blue-soft); border-color:rgba(88,166,255,.3);} .info .box-title{color:var(--blue);}
+.danger{background:var(--danger-soft); border-color:rgba(248,81,73,.3);} .danger .box-title{color:var(--danger);}
+.code-block{background:var(--code-bg); border-radius:var(--radius); overflow:hidden; margin:16px 0; border:1px solid var(--border); box-shadow:var(--shadow);}
+.tabs{display:flex; background:rgba(255,255,255,.03); border-bottom:1px solid rgba(255,255,255,.08); overflow-x:auto;}
+.tab-btn{padding:9px 16px; font-family:'Space Mono',monospace; font-size:12px; color:#8a96a3; background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap;}
+.tab-btn.active{color:#e6edf3; border-bottom-color:var(--accent);}
+.tab-content{display:none; padding:16px 18px; overflow-x:auto;}
+.tab-content.active{display:block;}
+.tab-content pre{color:#c9d1d9; font-size:13px; line-height:1.65; white-space:pre;}
+.tab-content .kw{color:#ff7b72;} .tab-content .str{color:#a5d6ff;} .tab-content .cm{color:#8b949e; font-style:italic;}
+.tab-content .an{color:#d2a8ff;} .tab-content .cl{color:#79c0ff;} .tab-content .mt{color:#d2a8ff;}
+table{width:100%; border-collapse:collapse; margin:16px 0; font-size:13.8px;}
+th{text-align:left; padding:9px 12px; background:var(--bg-card); border-bottom:2px solid var(--border); font-size:11.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--text-dim);}
+td{padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top;}
+tr:hover td{background:var(--accent-soft);}
+.qa-wrap{margin-top:18px;}
+.qa-item{border:1px solid var(--border); border-radius:var(--radius); margin-bottom:10px; overflow:hidden; background:var(--bg-card);}
+.qa-q{padding:14px 46px 14px 18px; cursor:pointer; font-weight:600; font-size:14.3px; position:relative; display:flex; align-items:center; gap:10px;}
+.qa-q:hover{background:var(--accent-soft);}
+.qa-tag{font-family:'Space Mono',monospace; font-size:9.5px; padding:2px 7px; border-radius:4px; font-weight:700; flex-shrink:0; text-transform:uppercase; letter-spacing:.3px;}
+.tag-faang{background:rgba(248,81,73,.15); color:var(--danger);}
+.tag-core{background:rgba(88,166,255,.15); color:var(--blue);}
+.qa-q::after{content:'+'; position:absolute; right:18px; top:50%; transform:translateY(-50%); font-size:20px; color:var(--text-faint); font-weight:400;}
+.qa-item.open .qa-q::after{content:'−';}
+.qa-a{max-height:0; overflow:hidden; transition:max-height .25s ease; padding:0 18px;}
+.qa-item.open .qa-a{max-height:1400px; padding:2px 18px 18px;}
+.qa-a p{font-size:14px; color:var(--text-dim);}
+.qa-a ul{margin-top:6px;}
+.qa-a li{color:var(--text-dim); font-size:13.8px;}
+.divider{height:1px; background:var(--border); margin:44px 0;}
+.section-badge{display:inline-block; background:var(--accent); color:#0d1117; font-family:'Space Mono',monospace; font-weight:700; font-size:11px; padding:4px 10px; border-radius:6px; margin-bottom:14px;}
+.diagram{background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin:18px 0; font-family:'Space Mono',monospace; font-size:12.5px; color:var(--text-dim); overflow-x:auto; white-space:pre; line-height:1.5;}
+footer{margin-top:60px; padding-top:24px; border-top:1px solid var(--border); color:var(--text-faint); font-size:12px;}
+@media(max-width:900px){
+  .sidebar{position:fixed; left:-100%; z-index:50; transition:left .2s; box-shadow:var(--shadow);}
+  .sidebar.open{left:0;}
+  .main{padding:24px 20px 100px;}
+  .mobile-toggle{display:block !important;}
+}
+.mobile-toggle{display:none; position:fixed; top:16px; left:16px; z-index:60; background:var(--accent); color:#0d1117; border:none; border-radius:8px; width:40px; height:40px; font-size:18px; font-weight:700;}
+</style>
+</head>
+<body data-theme="dark">
+
+<button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="wrapper">
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-badge">G</div>
+    <div>
+      <div class="brand-text">GrowthScript Eng.</div>
+      <div class="brand-sub">Spring Boot Bible</div>
+    </div>
+  </div>
+  <button class="theme-toggle" onclick="toggleTheme()">🌗 Toggle Theme</button>
+
+  <div class="nav-group">
+    <div class="nav-label">Section 08 · Logging</div>
+    <a class="nav-link" href="#why-logging">142. Why Logging Matters</a>
+    <a class="nav-link" href="#logging-demo">143–144. Logging Demo Parts 1–2</a>
+    <a class="nav-link" href="#logback-appenders">145. Logback Appenders</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Aspect-Oriented Programming</div>
+    <a class="nav-link" href="#pain-before-aop">146. The Pain Before AOP</a>
+    <a class="nav-link" href="#aop-fundamentals">147. AOP Fundamentals</a>
+    <a class="nav-link" href="#around-advice">148. Mastering @Around Advice</a>
+    <a class="nav-link" href="#execution-pointcuts">149. execution() Pointcuts</a>
+    <a class="nav-link" href="#around-handson">150. @Around Hands-On</a>
+    <a class="nav-link" href="#before-advice">151. @Before Advice</a>
+    <a class="nav-link" href="#afterreturning">152. @AfterReturning Advice</a>
+    <a class="nav-link" href="#afterthrowing">153. @AfterThrowing Advice</a>
+    <a class="nav-link" href="#annotation-aop">154. Annotation-Based AOP</a>
+    <a class="nav-link" href="#interview-master">Master Interview Q&A Bank</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<div class="header-block">
+  <div class="eyebrow">Java Backend Engineer · Spring Boot Course</div>
+  <h1>Section 8 — Production Logging & Aspect-Oriented Programming</h1>
+  <p>Two cross-cutting concerns every production Spring Boot application needs: structured, appender-based logging with Logback, and AOP — the mechanism that has quietly powered <code>@Transactional</code>, <code>@PreAuthorize</code>, and Spring Security's whole filter/proxy model throughout this course. This section demystifies that "magic" completely: Aspect, Advice, Pointcut, JoinPoint, every advice type, and exactly how and when to reach for AOP versus a plain Spring Boot filter or interceptor.</p>
+  <div class="meta-row">
+    <span class="meta-pill">Videos 142–154 (13 videos)</span>
+    <span class="meta-pill">~2 hrs runtime</span>
+    <span class="meta-pill">FAANG + Fintech interview focus</span>
+    <span class="meta-pill">Builds on Sections 1, 5 & 6</span>
+  </div>
+</div>
+
+<!-- 142 -->
+<section class="topic" id="why-logging">
+  <div class="topic-head"><span class="topic-num">142</span><h2>Why Logging Matters — The Backbone of Debugging & Monitoring</h2></div>
+  <div class="topic-video">Video: Why Logging Matters - The Backbone of Debugging & Monitoring</div>
+
+  <p>In production, <code>System.out.println</code> is not an option — it's unstructured, uncontrollable (no way to filter by severity or turn it off), performance-costly at scale, and impossible to route to log aggregation tools. A real logging framework solves all of this.</p>
+
+  <table>
+    <tr><th>Log Level</th><th>When to Use</th></tr>
+    <tr><td><code>TRACE</code></td><td>Extremely fine-grained diagnostic detail — rarely enabled outside active local debugging</td></tr>
+    <tr><td><code>DEBUG</code></td><td>Detailed flow information useful during development/troubleshooting, too verbose for routine production use</td></tr>
+    <tr><td><code>INFO</code></td><td>Significant, expected application events (app started, a scheduled job completed) — the standard production baseline</td></tr>
+    <tr><td><code>WARN</code></td><td>Something unexpected or potentially problematic happened, but the application recovered/continued normally</td></tr>
+    <tr><td><code>ERROR</code></td><td>A genuine failure occurred — an operation could not complete as intended</td></tr>
+  </table>
+
+  <div class="diagram">SLF4J (Simple Logging Facade for Java)     ◄── the API your code actually calls
+        │                                      (Logger, LoggerFactory)
+        │  delegates to whichever implementation is on the classpath
+        ▼
+Logback  (Spring Boot's DEFAULT implementation, brought in transitively
+          by spring-boot-starter — you rarely add it explicitly)
+
+     [ other possible implementations: Log4j2, java.util.logging ]</div>
+
+  <div class="box tip">
+    <div class="box-title">💡 SLF4J vs Logback — A Frequently Confused Pair</div>
+    <p><strong>SLF4J</strong> is a <strong>facade/abstraction</strong> — an API your application code depends on, with no logging implementation of its own. <strong>Logback</strong> is a concrete <strong>implementation</strong> that does the actual work (formatting, writing to files/console, rotation). This mirrors the exact same abstraction-vs-implementation relationship as JPA-vs-Hibernate from Section 4 — application code should depend on the facade (SLF4J's <code>Logger</code>/<code>LoggerFactory</code>), never directly on Logback's classes, so the concrete implementation can be swapped (e.g., to Log4j2) without touching application code.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why is logging considered a "cross-cutting concern," and how does that framing set up the rest of this section?</div>
+      <div class="qa-a"><p>A cross-cutting concern is functionality needed <strong>across many unrelated parts of a codebase</strong> — every controller, service, and repository method potentially wants entry/exit logging, execution-time tracking, or error logging — yet this need has nothing to do with any single class's actual business responsibility. Scattering manual <code>log.info(...)</code> calls at the start and end of every method violates separation of concerns and creates enormous duplication. This is precisely the problem AOP (the rest of this section) is designed to solve generically — logging is simply the most intuitive, concrete example to introduce the concept before generalizing to security, transactions, and caching.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 143-144 -->
+<section class="topic" id="logging-demo">
+  <div class="topic-head"><span class="topic-num">143–144</span><h2>Demo of Logging</h2></div>
+  <div class="topic-video">Videos: Demo of Logging Parts 1 & 2</div>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'ld1')">Manual SLF4J usage</button>
+      <button class="tab-btn" onclick="showTab(this,'ld2')">@Slf4j (Lombok shortcut)</button>
+      <button class="tab-btn" onclick="showTab(this,'ld3')">Parameterized logging</button>
+    </div>
+    <div class="tab-content active" id="ld1"><pre><span class="kw">public class</span> <span class="cl">OrderService</span> {
+    <span class="kw">private static final</span> Logger log = LoggerFactory.<span class="mt">getLogger</span>(OrderService.<span class="kw">class</span>);
+
+    <span class="kw">public</span> Order <span class="mt">createOrder</span>(OrderRequest request) {
+        log.<span class="mt">info</span>(<span class="str">"Creating order for product {}"</span>, request.<span class="mt">getProductId</span>());
+        <span class="kw">try</span> {
+            <span class="cm">// ... business logic</span>
+        } <span class="kw">catch</span> (Exception ex) {
+            log.<span class="mt">error</span>(<span class="str">"Order creation failed"</span>, ex);  <span class="cm">// pass the exception object — logs the FULL stack trace</span>
+            <span class="kw">throw</span> ex;
+        }
+    }
+}</pre></div>
+    <div class="tab-content" id="ld2"><pre><span class="an">@Slf4j</span>  <span class="cm">// Lombok generates the exact same "private static final Logger log = ..." field</span>
+<span class="an">@Service</span>
+<span class="kw">public class</span> <span class="cl">OrderService</span> {
+    <span class="kw">public</span> Order <span class="mt">createOrder</span>(OrderRequest request) {
+        log.<span class="mt">info</span>(<span class="str">"Creating order for product {}"</span>, request.<span class="mt">getProductId</span>());
+        <span class="cm">// ...</span>
+    }
+}</pre></div>
+    <div class="tab-content" id="ld3"><pre><span class="cm">// WRONG — string concatenation ALWAYS executes, even if INFO is disabled</span>
+log.<span class="mt">debug</span>(<span class="str">"Processing user: "</span> + expensiveToString(user));
+
+<span class="cm">// CORRECT — placeholder-based; the expensive toString() is only ever</span>
+<span class="cm">// invoked if DEBUG level is actually enabled at runtime</span>
+log.<span class="mt">debug</span>(<span class="str">"Processing user: {}"</span>, user);</pre></div>
+  </div>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Why Parameterized Logging Matters — A Real Performance Detail</div>
+    <p>String concatenation in a log statement's arguments is evaluated <strong>eagerly, before the call even reaches the logger</strong> — meaning that cost is paid every single time the line executes, regardless of whether the log level is actually enabled to record it. SLF4J's <code>{}</code> placeholder syntax defers formatting until the framework has already confirmed the log level is enabled, entirely avoiding that wasted work for disabled levels — a small-sounding detail that matters considerably at production request volume, where DEBUG-level statements otherwise silently degrade performance even while producing zero visible output.</p>
+  </div>
+</section>
+
+<!-- 145 -->
+<section class="topic" id="logback-appenders">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">145</span><h2>Designing Production-Ready Logging with Logback Appenders</h2></div>
+  <div class="topic-video">Video: Designing Production-Ready Logging with Logback Appenders</div>
+
+  <p>An <strong>appender</strong> is Logback's abstraction for <em>where</em> a log event actually gets written — console, a file, a remote log-aggregation service, or several simultaneously.</p>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'la1')">logback-spring.xml</button></div>
+    <div class="tab-content active" id="la1"><pre><span class="kw">&lt;configuration&gt;</span>
+
+    <span class="cm">&lt;!-- console appender — human-readable, for local dev --&gt;</span>
+    <span class="kw">&lt;appender</span> name=<span class="str">"CONSOLE"</span> class=<span class="str">"ch.qos.logback.core.ConsoleAppender"</span><span class="kw">&gt;</span>
+        <span class="kw">&lt;encoder&gt;</span>
+            <span class="kw">&lt;pattern&gt;</span>%d{HH:mm:ss} %-5level [%thread] %logger{36} - %msg%n<span class="kw">&lt;/pattern&gt;</span>
+        <span class="kw">&lt;/encoder&gt;</span>
+    <span class="kw">&lt;/appender&gt;</span>
+
+    <span class="cm">&lt;!-- rolling file appender — writes to disk, rotates daily, keeps 30 days --&gt;</span>
+    <span class="kw">&lt;appender</span> name=<span class="str">"FILE"</span> class=<span class="str">"ch.qos.logback.core.rolling.RollingFileAppender"</span><span class="kw">&gt;</span>
+        <span class="kw">&lt;file&gt;</span>logs/app.log<span class="kw">&lt;/file&gt;</span>
+        <span class="kw">&lt;rollingPolicy</span> class=<span class="str">"ch.qos.logback.core.rolling.TimeBasedRollingPolicy"</span><span class="kw">&gt;</span>
+            <span class="kw">&lt;fileNamePattern&gt;</span>logs/app-%d{yyyy-MM-dd}.log<span class="kw">&lt;/fileNamePattern&gt;</span>
+            <span class="kw">&lt;maxHistory&gt;</span>30<span class="kw">&lt;/maxHistory&gt;</span>          <span class="cm">&lt;!-- auto-deletes files older than 30 days --&gt;</span>
+        <span class="kw">&lt;/rollingPolicy&gt;</span>
+        <span class="kw">&lt;encoder&gt;</span>
+            <span class="kw">&lt;pattern&gt;</span>%d{ISO8601} %-5level [%thread] %logger{36} - %msg%n<span class="kw">&lt;/pattern&gt;</span>
+        <span class="kw">&lt;/encoder&gt;</span>
+    <span class="kw">&lt;/appender&gt;</span>
+
+    <span class="cm">&lt;!-- environment-specific profiles — different appenders per environment --&gt;</span>
+    <span class="kw">&lt;springProfile</span> name=<span class="str">"local"</span><span class="kw">&gt;</span>
+        <span class="kw">&lt;root</span> level=<span class="str">"DEBUG"</span><span class="kw">&gt;</span> <span class="kw">&lt;appender-ref</span> ref=<span class="str">"CONSOLE"</span> /<span class="kw">&gt;</span> <span class="kw">&lt;/root&gt;</span>
+    <span class="kw">&lt;/springProfile&gt;</span>
+
+    <span class="kw">&lt;springProfile</span> name=<span class="str">"prod"</span><span class="kw">&gt;</span>
+        <span class="kw">&lt;root</span> level=<span class="str">"INFO"</span><span class="kw">&gt;</span>
+            <span class="kw">&lt;appender-ref</span> ref=<span class="str">"FILE"</span> /<span class="kw">&gt;</span>
+        <span class="kw">&lt;/root&gt;</span>
+    <span class="kw">&lt;/springProfile&gt;</span>
+
+<span class="kw">&lt;/configuration&gt;</span></pre></div>
+  </div>
+
+  <table>
+    <tr><th>Appender Type</th><th>Purpose</th></tr>
+    <tr><td><code>ConsoleAppender</code></td><td>Writes to stdout — ideal for local dev and containerized deployments where a log collector (Docker/Kubernetes/ELK) scrapes stdout directly</td></tr>
+    <tr><td><code>RollingFileAppender</code></td><td>Writes to disk with automatic rotation (by size, date, or both) and retention limits — prevents log files from growing unbounded and filling disk</td></tr>
+    <tr><td>Async wrapper (<code>AsyncAppender</code>)</td><td>Wraps another appender to make logging non-blocking — the calling thread hands the log event to a queue and continues immediately, rather than blocking on (comparatively slow) disk/network I/O</td></tr>
+    <tr><td>Custom/remote appenders</td><td>Ship logs directly to log aggregation platforms (Logstash, Splunk, CloudWatch) — common in real production microservices setups</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 Why Structured (JSON) Logging Matters at Scale</div>
+    <p>The human-readable pattern shown above is fine for local console viewing, but production systems processing thousands of log lines per second across dozens of service instances need logs in a <strong>structured format (JSON)</strong> so log aggregation tools (ELK stack, Datadog, Splunk) can parse, index, and query fields programmatically — e.g., "show me every ERROR log with <code>userId=42</code> in the last hour" — rather than relying on fragile regex parsing of free-text log lines. A production Logback config typically swaps the plain-text encoder shown above for a JSON encoder (e.g., via the <code>logstash-logback-encoder</code> library) specifically for this reason.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why would a high-throughput production service wrap its file appender in an AsyncAppender?</div>
+      <div class="qa-a"><p>Without it, every <code>log.info(...)</code> call <strong>blocks the calling thread</strong> until the write to disk (or network, for a remote appender) actually completes — under high request volume, this I/O latency directly adds to request-handling latency and can become a genuine throughput bottleneck, especially if the underlying storage is momentarily slow. <code>AsyncAppender</code> decouples log writing from the request-handling thread: the calling thread simply enqueues the log event (a fast, in-memory operation) and immediately continues, while a separate background thread drains the queue and performs the actual I/O. The trade-off: a small risk of losing the most recent queued log entries if the JVM crashes abruptly before the queue is flushed — an acceptable trade for most production systems given the throughput benefit.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What's the danger of leaving the log level at DEBUG in a production deployment?</div>
+      <div class="qa-a"><p>Beyond the sheer log volume overwhelming storage and making genuinely important <code>WARN</code>/<code>ERROR</code> events harder to find in the noise, DEBUG-level logs often include far more granular detail than INFO — potentially including sensitive data (request payloads, internal variable states) that shouldn't be persisted in production log files at all, a real data-exposure/compliance risk. It also meaningfully impacts performance, since even with parameterized logging avoiding wasted string-formatting work, the sheer volume of log events still costs I/O and appender processing time. Production environments should default to <code>INFO</code>, with <code>DEBUG</code> enabled surgically and temporarily (often via a specific logger name, not the whole application) only while actively investigating a specific issue.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 146 -->
+<section class="topic" id="pain-before-aop">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">146</span><h2>The Pain Before AOP — Repeated Code & Cross-Cutting Concerns</h2></div>
+  <div class="topic-video">Video: The Pain Before AOP - Repeated Code & Cross-Cutting Concerns</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'pb1')">The problem — manually duplicated concerns</button></div>
+    <div class="tab-content active" id="pb1"><pre><span class="an">@Service</span>
+<span class="kw">public class</span> <span class="cl">OrderService</span> {
+    <span class="kw">public</span> Order <span class="mt">createOrder</span>(OrderRequest request) {
+        <span class="kw">long</span> start = System.<span class="mt">currentTimeMillis</span>();          <span class="cm">// timing — cross-cutting concern #1</span>
+        log.<span class="mt">info</span>(<span class="str">"Entering createOrder"</span>);              <span class="cm">// logging   — cross-cutting concern #2</span>
+        <span class="kw">try</span> {
+            <span class="cm">// the ACTUAL business logic — a small fraction of this method's code</span>
+            Order order = <span class="kw">new</span> Order(request);
+            <span class="kw">return</span> orderRepository.<span class="mt">save</span>(order);
+        } <span class="kw">catch</span> (Exception ex) {
+            log.<span class="mt">error</span>(<span class="str">"createOrder failed"</span>, ex);       <span class="cm">// error logging — cross-cutting concern #3</span>
+            <span class="kw">throw</span> ex;
+        } <span class="kw">finally</span> {
+            log.<span class="mt">info</span>(<span class="str">"Exiting createOrder, took {}ms"</span>,
+                    System.<span class="mt">currentTimeMillis</span>() - start);
+        }
+    }
+    <span class="cm">// ... now imagine repeating this exact boilerplate in EVERY service method,</span>
+    <span class="cm">// across EVERY service class, in the entire application</span>
+}</pre></div>
+  </div>
+
+  <p>This duplication is more than an aesthetic annoyance — it's a genuine software-engineering problem: <strong>tangled concerns</strong> (business logic entangled with logging/timing/error-handling code, making the actual business logic harder to read at a glance) and <strong>scattered concerns</strong> (the same logging pattern copy-pasted across hundreds of methods, meaning a single change — like adjusting the log format — requires touching every single one of them).</p>
+
+  <div class="box info">
+    <div class="box-title">ℹ Connecting to Concepts Already Covered</div>
+    <p>This is exactly the same underlying problem Spring Security's filter chain (Section 6) and <code>@Transactional</code> (Section 4) solve for their own specific concerns — authentication/authorization logic and transaction-boundary logic, respectively, are cross-cutting in the identical sense that logging is here. AOP is the <strong>general-purpose mechanism</strong> underlying all of those — this section finally explains the machinery that made those earlier "magic" annotations work.</p>
+  </div>
+</section>
+
+<!-- 147 -->
+<section class="topic" id="aop-fundamentals">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">147</span><h2>AOP Fundamentals — Aspect, Advice & Pointcut Explained Simply</h2></div>
+  <div class="topic-video">Video: AOP Fundamentals - Aspect, Advice & Pointcut Explained Simply</div>
+
+  <table>
+    <tr><th>Term</th><th>Definition</th></tr>
+    <tr><td><strong>Aspect</strong></td><td>A module encapsulating a cross-cutting concern — a class annotated <code>@Aspect</code>, bundling related advice and pointcuts together (e.g., a single <code>LoggingAspect</code> class handling all logging concerns)</td></tr>
+    <tr><td><strong>Join Point</strong></td><td>A specific point during program execution where an aspect <em>could</em> be applied — in Spring AOP, this is always a <strong>method execution</strong> (Spring AOP doesn't support field access or constructor join points, unlike full AspectJ)</td></tr>
+    <tr><td><strong>Pointcut</strong></td><td>An <strong>expression</strong> that selects/matches a set of join points — "which methods does this advice apply to?" (e.g., "every public method in any class under the <code>service</code> package")</td></tr>
+    <tr><td><strong>Advice</strong></td><td>The <strong>actual code that runs</strong> at a matched join point — the "what to do," paired with a pointcut's "where to do it"</td></tr>
+    <tr><td><strong>Weaving</strong></td><td>The process of actually applying aspects to target objects — creating a proxy (or, in other AOP implementations, modifying bytecode) that intercepts matched method calls and runs the advice around them</td></tr>
+  </table>
+
+  <div class="diagram">                    @Aspect
+                 ┌────────────────┐
+                 │ LoggingAspect    │
+                 │                  │
+                 │  Pointcut:        │  "which methods?"
+                 │  execution(* com.growthscript.service.*.*(..))
+                 │                  │
+                 │  Advice:          │  "what code runs, and when
+                 │  @Around/@Before/  │   relative to the matched method?"
+                 │  @AfterReturning/   │
+                 │  @AfterThrowing     │
+                 └────────────────┘
+                          │
+                     WEAVING (proxy creation, at startup)
+                          │
+                          ▼
+        ┌─────────────────────────────────────┐
+        │  Proxy wraps OrderService              │
+        │  intercepts createOrder() calls,        │
+        │  runs advice code around the REAL       │
+        │  createOrder() method (the Join Point)  │
+        └─────────────────────────────────────┘</div>
+
+  <div class="box tip">
+    <div class="box-title">💡 How Spring AOP Actually Implements Weaving — Proxies, Not Bytecode Magic</div>
+    <p>Spring AOP is deliberately a <strong>simpler, proxy-based subset</strong> of full AspectJ (a more powerful but more complex compile-time/load-time bytecode-weaving AOP framework). Spring creates a runtime <strong>proxy</strong> around any bean matched by an aspect's pointcut — exactly the same underlying mechanism as the CGLIB proxying discussed for <code>@Configuration</code> classes in Section 1, and the same proxy-based approach <code>@Transactional</code> uses. This is precisely why Spring AOP has the well-known <strong>self-invocation limitation</strong>: calling an advised method from <em>within the same class</em> bypasses the proxy entirely (the call goes directly through <code>this</code>, never touching the proxy wrapper), so the advice silently doesn't run — the exact same gotcha already flagged for <code>@Transactional</code> in Section 4's interview Q&A.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>What's the difference between a Pointcut and a Join Point, precisely — candidates often use these interchangeably, incorrectly.</div>
+      <div class="qa-a"><p>A <strong>Join Point</strong> is a concrete, individual point in execution — "this specific call to <code>OrderService.createOrder()</code> happening right now." A <strong>Pointcut</strong> is an <strong>expression/predicate</strong> that defines a <em>set</em> of join points matching some criteria — "every method in any class under <code>com.growthscript.service</code>" is a pointcut; each individual method call it matches at runtime is a distinct join point. The relationship is set-membership: a pointcut expression is evaluated against every candidate join point to decide whether advice should apply to it.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Why does Spring AOP only support method-execution join points, while full AspectJ supports far more (field access, constructor calls, static initializers)?</div>
+      <div class="qa-a"><p>Spring AOP is deliberately scoped to solve the <strong>enterprise cross-cutting concerns Spring applications actually need</strong> — logging, transactions, security, caching — all of which are naturally expressed as "run some code around/before/after a method call." It achieves this with a comparatively simple, lightweight <strong>proxy-based</strong> mechanism requiring no special compiler or build-time weaving step, which keeps the development experience simple (a plain <code>@Aspect</code> class, no extra tooling). Full AspectJ's broader join-point model (field access, constructor calls) requires actual <strong>bytecode weaving</strong> (either at compile time or class-load time) — genuinely more powerful, but with meaningfully more build/tooling complexity that Spring deliberately avoids for the common case, favoring simplicity over completeness.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 148 -->
+<section class="topic" id="around-advice">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">148</span><h2>Mastering @Around Advice — Full Control Over Method Execution</h2></div>
+  <div class="topic-video">Video: Mastering @Around Advice - Full Control Over Method Execution</div>
+
+  <p><code>@Around</code> is the most powerful advice type — it <strong>wraps</strong> the target method entirely, giving the aspect full control over whether the method executes at all, what arguments it receives, and what it ultimately returns (or throws) to the original caller.</p>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'ar1')">@Around — full control example</button></div>
+    <div class="tab-content active" id="ar1"><pre><span class="an">@Aspect</span>
+<span class="an">@Component</span>
+<span class="an">@Slf4j</span>
+<span class="kw">public class</span> <span class="cl">LoggingAspect</span> {
+
+    <span class="an">@Around</span>(<span class="str">"execution(* com.growthscript.service.*.*(..))"</span>)
+    <span class="kw">public</span> Object <span class="mt">logExecutionTime</span>(ProceedingJoinPoint joinPoint) <span class="kw">throws</span> Throwable {
+        <span class="kw">long</span> start = System.<span class="mt">currentTimeMillis</span>();
+        String methodName = joinPoint.<span class="mt">getSignature</span>().<span class="mt">getName</span>();
+
+        log.<span class="mt">info</span>(<span class="str">"Entering {} with args {}"</span>, methodName, joinPoint.<span class="mt">getArgs</span>());
+
+        <span class="kw">try</span> {
+            <span class="cm">// proceed() actually INVOKES the real, wrapped method — the aspect</span>
+            <span class="cm">// could choose NOT to call this at all (e.g. for a caching aspect</span>
+            <span class="cm">// that returns a cached value instead of running the method)</span>
+            Object result = joinPoint.<span class="mt">proceed</span>();
+
+            <span class="kw">long</span> duration = System.<span class="mt">currentTimeMillis</span>() - start;
+            log.<span class="mt">info</span>(<span class="str">"Exiting {} - took {}ms - result: {}"</span>, methodName, duration, result);
+            <span class="kw">return</span> result;   <span class="cm">// the aspect COULD also modify/replace this before returning it</span>
+
+        } <span class="kw">catch</span> (Throwable ex) {
+            log.<span class="mt">error</span>(<span class="str">"Exception in {}: {}"</span>, methodName, ex.<span class="mt">getMessage</span>());
+            <span class="kw">throw</span> ex;   <span class="cm">// re-throw to preserve normal exception propagation</span>
+        }
+    }
+}</pre></div>
+  </div>
+
+  <table>
+    <tr><th>Capability</th><th>Explanation</th></tr>
+    <tr><td>Skip the method entirely</td><td>Simply don't call <code>joinPoint.proceed()</code> — useful for a caching aspect returning a cached value without ever invoking the real (expensive) method</td></tr>
+    <tr><td>Modify arguments</td><td><code>joinPoint.proceed(newArgs)</code> — pass a different argument array than what was originally supplied</td></tr>
+    <tr><td>Modify the return value</td><td>Transform <code>result</code> after <code>proceed()</code> returns, before handing it back to the original caller</td></tr>
+    <tr><td>Suppress or transform exceptions</td><td>Catch what <code>proceed()</code> throws and decide whether to re-throw as-is, wrap in a different exception, or swallow entirely</td></tr>
+    <tr><td>Measure execution time</td><td>Wrap the <code>proceed()</code> call with timestamps before/after — the canonical example, shown above</td></tr>
+  </table>
+
+  <div class="box danger">
+    <div class="box-title">⚠ Forgetting to Call proceed() Is a Common, Serious Bug</div>
+    <p>If an <code>@Around</code> advice method never calls <code>joinPoint.proceed()</code>, the <strong>real target method simply never executes at all</strong> — no exception, no obvious error, just silently skipped business logic. This is a uniquely dangerous AOP bug precisely because it fails silently; a method that appears to be called (and even appears to "complete," since the advice returns something) never actually ran its intended logic. Always ensure every code path in an <code>@Around</code> advice either calls <code>proceed()</code> or has a clearly deliberate, well-documented reason not to (like the caching short-circuit example above).</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why does @Around advice need to declare "throws Throwable" specifically, rather than "throws Exception"?</div>
+      <div class="qa-a"><p><code>ProceedingJoinPoint.proceed()</code>'s signature declares <code>throws Throwable</code> because the wrapped target method could, in principle, throw absolutely anything the JVM allows — including an <code>Error</code> subtype (e.g., <code>OutOfMemoryError</code>, <code>StackOverflowError</code>), which is not an <code>Exception</code> at all in Java's throwable hierarchy. Since the advice must be able to propagate <em>whatever</em> the wrapped method actually threw without narrowing or losing type information, it has to declare the broadest possible checked-exception type, <code>Throwable</code>, matching what <code>proceed()</code> itself can throw.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Give a realistic example (beyond logging) where an @Around aspect's ability to skip proceed() entirely is genuinely useful.</div>
+      <div class="qa-a"><p>A custom caching aspect: before calling <code>proceed()</code>, check whether a cache (e.g., backed by Redis or an in-memory <code>Map</code>) already holds a result for the given method arguments; if a cache hit exists, return the cached value directly and <strong>never call <code>proceed()</code> at all</strong>, entirely skipping the (potentially expensive) real method execution. This is conceptually exactly how Spring's own built-in <code>@Cacheable</code> annotation works under the hood — it's implemented as an AOP advice that conditionally short-circuits method execution based on cache state, a direct real-world application of the "skip the method entirely" capability.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 149 -->
+<section class="topic" id="execution-pointcuts">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">149</span><h2>Targeting Methods Precisely with execution() Pointcuts</h2></div>
+  <div class="topic-video">Video: Targeting Methods Precisely with execution() Pointcuts</div>
+
+  <div class="diagram">execution( public User com.growthscript.service.UserService.findById(Long) )
+            │      │          │                                  │            │
+            │      │          │                                  │            └─ parameter types
+            │      │          │                                  └─ method name
+            │      │          └─ fully-qualified class name
+            │      └─ return type
+            └─ access modifier (often omitted — matches any)
+
+WILDCARDS:
+  *                matches ANY single item (one return type, one method name, etc.)
+  ..                in a package path: matches that package AND all sub-packages
+  ..                in a parameter list: matches ANY number of parameters, any types</div>
+
+  <table>
+    <tr><th>Pointcut Expression</th><th>Matches</th></tr>
+    <tr><td><code>execution(* com.growthscript.service.OrderService.createOrder(..))</code></td><td>Exactly one method, any parameters — the most narrowly targeted form</td></tr>
+    <tr><td><code>execution(* com.growthscript.service.*.*(..))</code></td><td>Every method, on every class, directly inside the <code>service</code> package (not sub-packages)</td></tr>
+    <tr><td><code>execution(* com.growthscript.service..*.*(..))</code></td><td>Every method, on every class, in <code>service</code> AND all its sub-packages (note the double dot)</td></tr>
+    <tr><td><code>execution(public * com.growthscript..*Service.*(..))</code></td><td>Every public method on any class whose name ends in "Service," anywhere under the base package</td></tr>
+    <tr><td><code>within(com.growthscript.service..*)</code></td><td>An alternative to <code>execution</code> — matches all join points within types in the given package, often more efficient for broad "everything in this package" matching</td></tr>
+    <tr><td><code>@annotation(com.growthscript.annotation.LogExecutionTime)</code></td><td>Matches any method annotated with a specific <strong>custom annotation</strong> — the mechanism behind the next section's Annotation-Based AOP topic</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 Combining Pointcuts</div>
+    <p>Pointcut expressions can be composed with <code>&amp;&amp;</code> (AND), <code>||</code> (OR), and <code>!</code> (NOT) — e.g., <code>execution(* com.growthscript.service..*(..)) &amp;&amp; !execution(* com.growthscript.service.InternalUtils.*(..))</code> to target the whole service layer while explicitly excluding one specific utility class. This composability is what lets a single, well-designed pointcut precisely target exactly the intended set of methods without needing a separate aspect declaration for every narrow exception.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why can a broad, catch-all pointcut like "execution(* com.growthscript..*.*(..))" be dangerous or counterproductive in a real application?</div>
+      <div class="qa-a"><p>Such a pointcut matches <em>every single method</em> across the entire application's base package — including getters, setters, and trivial utility methods that gain no real value from logging/timing advice, while incurring real proxy-invocation overhead on every single call, adding up to meaningful unnecessary performance cost at scale. It also produces enormous, low-signal log noise that makes genuinely important log entries harder to find. Well-designed pointcuts should be scoped as narrowly as the actual cross-cutting need requires — typically to a specific layer (e.g., just the service layer, or just methods annotated with a specific custom marker annotation, as covered in the Annotation-Based AOP topic) rather than "everything."</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 150 -->
+<section class="topic" id="around-handson">
+  <div class="topic-head"><span class="topic-num">150</span><h2>Hands-On @Around Advice — Logging & Performance Use Case</h2></div>
+  <div class="topic-video">Video: Hands-On @Around Advice - Logging & Performance Use Case</div>
+
+  <p>A practical build-out applying the previous two topics together — a real, working <code>LoggingAspect</code> wired against the actual service layer built across Sections 4–7 (e.g., <code>ContactService</code>, <code>OrderService</code>), verified by observing the log output for real method calls through Postman, confirming entry/exit logs and execution-time measurements appear exactly as the theory predicted.</p>
+
+  <div class="box info">
+    <div class="box-title">ℹ Why Hands-On Verification Matters Here Specifically</div>
+    <p>AOP is one of the areas where the gap between "can recite the theory" and "actually understands it" shows up fastest in an interview — because the mechanism is genuinely invisible in the source code of the classes being advised (no annotation appears on <code>OrderService</code> itself; the logging just "happens"). Having actually watched log output appear around methods you didn't modify is what makes the proxy/weaving explanation from the Fundamentals topic concrete rather than abstract.</p>
+  </div>
+</section>
+
+<!-- 151 -->
+<section class="topic" id="before-advice">
+  <div class="topic-head"><span class="topic-num">151</span><h2>@Before Advice Demo — Executing Logic Before Business Methods</h2></div>
+  <div class="topic-video">Video: @Before Advice Demo - Executing Logic Before Business Methods</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'bf1')">@Before advice</button></div>
+    <div class="tab-content active" id="bf1"><pre><span class="an">@Aspect</span>
+<span class="an">@Component</span>
+<span class="an">@Slf4j</span>
+<span class="kw">public class</span> <span class="cl">AuditAspect</span> {
+
+    <span class="an">@Before</span>(<span class="str">"execution(* com.growthscript.service.*.*(..))"</span>)
+    <span class="kw">public void</span> <span class="mt">logMethodEntry</span>(JoinPoint joinPoint) {
+        <span class="cm">// note: plain JoinPoint here, NOT ProceedingJoinPoint —</span>
+        <span class="cm">// @Before has no ability to control whether the method proceeds</span>
+        String methodName = joinPoint.<span class="mt">getSignature</span>().<span class="mt">getName</span>();
+        log.<span class="mt">info</span>(<span class="str">"[AUDIT] About to invoke: {} with args: {}"</span>,
+                methodName, Arrays.<span class="mt">toString</span>(joinPoint.<span class="mt">getArgs</span>()));
+    }
+}</pre></div>
+  </div>
+
+  <table>
+    <tr><th></th><th><code>@Before</code></th><th><code>@Around</code></th></tr>
+    <tr><td><strong>Runs</strong></td><td>Always before the method — cannot prevent it from executing</td><td>Wraps the entire execution — full control over whether/how it executes</td></tr>
+    <tr><td><strong>Join point type</strong></td><td>Plain <code>JoinPoint</code> — read-only access to method signature/args</td><td><code>ProceedingJoinPoint</code> — adds the crucial <code>proceed()</code> method</td></tr>
+    <tr><td><strong>Can it stop execution?</strong></td><td>Only by throwing an exception from within the advice itself</td><td>Yes, simply by not calling <code>proceed()</code></td></tr>
+    <tr><td><strong>Typical use</strong></td><td>Simple, guaranteed-to-run entry logging, input validation/auditing that doesn't need to alter the result</td><td>Timing, caching, retry logic, transaction-boundary-style concerns — anything needing control over the "around"</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 Prefer the Narrowest Advice Type That Solves the Problem</div>
+    <p>A common code-quality signal: reaching for <code>@Around</code> for something that only needs <code>@Before</code>'s simpler semantics is unnecessary complexity — <code>@Around</code>'s power (skipping/modifying execution, handling <code>Throwable</code>, manually calling <code>proceed()</code>) comes with more ways to introduce the "forgot to call proceed()" bug class discussed earlier. If an aspect genuinely only needs to run code before a method with no interest in controlling its execution, <code>@Before</code> is simpler, safer, and communicates intent more precisely to future readers.</p>
+  </div>
+</section>
+
+<!-- 152 -->
+<section class="topic" id="afterreturning">
+  <div class="topic-head"><span class="topic-num">152</span><h2>@AfterReturning Advice Demo — Working with Method Results</h2></div>
+  <div class="topic-video">Video: @AfterReturning Advice Demo - Working with Method Results</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'afr1')">@AfterReturning advice</button></div>
+    <div class="tab-content active" id="afr1"><pre><span class="an">@Aspect</span>
+<span class="an">@Component</span>
+<span class="an">@Slf4j</span>
+<span class="kw">public class</span> <span class="cl">ResultLoggingAspect</span> {
+
+    <span class="an">@AfterReturning</span>(
+        pointcut = <span class="str">"execution(* com.growthscript.service.OrderService.createOrder(..))"</span>,
+        returning = <span class="str">"result"</span>   <span class="cm">// binds the ACTUAL return value into the advice parameter below</span>
+    )
+    <span class="kw">public void</span> <span class="mt">logSuccessfulOrder</span>(JoinPoint joinPoint, Order result) {
+        <span class="cm">// only invoked if the method returned NORMALLY — an exception</span>
+        <span class="cm">// SKIPS this advice entirely and goes to @AfterThrowing instead</span>
+        log.<span class="mt">info</span>(<span class="str">"Order created successfully: id={}, total={}"</span>,
+                result.<span class="mt">getId</span>(), result.<span class="mt">getTotal</span>());
+    }
+}</pre></div>
+  </div>
+
+  <div class="box warn">
+    <div class="box-title">⚠ @AfterReturning Cannot Modify the Return Value</div>
+    <p>Despite having read access to the method's result via the <code>returning</code> attribute, <code>@AfterReturning</code> advice <strong>cannot replace or transform</strong> what's ultimately handed back to the original caller — it can observe the result (for logging, auditing, triggering a side effect like a notification) but the value returned to the caller is fixed, exactly as the target method produced it. If an aspect genuinely needs to transform the return value, only <code>@Around</code> provides that capability, since it directly controls what its own advice method returns.</p>
+  </div>
+</section>
+
+<!-- 153 -->
+<section class="topic" id="afterthrowing">
+  <div class="topic-head"><span class="topic-num">153</span><h2>Centralized Exception Logging with @AfterThrowing Advice</h2></div>
+  <div class="topic-video">Video: Centralized Exception Logging with @AfterThrowing Advice</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'aft1')">@AfterThrowing advice</button></div>
+    <div class="tab-content active" id="aft1"><pre><span class="an">@Aspect</span>
+<span class="an">@Component</span>
+<span class="an">@Slf4j</span>
+<span class="kw">public class</span> <span class="cl">ExceptionLoggingAspect</span> {
+
+    <span class="an">@AfterThrowing</span>(
+        pointcut = <span class="str">"execution(* com.growthscript.service..*.*(..))"</span>,
+        throwing = <span class="str">"ex"</span>   <span class="cm">// binds the thrown exception into the advice parameter below</span>
+    )
+    <span class="kw">public void</span> <span class="mt">logException</span>(JoinPoint joinPoint, Exception ex) {
+        log.<span class="mt">error</span>(<span class="str">"Exception in {}.{}: {}"</span>,
+                joinPoint.<span class="mt">getSignature</span>().<span class="mt">getDeclaringTypeName</span>(),
+                joinPoint.<span class="mt">getSignature</span>().<span class="mt">getName</span>(),
+                ex.<span class="mt">getMessage</span>(), ex);
+        <span class="cm">// CANNOT suppress the exception — it continues propagating up</span>
+        <span class="cm">// to the caller (and eventually Section 5's @RestControllerAdvice)</span>
+        <span class="cm">// exactly as if this advice weren't here at all</span>
+    }
+}</pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 @AfterThrowing vs @RestControllerAdvice — Complementary, Not Competing</div>
+    <p>These solve genuinely different problems and work together well: <code>@AfterThrowing</code> (this topic) provides <strong>centralized, cross-cutting exception logging/auditing</strong> at the exact point an exception originates, wherever in the service layer that may be — useful for consistent diagnostic logging regardless of which specific exception type occurred. <code>@RestControllerAdvice</code> (Section 5) handles <strong>translating</strong> that exception into an appropriate HTTP response once it reaches the web layer. A well-designed application often uses both: the AOP aspect logs every service-layer exception uniformly for observability, while the controller advice separately decides what HTTP status/body the client ultimately sees — since <code>@AfterThrowing</code> cannot suppress or alter the exception, it doesn't interfere with the exception still reaching the controller advice normally.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Can @AfterThrowing be used to swallow an exception and prevent it from propagating further, the way a try-catch block in application code could?</div>
+      <div class="qa-a"><p>No — this is an important, frequently-tested distinction. <code>@AfterThrowing</code> is a pure <strong>observer</strong>: it runs as a side effect when an exception occurs, but has no mechanism to intercept, replace, or suppress that exception — it always continues propagating to the caller exactly as it would without the advice present. Only <code>@Around</code> advice, with its explicit <code>try/catch</code> around the <code>proceed()</code> call, has the actual power to catch an exception and decide not to re-throw it (or to throw a different one instead). This is a deliberate design choice: <code>@AfterThrowing</code>'s narrower contract makes its behavior more predictable and impossible to accidentally use for silently swallowing errors, which would be a dangerous, hard-to-debug side effect for a "logging" aspect to have.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 154 -->
+<section class="topic" id="annotation-aop">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">154</span><h2>Annotation-Based AOP — Cleaner & More Readable Aspects</h2></div>
+  <div class="topic-video">Video: Annotation-Based AOP - Cleaner & More Readable Aspects</div>
+
+  <p>Rather than targeting methods via broad package-based <code>execution()</code> expressions (which apply an aspect to a whole layer, whether or not each individual method actually needs it), a <strong>custom annotation</strong> lets you mark <em>exactly</em> which methods should receive the aspect's behavior — explicit, self-documenting, opt-in.</p>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'ann1')">Custom annotation definition</button>
+      <button class="tab-btn" onclick="showTab(this,'ann2')">Aspect targeting the annotation</button>
+      <button class="tab-btn" onclick="showTab(this,'ann3')">Usage — explicit, self-documenting opt-in</button>
+    </div>
+    <div class="tab-content active" id="ann1"><pre><span class="an">@Target</span>(ElementType.METHOD)
+<span class="an">@Retention</span>(RetentionPolicy.RUNTIME)   <span class="cm">// MUST be RUNTIME — the aspect reads it via reflection at call time</span>
+<span class="kw">public @interface</span> <span class="cl">LogExecutionTime</span> {
+}</pre></div>
+    <div class="tab-content" id="ann2"><pre><span class="an">@Aspect</span>
+<span class="an">@Component</span>
+<span class="an">@Slf4j</span>
+<span class="kw">public class</span> <span class="cl">ExecutionTimeAspect</span> {
+
+    <span class="cm">// the pointcut expression targets the ANNOTATION, not a package/class pattern —</span>
+    <span class="cm">// matches ANY method, anywhere in the codebase, carrying @LogExecutionTime</span>
+    <span class="an">@Around</span>(<span class="str">"@annotation(com.growthscript.annotation.LogExecutionTime)"</span>)
+    <span class="kw">public</span> Object <span class="mt">logExecutionTime</span>(ProceedingJoinPoint joinPoint) <span class="kw">throws</span> Throwable {
+        <span class="kw">long</span> start = System.<span class="mt">currentTimeMillis</span>();
+        Object result = joinPoint.<span class="mt">proceed</span>();
+        log.<span class="mt">info</span>(<span class="str">"{} took {}ms"</span>, joinPoint.<span class="mt">getSignature</span>().<span class="mt">getName</span>(),
+                System.<span class="mt">currentTimeMillis</span>() - start);
+        <span class="kw">return</span> result;
+    }
+}</pre></div>
+    <div class="tab-content" id="ann3"><pre><span class="an">@Service</span>
+<span class="kw">public class</span> <span class="cl">ReportService</span> {
+
+    <span class="an">@LogExecutionTime</span>   <span class="cm">// explicit, visible, self-documenting — reader immediately</span>
+    <span class="kw">public</span> Report <span class="mt">generateMonthlyReport</span>() {   <span class="cm">// knows THIS method is timed, without checking any aspect class</span>
+        <span class="cm">// expensive report generation logic</span>
+    }
+
+    <span class="kw">public</span> List&lt;Report&gt; <span class="mt">listReports</span>() {
+        <span class="cm">// NOT annotated — NOT advised — no timing overhead here at all</span>
+    }
+}</pre></div>
+  </div>
+
+  <table>
+    <tr><th></th><th>execution() Pointcut (package/class pattern)</th><th>@annotation() Pointcut (custom marker)</th></tr>
+    <tr><td><strong>Targeting granularity</strong></td><td>Coarse — an entire layer/package, all-or-nothing</td><td>Fine — exactly the methods explicitly marked, method by method</td></tr>
+    <tr><td><strong>Visibility to a reader</strong></td><td>Implicit — you'd have to find and read the aspect class to know a given method is advised</td><td>Explicit — the annotation is right there on the method signature</td></tr>
+    <tr><td><strong>Coupling</strong></td><td>None — target code has zero awareness of the aspect</td><td>A small, deliberate coupling — the target method "opts in" via the annotation import</td></tr>
+    <tr><td><strong>Best for</strong></td><td>Universal, blanket concerns genuinely needed everywhere in a layer (e.g., every controller needs request logging)</td><td>Selective concerns needed only on specific, deliberately chosen methods (e.g., only genuinely expensive operations need timing instrumentation)</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 This Is Exactly How Spring's Own Built-In Annotations Work</div>
+    <p>This pattern — a custom annotation plus an <code>@annotation()</code>-targeted aspect — is not a course-specific trick; it's the <strong>literal mechanism</strong> behind Spring's own <code>@Transactional</code>, <code>@Cacheable</code>, <code>@Async</code>, and <code>@PreAuthorize</code> (Section 6). Each is implemented internally as exactly this pattern: a marker annotation plus a corresponding aspect/interceptor that activates specifically on methods carrying it. Having built your own version from scratch in this topic means you now genuinely understand — rather than take on faith — how every one of those "magic" annotations from earlier sections actually works under the hood.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why must a custom AOP marker annotation's @Retention be RUNTIME, not the default CLASS or SOURCE?</div>
+      <div class="qa-a"><p>Spring's AOP proxy needs to inspect a method for the presence of <code>@LogExecutionTime</code> via <strong>reflection, at application runtime</strong> (specifically, when deciding whether to apply the advice to a given method call). <code>RetentionPolicy.SOURCE</code> annotations are discarded entirely by the compiler and never even make it into the <code>.class</code> file — reflection can't see them at all. <code>RetentionPolicy.CLASS</code> (the Java default if unspecified) keeps the annotation in the bytecode but strips it before/during class loading into the JVM at runtime — also invisible to runtime reflection. Only <code>RetentionPolicy.RUNTIME</code> keeps the annotation genuinely available for runtime introspection via the Reflection API, which is exactly what Spring AOP's <code>@annotation()</code> pointcut matching depends on to function at all.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Design a custom @RateLimited annotation using this pattern — what would the aspect need to do differently from the timing example?</div>
+      <div class="qa-a"><p>The annotation definition follows the identical shape (<code>@Target(METHOD)</code>, <code>@Retention(RUNTIME)</code>), likely with an attribute like <code>@RateLimited(maxCallsPerMinute = 10)</code> to parametrize the limit per method. The aspect would use <code>@Around</code> (since it needs the ability to <strong>skip</strong> <code>proceed()</code> entirely when the limit is exceeded, unlike the purely observational timing aspect) — maintaining a counter (backed by a thread-safe structure, or Redis for a distributed/multi-instance deployment) keyed by method signature and time window, checking it before deciding whether to call <code>proceed()</code> or instead throw a custom <code>RateLimitExceededException</code> (which Section 5's <code>@RestControllerAdvice</code> could then translate into a 429 response, tying back to Section 3's rate-limiting discussion). This demonstrates the annotation-based AOP pattern generalizes well beyond logging to genuinely enforce cross-cutting business rules.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- MASTER Q&A -->
+<section class="topic" id="interview-master">
+  <span class="section-badge">🎯 Rapid-Fire Round</span>
+  <div class="topic-head"><h2>Master Interview Q&A Bank — Section 8</h2></div>
+  <p class="dim">AOP is one of the most commonly probed "do you actually understand Spring, or just use it" topics in mid-to-senior interviews — these synthesize the whole section, including how it retroactively explains earlier "magic" annotations.</p>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Explain, from first principles, how @Transactional (Section 4) actually works, now that you understand AOP.</div>
+      <div class="qa-a"><p><code>@Transactional</code> is Spring's own built-in example of exactly the annotation-based AOP pattern from this section: a marker annotation (<code>@Transactional</code>) plus an internal Spring-provided aspect/interceptor (<code>TransactionInterceptor</code>, applied via a proxy created at startup for any bean containing an annotated method — the same weaving process covered in the Fundamentals topic). The interceptor's advice logic is conceptually an <code>@Around</code>-style wrap: begin a transaction before <code>proceed()</code>, commit after a normal return, roll back if <code>proceed()</code> throws an unchecked exception. This is precisely why <code>@Transactional</code> exhibits the self-invocation limitation flagged back in Section 4 — it's proxy-based AOP, and a call from within the same class bypasses the proxy, exactly as explained in this section's Fundamentals topic.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Design a complete AOP-based auditing system for a financial application that must log every write operation (create/update/delete) with who performed it, what changed, and when — without touching any existing service method's code.</div>
+      <div class="qa-a"><p>A custom <code>@Audited</code> annotation (this section's annotation-based pattern) applied to every write-operation service method, paired with an <code>@Around</code> aspect (needed because it must capture both the "before" state via method arguments and the "after" state via the return value, and must run regardless of success/failure to log attempted-but-failed operations too). The aspect pulls the current user from <code>SecurityContextHolder</code> (Section 6's ThreadLocal-based mechanism), captures the method name/arguments/timestamp, calls <code>proceed()</code>, and persists an audit record (potentially via Hibernate Envers, from Section 5's auditing discussion, for full before/after field-level diffs) — all without a single line of this logic appearing inside <code>OrderService</code>, <code>ContactService</code>, or any other advised class. This ties together AOP, SecurityContextHolder, and Envers-style auditing into one coherent, realistic system design answer.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What's the performance cost of AOP, and when would you decide NOT to use it for a given cross-cutting concern?</div>
+      <div class="qa-a"><p>Every advised method call incurs proxy-invocation overhead — generally small (a few extra method-call indirections) but non-zero, and it compounds if pointcuts are overly broad (per the earlier warning about catch-all <code>execution()</code> expressions). AOP is the wrong tool when: (1) the concern only applies to one or two specific methods with no real duplication problem to solve — a plain try/catch or explicit code is more readable and debuggable than introducing proxy indirection for a one-off case; (2) the logic genuinely needs to be part of the method's own control flow in an obvious, step-through-debuggable way (AOP's "invisible" interception can make debugging harder for engineers unfamiliar with the codebase's aspects); or (3) extremely latency-sensitive hot-path code where even small proxy overhead is unacceptable. AOP earns its complexity specifically when a concern is genuinely duplicated across many unrelated classes/methods — the "pain before AOP" scenario this section opened with.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Two aspects both match the same method — a LoggingAspect and a SecurityAspect. What determines which one's advice runs first, and can you control it?</div>
+      <div class="qa-a"><p>By default, the ordering between multiple matching aspects is <strong>undefined/unpredictable</strong> unless explicitly specified. Spring provides <code>@Order(n)</code> (the same annotation used generally for controlling bean/component ordering elsewhere in Spring) placeable on an <code>@Aspect</code> class to establish deterministic precedence — lower values run "further out" (earlier on the way in, later on the way out, for <code>@Around</code> advice, like nested onion layers). In a security-plus-logging scenario, you'd typically want the security check to run <em>before</em> logging captures method entry (so unauthorized attempts aren't logged as if they proceeded normally) — achieved by giving the security aspect a lower <code>@Order</code> value than the logging aspect.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Why can't Spring AOP intercept a call to a static method or a final method?</div>
+      <div class="qa-a"><p>Both limitations trace back to Spring AOP being fundamentally <strong>proxy-based</strong> (established in the Fundamentals topic). A proxy works by either implementing the same interface as the target (JDK dynamic proxies) or <strong>subclassing</strong> the target class (CGLIB proxies, the same mechanism from Section 1's <code>@Configuration</code> discussion) and overriding its methods to insert advice logic. A <code>static</code> method belongs to the class itself, not to any instance, so there's no instance-level method to override or intercept via subclassing/interface implementation. A <code>final</code> method explicitly cannot be overridden by any subclass by Java language rules — so a CGLIB subclass proxy has no way to intercept it either. Both are structural, unavoidable consequences of choosing a proxy-based rather than bytecode-weaving AOP implementation.</p></div>
+    </div>
+  </div>
+
+  <div class="box info" style="margin-top:28px;">
+    <div class="box-title">ℹ Next Section</div>
+    <p>Paste the next section's video list whenever you're ready, and I'll build the next HTML notes doc in this same design system.</p>
+  </div>
+
+  <footer>GrowthScript Engineering — Spring Boot Interview Bible · Section 8 of N</footer>
+</section>
+
+</main>
+</div>
+
+<script>
+function toggleTheme(){
+  const body = document.body;
+  const cur = body.getAttribute('data-theme');
+  body.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+}
+function showTab(btn, id){
+  const block = btn.closest('.code-block');
+  block.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  block.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  block.querySelector('#'+id).classList.add('active');
+}
+document.querySelectorAll('.qa-q').forEach(q=>{
+  q.addEventListener('click', ()=> q.parentElement.classList.toggle('open'));
+});
+</script>
+</body>
+</html>
