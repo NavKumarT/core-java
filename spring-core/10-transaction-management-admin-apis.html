@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Section 10: Transaction Management Deep Dive & Admin APIs | GrowthScript Engineering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117; --bg-elev:#151b23; --bg-card:#1a2230; --border:#2a3441;
+  --text:#e6edf3; --text-dim:#9aa7b5; --text-faint:#6e7c8c;
+  --accent:#3fb950; --accent-soft:rgba(63,185,80,.12);
+  --blue:#58a6ff; --blue-soft:rgba(88,166,255,.12);
+  --warn:#f0883e; --warn-soft:rgba(240,136,62,.12);
+  --danger:#f85149; --danger-soft:rgba(248,81,73,.12);
+  --code-bg:#0a0e14; --sidebar-w:290px; --radius:10px;
+  --shadow:0 4px 16px rgba(0,0,0,.35);
+}
+[data-theme="light"]{
+  --bg:#f6f8fa; --bg-elev:#ffffff; --bg-card:#ffffff; --border:#d8dee4;
+  --text:#1b2430; --text-dim:#4b5563; --text-faint:#8a96a3;
+  --accent:#1a7f37; --accent-soft:rgba(26,127,55,.08);
+  --blue:#0969da; --blue-soft:rgba(9,105,218,.08);
+  --warn:#9a6700; --warn-soft:rgba(154,103,0,.08);
+  --danger:#cf222e; --danger-soft:rgba(207,34,46,.08);
+  --code-bg:#0d1117; --shadow:0 2px 10px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); line-height:1.65; font-size:15.5px; transition:background .2s,color .2s;}
+code, pre, .mono{font-family:'Space Mono',monospace;}
+a{color:var(--blue); text-decoration:none;}
+a:hover{text-decoration:underline;}
+.wrapper{display:flex; min-height:100vh;}
+.sidebar{width:var(--sidebar-w); flex-shrink:0; background:var(--bg-elev); border-right:1px solid var(--border); position:sticky; top:0; height:100vh; overflow-y:auto; padding:22px 16px 40px;}
+.sidebar::-webkit-scrollbar{width:6px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border); border-radius:3px;}
+.brand{display:flex; align-items:center; gap:10px; margin-bottom:4px;}
+.brand-badge{width:34px; height:34px; border-radius:8px; background:var(--accent); display:flex; align-items:center; justify-content:center; color:#0d1117; font-weight:800; font-family:'Space Mono',monospace; font-size:15px; flex-shrink:0;}
+.brand-text{font-weight:800; font-size:14.5px; letter-spacing:.2px;}
+.brand-sub{font-size:11px; color:var(--text-faint); margin-top:1px;}
+.theme-toggle{margin:16px 0 20px; width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; font-size:12.5px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px;}
+.nav-group{margin-bottom:6px;}
+.nav-label{font-size:10.5px; text-transform:uppercase; letter-spacing:.9px; color:var(--text-faint); font-weight:700; margin:18px 4px 8px;}
+.nav-link{display:block; padding:7px 10px; border-radius:7px; font-size:13px; color:var(--text-dim); border-left:2px solid transparent; margin-bottom:1px;}
+.nav-link:hover{background:var(--accent-soft); color:var(--text); text-decoration:none;}
+.nav-link.sub{padding-left:22px; font-size:12.3px;}
+.main{flex:1; min-width:0; padding:44px 56px 120px; max-width:980px;}
+.header-block{margin-bottom:44px; padding-bottom:28px; border-bottom:1px solid var(--border);}
+.eyebrow{font-family:'Space Mono',monospace; font-size:11.5px; color:var(--accent); font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:10px;}
+.header-block h1{font-size:32px; font-weight:800; letter-spacing:-.5px; margin-bottom:12px;}
+.header-block p{color:var(--text-dim); font-size:15px; max-width:680px;}
+.meta-row{display:flex; gap:18px; margin-top:16px; flex-wrap:wrap;}
+.meta-pill{font-size:11.5px; padding:5px 11px; border-radius:20px; background:var(--bg-card); border:1px solid var(--border); color:var(--text-dim); font-family:'Space Mono',monospace;}
+section.topic{margin-bottom:56px; scroll-margin-top:24px;}
+.topic-head{display:flex; align-items:baseline; gap:12px; margin-bottom:6px;}
+.topic-num{font-family:'Space Mono',monospace; color:var(--accent); font-weight:700; font-size:14px;}
+h2{font-size:23px; font-weight:800; letter-spacing:-.3px;}
+.topic-video{font-size:12px; color:var(--text-faint); margin-bottom:20px; margin-top:2px; font-family:'Space Mono',monospace;}
+h3{font-size:17.5px; font-weight:700; margin:26px 0 12px; color:var(--text);}
+h4{font-weight:700; margin:18px 0 8px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.4px; font-size:12.5px;}
+p{margin-bottom:13px; color:var(--text); font-size:15px;}
+p.dim{color:var(--text-dim);}
+ul, ol{margin:0 0 15px 22px;}
+li{margin-bottom:7px; font-size:14.8px;}
+strong{color:var(--text); font-weight:700;}
+.hl{color:var(--accent); font-weight:700;}
+.box{border-radius:var(--radius); padding:16px 18px; margin:18px 0; border:1px solid var(--border); font-size:14.3px;}
+.box-title{font-weight:700; font-size:12.5px; text-transform:uppercase; letter-spacing:.5px; margin-bottom:7px; display:flex; align-items:center; gap:7px;}
+.tip{background:var(--accent-soft); border-color:rgba(63,185,80,.3);} .tip .box-title{color:var(--accent);}
+.warn{background:var(--warn-soft); border-color:rgba(240,136,62,.3);} .warn .box-title{color:var(--warn);}
+.info{background:var(--blue-soft); border-color:rgba(88,166,255,.3);} .info .box-title{color:var(--blue);}
+.danger{background:var(--danger-soft); border-color:rgba(248,81,73,.3);} .danger .box-title{color:var(--danger);}
+.code-block{background:var(--code-bg); border-radius:var(--radius); overflow:hidden; margin:16px 0; border:1px solid var(--border); box-shadow:var(--shadow);}
+.tabs{display:flex; background:rgba(255,255,255,.03); border-bottom:1px solid rgba(255,255,255,.08); overflow-x:auto;}
+.tab-btn{padding:9px 16px; font-family:'Space Mono',monospace; font-size:12px; color:#8a96a3; background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap;}
+.tab-btn.active{color:#e6edf3; border-bottom-color:var(--accent);}
+.tab-content{display:none; padding:16px 18px; overflow-x:auto;}
+.tab-content.active{display:block;}
+.tab-content pre{color:#c9d1d9; font-size:13px; line-height:1.65; white-space:pre;}
+.tab-content .kw{color:#ff7b72;} .tab-content .str{color:#a5d6ff;} .tab-content .cm{color:#8b949e; font-style:italic;}
+.tab-content .an{color:#d2a8ff;} .tab-content .cl{color:#79c0ff;} .tab-content .mt{color:#d2a8ff;}
+table{width:100%; border-collapse:collapse; margin:16px 0; font-size:13.8px;}
+th{text-align:left; padding:9px 12px; background:var(--bg-card); border-bottom:2px solid var(--border); font-size:11.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--text-dim);}
+td{padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top;}
+tr:hover td{background:var(--accent-soft);}
+.qa-wrap{margin-top:18px;}
+.qa-item{border:1px solid var(--border); border-radius:var(--radius); margin-bottom:10px; overflow:hidden; background:var(--bg-card);}
+.qa-q{padding:14px 46px 14px 18px; cursor:pointer; font-weight:600; font-size:14.3px; position:relative; display:flex; align-items:center; gap:10px;}
+.qa-q:hover{background:var(--accent-soft);}
+.qa-tag{font-family:'Space Mono',monospace; font-size:9.5px; padding:2px 7px; border-radius:4px; font-weight:700; flex-shrink:0; text-transform:uppercase; letter-spacing:.3px;}
+.tag-faang{background:rgba(248,81,73,.15); color:var(--danger);}
+.tag-core{background:rgba(88,166,255,.15); color:var(--blue);}
+.qa-q::after{content:'+'; position:absolute; right:18px; top:50%; transform:translateY(-50%); font-size:20px; color:var(--text-faint); font-weight:400;}
+.qa-item.open .qa-q::after{content:'−';}
+.qa-a{max-height:0; overflow:hidden; transition:max-height .25s ease; padding:0 18px;}
+.qa-item.open .qa-a{max-height:1400px; padding:2px 18px 18px;}
+.qa-a p{font-size:14px; color:var(--text-dim);}
+.qa-a ul{margin-top:6px;}
+.qa-a li{color:var(--text-dim); font-size:13.8px;}
+.divider{height:1px; background:var(--border); margin:44px 0;}
+.section-badge{display:inline-block; background:var(--accent); color:#0d1117; font-family:'Space Mono',monospace; font-weight:700; font-size:11px; padding:4px 10px; border-radius:6px; margin-bottom:14px;}
+.diagram{background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin:18px 0; font-family:'Space Mono',monospace; font-size:12.5px; color:var(--text-dim); overflow-x:auto; white-space:pre; line-height:1.5;}
+footer{margin-top:60px; padding-top:24px; border-top:1px solid var(--border); color:var(--text-faint); font-size:12px;}
+@media(max-width:900px){
+  .sidebar{position:fixed; left:-100%; z-index:50; transition:left .2s; box-shadow:var(--shadow);}
+  .sidebar.open{left:0;}
+  .main{padding:24px 20px 100px;}
+  .mobile-toggle{display:block !important;}
+}
+.mobile-toggle{display:none; position:fixed; top:16px; left:16px; z-index:60; background:var(--accent); color:#0d1117; border:none; border-radius:8px; width:40px; height:40px; font-size:18px; font-weight:700;}
+</style>
+</head>
+<body data-theme="dark">
+
+<button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="wrapper">
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-badge">G</div>
+    <div>
+      <div class="brand-text">GrowthScript Eng.</div>
+      <div class="brand-sub">Spring Boot Bible</div>
+    </div>
+  </div>
+  <button class="theme-toggle" onclick="toggleTheme()">🌗 Toggle Theme</button>
+
+  <div class="nav-group">
+    <div class="nav-label">Section 10 · Transactions</div>
+    <a class="nav-link" href="#transactional-demystified">174. @Transactional Demystified</a>
+    <a class="nav-link" href="#transactional-handson">175. Hands-On @Transactional</a>
+    <a class="nav-link" href="#readonly">176. @Transactional(readOnly = true)</a>
+    <a class="nav-link" href="#modifying">177. Why @Modifying Is Mandatory</a>
+    <a class="nav-link" href="#rollback-rules">178. Rollback Rules</a>
+    <a class="nav-link" href="#propagation">179. Transaction Propagation</a>
+    <a class="nav-link" href="#isolation">180. Isolation Levels</a>
+    <a class="nav-link" href="#pitfalls">181. Common @Transactional Pitfalls</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Admin Management</div>
+    <a class="nav-link" href="#company-mgmt">182–183. Company Management</a>
+    <a class="nav-link" href="#employer-mgmt">184–185. Employer Management</a>
+    <a class="nav-link" href="#interview-master">Master Interview Q&A Bank</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<div class="header-block">
+  <div class="eyebrow">Java Backend Engineer · Spring Boot Course</div>
+  <h1>Section 10 — Transaction Management Deep Dive & Admin APIs</h1>
+  <p>The most consequential eight annotations-deep dive in the whole course: how <code>@Transactional</code> actually works via AOP proxying (finally paying off Section 8's mechanism explanation), read-only optimization, why <code>@Modifying</code> exists, checked-vs-unchecked rollback semantics, transaction propagation without the usual confusion, isolation levels and the concurrency anomalies they prevent, and the production pitfalls that silently break transactional guarantees — then applied to real admin-facing Company and Employer management features.</p>
+  <div class="meta-row">
+    <span class="meta-pill">Videos 174–185 (12 videos)</span>
+    <span class="meta-pill">~2.3 hrs runtime</span>
+    <span class="meta-pill">FAANG + Fintech interview focus</span>
+    <span class="meta-pill">Builds on Sections 4, 5, 6, 8 & 9</span>
+  </div>
+</div>
+
+<!-- 174 -->
+<section class="topic" id="transactional-demystified">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">174</span><h2>@Transactional Demystified — How Spring Really Manages Transactions</h2></div>
+  <div class="topic-video">Video: @Transactional Demystified - How Spring Really Manages Transactions</div>
+
+  <p>Section 4 first introduced <code>@Transactional</code> and its self-invocation limitation; Section 8 explained AOP in full generality and used <code>@Transactional</code> as the worked example of how Spring's own annotations are built. This topic finally delivers the complete, precise mechanics.</p>
+
+  <div class="diagram">                    @Service
+              ┌──────────────────┐
+              │  OrderService      │   ← the RAW bean, as you wrote it
+              │  @Transactional     │
+              │  createOrder(...)   │
+              └──────────────────┘
+                       │
+              wrapped at startup by Spring's
+              TransactionInterceptor (an AOP advice,
+              exactly per Section 8's Fundamentals topic)
+                       │
+                       ▼
+              ┌──────────────────┐
+              │   PROXY            │   ← what's ACTUALLY injected everywhere
+              │                    │      this bean is used
+              │  1. begin transaction (via PlatformTransactionManager)
+              │  2. call the REAL createOrder() (the join point)
+              │  3a. method returns normally → COMMIT
+              │  3b. method throws unchecked exception → ROLLBACK
+              └──────────────────┘
+
+Caller (e.g. a Controller) → talks to the PROXY, not the raw bean directly</div>
+
+  <table>
+    <tr><th>Component</th><th>Role</th></tr>
+    <tr><td><code>@Transactional</code></td><td>The marker annotation — pure metadata, does nothing by itself</td></tr>
+    <tr><td><code>TransactionInterceptor</code></td><td>Spring's built-in AOP advice (conceptually an <code>@Around</code> advice, per Section 8) that does the actual begin/commit/rollback work around the annotated method</td></tr>
+    <tr><td><code>PlatformTransactionManager</code></td><td>The abstraction that actually talks to the underlying resource (JDBC connection, JPA <code>EntityManager</code>) to begin/commit/roll back — <code>DataSourceTransactionManager</code> or <code>JpaTransactionManager</code> depending on setup</td></tr>
+    <tr><td>The proxy (CGLIB or JDK dynamic proxy)</td><td>What's actually wired into the Spring context and injected into other beans — the exact same proxying mechanism from Section 1 (<code>@Configuration</code>) and Section 8 (AOP generally)</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 Stating This Precisely in an Interview</div>
+    <p>"<code>@Transactional</code> is not magic — it's a specific, built-in application of Spring AOP. At startup, any bean containing a <code>@Transactional</code> method gets wrapped in a proxy. The proxy's advice — <code>TransactionInterceptor</code> — begins a transaction before the real method runs, and commits or rolls back after, based on how the method completes. Every consequence and limitation of <code>@Transactional</code> (self-invocation not working, needing a public method, needing the call to go through the proxy) follows directly from this being proxy-based AOP — the exact mechanism explained generically in Section 8."</p>
+  </div>
+
+  <div class="box danger">
+    <div class="box-title">⚠ @Transactional on a private or self-invoked method silently does nothing</div>
+    <p>Both failure modes trace to the same root cause established in Section 8: proxies work by wrapping/subclassing a bean and intercepting calls that go <em>through the proxy</em>. A <code>private</code> method can never be overridden by a CGLIB subclass proxy at all — the annotation is silently ignored, no error. A call from <strong>within the same class</strong> (<code>this.someTransactionalMethod()</code>) bypasses the proxy entirely, going directly through the real object reference — again, the transactional behavior silently doesn't apply. Both are structural consequences of proxy-based AOP, not bugs in your code that are easy to spot by reading it.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>If @Transactional is AOP-based like Section 8's custom aspects, why does it feel so much more "built-in" and automatic than a custom @LogExecutionTime aspect?</div>
+      <div class="qa-a"><p>Purely because Spring Boot's auto-configuration (Section 3's philosophy applied here) automatically registers the <code>TransactionInterceptor</code>/<code>PlatformTransactionManager</code> infrastructure and enables <code>@Transactional</code> processing (via <code>@EnableTransactionManagement</code>, implicitly activated by Spring Boot's JPA/JDBC starters) the moment a <code>DataSource</code> is detected on the classpath — you never had to write <code>@Aspect</code>/<code>@Around</code> code yourself, unlike the custom aspects built by hand in Section 8. Mechanically, though, it is exactly the same category of thing: a marker annotation plus a pre-built aspect that Spring ships and wires up for you automatically, rather than one you write from scratch.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 175 -->
+<section class="topic" id="transactional-handson">
+  <div class="topic-head"><span class="topic-num">175</span><h2>Hands-On — Using @Transactional in a Production-Style Backend</h2></div>
+  <div class="topic-video">Video: Hands-On - Using @Transactional in a Production-Style Backend</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'th1')">A realistic multi-step transactional service method</button></div>
+    <div class="tab-content active" id="th1"><pre><span class="an">@Service</span>
+<span class="an">@RequiredArgsConstructor</span>
+<span class="kw">public class</span> <span class="cl">OrderService</span> {
+
+    <span class="kw">private final</span> OrderRepository orderRepository;
+    <span class="kw">private final</span> InventoryRepository inventoryRepository;
+    <span class="kw">private final</span> PaymentService paymentService;
+
+    <span class="an">@Transactional</span>
+    <span class="kw">public</span> Order <span class="mt">placeOrder</span>(OrderRequest request) {
+        <span class="cm">// THREE separate write operations, spanning TWO different tables —</span>
+        <span class="cm">// @Transactional guarantees ALL succeed together or NONE do</span>
+        Order order = orderRepository.<span class="mt">save</span>(<span class="kw">new</span> Order(request));
+        inventoryRepository.<span class="mt">decrementStock</span>(request.<span class="mt">getProductId</span>(), request.<span class="mt">getQuantity</span>());
+        paymentService.<span class="mt">chargeCustomer</span>(request.<span class="mt">getPaymentDetails</span>());  <span class="cm">// if THIS throws, the</span>
+                                                                      <span class="cm">// order save AND stock decrement above are BOTH rolled back</span>
+        <span class="kw">return</span> order;
+    }
+}</pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 What "Atomicity" Actually Buys You Here, Concretely</div>
+    <p>Without <code>@Transactional</code>, if <code>chargeCustomer()</code> throws (e.g., the payment gateway is down), the order row and the decremented stock count from the earlier two lines would <strong>already be permanently committed to the database</strong> — leaving the system in a corrupted state: stock reduced and an order recorded, despite the customer never actually being charged. <code>@Transactional</code> guarantees these three operations behave as a single atomic unit — either every statement's effect is committed, or (on any unchecked exception) every statement's effect is rolled back as if none of them ever ran, leaving the database in its original, consistent state.</p>
+  </div>
+</section>
+
+<!-- 176 -->
+<section class="topic" id="readonly">
+  <div class="topic-head"><span class="topic-num">176</span><h2>Optimizing Database Reads with @Transactional(readOnly = true)</h2></div>
+  <div class="topic-video">Video: Optimizing Database Reads with @Transactional(readOnly = true)</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'ro1')">readOnly in practice</button></div>
+    <div class="tab-content active" id="ro1"><pre><span class="an">@Transactional</span>(readOnly = <span class="kw">true</span>)
+<span class="kw">public</span> List&lt;OrderResponseDto&gt; <span class="mt">getOrderHistory</span>(Long userId) {
+    <span class="kw">return</span> orderRepository.<span class="mt">findByUserId</span>(userId).<span class="mt">stream</span>()
+            .<span class="mt">map</span>(orderMapper::<span class="mt">toDto</span>)
+            .<span class="mt">toList</span>();
+    <span class="cm">// this method NEVER writes — readOnly=true tells Hibernate/the driver</span>
+    <span class="cm">// that upfront, unlocking real optimizations</span>
+}</pre></div>
+  </div>
+
+  <table>
+    <tr><th>Optimization</th><th>Mechanism</th></tr>
+    <tr><td><strong>Hibernate flush mode</strong></td><td>Disables automatic dirty-checking flushes (Section 4's persistence-context mechanism) since no entity state changes are expected to need flushing — saves the overhead of Hibernate comparing entity snapshots to detect changes</td></tr>
+    <tr><td><strong>Database-level read-only hint</strong></td><td>Some JDBC drivers/databases can route a read-only-flagged connection differently — e.g., to a <strong>read replica</strong> in a primary/replica database architecture, offloading read traffic away from the primary write database entirely</td></tr>
+    <tr><td><strong>No transaction log overhead</strong></td><td>Some databases can skip undo/rollback-log bookkeeping for a connection explicitly marked read-only, since there's nothing to potentially need rolling back</td></tr>
+  </table>
+
+  <div class="box warn">
+    <div class="box-title">⚠ readOnly = true Is a Hint, Not a Hard Enforcement Guarantee</div>
+    <p>Marking a method <code>readOnly = true</code> does <strong>not</strong> actually prevent a write statement from executing if one is accidentally present in the method body — most JPA providers/drivers treat it purely as a performance optimization hint, not a database-level enforced constraint (behavior can vary by driver/database, but it should never be relied upon as a safety mechanism). It is a <strong>performance</strong> annotation, not a <strong>correctness/safety</strong> one — always still write correct code that doesn't call a repository's write methods inside a method you've marked read-only, rather than relying on the flag to catch that mistake.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>In a system with a primary/replica database setup, how does readOnly=true concretely help route traffic, and what has to be configured for that to actually work?</div>
+      <div class="qa-a"><p><code>readOnly = true</code> alone doesn't automatically route to a replica — it needs to be paired with an actual <strong>routing DataSource</strong> configuration (e.g., Spring's <code>AbstractRoutingDataSource</code>, or a database driver/proxy purpose-built for primary/replica routing) that inspects the current transaction's read-only flag and picks the replica connection pool for read-only transactions versus the primary connection pool for read-write ones. Without that routing infrastructure wired up, <code>readOnly = true</code> only delivers the Hibernate-level flush-mode optimization — the replica-routing benefit is a separate, additional piece of infrastructure this annotation merely provides the signal for, not something it accomplishes by itself.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 177 -->
+<section class="topic" id="modifying">
+  <div class="topic-head"><span class="topic-num">177</span><h2>Why @Modifying Is Mandatory for Update/Delete Queries</h2></div>
+  <div class="topic-video">Video: Why @Modifying Is Mandatory for Update/Delete Queries</div>
+
+  <p>This extends Section 7's brief mention of <code>@Modifying</code> into full explanation, now that transaction mechanics have been covered in depth.</p>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'mod1')">Without @Modifying — fails</button>
+      <button class="tab-btn" onclick="showTab(this,'mod2')">With @Modifying — correct</button>
+    </div>
+    <div class="tab-content active" id="mod1"><pre><span class="an">@Query</span>(<span class="str">"UPDATE Job j SET j.status = :status WHERE j.id = :id"</span>)
+<span class="kw">int</span> <span class="mt">updateStatus</span>(<span class="an">@Param</span>(<span class="str">"id"</span>) Long id, <span class="an">@Param</span>(<span class="str">"status"</span>) String status);
+<span class="cm">// throws InvalidDataAccessApiUsageException at runtime — Spring Data JPA, by</span>
+<span class="cm">// default, assumes every @Query is a SELECT and tries to execute it that way</span></pre></div>
+    <div class="tab-content" id="mod2"><pre><span class="an">@Modifying</span>(clearAutomatically = <span class="kw">true</span>, flushAutomatically = <span class="kw">true</span>)
+<span class="an">@Query</span>(<span class="str">"UPDATE Job j SET j.status = :status WHERE j.id = :id"</span>)
+<span class="kw">int</span> <span class="mt">updateStatus</span>(<span class="an">@Param</span>(<span class="str">"id"</span>) Long id, <span class="an">@Param</span>(<span class="str">"status"</span>) String status);
+<span class="cm">// returns the number of rows affected — the standard bulk-update return type</span></pre></div>
+  </div>
+
+  <table>
+    <tr><th>Attribute</th><th>Purpose</th></tr>
+    <tr><td><code>@Modifying</code> (bare)</td><td>Tells Spring Data JPA this <code>@Query</code> is a data-changing operation — executes via <code>Query.executeUpdate()</code> instead of a result-set-returning execution</td></tr>
+    <tr><td><code>clearAutomatically = true</code></td><td>Clears the persistence context after the bulk update — necessary because a bulk UPDATE/DELETE bypasses the persistence context entirely (Section 7), so any already-loaded entities in memory would otherwise silently hold stale data</td></tr>
+    <tr><td><code>flushAutomatically = true</code></td><td>Forces any pending changes already in the persistence context to flush to the database <em>before</em> the bulk operation executes, avoiding ordering inconsistencies between pending entity-level changes and the bulk statement</td></tr>
+  </table>
+
+  <div class="box danger">
+    <div class="box-title">⚠ The Stale-Data Trap This Directly Connects To</div>
+    <p>This is the exact mechanism behind the stale-data warning already flagged in Section 7's <code>@Modifying</code> Q&A: a bulk <code>UPDATE</code> query operates <strong>directly against the database</strong>, entirely bypassing Hibernate's persistence-context/first-level cache (Section 4). If code elsewhere in the same transaction already loaded a <code>Job</code> entity into the persistence context <em>before</em> the bulk update runs, that in-memory entity's fields are now silently out of sync with the database — <code>clearAutomatically = true</code> is the direct fix, forcing Hibernate to discard its now-stale cached entities so any subsequent read within the same transaction re-fetches fresh data from the database rather than returning outdated in-memory state.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why does a bulk @Modifying update bypass entity lifecycle callbacks like @PreUpdate and JPA auditing's @LastModifiedDate (Section 5)?</div>
+      <div class="qa-a"><p>JPA lifecycle callbacks (<code>@PrePersist</code>, <code>@PreUpdate</code>, and by extension Section 5's <code>AuditingEntityListener</code>, which hooks into exactly those callbacks) only fire when Hibernate manages an entity's state transition through its normal, tracked lifecycle — loading an entity, modifying a field, and letting dirty-checking generate an UPDATE at flush time. A <code>@Modifying</code> bulk query is a <strong>direct SQL statement</strong> issued straight to the database, entirely outside that entity-lifecycle machinery — no entity is ever loaded, modified, or dirty-checked in the normal sense, so there's no lifecycle event for any listener to hook into. This is a real, easy-to-miss consequence: a bulk status update via <code>@Modifying</code> will <strong>not</strong> automatically update <code>updatedAt</code>/<code>updatedBy</code> auditing fields the way an entity-level <code>save()</code> would, unless the JPQL update statement explicitly sets those fields itself.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 178 -->
+<section class="topic" id="rollback-rules">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">178</span><h2>Rollback Rules in Spring — Checked vs Runtime Exceptions</h2></div>
+  <div class="topic-video">Video: Rollback Rules in Spring - Checked vs Runtime Exceptions</div>
+
+  <p>Spring's default rollback policy is precise and frequently misunderstood: <strong>a transaction rolls back automatically on any unchecked (<code>RuntimeException</code> or <code>Error</code>) exception, but NOT on a checked exception</strong> — this default is the exact opposite of what many developers coming from plain JDBC/try-catch backgrounds intuitively expect.</p>
+
+  <div class="diagram">Exception thrown inside a @Transactional method
+        │
+        ▼
+   Is it a checked exception (extends Exception, not RuntimeException)?
+        │
+   ┌────┴────┐
+  YES          NO (it's a RuntimeException or Error)
+   │              │
+   ▼              ▼
+ COMMITS      ROLLS BACK
+ anyway! ⚠️    (the default, expected behavior)</div>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'rb1')">The surprising default — checked exception still commits</button>
+      <button class="tab-btn" onclick="showTab(this,'rb2')">Fixing it with rollbackFor</button>
+    </div>
+    <div class="tab-content active" id="rb1"><pre><span class="an">@Transactional</span>
+<span class="kw">public void</span> <span class="mt">processPayment</span>(PaymentRequest request) <span class="kw">throws</span> PaymentGatewayException {
+    orderRepository.<span class="mt">save</span>(<span class="kw">new</span> Order(request));
+
+    <span class="kw">if</span> (!paymentGateway.<span class="mt">charge</span>(request)) {
+        <span class="kw">throw new</span> PaymentGatewayException(<span class="str">"Payment failed"</span>);
+        <span class="cm">// IF PaymentGatewayException extends Exception (checked) — Spring's DEFAULT</span>
+        <span class="cm">// behavior COMMITS the order save above anyway! The order is now recorded</span>
+        <span class="cm">// despite the payment having failed — a genuine, serious production bug</span>
+    }
+}</pre></div>
+    <div class="tab-content" id="rb2"><pre><span class="an">@Transactional</span>(rollbackFor = PaymentGatewayException.<span class="kw">class</span>)   <span class="cm">// explicit override — now rolls back correctly</span>
+<span class="kw">public void</span> <span class="mt">processPayment</span>(PaymentRequest request) <span class="kw">throws</span> PaymentGatewayException {
+    orderRepository.<span class="mt">save</span>(<span class="kw">new</span> Order(request));
+    <span class="kw">if</span> (!paymentGateway.<span class="mt">charge</span>(request)) {
+        <span class="kw">throw new</span> PaymentGatewayException(<span class="str">"Payment failed"</span>);   <span class="cm">// now correctly rolls back</span>
+    }
+}
+
+<span class="cm">// the inverse also exists, for the rare case you want a RuntimeException NOT to roll back:</span>
+<span class="an">@Transactional</span>(noRollbackFor = SomeRecoverableRuntimeException.<span class="kw">class</span>)</pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 Why Spring Chose This Default — The Historical/Design Rationale</div>
+    <p>This traces back to a design philosophy from early J2EE-era EJB conventions that Spring inherited: checked exceptions were originally conceived as representing <strong>expected, recoverable business conditions</strong> the caller is meant to explicitly handle (the compiler forces you to catch or declare them) — the framework's assumption being that if you're throwing a checked exception, you've presumably already handled the "should this be a database rollback" decision at a business level. Unchecked/runtime exceptions were conceived as representing <strong>unexpected, programming-error-like failures</strong> where automatic rollback is the safe default. In practice, most modern Spring codebases prefer unchecked exceptions almost universally for exactly this reason — it sidesteps the entire "did I remember to add rollbackFor" trap by making rollback-on-exception the automatic, default-safe behavior for virtually everything thrown.</p>
+  </div>
+
+  <div class="box danger">
+    <div class="box-title">⚠ This Is One of the Single Most Common Real Production Bugs Involving @Transactional</div>
+    <p>A developer defines a custom checked exception (perhaps out of habit, or to force callers to explicitly handle a business exception via the compiler), throws it from inside a <code>@Transactional</code> method expecting normal rollback behavior, and is genuinely surprised in production when partial, inconsistent data ends up committed. The fix is either: (1) make custom business exceptions extend <code>RuntimeException</code> instead of <code>Exception</code> — the overwhelmingly preferred modern convention — or (2) explicitly declare <code>rollbackFor</code> if a checked exception type is unavoidable (e.g., required by an external library's API). Interviewers frequently ask this exact scenario specifically because it's such a realistic, high-impact gotcha.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Does Spring roll back on an Error (like OutOfMemoryError), and why does that matter?</div>
+      <div class="qa-a"><p>Yes — Spring's default rollback rule is actually "roll back on any unchecked <code>Throwable</code>," which includes both <code>RuntimeException</code> and <code>Error</code> (both are unchecked; only <code>Exception</code> and its non-<code>RuntimeException</code> subclasses are checked). This matters because a serious JVM-level failure like <code>OutOfMemoryError</code> mid-transaction should absolutely trigger a rollback rather than risk committing a half-completed, inconsistent set of database changes — the default correctly treats catastrophic JVM errors the same as ordinary unchecked application exceptions for rollback purposes, which is the safe, correct behavior for a truly unexpected failure.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 179 -->
+<section class="topic" id="propagation">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">179</span><h2>Understanding Transaction Propagation Without Confusion</h2></div>
+  <div class="topic-video">Video: Understanding Transaction Propagation Without Confusion</div>
+
+  <p><strong>Propagation</strong> answers one specific question: <em>when a <code>@Transactional</code> method calls another <code>@Transactional</code> method, does the inner call join the outer transaction, or start a genuinely separate one?</em></p>
+
+  <table>
+    <tr><th>Propagation</th><th>Behavior</th><th>Typical Use</th></tr>
+    <tr><td><code>REQUIRED</code> (default)</td><td>Joins the existing transaction if one is active; starts a new one if not</td><td>The overwhelming default for almost every service method — "just participate in whatever's already happening"</td></tr>
+    <tr><td><code>REQUIRES_NEW</code></td><td>Always suspends any existing transaction and starts a genuinely independent new one — the new transaction commits/rolls back entirely on its own, regardless of what happens to the outer transaction afterward</td><td>Audit logging that must persist even if the surrounding business operation later fails and rolls back</td></tr>
+    <tr><td><code>NESTED</code></td><td>Creates a savepoint within the existing transaction — can roll back to that savepoint independently, but is still fundamentally part of, and bound to, the outer transaction's ultimate commit/rollback</td><td>A sub-operation that should be able to fail and be "undone" in isolation without necessarily failing the entire outer operation — less commonly used, and not supported by every transaction manager/database combination</td></tr>
+    <tr><td><code>SUPPORTS</code></td><td>Joins an existing transaction if one is active; runs non-transactionally if not (no error either way)</td><td>Rare — a method that can work with or without a surrounding transaction</td></tr>
+    <tr><td><code>MANDATORY</code></td><td>Requires an existing transaction to already be active; throws an exception if called outside one</td><td>Enforcing that a method must never be called except as part of a larger transactional flow</td></tr>
+    <tr><td><code>NOT_SUPPORTED</code></td><td>Suspends any existing transaction and runs the method entirely non-transactionally</td><td>A read-heavy or long-running operation that should never hold a transaction/lock open</td></tr>
+    <tr><td><code>NEVER</code></td><td>Throws an exception if called from within an existing transaction</td><td>Explicitly enforcing a method must only ever run standalone</td></tr>
+  </table>
+
+  <div class="diagram">REQUIRED (default) — the inner call JOINS the outer transaction:
+
+@Transactional               @Transactional (REQUIRED, default)
+public void placeOrder() {   public void chargeCustomer() {
+    ...                          ...
+    chargeCustomer();  ──────▶   (throws!)
+                                  ┌── this exception rolls back
+                                  │   the ENTIRE combined transaction —
+    (never reached)  ◄────────────┘   including placeOrder()'s earlier writes
+}
+
+
+REQUIRES_NEW — the inner call is GENUINELY INDEPENDENT:
+
+@Transactional               @Transactional(propagation = REQUIRES_NEW)
+public void placeOrder() {   public void logAuditEntry() {
+    ...                          ...  (its OWN separate transaction)
+    logAuditEntry();  ───────▶   COMMITS independently, right here
+    riskyOperation();                 regardless of what happens next
+    (throws!)                    ┌──
+}                                 │   the audit log entry SURVIVES even
+    ROLLS BACK  ◄─────────────────┘   though placeOrder() itself rolled back</div>
+
+  <div class="box tip">
+    <div class="box-title">💡 The Single Cleanest Way to Explain REQUIRES_NEW's Value</div>
+    <p>"<code>REQUIRES_NEW</code> exists specifically for the case where you want an inner operation's outcome to be <strong>independent</strong> of the outer transaction's fate — the canonical example being audit/compliance logging that must be preserved even if the business operation it's logging ultimately fails and rolls back. Without <code>REQUIRES_NEW</code>, a failed order would also silently erase the audit trail explaining that the order was attempted and why it failed — exactly the evidence you'd want to have preserved."</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why does REQUIRES_NEW require suspending the outer transaction, rather than just running two transactions concurrently on the same thread?</div>
+      <div class="qa-a"><p>A single database connection (and the single thread using it, in Spring's typical synchronous MVC model) can only be bound to <strong>one active transaction at a time</strong> — a transaction is fundamentally tied to a specific connection's state. To start a genuinely new, independent transaction mid-flow, Spring's transaction manager must first <strong>suspend</strong> the current transaction (detaching it from the thread/connection, holding its state aside), acquire a separate connection (potentially from the same pool) for the new nested transaction, run it to completion (commit or rollback, entirely independently), and then <strong>resume</strong> the original suspended transaction on its original connection to continue where it left off. This connection-management overhead is real and worth knowing — <code>REQUIRES_NEW</code> isn't free, and using it excessively can exhaust a connection pool faster than expected under load, since it genuinely requires an additional connection for the nested transaction's duration.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What's the practical difference between NESTED and REQUIRES_NEW — they sound similar but aren't?</div>
+      <div class="qa-a"><p><code>REQUIRES_NEW</code> creates a <strong>completely independent</strong> transaction — its commit/rollback has zero effect on the outer transaction's ultimate fate, and vice versa (as shown in the audit-logging example). <code>NESTED</code> instead creates a <strong>savepoint</strong> within the <em>same</em> outer transaction — the nested portion can roll back to that savepoint on its own (undoing just its own changes) without necessarily failing the whole outer transaction, but if the <strong>outer</strong> transaction itself ultimately rolls back, the nested portion's changes are rolled back along with it too, since they were never truly independent — the nested savepoint is still fundamentally bound to and dependent on the outer transaction's own commit for its changes to become permanent. <code>NESTED</code> also requires JDBC savepoint support, meaning it isn't available with every transaction manager/database combination, unlike <code>REQUIRES_NEW</code>, which works anywhere ordinary transactions do.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 180 -->
+<section class="topic" id="isolation">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">180</span><h2>Choosing the Right Isolation Level in Real Applications</h2></div>
+  <div class="topic-video">Video: Choosing the Right Isolation Level in Real Applications</div>
+
+  <p><strong>Isolation</strong> answers a different question than propagation: <em>how much can concurrently-running transactions "see" of each other's uncommitted or newly-committed changes?</em> Each isolation level trades consistency guarantees against concurrency/performance.</p>
+
+  <h4>The Three Classic Concurrency Anomalies, Defined Precisely</h4>
+  <table>
+    <tr><th>Anomaly</th><th>What Happens</th></tr>
+    <tr><td><strong>Dirty Read</strong></td><td>Transaction A reads a row that Transaction B has modified but <strong>not yet committed</strong> — if B then rolls back, A has read data that never truly existed</td></tr>
+    <tr><td><strong>Non-Repeatable Read</strong></td><td>Transaction A reads the same row twice within one transaction, but Transaction B commits an update to that row in between A's two reads — A gets two <em>different</em> values for what should be a stable read within its own transaction</td></tr>
+    <tr><td><strong>Phantom Read</strong></td><td>Transaction A runs the same range query (e.g., "all orders over $100") twice, but Transaction B commits a new row matching that range in between — A's second query returns an extra "phantom" row that wasn't there the first time</td></tr>
+  </table>
+
+  <table>
+    <tr><th>Isolation Level</th><th>Dirty Read</th><th>Non-Repeatable Read</th><th>Phantom Read</th><th>Concurrency</th></tr>
+    <tr><td><code>READ_UNCOMMITTED</code></td><td>❌ Possible</td><td>❌ Possible</td><td>❌ Possible</td><td>Highest — essentially no isolation</td></tr>
+    <tr><td><code>READ_COMMITTED</code></td><td>✅ Prevented</td><td>❌ Possible</td><td>❌ Possible</td><td>High — most databases' default (PostgreSQL, Oracle, SQL Server)</td></tr>
+    <tr><td><code>REPEATABLE_READ</code></td><td>✅ Prevented</td><td>✅ Prevented</td><td>❌ Possible (varies by DB — MySQL's InnoDB actually also prevents most phantom reads here via gap locking)</td><td>Medium — MySQL's default</td></tr>
+    <tr><td><code>SERIALIZABLE</code></td><td>✅ Prevented</td><td>✅ Prevented</td><td>✅ Prevented</td><td>Lowest — transactions effectively behave as if executed one at a time, sequentially</td></tr>
+  </table>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'iso1')">Specifying isolation explicitly</button></div>
+    <div class="tab-content active" id="iso1"><pre><span class="an">@Transactional</span>(isolation = Isolation.SERIALIZABLE)
+<span class="kw">public void</span> <span class="mt">transferFunds</span>(Long fromAccountId, Long toAccountId, BigDecimal amount) {
+    <span class="cm">// a genuinely high-stakes financial operation where even a rare</span>
+    <span class="cm">// concurrency anomaly is unacceptable — worth the performance cost</span>
+    Account from = accountRepository.<span class="mt">findById</span>(fromAccountId).<span class="mt">orElseThrow</span>();
+    Account to = accountRepository.<span class="mt">findById</span>(toAccountId).<span class="mt">orElseThrow</span>();
+    from.<span class="mt">debit</span>(amount);
+    to.<span class="mt">credit</span>(amount);
+}</pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 The Practical Decision Framework</div>
+    <p>Don't default to <code>SERIALIZABLE</code> "to be safe" — its heavy locking/performance cost is real and unnecessary for the vast majority of operations. The practical approach: (1) leave isolation at the <strong>database's own default</strong> (<code>READ_COMMITTED</code> for most, which Spring's own default <code>Isolation.DEFAULT</code> simply defers to) for ordinary CRUD operations where occasional non-repeatable/phantom reads genuinely don't matter for correctness, (2) escalate to <code>REPEATABLE_READ</code> or <code>SERIALIZABLE</code> deliberately and narrowly, only for specific operations where a concurrency anomaly would cause genuine business harm — financial transfers, inventory decrements preventing overselling, seat/ticket booking systems — and (3) consider whether <strong>optimistic locking</strong> (via JPA's <code>@Version</code> field) might solve the same correctness problem with less locking overhead than a blanket isolation-level escalation, since it only blocks/detects conflicts on rows that genuinely experienced concurrent modification, rather than adding locking overhead to every read.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Design the concurrency-safety approach for a limited-inventory checkout flow (e.g., only 5 tickets left, many users trying to buy simultaneously) — walk through the trade-offs of your chosen isolation/locking strategy.</div>
+      <div class="qa-a"><p>The core risk is two concurrent transactions both reading "5 available" before either commits a decrement, both proceeding to sell, resulting in overselling — a classic <strong>non-repeatable read</strong>-adjacent race condition (technically closer to a lost-update problem). Options, with trade-offs: (1) <strong>Pessimistic locking</strong> — <code>SELECT ... FOR UPDATE</code> (via JPA's <code>@Lock(LockModeType.PESSIMISTIC_WRITE)</code>) on the inventory row, forcing concurrent transactions to genuinely wait in line — simple to reason about, correctness-guaranteed, but reduces throughput under high contention since transactions serialize on that specific row. (2) <strong>Optimistic locking</strong> — a <code>@Version</code> field on the inventory entity; concurrent updates detect the version mismatch and one transaction fails with <code>OptimisticLockException</code>, requiring an application-level retry — better throughput under low-to-moderate contention, but adds retry-logic complexity and can itself degrade under very high contention (many wasted, retried attempts). (3) <strong>SERIALIZABLE isolation</strong> on the whole transaction — correctness-guaranteed but the heaviest-handed, least scalable option. For a real high-traffic ticket-sale scenario, pessimistic locking on the specific hot inventory row (not the whole transaction's isolation level) is usually the pragmatic middle ground — narrow, targeted locking rather than a blanket isolation escalation.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Why is READ_COMMITTED the default for most production databases rather than something stricter?</div>
+      <div class="qa-a"><p>It represents the pragmatic sweet spot for the overwhelming majority of application workloads: it eliminates <strong>dirty reads</strong> (the most dangerous and least defensible anomaly — reading data that was never actually committed and might not even really "exist") while still permitting reasonably high concurrency, since it doesn't hold long-lived locks across an entire transaction's reads the way <code>REPEATABLE_READ</code>/<code>SERIALIZABLE</code> do. Most business operations can tolerate the rarer, more benign possibility of a non-repeatable or phantom read (re-querying mid-transaction and seeing a value change is uncommon and often inconsequential for typical CRUD flows), making the extra locking overhead of stricter isolation levels an unnecessary cost for the common case — exactly why database vendors chose it as a sensible universal default rather than the strictest available option.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 181 -->
+<section class="topic" id="pitfalls">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">181</span><h2>Common @Transactional Pitfalls You Must Avoid in Production</h2></div>
+  <div class="topic-video">Video: Common @Transactional Pitfalls You Must Avoid in Production</div>
+
+  <table>
+    <tr><th>Pitfall</th><th>Why It Happens</th><th>Fix</th></tr>
+    <tr><td>Self-invocation silently skips the proxy</td><td>Proxy-based AOP (Section 8/174) — calling <code>this.method()</code> bypasses the proxy entirely</td><td>Call through a separately-injected self-reference bean, or restructure into two distinct service beans</td></tr>
+    <tr><td>Checked exception doesn't trigger rollback</td><td>Spring's default rollback rule (this section, topic 178)</td><td>Prefer <code>RuntimeException</code>-derived custom exceptions, or explicit <code>rollbackFor</code></td></tr>
+    <tr><td><code>@Transactional</code> on a private method does nothing</td><td>CGLIB proxies can't override private methods</td><td>Always make transactional methods <code>public</code></td></tr>
+    <tr><td>Long-running transactions holding connections open</td><td>A <code>@Transactional</code> method that does slow, non-database work (an external HTTP call, heavy computation) inside the transactional boundary holds a database connection/lock the entire time</td><td>Keep transactional methods focused purely on database operations; move slow external calls outside the transaction boundary where possible</td></tr>
+    <tr><td>Mixing read and write logic without readOnly</td><td>Missing the optimization from topic 176 on genuinely read-only methods</td><td>Explicitly mark pure-read methods <code>readOnly = true</code></td></tr>
+    <tr><td>Forgetting <code>@Modifying</code>'s stale-cache risk</td><td>Bulk updates bypass the persistence context (topic 177)</td><td><code>clearAutomatically = true</code>, or avoid mixing bulk updates with entity-level reads/writes in the same transaction</td></tr>
+    <tr><td>Swallowing an exception inside the method, defeating rollback</td><td>A <code>try/catch</code> inside the transactional method that catches and logs an exception <em>without re-throwing it</em> means the method returns normally from the proxy's perspective — no rollback occurs, even though something clearly went wrong</td><td>Only catch exceptions you're genuinely handling (recovering from); let genuine failures propagate so the transaction rolls back correctly</td></tr>
+  </table>
+
+  <div class="box danger">
+    <div class="box-title">⚠ The Silently-Swallowed-Exception Pitfall Deserves Special Attention</div>
+    <p>This is subtler and more dangerous than it first appears: a developer adds a <code>try/catch</code> around a risky operation purely to log the error for observability, intending the surrounding transaction to still fail — but since the method then <strong>returns normally</strong> (no exception propagates out to the proxy), <code>TransactionInterceptor</code> sees a normal return and <strong>commits</strong>, exactly as if nothing went wrong. The fix requires either re-throwing after logging (<code>catch (Exception ex) { log.error(...); throw ex; }</code>) or explicitly forcing a rollback via <code>TransactionAspectSupport.currentTransactionStatus().setRollbackOnly()</code> if you genuinely need to catch-and-suppress the exception at that point while still ensuring rollback.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why is a @Transactional method making a slow external HTTP call (e.g., to a payment gateway) a real production risk, beyond just "it's slow"?</div>
+      <div class="qa-a"><p>A <code>@Transactional</code> method holds a <strong>database connection checked out from the connection pool</strong> for its entire duration — including time spent waiting on a slow, unrelated external HTTP call that has nothing to do with the database at all. Under load, this means database connections sit idle-but-checked-out for however long the external call takes, rapidly exhausting a finite connection pool and causing <em>unrelated</em> requests to fail or queue waiting for a connection — a slow third-party API can cascade into an apparent "database is down" incident, when the actual root cause is connection-pool starvation caused by holding transactions open across slow I/O that should never have been inside the transactional boundary in the first place. The fix is architectural: perform the external call <em>before</em> or <em>after</em> the transactional boundary, only wrapping the actual database operations in <code>@Transactional</code>.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 182-183 -->
+<section class="topic" id="company-mgmt">
+  <div class="topic-head"><span class="topic-num">182–183</span><h2>Building & Demoing Company Management Features for Admin Users</h2></div>
+  <div class="topic-video">Videos: Building Company Management Features for Admin Users · Live Demo - Company Management Admin APIs in Action</div>
+
+  <p>An applied capstone bringing together this section's transaction concepts with earlier sections' authorization (Section 9) and JPA relationship mapping (Section 5) — full CRUD admin endpoints for managing <code>Company</code> entities, gated behind <code>hasRole("ADMIN")</code>/appropriate <code>@PreAuthorize</code> authorities.</p>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'cm1')">CompanyAdminController — applying this section's concepts</button></div>
+    <div class="tab-content active" id="cm1"><pre><span class="an">@RestController</span>
+<span class="an">@RequestMapping</span>(<span class="str">"/api/v1/admin/companies"</span>)
+<span class="an">@PreAuthorize</span>(<span class="str">"hasRole('ADMIN')"</span>)   <span class="cm">// Section 9's coarse role gate, applied at the class level</span>
+<span class="an">@RequiredArgsConstructor</span>
+<span class="kw">public class</span> <span class="cl">CompanyAdminController</span> {
+
+    <span class="kw">private final</span> CompanyService companyService;
+
+    <span class="an">@PostMapping</span>
+    <span class="kw">public</span> ResponseEntity&lt;CompanyResponseDto&gt; <span class="mt">create</span>(<span class="an">@Valid</span> <span class="an">@RequestBody</span> CompanyRequestDto dto) {
+        <span class="kw">return</span> ResponseEntity.<span class="mt">status</span>(HttpStatus.CREATED).<span class="mt">body</span>(companyService.<span class="mt">create</span>(dto));
+    }
+
+    <span class="an">@DeleteMapping</span>(<span class="str">"/{id}"</span>)
+    <span class="kw">public</span> ResponseEntity&lt;Void&gt; <span class="mt">delete</span>(<span class="an">@PathVariable</span> Long id) {
+        companyService.<span class="mt">delete</span>(id);   <span class="cm">// internally @Transactional — cascades to Jobs per Section 5's mapping</span>
+        <span class="kw">return</span> ResponseEntity.<span class="mt">noContent</span>().<span class="mt">build</span>();
+    }
+}
+
+<span class="an">@Service</span>
+<span class="an">@RequiredArgsConstructor</span>
+<span class="kw">public class</span> <span class="cl">CompanyService</span> {
+
+    <span class="an">@Transactional</span>   <span class="cm">// this section's mechanics — deleting a company + its jobs is ATOMIC</span>
+    <span class="kw">public void</span> <span class="mt">delete</span>(Long id) {
+        Company company = companyRepository.<span class="mt">findById</span>(id)
+                .<span class="mt">orElseThrow</span>(() -&gt; <span class="kw">new</span> ResourceNotFoundException(<span class="str">"Company not found"</span>));
+        companyRepository.<span class="mt">delete</span>(company);   <span class="cm">// CascadeType.ALL from Section 5 handles the Jobs</span>
+    }
+
+    <span class="an">@Transactional</span>(readOnly = <span class="kw">true</span>)   <span class="cm">// this section's read optimization</span>
+    <span class="kw">public</span> Page&lt;CompanyResponseDto&gt; <span class="mt">list</span>(Pageable pageable) {   <span class="cm">// Section 9's pagination</span>
+        <span class="kw">return</span> companyRepository.<span class="mt">findAll</span>(pageable).<span class="mt">map</span>(companyMapper::<span class="mt">toDto</span>);
+    }
+}</pre></div>
+  </div>
+
+  <div class="box info">
+    <div class="box-title">ℹ A Genuine Multi-Section Synthesis</div>
+    <p>This single controller/service pair exercises: role-based authorization (Section 9), DTO validation and mapping (Sections 4–5), global exception handling for not-found (Section 5), cascading deletes (Section 5), pagination (Section 9), and — the specific new material this section adds — deliberate, correct use of <code>@Transactional</code> (default for the atomic delete) versus <code>@Transactional(readOnly = true)</code> (for the pure-read listing), applied with actual understanding of why each choice is correct rather than copy-pasted habit.</p>
+  </div>
+</section>
+
+<!-- 184-185 -->
+<section class="topic" id="employer-mgmt">
+  <div class="topic-head"><span class="topic-num">184–185</span><h2>Building & Demoing Employer Management Features for Admin Users</h2></div>
+  <div class="topic-video">Videos: Building Employer Management Features for Admin Users · Live Demo - Employer Management Admin APIs</div>
+
+  <p>A structurally parallel admin feature set for managing employer/user accounts — reinforcing the same patterns (role-gated CRUD, correct transactional boundaries, DTO-based request/response shapes) against a different entity, which is itself a valuable exercise: demonstrating the patterns generalize cleanly rather than being one-off, entity-specific tricks.</p>
+
+  <div class="box tip">
+    <div class="box-title">💡 A Notable Difference Worth Watching For — Account Status Toggling</div>
+    <p>Employer/user management typically includes an <strong>enable/disable account</strong> operation (rather than hard deletion) — directly exercising the <code>isEnabled()</code> flag from Section 7's <code>UserDetails</code> implementation. Disabling a user this way means their <em>existing</em> JWT (if not yet expired) may still pass signature validation in Section 6's <code>JwtAuthFilter</code>, since the filter doesn't re-check <code>isEnabled()</code> against the database on every single request by default — a genuinely important edge case worth being able to discuss: true immediate revocation of a disabled account's access typically requires either a short token expiry (Section 6's revocation discussion) or an explicit database check added to the authentication filter itself, since JWT statelessness and instant account-disable semantics are in real, direct tension.</p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- MASTER Q&A -->
+<section class="topic" id="interview-master">
+  <span class="section-badge">🎯 Rapid-Fire Round</span>
+  <div class="topic-head"><h2>Master Interview Q&A Bank — Section 10</h2></div>
+  <p class="dim">Transaction management is consistently one of the highest-signal topics in senior backend interviews — these questions probe whether a candidate has genuinely internalized the mechanics or just the annotation syntax.</p>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Walk through, in complete detail, what happens when method A (REQUIRED) calls method B (REQUIRED) which calls method C (REQUIRES_NEW), and C throws an exception that B catches and swallows without re-throwing.</div>
+      <div class="qa-a"><p>A starts a new transaction (call it T1, since none exists yet). B is called and joins T1 (REQUIRED, existing transaction present). B calls C; because C is <code>REQUIRES_NEW</code>, Spring suspends T1 and starts an entirely independent T2 for C. C throws — assuming an unchecked exception, T2 rolls back and the exception propagates back out of C's call. B <strong>catches this exception and does not re-throw it</strong> — from the proxy's perspective, B's method then returns normally. Because B returns normally, T1 (still active, now resumed) proceeds to <strong>commit</strong> when A's method also completes normally — including any writes A or B made before/after the call to C. Net result: whatever C attempted is correctly rolled back (T2's own rollback), but A and B's changes commit as if nothing went wrong, and — critically — nothing signals to A's caller that C's operation actually failed, unless B explicitly surfaces that failure some other way (a return value, re-throwing a different exception, etc.). This scenario combines topics 178, 179, and 181 into one complete trace.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Design the transaction and isolation strategy for a bank's fund-transfer system end to end — propagation, isolation, rollback rules, and how you'd prevent double-spending under concurrent requests.</div>
+      <div class="qa-a"><p>The core transfer operation uses default <code>REQUIRED</code> propagation (it should always run within a single atomic unit — debit and credit must succeed or fail together, the canonical <code>@Transactional</code> atomicity case from topic 175). All business/validation exceptions extend <code>RuntimeException</code> specifically to get automatic rollback without needing to remember <code>rollbackFor</code> everywhere (topic 178's lesson). For the double-spend concern specifically — two concurrent transfer requests debiting the same account simultaneously — pessimistic row-level locking (<code>SELECT ... FOR UPDATE</code>) on the account balance row during the debit is the most defensible, easiest-to-reason-about choice for genuinely high-stakes financial correctness, rather than relying purely on isolation level (topic 180's discussion of pessimistic vs optimistic locking, applied to the exact scenario this topic set up). A separate audit-log entry recording every attempted transfer (successful or failed) is written via <code>REQUIRES_NEW</code> specifically so the audit trail survives even when the underlying transfer itself rolls back — directly reusing topic 179's audit-logging justification for that propagation type. This synthesizes essentially every mechanism covered in this section into one coherent, realistic system design answer.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Is it true that @Transactional guarantees "ACID" properties — what exactly does the annotation provide versus what the underlying database provides?</div>
+      <div class="qa-a"><p><code>@Transactional</code> itself is purely an orchestration mechanism — it tells Spring <em>when</em> to begin, commit, or roll back a transaction boundary around your Java method calls. The actual <strong>ACID guarantees</strong> (Atomicity, Consistency, Isolation, Durability) are provided by the <strong>underlying database engine</strong> itself once that begin/commit/rollback sequence is correctly issued — Spring doesn't implement transaction semantics from scratch; it delegates to the database's native transaction support via JDBC/the <code>PlatformTransactionManager</code> abstraction. This is a subtle but important distinction: writing <code>@Transactional</code> incorrectly (e.g., missing <code>rollbackFor</code> for a checked exception) doesn't mean "ACID is broken" — it means Spring simply never told the database to roll back at all, and the database faithfully committed exactly what it was told to, exactly as ACID-compliant behavior would predict.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why can't @Transactional alone solve a distributed transaction problem — e.g., updating your own database AND calling an external microservice's API that also needs to "commit" atomically together?</div>
+      <div class="qa-a"><p><code>@Transactional</code> (via <code>PlatformTransactionManager</code>) manages a transaction against <strong>one specific transactional resource</strong> — typically one database connection. An external microservice call over HTTP is not a transactional resource in this sense at all — there's no way to "roll back" an HTTP call that already succeeded on the other side simply because your own local database transaction later fails, and no way for the remote service to participate in your local commit/rollback decision. This is precisely the class of problem that motivates patterns like the <strong>Saga pattern</strong> (a sequence of local transactions, each with a corresponding compensating action to "undo" it if a later step fails) or genuine distributed-transaction protocols (two-phase commit, rarely used in modern microservices due to their tight-coupling and availability costs) — <code>@Transactional</code>'s guarantees stop firmly at the boundary of a single transactional resource, and understanding that boundary precisely is exactly what separates a monolith-only understanding of transactions from a microservices-aware one.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>You inherited a codebase where every single service method is annotated @Transactional, including pure getters that never write anything. What would you change and why?</div>
+      <div class="qa-a"><p>Every genuinely read-only method should be changed to <code>@Transactional(readOnly = true)</code> at minimum (topic 176's optimization — free performance with no downside for methods that truly never write), and it's worth questioning whether some of those read methods need <code>@Transactional</code> at all if they're simple single-query reads that don't need a consistent multi-statement view of the data (a single JPA repository call is often already implicitly transactional at the JDBC/Hibernate level without needing an explicit annotation, depending on configuration) — blanket-applying <code>@Transactional</code> everywhere "just in case" adds unnecessary proxy overhead and obscures which methods actually have meaningful atomicity requirements versus which don't, making the codebase harder to reason about for anyone auditing where genuine multi-statement atomicity guarantees are actually needed.</p></div>
+    </div>
+  </div>
+
+  <div class="box info" style="margin-top:28px;">
+    <div class="box-title">ℹ Next Section</div>
+    <p>Paste the next section's video list whenever you're ready, and I'll build the next HTML notes doc in this same design system.</p>
+  </div>
+
+  <footer>GrowthScript Engineering — Spring Boot Interview Bible · Section 10 of N</footer>
+</section>
+
+</main>
+</div>
+
+<script>
+function toggleTheme(){
+  const body = document.body;
+  const cur = body.getAttribute('data-theme');
+  body.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+}
+function showTab(btn, id){
+  const block = btn.closest('.code-block');
+  block.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  block.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  block.querySelector('#'+id).classList.add('active');
+}
+document.querySelectorAll('.qa-q').forEach(q=>{
+  q.addEventListener('click', ()=> q.parentElement.classList.toggle('open'));
+});
+</script>
+</body>
+</html>

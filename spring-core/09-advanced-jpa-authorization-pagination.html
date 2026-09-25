@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Section 9: Advanced JPA Queries, Authorization Deep Dive & Pagination | GrowthScript Engineering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117; --bg-elev:#151b23; --bg-card:#1a2230; --border:#2a3441;
+  --text:#e6edf3; --text-dim:#9aa7b5; --text-faint:#6e7c8c;
+  --accent:#3fb950; --accent-soft:rgba(63,185,80,.12);
+  --blue:#58a6ff; --blue-soft:rgba(88,166,255,.12);
+  --warn:#f0883e; --warn-soft:rgba(240,136,62,.12);
+  --danger:#f85149; --danger-soft:rgba(248,81,73,.12);
+  --code-bg:#0a0e14; --sidebar-w:290px; --radius:10px;
+  --shadow:0 4px 16px rgba(0,0,0,.35);
+}
+[data-theme="light"]{
+  --bg:#f6f8fa; --bg-elev:#ffffff; --bg-card:#ffffff; --border:#d8dee4;
+  --text:#1b2430; --text-dim:#4b5563; --text-faint:#8a96a3;
+  --accent:#1a7f37; --accent-soft:rgba(26,127,55,.08);
+  --blue:#0969da; --blue-soft:rgba(9,105,218,.08);
+  --warn:#9a6700; --warn-soft:rgba(154,103,0,.08);
+  --danger:#cf222e; --danger-soft:rgba(207,34,46,.08);
+  --code-bg:#0d1117; --shadow:0 2px 10px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); line-height:1.65; font-size:15.5px; transition:background .2s,color .2s;}
+code, pre, .mono{font-family:'Space Mono',monospace;}
+a{color:var(--blue); text-decoration:none;}
+a:hover{text-decoration:underline;}
+.wrapper{display:flex; min-height:100vh;}
+.sidebar{width:var(--sidebar-w); flex-shrink:0; background:var(--bg-elev); border-right:1px solid var(--border); position:sticky; top:0; height:100vh; overflow-y:auto; padding:22px 16px 40px;}
+.sidebar::-webkit-scrollbar{width:6px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border); border-radius:3px;}
+.brand{display:flex; align-items:center; gap:10px; margin-bottom:4px;}
+.brand-badge{width:34px; height:34px; border-radius:8px; background:var(--accent); display:flex; align-items:center; justify-content:center; color:#0d1117; font-weight:800; font-family:'Space Mono',monospace; font-size:15px; flex-shrink:0;}
+.brand-text{font-weight:800; font-size:14.5px; letter-spacing:.2px;}
+.brand-sub{font-size:11px; color:var(--text-faint); margin-top:1px;}
+.theme-toggle{margin:16px 0 20px; width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; font-size:12.5px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px;}
+.nav-group{margin-bottom:6px;}
+.nav-label{font-size:10.5px; text-transform:uppercase; letter-spacing:.9px; color:var(--text-faint); font-weight:700; margin:18px 4px 8px;}
+.nav-link{display:block; padding:7px 10px; border-radius:7px; font-size:13px; color:var(--text-dim); border-left:2px solid transparent; margin-bottom:1px;}
+.nav-link:hover{background:var(--accent-soft); color:var(--text); text-decoration:none;}
+.nav-link.sub{padding-left:22px; font-size:12.3px;}
+.main{flex:1; min-width:0; padding:44px 56px 120px; max-width:980px;}
+.header-block{margin-bottom:44px; padding-bottom:28px; border-bottom:1px solid var(--border);}
+.eyebrow{font-family:'Space Mono',monospace; font-size:11.5px; color:var(--accent); font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:10px;}
+.header-block h1{font-size:32px; font-weight:800; letter-spacing:-.5px; margin-bottom:12px;}
+.header-block p{color:var(--text-dim); font-size:15px; max-width:680px;}
+.meta-row{display:flex; gap:18px; margin-top:16px; flex-wrap:wrap;}
+.meta-pill{font-size:11.5px; padding:5px 11px; border-radius:20px; background:var(--bg-card); border:1px solid var(--border); color:var(--text-dim); font-family:'Space Mono',monospace;}
+section.topic{margin-bottom:56px; scroll-margin-top:24px;}
+.topic-head{display:flex; align-items:baseline; gap:12px; margin-bottom:6px;}
+.topic-num{font-family:'Space Mono',monospace; color:var(--accent); font-weight:700; font-size:14px;}
+h2{font-size:23px; font-weight:800; letter-spacing:-.3px;}
+.topic-video{font-size:12px; color:var(--text-faint); margin-bottom:20px; margin-top:2px; font-family:'Space Mono',monospace;}
+h3{font-size:17.5px; font-weight:700; margin:26px 0 12px; color:var(--text);}
+h4{font-weight:700; margin:18px 0 8px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.4px; font-size:12.5px;}
+p{margin-bottom:13px; color:var(--text); font-size:15px;}
+p.dim{color:var(--text-dim);}
+ul, ol{margin:0 0 15px 22px;}
+li{margin-bottom:7px; font-size:14.8px;}
+strong{color:var(--text); font-weight:700;}
+.hl{color:var(--accent); font-weight:700;}
+.box{border-radius:var(--radius); padding:16px 18px; margin:18px 0; border:1px solid var(--border); font-size:14.3px;}
+.box-title{font-weight:700; font-size:12.5px; text-transform:uppercase; letter-spacing:.5px; margin-bottom:7px; display:flex; align-items:center; gap:7px;}
+.tip{background:var(--accent-soft); border-color:rgba(63,185,80,.3);} .tip .box-title{color:var(--accent);}
+.warn{background:var(--warn-soft); border-color:rgba(240,136,62,.3);} .warn .box-title{color:var(--warn);}
+.info{background:var(--blue-soft); border-color:rgba(88,166,255,.3);} .info .box-title{color:var(--blue);}
+.danger{background:var(--danger-soft); border-color:rgba(248,81,73,.3);} .danger .box-title{color:var(--danger);}
+.code-block{background:var(--code-bg); border-radius:var(--radius); overflow:hidden; margin:16px 0; border:1px solid var(--border); box-shadow:var(--shadow);}
+.tabs{display:flex; background:rgba(255,255,255,.03); border-bottom:1px solid rgba(255,255,255,.08); overflow-x:auto;}
+.tab-btn{padding:9px 16px; font-family:'Space Mono',monospace; font-size:12px; color:#8a96a3; background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap;}
+.tab-btn.active{color:#e6edf3; border-bottom-color:var(--accent);}
+.tab-content{display:none; padding:16px 18px; overflow-x:auto;}
+.tab-content.active{display:block;}
+.tab-content pre{color:#c9d1d9; font-size:13px; line-height:1.65; white-space:pre;}
+.tab-content .kw{color:#ff7b72;} .tab-content .str{color:#a5d6ff;} .tab-content .cm{color:#8b949e; font-style:italic;}
+.tab-content .an{color:#d2a8ff;} .tab-content .cl{color:#79c0ff;} .tab-content .mt{color:#d2a8ff;}
+table{width:100%; border-collapse:collapse; margin:16px 0; font-size:13.8px;}
+th{text-align:left; padding:9px 12px; background:var(--bg-card); border-bottom:2px solid var(--border); font-size:11.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--text-dim);}
+td{padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top;}
+tr:hover td{background:var(--accent-soft);}
+.qa-wrap{margin-top:18px;}
+.qa-item{border:1px solid var(--border); border-radius:var(--radius); margin-bottom:10px; overflow:hidden; background:var(--bg-card);}
+.qa-q{padding:14px 46px 14px 18px; cursor:pointer; font-weight:600; font-size:14.3px; position:relative; display:flex; align-items:center; gap:10px;}
+.qa-q:hover{background:var(--accent-soft);}
+.qa-tag{font-family:'Space Mono',monospace; font-size:9.5px; padding:2px 7px; border-radius:4px; font-weight:700; flex-shrink:0; text-transform:uppercase; letter-spacing:.3px;}
+.tag-faang{background:rgba(248,81,73,.15); color:var(--danger);}
+.tag-core{background:rgba(88,166,255,.15); color:var(--blue);}
+.qa-q::after{content:'+'; position:absolute; right:18px; top:50%; transform:translateY(-50%); font-size:20px; color:var(--text-faint); font-weight:400;}
+.qa-item.open .qa-q::after{content:'−';}
+.qa-a{max-height:0; overflow:hidden; transition:max-height .25s ease; padding:0 18px;}
+.qa-item.open .qa-a{max-height:1400px; padding:2px 18px 18px;}
+.qa-a p{font-size:14px; color:var(--text-dim);}
+.qa-a ul{margin-top:6px;}
+.qa-a li{color:var(--text-dim); font-size:13.8px;}
+.divider{height:1px; background:var(--border); margin:44px 0;}
+.section-badge{display:inline-block; background:var(--accent); color:#0d1117; font-family:'Space Mono',monospace; font-weight:700; font-size:11px; padding:4px 10px; border-radius:6px; margin-bottom:14px;}
+.diagram{background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin:18px 0; font-family:'Space Mono',monospace; font-size:12.5px; color:var(--text-dim); overflow-x:auto; white-space:pre; line-height:1.5;}
+footer{margin-top:60px; padding-top:24px; border-top:1px solid var(--border); color:var(--text-faint); font-size:12px;}
+@media(max-width:900px){
+  .sidebar{position:fixed; left:-100%; z-index:50; transition:left .2s; box-shadow:var(--shadow);}
+  .sidebar.open{left:0;}
+  .main{padding:24px 20px 100px;}
+  .mobile-toggle{display:block !important;}
+}
+.mobile-toggle{display:none; position:fixed; top:16px; left:16px; z-index:60; background:var(--accent); color:#0d1117; border:none; border-radius:8px; width:40px; height:40px; font-size:18px; font-weight:700;}
+</style>
+</head>
+<body data-theme="dark">
+
+<button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="wrapper">
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-badge">G</div>
+    <div>
+      <div class="brand-text">GrowthScript Eng.</div>
+      <div class="brand-sub">Spring Boot Bible</div>
+    </div>
+  </div>
+  <button class="theme-toggle" onclick="toggleTheme()">🌗 Toggle Theme</button>
+
+  <div class="nav-group">
+    <div class="nav-label">Advanced JPA Queries</div>
+    <a class="nav-link" href="#limits-derived">155. Limits of Derived Queries</a>
+    <a class="nav-link" href="#n-plus-1">156. The N+1 Problem</a>
+    <a class="nav-link" href="#batch-fetching">157. Fixing N+1 with Batch Fetching</a>
+    <a class="nav-link" href="#query-jpql">158–159. @Query and JPQL</a>
+    <a class="nav-link" href="#native-sql">160. Native SQL with @Query</a>
+    <a class="nav-link" href="#named-query">161–162. @NamedQuery & @NamedNativeQuery</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Authorization Deep Dive</div>
+    <a class="nav-link" href="#authz-overview">163. Section Overview</a>
+    <a class="nav-link" href="#authn-vs-authz">164. Authentication vs Authorization</a>
+    <a class="nav-link" href="#granted-authority">165. GrantedAuthority Internals</a>
+    <a class="nav-link" href="#authority-vs-role">166. AUTHORITY vs ROLE</a>
+    <a class="nav-link" href="#hasrole-demo">167. Securing APIs with hasRole</a>
+    <a class="nav-link" href="#custom-security-errors">168. Customizing Security Errors</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Sorting & Pagination</div>
+    <a class="nav-link" href="#sorting">169–170. Sorting in Spring Data JPA</a>
+    <a class="nav-link" href="#pagination">171–172. Pagination in Spring Data JPA</a>
+    <a class="nav-link" href="#update-status">173. Updating Contact Messages</a>
+    <a class="nav-link" href="#interview-master">Master Interview Q&A Bank</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<div class="header-block">
+  <div class="eyebrow">Java Backend Engineer · Spring Boot Course</div>
+  <h1>Section 9 — Advanced JPA Queries, Authorization Deep Dive & Pagination</h1>
+  <p>Where derived query methods hit their limits and JPQL/native SQL/@NamedQuery take over; the N+1 problem diagnosed and fixed with real batch-fetching configuration; a rigorous authentication-vs-authorization distinction with GrantedAuthority internals and the AUTHORITY-vs-ROLE debate settled precisely; and the sorting/pagination machinery every list endpoint in a real API needs.</p>
+  <div class="meta-row">
+    <span class="meta-pill">Videos 155–173 (19 videos)</span>
+    <span class="meta-pill">~3 hrs runtime</span>
+    <span class="meta-pill">FAANG + Fintech interview focus</span>
+    <span class="meta-pill">Builds on Sections 4, 5, 6 & 7</span>
+  </div>
+</div>
+
+<!-- 155 -->
+<section class="topic" id="limits-derived">
+  <div class="topic-head"><span class="topic-num">155</span><h2>Limits of Derived Queries — When Method Names Stop Working</h2></div>
+  <div class="topic-video">Video: Limits of Derived Queries - When Method Names Stop Working</div>
+
+  <p>Section 7 went deep on derived query method mechanics; this topic marks the boundary where they stop being the right tool.</p>
+
+  <table>
+    <tr><th>Limitation</th><th>Why It Breaks Down</th></tr>
+    <tr><td><strong>Readability collapse past ~3 conditions</strong></td><td><code>findByStatusAndCreatedAtBetweenAndCompanyNameContainingIgnoreCaseOrderByCreatedAtDesc</code> is technically valid but unreadable and error-prone to modify</td></tr>
+    <tr><td><strong>Joins across multiple entities</strong></td><td>Derived queries can traverse simple nested-property paths (e.g. <code>findByCompany_Name</code>) but cannot express genuine multi-table joins with custom join conditions</td></tr>
+    <tr><td><strong>Aggregate functions</strong></td><td>No derived-query syntax exists for <code>AVG</code>, <code>SUM</code>, <code>GROUP BY</code>, <code>HAVING</code> — these require an explicit query</td></tr>
+    <tr><td><strong>Subqueries</strong></td><td>Cannot be expressed via method-name parsing at all</td></tr>
+    <tr><td><strong>Dynamic/conditional query structure</strong></td><td>A query whose shape depends on which filters are actually provided at runtime (e.g., an optional filter) cannot be a single fixed method name</td></tr>
+    <tr><td><strong>Performance-tuned, hand-optimized SQL</strong></td><td>Sometimes the generated JPQL isn't the most efficient possible query for a specific database/index setup</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 The Practical Decision Rule</div>
+    <p>Use a derived query method when the query is genuinely simple (1–2 conditions, a straightforward field-based filter). The moment you're fighting the method-name syntax to express something (nested conditions, joins, aggregates) or the method name itself becomes hard to parse as a human, reach for <code>@Query</code> with explicit JPQL instead — covered next.</p>
+  </div>
+</section>
+
+<!-- 156 -->
+<section class="topic" id="n-plus-1">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">156</span><h2>The N+1 Problem — The Silent Performance Killer</h2></div>
+  <div class="topic-video">Video: The N+1 Problem - The Silent Performance Killer</div>
+
+  <p>Section 5 briefly named this problem; this topic goes deep. Using the <code>Company</code>/<code>Job</code> relationship from Section 5's JPA relationships deep dive as the running example:</p>
+
+  <div class="diagram">List<Company> companies = companyRepository.findAll();   // Query #1: SELECT * FROM companies
+
+for (Company c : companies) {
+    c.getJobs().size();   // triggers a LAZY LOAD for EACH company
+}
+
+// Query #2:  SELECT * FROM jobs WHERE company_id = 1
+// Query #3:  SELECT * FROM jobs WHERE company_id = 2
+// Query #4:  SELECT * FROM jobs WHERE company_id = 3
+// ...
+// Query #(N+1): SELECT * FROM jobs WHERE company_id = N
+
+// 1 query for N companies + N additional queries for their jobs = N+1 total queries
+// 100 companies -> 101 queries, when 2 well-designed queries (or 1 join) would suffice</div>
+
+  <div class="box danger">
+    <div class="box-title">⚠ Why "Silent" Is the Operative Word</div>
+    <p>The N+1 problem is uniquely dangerous because it produces <strong>entirely correct results</strong> — every test passes, every response is accurate — while silently degrading performance in a way that's invisible in code review (nothing about <code>c.getJobs().size()</code> looks wrong) and often invisible in local development (where a handful of test rows make 101 queries feel instant). It typically only becomes visible in production once data volume grows, manifesting as mysteriously slow endpoints that don't obviously correlate with any specific line of business logic — exactly the kind of bug that's expensive to diagnose after the fact and cheap to prevent by understanding the pattern upfront.</p>
+  </div>
+
+  <h4>How to Detect It</h4>
+  <ul>
+    <li><code>spring.jpa.show-sql=true</code> (plus <code>spring.jpa.properties.hibernate.format_sql=true</code>) and manually counting queries for a suspicious endpoint — crude but effective for learning.</li>
+    <li>A datasource proxy library (like <strong>p6spy</strong> or <strong>datasource-proxy</strong>) that logs every executed query with a running count — the practical production-debugging approach.</li>
+    <li>Hibernate's built-in statistics (<code>spring.jpa.properties.hibernate.generate_statistics=true</code>), which logs aggregate query counts per session.</li>
+    <li>APM tools (Datadog, New Relic) that flag suspiciously repetitive query patterns automatically in production traces.</li>
+  </ul>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Does switching the association's fetch type to EAGER "fix" the N+1 problem?</div>
+      <div class="qa-a"><p>No — and this is a common, incorrect first instinct. Switching <code>@OneToMany</code> to <code>FetchType.EAGER</code> doesn't eliminate the extra queries; it just changes <strong>when</strong> they happen — Hibernate still typically issues one separate query per parent to fetch each one's associated collection (unless it happens to also use a join, which isn't EAGER's default query strategy for collections), except now they fire immediately during <code>findAll()</code> regardless of whether the caller ever actually needed the jobs data at all. Worse, it makes the problem <strong>unconditional</strong> and harder to control per-query — every single fetch of a <code>Company</code>, anywhere in the codebase, now always pays this cost, even in code paths that never touch <code>.getJobs()</code>. The correct fixes (covered in the next topic) target the specific query that needs the association, not the association's global default.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 157 -->
+<section class="topic" id="batch-fetching">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">157</span><h2>Fixing the N+1 Problem with Hibernate Batch Fetching</h2></div>
+  <div class="topic-video">Video: Fixing the N+1 Problem with Hibernate Batch Fetching</div>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'bf1')">Fix 1 — JOIN FETCH (query-specific)</button>
+      <button class="tab-btn" onclick="showTab(this,'bf2')">Fix 2 — @EntityGraph (declarative)</button>
+      <button class="tab-btn" onclick="showTab(this,'bf3')">Fix 3 — @BatchSize (global batching)</button>
+    </div>
+    <div class="tab-content active" id="bf1"><pre><span class="kw">public interface</span> <span class="cl">CompanyRepository extends</span> JpaRepository&lt;Company, Long&gt; {
+
+    <span class="an">@Query</span>(<span class="str">"SELECT DISTINCT c FROM Company c LEFT JOIN FETCH c.jobs"</span>)
+    List&lt;Company&gt; <span class="mt">findAllWithJobs</span>();
+    <span class="cm">// generates ONE query with a SQL JOIN — jobs come back already populated,</span>
+    <span class="cm">// zero additional lazy-load queries triggered later</span>
+}</pre></div>
+    <div class="tab-content" id="bf2"><pre><span class="kw">public interface</span> <span class="cl">CompanyRepository extends</span> JpaRepository&lt;Company, Long&gt; {
+
+    <span class="an">@EntityGraph</span>(attributePaths = {<span class="str">"jobs"</span>})   <span class="cm">// declarative alternative to writing JOIN FETCH by hand</span>
+    List&lt;Company&gt; <span class="mt">findAll</span>();
+    <span class="cm">// overrides JpaRepository's default findAll() specifically for this repository,</span>
+    <span class="cm">// telling Hibernate to eagerly fetch "jobs" for THIS query only</span>
+}</pre></div>
+    <div class="tab-content" id="bf3"><pre><span class="an">@Entity</span>
+<span class="kw">public class</span> <span class="cl">Company</span> {
+    <span class="an">@OneToMany</span>(mappedBy = <span class="str">"company"</span>)
+    <span class="an">@BatchSize</span>(size = <span class="mt">20</span>)   <span class="cm">// Hibernate-specific: batches lazy loads in groups of 20</span>
+    <span class="kw">private</span> List&lt;Job&gt; jobs;
+}
+<span class="cm">// instead of N individual "WHERE company_id = ?" queries, Hibernate issues</span>
+<span class="cm">// ceil(N/20) queries using "WHERE company_id IN (?, ?, ?, ... up to 20 ids)"</span>
+<span class="cm">// — dramatically fewer round-trips, though still more than a single JOIN FETCH</span></pre></div>
+  </div>
+
+  <table>
+    <tr><th>Approach</th><th>Query Count</th><th>Best For</th></tr>
+    <tr><td><code>JOIN FETCH</code></td><td>Exactly 1</td><td>A specific, known use case where you always need the association — most efficient, but requires a dedicated query method per fetch shape</td></tr>
+    <tr><td><code>@EntityGraph</code></td><td>Exactly 1 (typically)</td><td>Same effect as JOIN FETCH but more declarative/reusable, and can be applied to override even inherited <code>JpaRepository</code> methods like <code>findAll()</code></td></tr>
+    <tr><td><code>@BatchSize</code></td><td>ceil(N / batch size)</td><td>A general-purpose, global safety net applied at the entity level — helps even in code paths you didn't specifically optimize, at the cost of still being more than 1 query</td></tr>
+  </table>
+
+  <div class="box warn">
+    <div class="box-title">⚠ The DISTINCT Keyword in JOIN FETCH Isn't Optional</div>
+    <p>A SQL join between a <code>Company</code> and its multiple <code>Job</code>s produces one <strong>result row per job</strong> — meaning a company with 5 jobs appears 5 times in the raw joined result set. Without <code>DISTINCT</code> in the JPQL, Hibernate would return duplicate <code>Company</code> objects in the Java-level result list (technically the same object reference repeated, due to first-level cache identity, but still duplicated entries in the returned <code>List</code>). <code>DISTINCT</code> at the JPQL level deduplicates these before the result is returned — a very common, easy-to-miss bug when first learning <code>JOIN FETCH</code>.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Can you use JOIN FETCH for more than one collection association on the same entity in a single query?</div>
+      <div class="qa-a"><p>Technically you can write it, but Hibernate will throw a <code>MultipleBagFetchException</code> if you try to <code>JOIN FETCH</code> <strong>two separate <code>List</code>-typed collections</strong> in the same query — the Cartesian product of two unbounded collections joined simultaneously produces an explosion of duplicate rows Hibernate can't cleanly deduplicate back into the correct object graph shape. Common workarounds: fetch one collection via <code>JOIN FETCH</code> and let the other remain lazy (or use <code>@BatchSize</code> for it), change one of the collections to a <code>Set</code> instead of a <code>List</code> (which sidesteps the specific "bag" ordering ambiguity that triggers the exception), or split into two separate queries and merge the results in application code.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Why doesn't @BatchSize get you down to exactly 1 query like JOIN FETCH does?</div>
+      <div class="qa-a"><p><code>@BatchSize</code> is a general optimization applied at the <strong>entity/association mapping level</strong>, not tied to any specific query — it doesn't know in advance which parent IDs will need their lazy collection loaded, so it can only batch together the IDs that happen to already be loaded into the persistence context at the moment a lazy load is triggered, up to the configured batch size. <code>JOIN FETCH</code> is a <strong>query-level</strong> decision made upfront, explicitly telling Hibernate "I need these specific parents and their children together, right now, in one shot" — a stronger, more specific guarantee that a generic batching heuristic can't match, in exchange for less flexibility (you need a dedicated query method for each distinct fetch shape you require).</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 158-159 -->
+<section class="topic" id="query-jpql">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">158–159</span><h2>Introducing @Query and JPQL — Writing Custom JPA Queries</h2></div>
+  <div class="topic-video">Videos: Introducing @Query and JPQL - Writing Custom JPA Queries · Hands-On Demo - Writing JPQL Queries Using @Query</div>
+
+  <p><strong>JPQL (Java Persistence Query Language)</strong> is JPA's own SQL-like query language — but it queries against <strong>entities and their fields</strong>, not tables and columns directly, making it database-vendor-agnostic (the same query works unchanged against MySQL, PostgreSQL, Oracle — Hibernate's dialect translates it to the actual vendor SQL).</p>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'jpql1')">Basic @Query with JPQL</button>
+      <button class="tab-btn" onclick="showTab(this,'jpql2')">Named vs positional parameters</button>
+      <button class="tab-btn" onclick="showTab(this,'jpql3')">Projections — returning a subset of fields</button>
+    </div>
+    <div class="tab-content active" id="jpql1"><pre><span class="kw">public interface</span> <span class="cl">JobRepository extends</span> JpaRepository&lt;Job, Long&gt; {
+
+    <span class="an">@Query</span>(<span class="str">"SELECT j FROM Job j WHERE j.minSalary &gt;= :minSalary AND j.company.name = :companyName"</span>)
+    List&lt;Job&gt; <span class="mt">searchJobs</span>(<span class="an">@Param</span>(<span class="str">"minSalary"</span>) BigDecimal minSalary,
+                          <span class="an">@Param</span>(<span class="str">"companyName"</span>) String companyName);
+    <span class="cm">// "Job j" refers to the ENTITY CLASS, "j.company.name" navigates the</span>
+    <span class="cm">// mapped Java object graph — NOT the raw "jobs"/"company_id" table/column names</span>
+}</pre></div>
+    <div class="tab-content" id="jpql2"><pre><span class="cm">// named parameters (preferred — clearer, order-independent)</span>
+<span class="an">@Query</span>(<span class="str">"SELECT j FROM Job j WHERE j.status = :status"</span>)
+List&lt;Job&gt; <span class="mt">findByStatus</span>(<span class="an">@Param</span>(<span class="str">"status"</span>) String status);
+
+<span class="cm">// positional parameters (order-dependent, more fragile to reorder)</span>
+<span class="an">@Query</span>(<span class="str">"SELECT j FROM Job j WHERE j.status = ?1"</span>)
+List&lt;Job&gt; <span class="mt">findByStatusPositional</span>(String status);</pre></div>
+    <div class="tab-content" id="jpql3"><pre><span class="cm">// selecting specific fields rather than a full entity — a "projection"</span>
+<span class="an">@Query</span>(<span class="str">"SELECT new com.growthscript.dto.JobSummaryDto(j.id, j.title, j.company.name) "</span> +
+       <span class="str">"FROM Job j WHERE j.status = 'OPEN'"</span>)
+List&lt;JobSummaryDto&gt; <span class="mt">findOpenJobSummaries</span>();
+<span class="cm">// JobSummaryDto MUST have a matching constructor — this is JPQL's</span>
+<span class="cm">// "constructor expression" syntax, letting a query return DTOs DIRECTLY,</span>
+<span class="cm">// skipping the manual entity-to-DTO mapping step from Section 4</span></pre></div>
+  </div>
+
+  <table>
+    <tr><th></th><th>Derived Query Method</th><th>@Query with JPQL</th><th>Native SQL</th></tr>
+    <tr><td><strong>Written against</strong></td><td>Method name (parsed)</td><td>Entity/field names</td><td>Actual table/column names</td></tr>
+    <tr><td><strong>Database-portable?</strong></td><td>✅ Yes</td><td>✅ Yes</td><td>❌ No — vendor-specific SQL syntax</td></tr>
+    <tr><td><strong>Complexity ceiling</strong></td><td>Low</td><td>High — joins, aggregates, subqueries, projections all supported</td><td>Unlimited — anything the database supports</td></tr>
+    <tr><td><strong>IDE/compile-time safety</strong></td><td>Checked at startup (Section 7)</td><td>Checked at startup, but string-based — no compile-time type checking</td><td>No JPA-level validation at all — pure string, checked only by the database at execution</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 Constructor Expressions — A Major Practical Win</div>
+    <p>The projection example above directly addresses a real pain point from Section 4's DTO pattern: instead of fetching full entities and manually mapping them to DTOs in the service layer (extra code, extra memory for unused fields), a JPQL <strong>constructor expression</strong> lets the database-level query itself select only the needed columns and have Hibernate construct the DTO directly — genuinely more efficient (less data transferred and mapped) and less boilerplate, for read-heavy, DTO-shaped list/summary endpoints specifically.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Does JPQL protect against SQL injection the same way derived queries and native parameterized queries do?</div>
+      <div class="qa-a"><p>Yes, as long as you use <strong>named or positional parameters</strong> (<code>:status</code> or <code>?1</code>) rather than string-concatenating user input directly into the JPQL string. Parameters are bound via JDBC's prepared-statement mechanism underneath, exactly like derived queries — user input is always treated as data, never as executable query syntax, regardless of what characters it contains (directly extending Section 7's SQL injection discussion). The vulnerability only reappears if a developer manually concatenates raw user input into the <code>@Query</code> string itself, which defeats the parameterization Spring Data JPA provides — a mistake, not a limitation of JPQL/@Query as a mechanism.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Why does JPQL use entity/field names instead of table/column names, and what's the practical benefit?</div>
+      <div class="qa-a"><p>JPQL operates at the <strong>object-model level</strong> deliberately — it's part of what makes JPA/Hibernate an ORM abstraction rather than a thin SQL wrapper. This means a JPQL query written today continues to work unchanged if the underlying database vendor changes (MySQL to PostgreSQL, say), if a <code>@Column(name=...)</code> mapping is renamed at the database level without touching the Java field name, or across any Hibernate-dialect-specific SQL syntax differences — all of which Hibernate translates transparently underneath. This portability is the direct, practical payoff of JPQL's entity-oriented syntax versus writing native SQL, which ties a query to one specific database's exact schema and syntax.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 160 -->
+<section class="topic" id="native-sql">
+  <div class="topic-head"><span class="topic-num">160</span><h2>Using Native SQL Queries with @Query — Practical Demo</h2></div>
+  <div class="topic-video">Video: Using Native SQL Queries with @Query - Practical Demo</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'ns1')">nativeQuery = true</button></div>
+    <div class="tab-content active" id="ns1"><pre><span class="an">@Query</span>(
+    value = <span class="str">"SELECT * FROM jobs j WHERE j.min_salary &gt;= :minSalary "</span> +
+            <span class="str">"AND MATCH(j.description) AGAINST(:keyword IN NATURAL LANGUAGE MODE)"</span>,
+            <span class="cm">// ^^ a MySQL-SPECIFIC full-text search function — impossible to express in portable JPQL</span>
+    nativeQuery = <span class="kw">true</span>
+)
+List&lt;Job&gt; <span class="mt">fullTextSearch</span>(<span class="an">@Param</span>(<span class="str">"minSalary"</span>) BigDecimal minSalary,
+                              <span class="an">@Param</span>(<span class="str">"keyword"</span>) String keyword);</pre></div>
+  </div>
+
+  <div class="box warn">
+    <div class="box-title">⚠ When Native SQL Is Genuinely Justified — Not a Default Choice</div>
+    <p>Native SQL should be the <strong>last resort</strong>, reached for specifically when: (1) a database-vendor-specific feature has no JPQL equivalent (full-text search functions, window functions, specific date/JSON functions), (2) an existing, already-hand-tuned SQL query needs to be reused as-is (e.g., migrating a legacy stored procedure's logic), or (3) a query needs hand-tuning for performance that JPQL's generated SQL doesn't achieve (verified via <code>EXPLAIN</code> analysis, not just a guess). Reaching for native SQL by default throws away JPQL's database portability and the (admittedly limited) startup-time validation JPQL gets — it should be a deliberate, justified exception, not a habit.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Does a native query still return managed JPA entities the way a JPQL query does?</div>
+      <div class="qa-a"><p>Yes, when the repository method's return type is a mapped entity type (as in the example above), Spring Data JPA still maps the native SQL's result set rows back into fully-managed <code>Job</code> entities, tracked by the persistence context exactly like any other JPA-fetched entity — dirty checking, lazy associations, and the full entity lifecycle from Section 4 all still apply normally. This is a genuinely useful property: native SQL is used only to express the <em>query logic</em> itself, while the result still integrates cleanly into the rest of the JPA-managed object graph, rather than returning disconnected raw data.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 161-162 -->
+<section class="topic" id="named-query">
+  <div class="topic-head"><span class="topic-num">161–162</span><h2>Understanding & Using @NamedQuery and @NamedNativeQuery</h2></div>
+  <div class="topic-video">Videos: Understanding @NamedQuery and @NamedNativeQuery · Demo</div>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'nq1')">@NamedQuery — declared on the entity</button>
+      <button class="tab-btn" onclick="showTab(this,'nq2')">Referenced from the repository</button>
+    </div>
+    <div class="tab-content active" id="nq1"><pre><span class="an">@Entity</span>
+<span class="an">@NamedQuery</span>(
+    name = <span class="str">"Job.findOpenJobsAboveSalary"</span>,   <span class="cm">// convention: EntityName.methodPurpose</span>
+    query = <span class="str">"SELECT j FROM Job j WHERE j.status = 'OPEN' AND j.minSalary &gt;= :minSalary"</span>
+)
+<span class="kw">public class</span> <span class="cl">Job</span> { ... }</pre></div>
+    <div class="tab-content" id="nq2"><pre><span class="kw">public interface</span> <span class="cl">JobRepository extends</span> JpaRepository&lt;Job, Long&gt; {
+
+    <span class="cm">// Spring Data JPA AUTOMATICALLY looks for a NamedQuery matching</span>
+    <span class="cm">// "Job.findByMinSalaryGreaterThan" by convention BEFORE falling back to</span>
+    <span class="cm">// parsing the method name as a derived query — but usually you reference</span>
+    <span class="cm">// it explicitly for clarity:</span>
+    List&lt;Job&gt; <span class="mt">findOpenJobsAboveSalary</span>(<span class="an">@Param</span>(<span class="str">"minSalary"</span>) BigDecimal minSalary);
+}</pre></div>
+  </div>
+
+  <table>
+    <tr><th></th><th><code>@Query</code></th><th><code>@NamedQuery</code></th></tr>
+    <tr><td><strong>Declared where</strong></td><td>Directly on the repository method — colocated with usage</td><td>On the <code>@Entity</code> class — decoupled from any specific repository</td></tr>
+    <tr><td><strong>Parsed / validated</strong></td><td>At application startup</td><td>At <strong>EntityManagerFactory creation</strong> — arguably even earlier in the startup sequence, and historically the JPA-spec-standard mechanism (predates Spring Data JPA's <code>@Query</code> convenience)</td></tr>
+    <tr><td><strong>Reusability</strong></td><td>Tied to one repository interface</td><td>Named globally — in principle referenceable by name from anywhere via <code>EntityManager.createNamedQuery(...)</code>, not just Spring Data repositories</td></tr>
+    <tr><td><strong>Modern usage frequency</strong></td><td>✅ The overwhelming default choice in Spring Boot codebases</td><td>Less common now — <code>@Query</code>'s co-located, per-repository style is generally considered more maintainable/discoverable in practice</td></tr>
+  </table>
+
+  <div class="box info">
+    <div class="box-title">ℹ Why @Query Has Largely Superseded @NamedQuery in Practice</div>
+    <p>Putting the query text directly on the repository method (<code>@Query</code>) keeps the query <strong>colocated with its one point of use</strong> — a developer reading <code>JobRepository</code> sees exactly what SQL/JPQL each method executes without needing to jump to a separate entity class and search for a matching string name. <code>@NamedQuery</code>'s entity-level declaration made more sense in the pre-Spring-Data-JPA era, when query reuse across multiple, hand-written DAO classes was a bigger concern than it is now that each repository interface typically has one clear, dedicated purpose.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>What's a genuine, still-relevant reason to reach for @NamedQuery over @Query today?</div>
+      <div class="qa-a"><p>When the exact same query genuinely needs to be reused <strong>outside</strong> the Spring Data repository abstraction entirely — e.g., called directly via a raw <code>EntityManager.createNamedQuery("Job.findOpenJobsAboveSalary")</code> in some framework-level or legacy integration code that doesn't go through a Spring Data repository interface at all. Since <code>@NamedQuery</code> is validated and compiled once, centrally, at <code>EntityManagerFactory</code> startup regardless of which repository (if any) ends up calling it, it can offer a very marginal startup-time performance edge in very large applications with many query methods — though this is rarely the deciding factor in practice; the "shared across non-Spring-Data callers" scenario is the more commonly cited legitimate justification.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 163 -->
+<section class="topic" id="authz-overview">
+  <div class="topic-head"><span class="topic-num">163</span><h2>Section Overview — Authorization & Data Handling</h2></div>
+  <div class="topic-video">Video: Section Overview - Authorization & Data Handling</div>
+
+  <p>A roadmap video framing the rest of the section: having built authentication end-to-end across Sections 6–7 (proving <em>who</em> a user is via JWT/DB-backed login), this stretch goes deep specifically on <strong>authorization</strong> — the "what can you do" half of security that's been used somewhat informally (<code>hasRole("ADMIN")</code>) up to this point — before pivoting to sorting/pagination as the data-handling concerns every real list endpoint needs.</p>
+</section>
+
+<!-- 164 -->
+<section class="topic" id="authn-vs-authz">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">164</span><h2>Authentication (Who Are You) vs Authorization (What Can You Do)</h2></div>
+  <div class="topic-video">Video: Authentication(Who Are You) vs Authorization(What Can You Do)</div>
+
+  <p>This formalizes the distinction Section 6 first introduced when explaining the filter chain — worth a rigorous, precise restatement given how frequently interviewers probe exactly this pairing.</p>
+
+  <table>
+    <tr><th></th><th>Authentication</th><th>Authorization</th></tr>
+    <tr><td><strong>Question answered</strong></td><td>"Who are you?"</td><td>"What are you allowed to do?"</td></tr>
+    <tr><td><strong>Happens</strong></td><td>First, always — a prerequisite</td><td>Second, always — depends on a known identity</td></tr>
+    <tr><td><strong>Failure produces</strong></td><td>401 Unauthorized</td><td>403 Forbidden</td></tr>
+    <tr><td><strong>Spring Security mechanism</strong></td><td>Authentication filters, <code>AuthenticationManager</code>/<code>AuthenticationProvider</code>, <code>UserDetailsService</code> (Section 6)</td><td><code>AuthorizationFilter</code>, <code>authorizeHttpRequests</code> rules, <code>@PreAuthorize</code>, <code>GrantedAuthority</code> (this section)</td></tr>
+    <tr><td><strong>Example</strong></td><td>Verifying a JWT's signature and extracting the username</td><td>Checking whether that username's roles include <code>ROLE_ADMIN</code> before allowing a DELETE</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 The Single Cleanest Way to State This in an Interview</div>
+    <p>"Authentication establishes identity; authorization makes access-control decisions based on that already-established identity. You cannot authorize a request before authenticating it — there's no permission to check against an unknown principal — which is exactly why, in Spring Security's filter chain, authentication filters always run before the final <code>AuthorizationFilter</code>."</p>
+  </div>
+</section>
+
+<!-- 165 -->
+<section class="topic" id="granted-authority">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">165</span><h2>How Spring Security Stores Authorities Internally Using GrantedAuthority</h2></div>
+  <div class="topic-video">Video: How Spring Security Stores Authorities Internally using GrantedAuthority</div>
+
+  <div class="diagram">                    GrantedAuthority   (interface — ONE method: getAuthority() -> String)
+                          ▲
+                          │ implemented by
+                          │
+                 SimpleGrantedAuthority   (the standard, near-universal implementation —
+                                            just wraps a single authority string)
+
+UserDetails.getAuthorities() returns:  Collection<? extends GrantedAuthority>
+                                              │
+                                              ▼
+                              [ SimpleGrantedAuthority("ROLE_ADMIN"),
+                                SimpleGrantedAuthority("ROLE_USER"),
+                                SimpleGrantedAuthority("SCOPE_read") ]
+                                              │
+                             at authorization-check time, hasRole("ADMIN")
+                             checks whether "ROLE_ADMIN" is PRESENT in this collection</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'ga1')">From Section 7's User.getAuthorities()</button></div>
+    <div class="tab-content active" id="ga1"><pre><span name="Override">@Override</span>
+<span class="kw">public</span> Collection&lt;? <span class="kw">extends</span> GrantedAuthority&gt; <span class="mt">getAuthorities</span>() {
+    <span class="kw">return</span> roles.<span class="mt">stream</span>()
+            .<span class="mt">map</span>(role -&gt; <span class="kw">new</span> SimpleGrantedAuthority(role.<span class="mt">getName</span>()))  <span class="cm">// e.g. "ROLE_ADMIN"</span>
+            .<span class="mt">collect</span>(Collectors.<span class="mt">toSet</span>());
+}</pre></div>
+  </div>
+
+  <p>The core insight: <strong>Spring Security's entire internal authorization model is nothing more than a flat collection of strings</strong> attached to the authenticated principal. There's no built-in distinction at the storage level between a "role" and a "permission/authority" — <code>GrantedAuthority</code> is just a single-method wrapper around a string, and any semantic meaning (like the <code>ROLE_</code> prefix convention) is a layer of <em>convention</em> Spring Security builds on top, not something enforced by the type system itself.</p>
+
+  <div class="box warn">
+    <div class="box-title">⚠ hasRole() Silently Adds the ROLE_ Prefix — A Frequent Source of Bugs</div>
+    <p>Because <code>hasRole("ADMIN")</code> internally checks for the string <code>"ROLE_ADMIN"</code>, a common bug pattern is <strong>storing</strong> the authority as <code>"ROLE_ADMIN"</code> but then also writing <code>hasRole("ROLE_ADMIN")</code> at the check site — this silently checks for the (nonexistent) string <code>"ROLE_ROLE_ADMIN"</code>, causing every authorization check to fail with no obvious error, just an unexpected 403. Always store the <code>ROLE_</code> prefix in the database/data model (as done in Section 7's schema) and call <code>hasRole()</code> <em>without</em> repeating the prefix — or use <code>hasAuthority("ROLE_ADMIN")</code> everywhere instead, which never adds any implicit prefix, if you want to eliminate this entire class of bug.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>If GrantedAuthority is just a string wrapper with no built-in role/permission distinction, how would you model a fine-grained permission system (e.g., "can edit invoices," "can approve refunds") using it?</div>
+      <div class="qa-a"><p>Simply add more <code>GrantedAuthority</code> strings to the same flat collection — there's nothing structurally different required. A user's <code>getAuthorities()</code> might return <code>["ROLE_USER", "PERMISSION_EDIT_INVOICES", "PERMISSION_APPROVE_REFUNDS"]</code> all in the same collection — Spring Security doesn't care that some strings follow a "role" naming convention and others follow a "permission" naming convention; both are just strings checked via <code>hasAuthority()</code> (never <code>hasRole()</code>, which specifically adds the <code>ROLE_</code> prefix and implies the coarser convention). This directly demonstrates the next topic's AUTHORITY-vs-ROLE distinction is purely a <em>naming/usage convention</em>, not a structural capability difference in the framework.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 166 -->
+<section class="topic" id="authority-vs-role">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">166</span><h2>AUTHORITY vs ROLE — Which One Should You Use?</h2></div>
+  <div class="topic-video">Video: AUTHORITY vs ROLE - Which One Should You Use</div>
+
+  <table>
+    <tr><th></th><th>ROLE (via hasRole)</th><th>AUTHORITY (via hasAuthority)</th></tr>
+    <tr><td><strong>Granularity</strong></td><td>Coarse — broad user categories (ADMIN, USER, MANAGER)</td><td>Fine — specific individual permissions (EDIT_INVOICE, APPROVE_REFUND, VIEW_AUDIT_LOG)</td></tr>
+    <tr><td><strong>Naming convention</strong></td><td><code>ROLE_</code>-prefixed by Spring Security convention</td><td>No convention enforced — any string, though a scheme like <code>PERMISSION_X</code> or a resource:action pattern (<code>invoice:edit</code>) is common</td></tr>
+    <tr><td><strong>Typical count per user</strong></td><td>Small — usually 1–3 roles</td><td>Potentially many — a role often expands into several underlying authorities</td></tr>
+    <tr><td><strong>Maps well to</strong></td><td>"Who is this user, broadly" — a job title/category</td><td>"What specifically can this user do" — individual capabilities, composable and independently grantable</td></tr>
+  </table>
+
+  <div class="diagram">A ROLE is often really just a BUNDLE of AUTHORITIES:
+
+ROLE_ADMIN  conceptually expands to:
+    PERMISSION_EDIT_INVOICES
+    PERMISSION_APPROVE_REFUNDS
+    PERMISSION_VIEW_AUDIT_LOG
+    PERMISSION_MANAGE_USERS
+
+ROLE_ACCOUNTANT  might overlap partially:
+    PERMISSION_EDIT_INVOICES
+    PERMISSION_VIEW_AUDIT_LOG
+    (but NOT approve refunds or manage users)
+
+Fine-grained @PreAuthorize checks against the underlying AUTHORITY
+("can this user edit invoices?") remain stable even if which ROLES
+happen to grant that permission changes over time — a real advantage
+for systems whose permission model evolves independently of role names</div>
+
+  <div class="box tip">
+    <div class="box-title">💡 The Practical Recommendation — Not Either/Or</div>
+    <p>Real production systems typically use <strong>both, at different layers</strong>: coarse-grained <strong>role</strong> checks (<code>hasRole("ADMIN")</code>) guard broad access at the <code>authorizeHttpRequests</code>/URL level (Section 6) — cheap, simple, and sufficient for "is this general category of user even allowed near this feature area at all." Fine-grained <strong>authority/permission</strong> checks (<code>hasAuthority("PERMISSION_APPROVE_REFUNDS")</code>) guard specific, business-logic-sensitive operations, typically via <code>@PreAuthorize</code> at the service-method level (Section 6) — expressing exactly the capability that matters for that one specific action, independent of which role(s) happen to currently grant it. This layered approach avoids both the rigidity of pure role-based access control and the verbosity of checking dozens of individual permissions everywhere.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>A product requirement changes: accountants (previously only ROLE_ACCOUNTANT) should now also be able to approve refunds under $500, a capability that used to be ADMIN-only. How does an authority-based design handle this more gracefully than a pure role-based one?</div>
+      <div class="qa-a"><p>With pure role-based checks (<code>hasRole("ADMIN")</code> scattered across every refund-approval code path), this change requires either granting accountants the full <code>ADMIN</code> role (dangerously over-broad — they'd gain every other admin capability too) or hunting down and modifying every single <code>hasRole("ADMIN")</code> check related to refunds specifically. With an authority-based design, the check is already expressed as <code>hasAuthority("PERMISSION_APPROVE_REFUNDS")</code> — independent of which role(s) currently grant it — so the fix is purely a <strong>data-level</strong change: add that one authority to the <code>ROLE_ACCOUNTANT</code> role's grant set (or directly to affected users) in the database, with zero code changes to any authorization check anywhere in the codebase. This is the concrete, practical payoff of designing authorization around fine-grained authorities from the start, even in systems that also expose coarser roles for simpler checks.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 167 -->
+<section class="topic" id="hasrole-demo">
+  <div class="topic-head"><span class="topic-num">167</span><h2>Hands-On Demo — Securing APIs with hasRole</h2></div>
+  <div class="topic-video">Video: Hands-On Demo - Securing APIs with hasRole</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'hr1')">Layered role + authority checks in practice</button></div>
+    <div class="tab-content active" id="hr1"><pre><span class="an">@Bean</span>
+<span class="kw">public</span> SecurityFilterChain <span class="mt">filterChain</span>(HttpSecurity http) <span class="kw">throws</span> Exception {
+    http.authorizeHttpRequests(auth -&gt; auth
+        .requestMatchers(<span class="str">"/api/v1/admin/**"</span>).<span class="mt">hasRole</span>(<span class="str">"ADMIN"</span>)          <span class="cm">// coarse, URL-level gate</span>
+        .requestMatchers(HttpMethod.DELETE, <span class="str">"/api/v1/jobs/**"</span>).<span class="mt">hasRole</span>(<span class="str">"ADMIN"</span>)
+        .requestMatchers(HttpMethod.GET, <span class="str">"/api/v1/jobs/**"</span>).<span class="mt">permitAll</span>()
+        .anyRequest().<span class="mt">authenticated</span>()
+    );
+    <span class="kw">return</span> http.<span class="mt">build</span>();
+}
+
+<span class="an">@Service</span>
+<span class="kw">public class</span> <span class="cl">RefundService</span> {
+
+    <span class="an">@PreAuthorize</span>(<span class="str">"hasAuthority('PERMISSION_APPROVE_REFUNDS')"</span>)  <span class="cm">// fine-grained, service-level gate</span>
+    <span class="kw">public void</span> <span class="mt">approveRefund</span>(Long refundId) {
+        <span class="cm">// only reached if BOTH the URL-level role gate (if any applies to this</span>
+        <span class="cm">// endpoint) AND this specific authority check pass</span>
+    }
+}</pre></div>
+  </div>
+
+  <p>A hands-on verification: testing with JWTs issued for users with different role/authority combinations, confirming a plain <code>ROLE_USER</code> token correctly receives 403 on admin-only endpoints, while a properly-provisioned <code>ROLE_ADMIN</code> token succeeds — closing the loop from theory to a demonstrably working, testable authorization system.</p>
+</section>
+
+<!-- 168 -->
+<section class="topic" id="custom-security-errors">
+  <div class="topic-head"><span class="topic-num">168</span><h2>Customizing Security Errors in Spring Security</h2></div>
+  <div class="topic-video">Video: Customizing Security Errors in Spring Security</div>
+
+  <p>By default, Spring Security's 401/403 responses are plain, minimal, and inconsistent with the structured <code>ErrorResponse</code> shape established by <code>@RestControllerAdvice</code> in Section 5. Two dedicated interfaces let you customize each case.</p>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'cse1')">AuthenticationEntryPoint — 401 responses</button>
+      <button class="tab-btn" onclick="showTab(this,'cse2')">AccessDeniedHandler — 403 responses</button>
+      <button class="tab-btn" onclick="showTab(this,'cse3')">Wiring both into SecurityFilterChain</button>
+    </div>
+    <div class="tab-content active" id="cse1"><pre><span class="an">@Component</span>
+<span class="kw">public class</span> <span class="cl">CustomAuthenticationEntryPoint implements</span> AuthenticationEntryPoint {
+
+    <span name="Override">@Override</span>
+    <span class="kw">public void</span> <span class="mt">commence</span>(HttpServletRequest request, HttpServletResponse response,
+                        AuthenticationException authException) <span class="kw">throws</span> IOException {
+        <span class="cm">// invoked whenever an UNAUTHENTICATED request hits a protected endpoint —</span>
+        <span class="cm">// this is the exact landing spot referenced in Section 6's JWT filter Q&A</span>
+        response.<span class="mt">setStatus</span>(HttpServletResponse.SC_UNAUTHORIZED);
+        response.<span class="mt">setContentType</span>(<span class="str">"application/json"</span>);
+
+        ErrorResponse error = ErrorResponse.<span class="mt">builder</span>()
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .message(<span class="str">"Authentication required"</span>)
+                .timestamp(LocalDateTime.<span class="mt">now</span>())
+                .path(request.<span class="mt">getRequestURI</span>())
+                .build();
+
+        <span class="kw">new</span> ObjectMapper().<span class="mt">writeValue</span>(response.<span class="mt">getOutputStream</span>(), error);  <span class="cm">// consistent with Section 5's shape</span>
+    }
+}</pre></div>
+    <div class="tab-content" id="cse2"><pre><span class="an">@Component</span>
+<span class="kw">public class</span> <span class="cl">CustomAccessDeniedHandler implements</span> AccessDeniedHandler {
+
+    <span name="Override">@Override</span>
+    <span class="kw">public void</span> <span class="mt">handle</span>(HttpServletRequest request, HttpServletResponse response,
+                       AccessDeniedException accessDeniedException) <span class="kw">throws</span> IOException {
+        <span class="cm">// invoked when the user IS authenticated but LACKS the required role/authority</span>
+        response.<span class="mt">setStatus</span>(HttpServletResponse.SC_FORBIDDEN);
+        response.<span class="mt">setContentType</span>(<span class="str">"application/json"</span>);
+
+        ErrorResponse error = ErrorResponse.<span class="mt">builder</span>()
+                .status(HttpStatus.FORBIDDEN.value())
+                .message(<span class="str">"You do not have permission to perform this action"</span>)
+                .timestamp(LocalDateTime.<span class="mt">now</span>())
+                .path(request.<span class="mt">getRequestURI</span>())
+                .build();
+
+        <span class="kw">new</span> ObjectMapper().<span class="mt">writeValue</span>(response.<span class="mt">getOutputStream</span>(), error);
+    }
+}</pre></div>
+    <div class="tab-content" id="cse3"><pre>http.exceptionHandling(exceptions -&gt; exceptions
+    .authenticationEntryPoint(customAuthenticationEntryPoint)   <span class="cm">// 401 path</span>
+    .accessDeniedHandler(customAccessDeniedHandler)             <span class="cm">// 403 path</span>
+);</pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 Why Two Separate Interfaces, Not One</div>
+    <p>This mirrors the authentication-vs-authorization distinction from earlier in this section precisely: <code>AuthenticationEntryPoint</code> fires when identity itself couldn't be established (missing/invalid/expired token — a 401 concern), while <code>AccessDeniedHandler</code> fires when identity <em>was</em> established but the now-known principal simply lacks permission (a 403 concern). Keeping them as separate, independently-configurable components reflects that these are genuinely different failure modes needing potentially different handling/logging/messaging — not the same problem seen from two angles.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why can't @RestControllerAdvice alone handle these 401/403 error customizations, requiring these separate Spring Security interfaces instead?</div>
+      <div class="qa-a"><p>This connects directly to Section 6's filter-chain architecture: <code>@RestControllerAdvice</code>'s <code>@ExceptionHandler</code> methods only catch exceptions thrown from within <strong>controller method execution</strong>, inside <code>DispatcherServlet</code>'s processing. Authentication/authorization failures, however, are detected and thrown by Spring Security's <strong>filters</strong> — <code>AuthorizationFilter</code>, specifically — which run <em>before</em> the request ever reaches <code>DispatcherServlet</code> at all (per Section 6's filter-chain diagram). An exception thrown at the filter level, before Spring MVC's dispatch machinery is even involved, is structurally invisible to <code>@RestControllerAdvice</code> — Spring Security's own <code>ExceptionTranslationFilter</code> catches it instead and delegates to whichever <code>AuthenticationEntryPoint</code>/<code>AccessDeniedHandler</code> is configured, which is exactly why these are the correct, necessary customization point for this specific class of error.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 169-170 -->
+<section class="topic" id="sorting">
+  <div class="topic-head"><span class="topic-num">169–170</span><h2>Understanding & Implementing Sorting in Spring Data JPA</h2></div>
+  <div class="topic-video">Videos: Understanding Sorting in Spring Data JPA · Hands-On Demo - Sorting Records Using JPA</div>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'sort1')">Sort in a repository method</button>
+      <button class="tab-btn" onclick="showTab(this,'sort2')">Building Sort from a query parameter</button>
+    </div>
+    <div class="tab-content active" id="sort1"><pre><span class="kw">public interface</span> <span class="cl">JobRepository extends</span> JpaRepository&lt;Job, Long&gt; {
+    <span class="cm">// JpaRepository ALREADY provides this overload — no custom method needed</span>
+    List&lt;Job&gt; <span class="mt">findByStatus</span>(String status, Sort sort);
+}
+
+<span class="cm">// usage:</span>
+Sort sort = Sort.<span class="mt">by</span>(Sort.Direction.DESC, <span class="str">"createdAt"</span>)
+                .<span class="mt">and</span>(Sort.<span class="mt">by</span>(Sort.Direction.ASC, <span class="str">"title"</span>));   <span class="cm">// multi-field sort — secondary tiebreaker</span>
+List&lt;Job&gt; jobs = jobRepository.<span class="mt">findByStatus</span>(<span class="str">"OPEN"</span>, sort);
+<span class="cm">// generates: ... ORDER BY created_at DESC, title ASC</span></pre></div>
+    <div class="tab-content" id="sort2"><pre><span class="an">@GetMapping</span>(<span class="str">"/jobs"</span>)
+<span class="kw">public</span> List&lt;JobResponseDto&gt; <span class="mt">getJobs</span>(
+        <span class="an">@RequestParam</span>(defaultValue = <span class="str">"createdAt"</span>) String sortBy,
+        <span class="an">@RequestParam</span>(defaultValue = <span class="str">"desc"</span>) String direction) {
+
+    Sort sort = Sort.<span class="mt">by</span>(Sort.Direction.<span class="mt">fromString</span>(direction), sortBy);
+    <span class="kw">return</span> jobRepository.<span class="mt">findAll</span>(sort).<span class="mt">stream</span>()
+            .<span class="mt">map</span>(jobMapper::<span class="mt">toDto</span>)
+            .<span class="mt">toList</span>();
+}
+<span class="cm">// GET /jobs?sortBy=minSalary&direction=asc</span></pre></div>
+  </div>
+
+  <div class="box danger">
+    <div class="box-title">⚠ Never Pass a Client-Supplied Sort Field Directly Without Validation</div>
+    <p>Accepting an arbitrary <code>sortBy</code> string directly from a request parameter and passing it straight into <code>Sort.by()</code> is a <strong>real security/stability risk</strong>: it lets a client attempt to sort by any field name, including ones that don't exist on the entity (causing a runtime exception) or, in more sensitive systems, fields that shouldn't be exposed as sortable at all for information-disclosure reasons. Production code should validate <code>sortBy</code> against an explicit <strong>allow-list</strong> of permitted sortable field names before constructing the <code>Sort</code> object — a direct application of the "never trust client input" principle from Section 5's validation discussion.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>How does Sort.by(...) actually translate into SQL under the hood — does it risk SQL injection like a naively-built dynamic ORDER BY clause might?</div>
+      <div class="qa-a"><p>Spring Data JPA's <code>Sort</code> object is resolved against the target entity's <strong>mapped field metadata</strong> — it isn't string-concatenated directly into raw SQL. If a supplied field name doesn't correspond to an actual mapped entity property, Hibernate throws a <code>PropertyReferenceException</code> at query-execution time (not a SQL injection vector, since the field name is validated against known entity metadata before ever reaching the SQL generation stage, similar in spirit to how derived query method names are validated). That said, the earlier allow-list warning still stands — not because of injection risk specifically, but because an unvalidated field name can crash the endpoint with an unhandled exception, or expose sortability on fields that shouldn't be client-controllable for business reasons.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 171-172 -->
+<section class="topic" id="pagination">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">171–172</span><h2>Understanding & Implementing Pagination in Spring Data JPA</h2></div>
+  <div class="topic-video">Videos: Understanding Pagination in Spring Data JPA · Hands-On Demo - Paginating Data Using JPA</div>
+
+  <p>This extends Section 4's brief pagination mention into full working detail — essential given every list endpoint in a real production API needs it.</p>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'pg1')">Pageable + Page&lt;T&gt;</button>
+      <button class="tab-btn" onclick="showTab(this,'pg2')">Controller — building Pageable from query params</button>
+      <button class="tab-btn" onclick="showTab(this,'pg3')">Page&lt;T&gt; as an API response</button>
+    </div>
+    <div class="tab-content active" id="pg1"><pre><span class="kw">public interface</span> <span class="cl">JobRepository extends</span> JpaRepository&lt;Job, Long&gt; {
+    Page&lt;Job&gt; <span class="mt">findByStatus</span>(String status, Pageable pageable);
+    <span class="cm">// JpaRepository ALSO already provides: Page<Job> findAll(Pageable pageable)</span>
+}</pre></div>
+    <div class="tab-content" id="pg2"><pre><span class="an">@GetMapping</span>(<span class="str">"/jobs"</span>)
+<span class="kw">public</span> Page&lt;JobResponseDto&gt; <span class="mt">getJobs</span>(
+        <span class="an">@RequestParam</span>(defaultValue = <span class="str">"0"</span>) <span class="kw">int</span> page,
+        <span class="an">@RequestParam</span>(defaultValue = <span class="str">"20"</span>) <span class="kw">int</span> size,
+        <span class="an">@RequestParam</span>(defaultValue = <span class="str">"createdAt,desc"</span>) String sort) {
+
+    String[] sortParams = sort.<span class="mt">split</span>(<span class="str">","</span>);
+    Pageable pageable = PageRequest.<span class="mt">of</span>(page, size,
+            Sort.<span class="mt">by</span>(Sort.Direction.<span class="mt">fromString</span>(sortParams[<span class="mt">1</span>]), sortParams[<span class="mt">0</span>]));
+
+    <span class="kw">return</span> jobRepository.<span class="mt">findAll</span>(pageable).<span class="mt">map</span>(jobMapper::<span class="mt">toDto</span>);  <span class="cm">// Page.map() converts entity -> DTO,</span>
+}                                                                <span class="cm">// preserving all pagination metadata</span>
+<span class="cm">// GET /jobs?page=0&size=20&sort=minSalary,asc</span></pre></div>
+    <div class="tab-content" id="pg3"><pre><span class="cm">// Page<T>'s JSON response includes rich metadata alongside the content:</span>
+{
+  <span class="str">"content"</span>: [ <span class="cm">/* the 20 Job objects for this page */</span> ],
+  <span class="str">"totalElements"</span>: <span class="mt">143</span>,
+  <span class="str">"totalPages"</span>: <span class="mt">8</span>,
+  <span class="str">"number"</span>: <span class="mt">0</span>,          <span class="cm">// current page (0-indexed)</span>
+  <span class="str">"size"</span>: <span class="mt">20</span>,
+  <span class="str">"first"</span>: <span class="kw">true</span>,
+  <span class="str">"last"</span>: <span class="kw">false</span>,
+  <span class="str">"numberOfElements"</span>: <span class="mt">20</span>
+}</pre></div>
+  </div>
+
+  <table>
+    <tr><th>Type</th><th>What It Provides</th><th>Query Cost</th></tr>
+    <tr><td><code>List&lt;T&gt;</code></td><td>Just the rows — no metadata at all</td><td>1 query</td></tr>
+    <tr><td><code>Slice&lt;T&gt;</code></td><td>Content + <code>hasNext()</code>/<code>hasPrevious()</code>, but NOT total count</td><td>1 query — fetches <code>size + 1</code> rows to determine if a next page exists, without a separate COUNT</td></tr>
+    <tr><td><code>Page&lt;T&gt;</code></td><td>Everything <code>Slice</code> has, PLUS <code>totalElements</code>/<code>totalPages</code></td><td><strong>2 queries</strong> — the content query, plus a separate <code>COUNT(*)</code> query to compute totals</td></tr>
+  </table>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Page's COUNT Query Is a Real, Often-Overlooked Cost</div>
+    <p>Returning <code>Page&lt;T&gt;</code> always triggers a <strong>second query</strong> just to compute <code>totalElements</code> — on a very large table, an unindexed or complex-filtered <code>COUNT(*)</code> can itself become a meaningful performance cost, sometimes even slower than the actual content query it's paired with. If a UI genuinely doesn't need a total-page-count display (e.g., an infinite-scroll feed that just needs "is there more to load"), <strong>prefer <code>Slice&lt;T&gt;</code></strong> specifically to avoid this extra COUNT query entirely — a concrete, interview-relevant performance/API-design trade-off most candidates default to <code>Page</code> without considering.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>For a very large table (tens of millions of rows), why does offset-based pagination (page=500&size=20) get progressively slower for later pages, and what's the alternative?</div>
+      <div class="qa-a"><p>Offset-based pagination (<code>LIMIT 20 OFFSET 10000</code>, underneath a request for page 500) requires the database to still <strong>scan and discard</strong> all 10,000 preceding rows before it can return the requested 20 — the further into the dataset a page is, the more wasted scanning work each request costs, even with an index, since the database still has to walk that many index entries to reach the offset. The scalable alternative is <strong>keyset (cursor-based) pagination</strong>: instead of an offset, the client passes the <strong>last seen value</strong> of the sort key from the previous page (e.g., <code>WHERE created_at &lt; :lastSeenTimestamp ORDER BY created_at DESC LIMIT 20</code>) — this lets the database jump directly to the right starting point via an index seek, with performance that stays roughly constant regardless of how deep into the dataset the "page" conceptually is. The trade-off: keyset pagination doesn't support jumping to an arbitrary page number directly (only "next"/"previous" relative to a cursor), which is often an acceptable UX trade-off for infinite-scroll-style interfaces but not for a classic numbered-page UI.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Why does Page's map() method (used above to convert entities to DTOs) preserve pagination metadata rather than needing to be recomputed?</div>
+      <div class="qa-a"><p><code>Page&lt;T&gt;.map(Function&lt;T,R&gt;)</code> is specifically designed to transform only the <strong>content</strong> of the page (each individual element, entity → DTO here) while carrying forward all the pagination metadata (<code>totalElements</code>, <code>totalPages</code>, current page number) unchanged, since that metadata was already correctly computed against the original (pre-mapping) query and has nothing to do with what shape each element is transformed into afterward. This makes it the standard, idiomatic way to expose a paginated <strong>DTO</strong> response from a repository that naturally returns paginated <strong>entities</strong> — directly connecting Section 4's DTO-mapping discussion to the pagination machinery here, without manually reconstructing a new <code>Page</code> object and re-deriving its metadata by hand.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 173 -->
+<section class="topic" id="update-status">
+  <div class="topic-head"><span class="topic-num">173</span><h2>From NEW to CLOSED — Updating Contact Messages</h2></div>
+  <div class="topic-video">Video: From NEW to CLOSED - Updating Contact Messages</div>
+
+  <p>The section's capstone — a PATCH-style status-update endpoint on the <code>Contact</code> entity from Section 4's capstone, now layering in this section's concepts: role-gated (only staff, via <code>hasRole</code>/<code>hasAuthority</code>, can transition a contact's status), and demonstrating a targeted, single-field update rather than a full entity replacement.</p>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'us1')">Status-update endpoint</button></div>
+    <div class="tab-content active" id="us1"><pre><span class="an">@PatchMapping</span>(<span class="str">"/{id}/status"</span>)
+<span class="an">@PreAuthorize</span>(<span class="str">"hasAuthority('PERMISSION_MANAGE_CONTACTS')"</span>)   <span class="cm">// this section's fine-grained authority check</span>
+<span class="kw">public</span> ResponseEntity&lt;ContactResponseDto&gt; <span class="mt">updateStatus</span>(
+        <span class="an">@PathVariable</span> String id,
+        <span class="an">@RequestBody</span> UpdateStatusRequest request) {
+
+    Contact contact = contactRepository.<span class="mt">findById</span>(id)
+            .<span class="mt">orElseThrow</span>(() -&gt; <span class="kw">new</span> ResourceNotFoundException(<span class="str">"Contact not found: "</span> + id));
+
+    <span class="cm">// a real state machine would validate the transition here —</span>
+    <span class="cm">// e.g. NEW -> IN_PROGRESS -> CLOSED, rejecting invalid jumps like NEW -> CLOSED</span>
+    contact.<span class="mt">setStatus</span>(request.<span class="mt">getStatus</span>());
+    Contact updated = contactRepository.<span class="mt">save</span>(contact);
+    <span class="cm">// @LastModifiedDate / @LastModifiedBy (Section 5's auditing) fire automatically here</span>
+
+    <span class="kw">return</span> ResponseEntity.<span class="mt">ok</span>(contactMapper.<span class="mt">toDto</span>(updated));
+}</pre></div>
+  </div>
+
+  <div class="box info">
+    <div class="box-title">ℹ A Genuine Full-Stack Synthesis Point</div>
+    <p>This one small endpoint quietly exercises nearly every major concept from Sections 4 through 9: JPA entity lookup and <code>save()</code> (Section 4), DTO mapping (Section 4), global exception handling for the not-found case (Section 5), JPA auditing firing automatically on the update (Section 5), fine-grained authority-based authorization (this section), and PATCH's HTTP semantics for a partial update (Section 3). Recognizing how many earlier concepts converge in one realistic endpoint is exactly the kind of synthesis interviewers are listening for in system-design and code-review-style interview questions.</p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- MASTER Q&A -->
+<section class="topic" id="interview-master">
+  <span class="section-badge">🎯 Rapid-Fire Round</span>
+  <div class="topic-head"><h2>Master Interview Q&A Bank — Section 9</h2></div>
+  <p class="dim">JPA query strategy and authorization design are two of the most reliably-tested "does this candidate have real production experience" areas — these synthesize the whole section.</p>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>An endpoint that lists jobs with their company names is timing out under load. Walk through your full diagnostic and fix process.</div>
+      <div class="qa-a"><p>(1) Enable query logging/a datasource proxy to confirm the actual query pattern — likely reveals the N+1 signature (1 query for jobs, N queries for each job's company via a lazy <code>@ManyToOne</code>). (2) Confirm via <code>EXPLAIN</code> or Hibernate statistics that query count scales linearly with result size. (3) Fix with a targeted <code>JOIN FETCH</code> or <code>@EntityGraph</code> on the specific repository method powering this endpoint (not a global fetch-type change, which risks the "eager-fixes-nothing" trap). (4) If the endpoint is paginated, verify the fix still works correctly with <code>Pageable</code> — a naive <code>JOIN FETCH</code> combined with pagination on a collection association can produce incorrect, non-paginated-at-the-database-level results (Hibernate historically had to paginate in-memory in some such cases, a known gotcha worth mentioning). (5) Re-measure query count and latency after the fix to confirm the improvement empirically, not just theoretically.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Design the full authorization model (roles, authorities, and where each check lives) for a multi-tenant SaaS invoicing platform with Owner, Accountant, and Viewer user types.</div>
+      <div class="qa-a"><p>Coarse roles (<code>ROLE_OWNER</code>, <code>ROLE_ACCOUNTANT</code>, <code>ROLE_VIEWER</code>) gate broad feature-area access at the <code>authorizeHttpRequests</code> level (e.g., only Owner/Accountant can reach <code>/api/v1/invoices/**</code> write endpoints at all; Viewer is read-only via method-level GET restrictions). Fine-grained authorities (<code>PERMISSION_CREATE_INVOICE</code>, <code>PERMISSION_APPROVE_PAYMENT</code>, <code>PERMISSION_MANAGE_USERS</code>) gate specific business operations via <code>@PreAuthorize</code> at the service layer, mapped from roles in the database so the mapping can evolve without code changes (this section's ROLE-vs-AUTHORITY discussion). On top of both, a <strong>tenant-ownership check</strong> in the service layer verifies the authenticated user's tenant ID matches the invoice's tenant ID before any operation proceeds — a business-logic-level check no static role/authority system can express, since it depends on the specific resource being accessed, not just the user's general capabilities. This three-layer design (URL-level roles, method-level authorities, data-level ownership checks) is a realistic, complete answer synthesizing this section with general system-design thinking.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>When would you choose Slice<T> over Page<T>, and what's the concrete cost difference?</div>
+      <div class="qa-a"><p><code>Page&lt;T&gt;</code> executes the content query <em>plus</em> a separate <code>COUNT(*)</code> query to populate <code>totalElements</code>/<code>totalPages</code> — two round-trips, and the COUNT can itself be expensive on a large or heavily-filtered table. <code>Slice&lt;T&gt;</code> needs only one query (fetching <code>pageSize + 1</code> rows to cheaply determine <code>hasNext()</code> without a separate count). Choose <code>Slice</code> whenever the UI only needs "load more" / infinite-scroll semantics and genuinely has no need to display a total count or jump to an arbitrary page number — a common, concrete performance optimization for large-table, infinite-scroll-style endpoints that most candidates don't think to apply, defaulting to <code>Page</code> everywhere out of habit.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why might a well-designed system use @NamedNativeQuery (or plain @Query with nativeQuery=true) even though it sacrifices database portability — isn't portability always worth preserving?</div>
+      <div class="qa-a"><p>Portability is valuable but not free — it constrains you to whatever subset of functionality JPQL can express across all database vendors uniformly, which sometimes means leaving real performance or functionality on the table. If a specific PostgreSQL feature (e.g., a GIN index-backed JSONB containment query, or a window function for a leaderboard/ranking calculation) has no reasonable JPQL equivalent, and the team has no realistic plan to ever migrate off that specific database vendor, insisting on JPQL-only for theoretical future portability is a real, unnecessary cost paid today for a migration that may never happen. The honest engineering trade-off is: default to JPQL for portability and maintainability, but treat native SQL as a legitimate, deliberate escape hatch — not a failure — when a specific, verified need justifies it, exactly as covered in this section's native SQL topic.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>How do sorting and pagination interact — does adding Sort to a Pageable change the query's correctness or just its ordering?</div>
+      <div class="qa-a"><p>Sorting and pagination are complementary and, critically, <strong>order matters for pagination correctness</strong> — without a deterministic <code>ORDER BY</code>, a database offers no guarantee that repeated <code>LIMIT/OFFSET</code> queries return a stable, non-overlapping sequence of rows across separate requests (rows could shift between pages if concurrent writes happen, or if the database's default ordering isn't actually stable). This is precisely why <code>PageRequest.of(page, size, sort)</code> bundles both together — a paginated query without an explicit sort is technically well-formed but semantically risky for a UI that expects consistent, non-duplicated results as a user pages through results.</p></div>
+    </div>
+  </div>
+
+  <div class="box info" style="margin-top:28px;">
+    <div class="box-title">ℹ Next Section</div>
+    <p>Paste the next section's video list whenever you're ready, and I'll build the next HTML notes doc in this same design system.</p>
+  </div>
+
+  <footer>GrowthScript Engineering — Spring Boot Interview Bible · Section 9 of N</footer>
+</section>
+
+</main>
+</div>
+
+<script>
+function toggleTheme(){
+  const body = document.body;
+  const cur = body.getAttribute('data-theme');
+  body.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+}
+function showTab(btn, id){
+  const block = btn.closest('.code-block');
+  block.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  block.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  block.querySelector('#'+id).classList.add('active');
+}
+document.querySelectorAll('.qa-q').forEach(q=>{
+  q.addEventListener('click', ()=> q.parentElement.classList.toggle('open'));
+});
+</script>
+</body>
+</html>

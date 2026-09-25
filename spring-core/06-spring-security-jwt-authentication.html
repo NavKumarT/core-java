@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Section 6: Spring Security Internals & JWT Authentication | GrowthScript Engineering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117; --bg-elev:#151b23; --bg-card:#1a2230; --border:#2a3441;
+  --text:#e6edf3; --text-dim:#9aa7b5; --text-faint:#6e7c8c;
+  --accent:#3fb950; --accent-soft:rgba(63,185,80,.12);
+  --blue:#58a6ff; --blue-soft:rgba(88,166,255,.12);
+  --warn:#f0883e; --warn-soft:rgba(240,136,62,.12);
+  --danger:#f85149; --danger-soft:rgba(248,81,73,.12);
+  --code-bg:#0a0e14; --sidebar-w:290px; --radius:10px;
+  --shadow:0 4px 16px rgba(0,0,0,.35);
+}
+[data-theme="light"]{
+  --bg:#f6f8fa; --bg-elev:#ffffff; --bg-card:#ffffff; --border:#d8dee4;
+  --text:#1b2430; --text-dim:#4b5563; --text-faint:#8a96a3;
+  --accent:#1a7f37; --accent-soft:rgba(26,127,55,.08);
+  --blue:#0969da; --blue-soft:rgba(9,105,218,.08);
+  --warn:#9a6700; --warn-soft:rgba(154,103,0,.08);
+  --danger:#cf222e; --danger-soft:rgba(207,34,46,.08);
+  --code-bg:#0d1117; --shadow:0 2px 10px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); line-height:1.65; font-size:15.5px; transition:background .2s,color .2s;}
+code, pre, .mono{font-family:'Space Mono',monospace;}
+a{color:var(--blue); text-decoration:none;}
+a:hover{text-decoration:underline;}
+.wrapper{display:flex; min-height:100vh;}
+.sidebar{width:var(--sidebar-w); flex-shrink:0; background:var(--bg-elev); border-right:1px solid var(--border); position:sticky; top:0; height:100vh; overflow-y:auto; padding:22px 16px 40px;}
+.sidebar::-webkit-scrollbar{width:6px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border); border-radius:3px;}
+.brand{display:flex; align-items:center; gap:10px; margin-bottom:4px;}
+.brand-badge{width:34px; height:34px; border-radius:8px; background:var(--accent); display:flex; align-items:center; justify-content:center; color:#0d1117; font-weight:800; font-family:'Space Mono',monospace; font-size:15px; flex-shrink:0;}
+.brand-text{font-weight:800; font-size:14.5px; letter-spacing:.2px;}
+.brand-sub{font-size:11px; color:var(--text-faint); margin-top:1px;}
+.theme-toggle{margin:16px 0 20px; width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; font-size:12.5px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px;}
+.nav-group{margin-bottom:6px;}
+.nav-label{font-size:10.5px; text-transform:uppercase; letter-spacing:.9px; color:var(--text-faint); font-weight:700; margin:18px 4px 8px;}
+.nav-link{display:block; padding:7px 10px; border-radius:7px; font-size:13px; color:var(--text-dim); border-left:2px solid transparent; margin-bottom:1px;}
+.nav-link:hover{background:var(--accent-soft); color:var(--text); text-decoration:none;}
+.nav-link.sub{padding-left:22px; font-size:12.3px;}
+.main{flex:1; min-width:0; padding:44px 56px 120px; max-width:980px;}
+.header-block{margin-bottom:44px; padding-bottom:28px; border-bottom:1px solid var(--border);}
+.eyebrow{font-family:'Space Mono',monospace; font-size:11.5px; color:var(--accent); font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:10px;}
+.header-block h1{font-size:32px; font-weight:800; letter-spacing:-.5px; margin-bottom:12px;}
+.header-block p{color:var(--text-dim); font-size:15px; max-width:680px;}
+.meta-row{display:flex; gap:18px; margin-top:16px; flex-wrap:wrap;}
+.meta-pill{font-size:11.5px; padding:5px 11px; border-radius:20px; background:var(--bg-card); border:1px solid var(--border); color:var(--text-dim); font-family:'Space Mono',monospace;}
+section.topic{margin-bottom:56px; scroll-margin-top:24px;}
+.topic-head{display:flex; align-items:baseline; gap:12px; margin-bottom:6px;}
+.topic-num{font-family:'Space Mono',monospace; color:var(--accent); font-weight:700; font-size:14px;}
+h2{font-size:23px; font-weight:800; letter-spacing:-.3px;}
+.topic-video{font-size:12px; color:var(--text-faint); margin-bottom:20px; margin-top:2px; font-family:'Space Mono',monospace;}
+h3{font-size:17.5px; font-weight:700; margin:26px 0 12px; color:var(--text);}
+h4{font-weight:700; margin:18px 0 8px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.4px; font-size:12.5px;}
+p{margin-bottom:13px; color:var(--text); font-size:15px;}
+p.dim{color:var(--text-dim);}
+ul, ol{margin:0 0 15px 22px;}
+li{margin-bottom:7px; font-size:14.8px;}
+strong{color:var(--text); font-weight:700;}
+.hl{color:var(--accent); font-weight:700;}
+.box{border-radius:var(--radius); padding:16px 18px; margin:18px 0; border:1px solid var(--border); font-size:14.3px;}
+.box-title{font-weight:700; font-size:12.5px; text-transform:uppercase; letter-spacing:.5px; margin-bottom:7px; display:flex; align-items:center; gap:7px;}
+.tip{background:var(--accent-soft); border-color:rgba(63,185,80,.3);} .tip .box-title{color:var(--accent);}
+.warn{background:var(--warn-soft); border-color:rgba(240,136,62,.3);} .warn .box-title{color:var(--warn);}
+.info{background:var(--blue-soft); border-color:rgba(88,166,255,.3);} .info .box-title{color:var(--blue);}
+.danger{background:var(--danger-soft); border-color:rgba(248,81,73,.3);} .danger .box-title{color:var(--danger);}
+.code-block{background:var(--code-bg); border-radius:var(--radius); overflow:hidden; margin:16px 0; border:1px solid var(--border); box-shadow:var(--shadow);}
+.tabs{display:flex; background:rgba(255,255,255,.03); border-bottom:1px solid rgba(255,255,255,.08); overflow-x:auto;}
+.tab-btn{padding:9px 16px; font-family:'Space Mono',monospace; font-size:12px; color:#8a96a3; background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap;}
+.tab-btn.active{color:#e6edf3; border-bottom-color:var(--accent);}
+.tab-content{display:none; padding:16px 18px; overflow-x:auto;}
+.tab-content.active{display:block;}
+.tab-content pre{color:#c9d1d9; font-size:13px; line-height:1.65; white-space:pre;}
+.tab-content .kw{color:#ff7b72;} .tab-content .str{color:#a5d6ff;} .tab-content .cm{color:#8b949e; font-style:italic;}
+.tab-content .an{color:#d2a8ff;} .tab-content .cl{color:#79c0ff;} .tab-content .mt{color:#d2a8ff;}
+table{width:100%; border-collapse:collapse; margin:16px 0; font-size:13.8px;}
+th{text-align:left; padding:9px 12px; background:var(--bg-card); border-bottom:2px solid var(--border); font-size:11.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--text-dim);}
+td{padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top;}
+tr:hover td{background:var(--accent-soft);}
+.qa-wrap{margin-top:18px;}
+.qa-item{border:1px solid var(--border); border-radius:var(--radius); margin-bottom:10px; overflow:hidden; background:var(--bg-card);}
+.qa-q{padding:14px 46px 14px 18px; cursor:pointer; font-weight:600; font-size:14.3px; position:relative; display:flex; align-items:center; gap:10px;}
+.qa-q:hover{background:var(--accent-soft);}
+.qa-tag{font-family:'Space Mono',monospace; font-size:9.5px; padding:2px 7px; border-radius:4px; font-weight:700; flex-shrink:0; text-transform:uppercase; letter-spacing:.3px;}
+.tag-faang{background:rgba(248,81,73,.15); color:var(--danger);}
+.tag-core{background:rgba(88,166,255,.15); color:var(--blue);}
+.qa-q::after{content:'+'; position:absolute; right:18px; top:50%; transform:translateY(-50%); font-size:20px; color:var(--text-faint); font-weight:400;}
+.qa-item.open .qa-q::after{content:'−';}
+.qa-a{max-height:0; overflow:hidden; transition:max-height .25s ease; padding:0 18px;}
+.qa-item.open .qa-a{max-height:1400px; padding:2px 18px 18px;}
+.qa-a p{font-size:14px; color:var(--text-dim);}
+.qa-a ul{margin-top:6px;}
+.qa-a li{color:var(--text-dim); font-size:13.8px;}
+.divider{height:1px; background:var(--border); margin:44px 0;}
+.section-badge{display:inline-block; background:var(--accent); color:#0d1117; font-family:'Space Mono',monospace; font-weight:700; font-size:11px; padding:4px 10px; border-radius:6px; margin-bottom:14px;}
+.diagram{background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin:18px 0; font-family:'Space Mono',monospace; font-size:12.5px; color:var(--text-dim); overflow-x:auto; white-space:pre; line-height:1.5;}
+footer{margin-top:60px; padding-top:24px; border-top:1px solid var(--border); color:var(--text-faint); font-size:12px;}
+@media(max-width:900px){
+  .sidebar{position:fixed; left:-100%; z-index:50; transition:left .2s; box-shadow:var(--shadow);}
+  .sidebar.open{left:0;}
+  .main{padding:24px 20px 100px;}
+  .mobile-toggle{display:block !important;}
+}
+.mobile-toggle{display:none; position:fixed; top:16px; left:16px; z-index:60; background:var(--accent); color:#0d1117; border:none; border-radius:8px; width:40px; height:40px; font-size:18px; font-weight:700;}
+</style>
+</head>
+<body data-theme="dark">
+
+<button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="wrapper">
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-badge">G</div>
+    <div>
+      <div class="brand-text">GrowthScript Eng.</div>
+      <div class="brand-sub">Spring Boot Bible</div>
+    </div>
+  </div>
+  <button class="theme-toggle" onclick="toggleTheme()">🌗 Toggle Theme</button>
+
+  <div class="nav-group">
+    <div class="nav-label">Section 06 · Spring Security</div>
+    <a class="nav-link" href="#first-handshake">1. First Handshake & Default Behavior</a>
+    <a class="nav-link" href="#zero-config">2. Zero Config Magic</a>
+    <a class="nav-link" href="#disabling">3. Disabling Login Forms & Basic Auth</a>
+    <a class="nav-link" href="#permit-deny-csrf">4. permitAll, denyAll, CSRF Disable</a>
+    <a class="nav-link" href="#custom-config">5. Custom Security Configurations</a>
+    <a class="nav-link" href="#security-cors">6. CORS via Spring Security</a>
+    <a class="nav-link" href="#internals">7. Spring Security Internals</a>
+    <a class="nav-link" href="#internal-flow">8. Tracing the Internal Flow</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Passwords & Auth</div>
+    <a class="nav-link" href="#encoding-hashing">9. Encoding vs Encryption vs Hashing</a>
+    <a class="nav-link" href="#password-encoders">10. Password Encoders</a>
+    <a class="nav-link" href="#inmemory-users">11. InMemoryUserDetailsManager</a>
+    <a class="nav-link" href="#manual-auth">12. Manual Authentication Flow</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">JWT</div>
+    <a class="nav-link" href="#jwt-explained">13. JWT Tokens Explained</a>
+    <a class="nav-link" href="#jwt-signature">14. JWT Signature Validation</a>
+    <a class="nav-link" href="#jwt-generate">15. Generating JWT Tokens</a>
+    <a class="nav-link" href="#jwt-filter">16. JWT Validation Filter</a>
+    <a class="nav-link" href="#interview-master">Master Interview Q&A Bank</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<div class="header-block">
+  <div class="eyebrow">Java Backend Engineer · Spring Boot Course</div>
+  <h1>Section 6 — Spring Security Internals & JWT Authentication</h1>
+  <p>The single highest-leverage topic for backend interviews: how Spring Security's filter chain actually works under the hood, how passwords are safely stored, how authentication and authorization are genuinely different, and how to build stateless, production-grade JWT authentication from first principles — token generation, signature validation, and a custom filter wired into the security chain.</p>
+  <div class="meta-row">
+    <span class="meta-pill">Videos 107–129 (23 videos)</span>
+    <span class="meta-pill">~4 hrs runtime</span>
+    <span class="meta-pill">FAANG + Fintech interview focus</span>
+    <span class="meta-pill">Builds on Sections 1–5</span>
+  </div>
+</div>
+
+<!-- 1 -->
+<section class="topic" id="first-handshake">
+  <div class="topic-head"><span class="topic-num">01</span><h2>Hello Spring Security — Your First Handshake with the Framework</h2></div>
+  <div class="topic-video">Video: Hello Spring Security - Your First Handshake with the Framework</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'fh1')">Adding the dependency</button></div>
+    <div class="tab-content active" id="fh1"><pre><span class="kw">&lt;dependency&gt;</span>
+    <span class="kw">&lt;groupId&gt;</span>org.springframework.boot<span class="kw">&lt;/groupId&gt;</span>
+    <span class="kw">&lt;artifactId&gt;</span>spring-boot-starter-security<span class="kw">&lt;/artifactId&gt;</span>
+<span class="kw">&lt;/dependency&gt;</span></pre></div>
+  </div>
+
+  <p>The moment this single starter is added — with <strong>zero configuration code</strong> — every endpoint in the application becomes protected. This is Spring Boot's auto-configuration philosophy (Section 3) applied to security: <code>SecurityAutoConfiguration</code> detects Spring Security on the classpath and activates a fully-functional, secure-by-default setup.</p>
+
+  <div class="box tip">
+    <div class="box-title">💡 The Philosophy: Secure By Default</div>
+    <p>Spring Security's defaults are deliberately restrictive — every request requires authentication unless you explicitly say otherwise. This "closed by default, opened deliberately" posture is a foundational security design principle (the opposite of "open by default, restricted as an afterthought," which is how countless real-world vulnerabilities happen when a developer forgets to add a restriction).</p>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="topic" id="zero-config">
+  <div class="topic-head"><span class="topic-num">02</span><h2>Zero Config Magic — What Spring Security Gives You by Default</h2></div>
+  <div class="topic-video">Video: Zero Config Magic - What Spring Security Gives You by Default</div>
+
+  <p>Out of the box, with nothing but the starter on the classpath, Spring Boot auto-configures:</p>
+  <ul>
+    <li>A <strong>generated default password</strong> for a single user named <code>user</code>, printed to the console at startup (a fresh UUID every restart).</li>
+    <li>Every endpoint requires authentication — any unauthenticated request is redirected to a default <strong>login form</strong> (HTML page) or, for non-browser clients, met with an <strong>HTTP Basic Auth</strong> challenge.</li>
+    <li><strong>CSRF protection</strong> enabled by default for state-changing requests.</li>
+    <li>Sensible default security headers (e.g., <code>X-Content-Type-Options</code>, <code>X-Frame-Options</code>) to guard against common browser-based attacks like clickjacking.</li>
+  </ul>
+
+  <div class="box warn">
+    <div class="box-title">⚠ The Generated Password Is a Dev-Only Convenience</div>
+    <p>The console-printed password exists purely so a brand-new Spring Boot + Security project is immediately testable without any setup. It's obviously unsuitable for anything beyond initial exploration — the very next videos (static credentials, then real <code>UserDetailsService</code> implementations) exist to replace it.</p>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="topic" id="disabling">
+  <div class="topic-head"><span class="topic-num">108, 110</span><h2>Static User Credentials & Disabling Login Forms / Basic Auth</h2></div>
+  <div class="topic-video">Videos: Static User Credentials - Locking the Door with Custom Logins · Turning Things Off - Disabling Login Forms & Basic Auth</div>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'sc1')">Static credentials (properties)</button>
+      <button class="tab-btn" onclick="showTab(this,'sc2')">Disabling defaults in SecurityFilterChain</button>
+    </div>
+    <div class="tab-content active" id="sc1"><pre><span class="cm"># application.properties — simplest possible custom login,</span>
+<span class="cm"># still NOT production-appropriate (plaintext, single hardcoded user)</span>
+spring.security.user.name=admin
+spring.security.user.password=admin123
+spring.security.user.roles=ADMIN</pre></div>
+    <div class="tab-content" id="sc2"><pre><span class="an">@Configuration</span>
+<span class="an">@EnableWebSecurity</span>
+<span class="kw">public class</span> <span class="cl">SecurityConfig</span> {
+
+    <span class="an">@Bean</span>
+    <span class="kw">public</span> SecurityFilterChain <span class="mt">filterChain</span>(HttpSecurity http) <span class="kw">throws</span> Exception {
+        http
+            .formLogin(form -&gt; form.<span class="mt">disable</span>())     <span class="cm">// no more default HTML login page</span>
+            .httpBasic(basic -&gt; basic.<span class="mt">disable</span>());  <span class="cm">// no more Basic Auth challenge</span>
+            <span class="cm">// with BOTH disabled and no other auth mechanism configured yet,</span>
+            <span class="cm">// every request is simply rejected — this is the "empty slate" state</span>
+            <span class="cm">// custom configuration builds on top of, shown in the next topic</span>
+        <span class="kw">return</span> http.<span class="mt">build</span>();
+    }
+}</pre></div>
+  </div>
+
+  <div class="box info">
+    <div class="box-title">ℹ Why Disable These at All?</div>
+    <p>The default HTML login form is meant for traditional server-rendered web apps — irrelevant for a stateless REST API consumed by a separate frontend (or mobile app). HTTP Basic Auth sends credentials in <strong>every single request</strong> (base64-encoded, not encrypted — trivially decodable), which doesn't fit a token-based (JWT) authentication model at all. Disabling both is the standard first step before building a real, stateless, token-based security configuration.</p>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="topic" id="permit-deny-csrf">
+  <div class="topic-head"><span class="topic-num">111</span><h2>Demo of permitAll, denyAll and CSRF Disable</h2></div>
+  <div class="topic-video">Video: Demo of permitAll, denyAll and CSRF disable</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'pd1')">authorizeHttpRequests basics</button></div>
+    <div class="tab-content active" id="pd1"><pre>http
+    .authorizeHttpRequests(auth -&gt; auth
+        .requestMatchers(<span class="str">"/api/v1/auth/**"</span>).<span class="mt">permitAll</span>()   <span class="cm">// no authentication required at all</span>
+        .requestMatchers(<span class="str">"/api/v1/admin/**"</span>).<span class="mt">denyAll</span>()     <span class="cm">// blocked for EVERYONE, regardless of auth</span>
+        .anyRequest().<span class="mt">authenticated</span>()                       <span class="cm">// everything else needs a valid principal</span>
+    )
+    .csrf(csrf -&gt; csrf.<span class="mt">disable</span>());   <span class="cm">// see explanation below — appropriate for stateless APIs</span></pre></div>
+  </div>
+
+  <h4>What Is CSRF, and Why Disable It for a REST API?</h4>
+  <p><strong>CSRF (Cross-Site Request Forgery)</strong> exploits the browser's automatic inclusion of cookies on every request to a site — a malicious page can trick a logged-in user's browser into submitting a state-changing request (e.g., a hidden auto-submitting form) to your app, and the browser helpfully attaches the victim's session cookie, making it look legitimate. Spring Security's CSRF protection requires a unique, unguessable token on every state-changing request to defeat this.</p>
+
+  <div class="box tip">
+    <div class="box-title">💡 Why This Doesn't Apply to Token-Based (JWT) APIs</div>
+    <p>CSRF is fundamentally a <strong>cookie-based session</strong> vulnerability — it exploits the browser automatically attaching cookies. A stateless API authenticated via a <strong>JWT sent explicitly in the <code>Authorization</code> header</strong> (not a cookie) is not vulnerable to CSRF at all: an attacker's malicious page has no way to make the victim's browser automatically attach that header, since headers (unlike cookies) are never auto-attached by the browser to cross-origin requests. This is precisely why disabling CSRF is the <strong>correct, safe</strong> choice for a stateless JWT-based REST API — not a security shortcut, but a decision matching the actual threat model.</p>
+  </div>
+
+  <div class="box danger">
+    <div class="box-title">⚠ Never Disable CSRF for a Cookie/Session-Based App</div>
+    <p>If your app authenticates via a session cookie (the traditional server-rendered or same-origin-cookie-auth model), disabling CSRF genuinely reopens the vulnerability it was designed to close. The safe-to-disable rule applies specifically because JWT-in-header authentication is immune to the attack CSRF protection exists to prevent — not as a blanket rule for all APIs.</p>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="topic" id="custom-config">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">112–113</span><h2>Crafting Your Own Rules — Custom Security Configurations</h2></div>
+  <div class="topic-video">Videos: Crafting Your Own Rules - Custom Security Configurations Parts 1 & 2</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'cc1')">A complete, realistic SecurityConfig</button></div>
+    <div class="tab-content active" id="cc1"><pre><span class="an">@Configuration</span>
+<span class="an">@EnableWebSecurity</span>
+<span class="an">@EnableMethodSecurity</span>  <span class="cm">// enables @PreAuthorize/@PostAuthorize on service/controller methods</span>
+<span class="kw">public class</span> <span class="cl">SecurityConfig</span> {
+
+    <span class="an">@Bean</span>
+    <span class="kw">public</span> SecurityFilterChain <span class="mt">filterChain</span>(HttpSecurity http) <span class="kw">throws</span> Exception {
+        http
+            .csrf(csrf -&gt; csrf.<span class="mt">disable</span>())              <span class="cm">// stateless JWT API — safe, per above</span>
+            .cors(Customizer.<span class="mt">withDefaults</span>())            <span class="cm">// picks up the CorsConfigurationSource bean below</span>
+            .sessionManagement(sm -&gt;
+                sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))  <span class="cm">// no HttpSession ever created</span>
+            .authorizeHttpRequests(auth -&gt; auth
+                .requestMatchers(<span class="str">"/api/v1/auth/**"</span>, <span class="str">"/swagger-ui/**"</span>).<span class="mt">permitAll</span>()
+                .requestMatchers(HttpMethod.GET, <span class="str">"/api/v1/jobs/**"</span>).<span class="mt">permitAll</span>()  <span class="cm">// public reads</span>
+                .requestMatchers(<span class="str">"/api/v1/admin/**"</span>).<span class="mt">hasRole</span>(<span class="str">"ADMIN"</span>)          <span class="cm">// role-based restriction</span>
+                .anyRequest().<span class="mt">authenticated</span>()
+            )
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.<span class="kw">class</span>)  <span class="cm">// custom JWT filter — covered later</span>
+            .httpBasic(basic -&gt; basic.<span class="mt">disable</span>())
+            .formLogin(form -&gt; form.<span class="mt">disable</span>());
+        <span class="kw">return</span> http.<span class="mt">build</span>();
+    }
+
+    <span class="an">@Bean</span>
+    <span class="kw">public</span> PasswordEncoder <span class="mt">passwordEncoder</span>() {
+        <span class="kw">return new</span> BCryptPasswordEncoder();   <span class="cm">// covered in depth in the Password Encoders topic</span>
+    }
+}</pre></div>
+  </div>
+
+  <table>
+    <tr><th>Method</th><th>Purpose</th></tr>
+    <tr><td><code>hasRole("ADMIN")</code></td><td>Requires the authenticated principal to hold authority <code>ROLE_ADMIN</code> (Spring auto-prefixes <code>ROLE_</code> — don't include it yourself)</td></tr>
+    <tr><td><code>hasAuthority("SCOPE_read")</code></td><td>Requires an exact authority string — no auto-prefixing, used for fine-grained permissions/scopes rather than coarse roles</td></tr>
+    <tr><td><code>hasAnyRole(...)</code> / <code>hasAnyAuthority(...)</code></td><td>Matches if the principal holds any one of several listed roles/authorities</td></tr>
+    <tr><td><code>requestMatchers(HttpMethod.GET, "...")</code></td><td>Scopes a rule to a specific HTTP method, not just a path — common for "public reads, protected writes" patterns</td></tr>
+  </table>
+
+  <div class="box danger">
+    <div class="box-title">⚠ Rule Ordering Matters — First Match Wins</div>
+    <p><code>authorizeHttpRequests</code> rules are evaluated <strong>in the order declared</strong>, and the <strong>first matching rule applies</strong> — later rules for the same path are never reached. A very common real bug: placing <code>.anyRequest().authenticated()</code> <em>before</em> a more specific <code>permitAll()</code> rule for a sub-path, which makes the specific rule unreachable and unintentionally locks down an endpoint meant to be public. Always order rules from <strong>most specific to least specific</strong>, with <code>anyRequest()</code> last.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why SessionCreationPolicy.STATELESS specifically for a JWT-based API, and what does it actually change?</div>
+      <div class="qa-a"><p>It instructs Spring Security to <strong>never create or use an <code>HttpSession</code></strong> to store the <code>SecurityContext</code> — every single request must independently prove who it is (via the JWT in the <code>Authorization</code> header), rather than relying on server-side session state tied to a <code>JSESSIONID</code> cookie. This is the architectural foundation that makes true horizontal scaling trivial: any server instance can handle any request without needing shared/sticky session state (directly connecting to the session-scope scalability discussion from Section 5) — a load balancer can route requests to any instance in the fleet with zero coordination.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What's the difference between hasRole and hasAuthority, precisely?</div>
+      <div class="qa-a"><p>Both check the principal's granted authorities, but <code>hasRole("ADMIN")</code> is sugar that automatically checks for the authority string <code>"ROLE_ADMIN"</code> — the <code>ROLE_</code> prefix convention is a Spring Security-specific pattern for coarse-grained roles. <code>hasAuthority("SCOPE_read")</code> checks the exact string with no prefixing magic — used for finer-grained permission/scope-style authorization (common in OAuth2 setups where authorities come from token scopes, not simple roles). Mixing them up (e.g., calling <code>hasRole("ROLE_ADMIN")</code>, double-prefixing) is a very common configuration bug that silently fails all authorization checks.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="topic" id="security-cors">
+  <div class="topic-head"><span class="topic-num">114</span><h2>CORS Configuration via Spring Security</h2></div>
+  <div class="topic-video">Video: CORs configurations using Spring Security</div>
+
+  <p>This revisits Section 4's CORS topic, but configured through <strong>Spring Security's</strong> CORS integration rather than a plain <code>WebMvcConfigurer</code> — necessary because once Spring Security is on the classpath, <strong>its filter chain runs before Spring MVC even sees the request</strong>, so a CORS configuration living only in <code>WebMvcConfigurer</code> can be overridden or never even reached for security-protected endpoints.</p>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'sec-cors1')">CorsConfigurationSource bean</button></div>
+    <div class="tab-content active" id="sec-cors1"><pre><span class="an">@Bean</span>
+<span class="kw">public</span> CorsConfigurationSource <span class="mt">corsConfigurationSource</span>() {
+    CorsConfiguration config = <span class="kw">new</span> CorsConfiguration();
+    config.<span class="mt">setAllowedOrigins</span>(List.<span class="mt">of</span>(<span class="str">"http://localhost:4200"</span>));
+    config.<span class="mt">setAllowedMethods</span>(List.<span class="mt">of</span>(<span class="str">"GET"</span>, <span class="str">"POST"</span>, <span class="str">"PUT"</span>, <span class="str">"DELETE"</span>));
+    config.<span class="mt">setAllowedHeaders</span>(List.<span class="mt">of</span>(<span class="str">"*"</span>));
+    config.<span class="mt">setAllowCredentials</span>(<span class="kw">true</span>);
+
+    UrlBasedCorsConfigurationSource source = <span class="kw">new</span> UrlBasedCorsConfigurationSource();
+    source.<span class="mt">registerCorsConfiguration</span>(<span class="str">"/**"</span>, config);
+    <span class="kw">return</span> source;
+}
+
+<span class="cm">// then in the SecurityFilterChain: .cors(Customizer.withDefaults())</span>
+<span class="cm">// — this tells Spring Security to USE the CorsConfigurationSource bean above</span></pre></div>
+  </div>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Why CORS Must Be Configured Before Security Rejects the Request</div>
+    <p>Spring Security's CORS integration deliberately runs its own <code>CorsFilter</code> <strong>early in the filter chain</strong> — before authentication/authorization checks — specifically so that browser <strong>preflight OPTIONS requests</strong> (which never carry auth credentials, per Section 4's CORS mechanics) aren't rejected with a 401/403 before the browser even gets a chance to see the CORS headers it needs. Without this ordering, every cross-origin request to a secured endpoint would fail at the preflight stage, regardless of how correctly CORS itself was configured.</p>
+  </div>
+</section>
+
+<!-- 7 -->
+<section class="topic" id="internals">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">115</span><h2>What Happens Under the Hood — Spring Security Internals</h2></div>
+  <div class="topic-video">Video: What Happens Under the Hood - Spring Security Internals</div>
+
+  <p>This is the architectural core of the entire section — the mental model every subsequent JWT topic builds directly on top of.</p>
+
+  <div class="diagram">Incoming HTTP Request
+        │
+        ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  DelegatingFilterProxy  (bridges the Servlet container to Spring) │
+└─────────────────────────────────────────────────────────────────┘
+        │
+        ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  FilterChainProxy  →  the actual SecurityFilterChain (a LIST      │
+│  of security filters, executed in a fixed, well-defined order)    │
+├─────────────────────────────────────────────────────────────────┤
+│  1. SecurityContextPersistenceFilter / SecurityContextHolderFilter │
+│  2. CorsFilter                                                     │
+│  3. CsrfFilter                                                     │
+│  4. (your custom JwtAuthFilter would be inserted HERE — before #5) │
+│  5. UsernamePasswordAuthenticationFilter (form login)               │
+│  6. BasicAuthenticationFilter (HTTP Basic)                          │
+│  7. ExceptionTranslationFilter  (catches Auth/AccessDenied exceptions)│
+│  8. FilterSecurityInterceptor / AuthorizationFilter (final authZ check)│
+└─────────────────────────────────────────────────────────────────┘
+        │
+        ▼
+   Your Controller Method (DispatcherServlet, as in Section 3)</div>
+
+  <h3>The Core Components & Their Exact Responsibilities</h3>
+  <table>
+    <tr><th>Component</th><th>Responsibility</th></tr>
+    <tr><td><strong>AuthenticationManager</strong></td><td>The central orchestrator — receives an unauthenticated <code>Authentication</code> object, delegates to the right <code>AuthenticationProvider</code>, returns a fully-authenticated <code>Authentication</code> object or throws <code>AuthenticationException</code></td></tr>
+    <tr><td><strong>AuthenticationProvider</strong></td><td>Does the <em>actual</em> authentication logic for one specific mechanism (e.g., <code>DaoAuthenticationProvider</code> checks username/password against a <code>UserDetailsService</code>) — an <code>AuthenticationManager</code> typically delegates across a list of providers, trying each until one succeeds or all fail</td></tr>
+    <tr><td><strong>UserDetailsService</strong></td><td>A single-method interface: <code>loadUserByUsername(String)</code> — your bridge between Spring Security and your actual user data source (database, in-memory, LDAP)</td></tr>
+    <tr><td><strong>UserDetails</strong></td><td>The interface representing an authenticated user's core data — username, password (hashed), granted authorities, and account status flags (enabled, locked, expired)</td></tr>
+    <tr><td><strong>PasswordEncoder</strong></td><td>Verifies a raw submitted password against the stored hash (covered in full detail in the Password Encoders topic)</td></tr>
+    <tr><td><strong>SecurityContextHolder</strong></td><td>A <strong>ThreadLocal</strong>-based holder for the current request's <code>SecurityContext</code> (which wraps the authenticated <code>Authentication</code> object) — this is how "who is the current user" is accessible anywhere in the call stack without explicitly passing it as a parameter</td></tr>
+  </table>
+
+  <div class="diagram">           AuthenticationManager
+                    │
+         delegates to (tries each in order)
+                    │
+        ┌───────────┼───────────┐
+        ▼           ▼            ▼
+DaoAuthentication  LdapAuth   JwtAuthenticationProvider
+Provider           Provider   (custom, for token-based auth)
+        │
+        ▼
+  UserDetailsService.loadUserByUsername(username)
+        │
+        ▼
+  UserDetails (username, hashed password, authorities)
+        │
+        ▼
+  PasswordEncoder.matches(rawPassword, storedHash)
+        │
+   ┌────┴────┐
+  MATCH      NO MATCH
+   │            │
+   ▼            ▼
+Authentication  AuthenticationException
+(fully populated,
+isAuthenticated=true)
+   │
+   ▼
+SecurityContextHolder.getContext().setAuthentication(...)</div>
+
+  <div class="box tip">
+    <div class="box-title">💡 The Single Most Important Mental Model in This Entire Section</div>
+    <p>Spring Security is fundamentally <strong>a chain of Servlet Filters</strong>, not "magic." Every feature — form login, Basic Auth, CSRF, and your own custom JWT validation — is implemented as a filter with a specific, well-defined position in that chain. Once this clicks, the entire framework stops feeling like a black box: adding JWT support is just "insert one more filter, before the point where Spring would otherwise reject an unauthenticated request."</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How does SecurityContextHolder make the current user available across an entire request without passing it as a parameter everywhere, and what's the catch with async code?</div>
+      <div class="qa-a"><p><code>SecurityContextHolder</code> defaults to a <strong>ThreadLocal</strong>-based storage strategy — the <code>SecurityContext</code> is bound to the thread currently processing the request. Since a typical Spring MVC request is handled start-to-finish on one dedicated thread, any code anywhere in that call stack (controller, service, repository) can call <code>SecurityContextHolder.getContext().getAuthentication()</code> and get the correct current user, with zero explicit parameter-passing — the exact same ThreadLocal mechanism underlying Section 5's request-scoped bean discussion. The catch: if work is handed off to a <strong>different thread</strong> (a custom thread pool, <code>@Async</code>, or reactive/WebFlux code), that new thread has no ThreadLocal-bound context by default, and <code>getAuthentication()</code> returns null unless the context is explicitly propagated (e.g., via <code>DelegatingSecurityContextRunnable</code> or switching the holder strategy to <code>MODE_INHERITABLETHREADLOCAL</code>).</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>What's the difference between authentication and authorization, precisely, and where does each happen in the filter chain?</div>
+      <div class="qa-a"><p><strong>Authentication</strong> answers "who are you?" — verifying identity (username/password check, JWT signature validation) — handled by the authentication-related filters (e.g., <code>UsernamePasswordAuthenticationFilter</code>, or a custom JWT filter) earlier in the chain, ultimately populating the <code>SecurityContextHolder</code>. <strong>Authorization</strong> answers "are you allowed to do this?" — checking the now-known identity's permissions against the requested resource — handled by <code>AuthorizationFilter</code> (formerly <code>FilterSecurityInterceptor</code>) at the <em>end</em> of the chain, evaluating your <code>authorizeHttpRequests</code> rules. This ordering is architecturally necessary: you cannot check permissions before you know who's asking.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Why does Spring Security use a Filter chain instead of, say, an interceptor or AOP-based approach like @Transactional does?</div>
+      <div class="qa-a"><p>Servlet Filters operate at the <strong>lowest level of the request-processing pipeline</strong> — before the request even reaches <code>DispatcherServlet</code>/Spring MVC (as established in Section 3's request lifecycle). This is deliberate: security decisions (rejecting an unauthenticated or unauthorized request) need to happen as early as possible, ideally before any application code, database access, or business logic executes at all — minimizing the attack surface and avoiding wasted work on requests that will ultimately be rejected. An AOP/interceptor-based approach operating deeper inside Spring MVC would mean the request has already partially been processed by the time security is checked — a fundamentally weaker security posture.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 -->
+<section class="topic" id="internal-flow">
+  <div class="topic-head"><span class="topic-num">116–117</span><h2>Tracing the Security Path — Internal Flow Demo</h2></div>
+  <div class="topic-video">Videos: Tracing the Security Path - Internal Flow Demo Parts 1 & 2</div>
+
+  <p>A hands-on, debugger-driven walkthrough setting breakpoints inside Spring Security's own source (<code>UsernamePasswordAuthenticationFilter</code>, <code>DaoAuthenticationProvider</code>, <code>ProviderManager</code>) to watch the exact sequence from the diagram above execute in real time against a live login request — turning the architectural diagram into concrete, verified understanding rather than memorized theory.</p>
+
+  <div class="box info">
+    <div class="box-title">ℹ Why This Hands-On Step Matters for Interviews</div>
+    <p>Being able to say "I've actually stepped through Spring Security's filter chain in a debugger" is a meaningfully stronger interview signal than reciting the component names from a diagram — it demonstrates the difference between memorized architecture and genuinely internalized understanding, and equips you to debug unfamiliar security configuration issues on the job rather than just describing the theory.</p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 9 -->
+<section class="topic" id="encoding-hashing">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">118</span><h2>Encoding vs Encryption vs Hashing</h2></div>
+  <div class="topic-video">Video: Encoding Vs Encryption Vs Hashing</div>
+
+  <p>Three fundamentally different operations, frequently confused, and a very common interview question in its own right.</p>
+
+  <table>
+    <tr><th></th><th>Encoding</th><th>Encryption</th><th>Hashing</th></tr>
+    <tr><td><strong>Purpose</strong></td><td>Data <strong>format</strong> transformation for compatibility (e.g., binary → text)</td><td><strong>Confidentiality</strong> — hide data from unauthorized readers</td><td><strong>Integrity/verification</strong> — produce a fixed-size fingerprint of data</td></tr>
+    <tr><td><strong>Reversible?</strong></td><td>✅ Yes, trivially — no key needed at all</td><td>✅ Yes, but only with the correct key</td><td>❌ No — deliberately one-way by design</td></tr>
+    <tr><td><strong>Needs a key/secret?</strong></td><td>❌ No</td><td>✅ Yes (symmetric or asymmetric key)</td><td>❌ No (though a "salt" is added — not a secret key)</td></tr>
+    <tr><td><strong>Example</strong></td><td>Base64, URL encoding</td><td>AES, RSA</td><td>BCrypt, SHA-256, Argon2</td></tr>
+    <tr><td><strong>Used for passwords?</strong></td><td>❌ Never — trivially reversible, provides zero security</td><td>❌ Rarely for passwords specifically — if the encryption key is ever compromised, every password is instantly recoverable</td><td>✅ <strong>Yes — the correct and standard approach</strong></td></tr>
+  </table>
+
+  <div class="box danger">
+    <div class="box-title">⚠ Why Passwords Are Hashed, Never Encrypted or "Just" Encoded</div>
+    <p>Encoding (like Base64) provides <strong>zero security</strong> — it's designed to be reversed by anyone, with no key at all; using it for passwords is equivalent to storing them in plaintext. Encryption is reversible <em>by design</em> for legitimate use (decrypting a message meant to be read again later) — but this reversibility is exactly the wrong property for password storage: if a database breach also exposes the encryption key (a very plausible joint compromise), every single user's plaintext password is immediately recoverable. <strong>Hashing is deliberately one-way</strong> — there is no key to steal that would let an attacker recover the original password; the system only ever needs to verify a match (hash the login attempt, compare hashes), never to reconstruct the original.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>If hashing is one-way, how does a login system verify a password without ever "decrypting" the stored hash?</div>
+      <div class="qa-a"><p>It never needs to — login verification is fundamentally a <strong>re-computation and comparison</strong>, not a decryption. At signup, the system hashes the raw password once and stores only the hash. At login, it takes the newly submitted password, runs it through the <em>exact same</em> hashing algorithm (with the same salt, extracted from the stored hash itself — covered in the next topic), and checks whether the resulting hash matches the stored one. If both the original and the login attempt are the same string, a deterministic hash function always produces the same output — meaning a match is proof the submitted password is correct, without the system ever needing to know or reconstruct the original plaintext at all.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Give a legitimate real-world use case for each of encoding, encryption, and hashing in a typical Spring Boot application.</div>
+      <div class="qa-a"><p><strong>Encoding:</strong> Base64-encoding a binary file attachment to safely embed it inside a JSON payload, or URL-encoding query parameters with special characters. <strong>Encryption:</strong> encrypting sensitive data at rest that the application genuinely needs to read back later in its original form — e.g., a stored payment card token, or PII that must be decrypted for display to an authorized user. <strong>Hashing:</strong> password storage (the topic at hand), but also things like generating a checksum/fingerprint of a file to verify it wasn't tampered with in transit, or as part of a JWT's signature (covered later in this section).</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 -->
+<section class="topic" id="password-encoders">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">119</span><h2>How Passwords Really Stay Safe — Introduction to Password Encoders</h2></div>
+  <div class="topic-video">Video: How Passwords Really Stay Safe & introduction to Password Encoders</div>
+
+  <h3>Why Plain Hashing (Even SHA-256) Isn't Enough</h3>
+  <p>A naive approach — <code>SHA-256(password)</code> stored directly — is vulnerable to <strong>rainbow table attacks</strong>: precomputed lookup tables mapping common password hashes back to their plaintext, built once and reused against any leaked database. Fast, general-purpose hash functions like SHA-256 also make <strong>brute-force</strong> attacks computationally cheap for an attacker with GPU/ASIC hardware, since SHA-256 was designed to be <em>fast</em> — the opposite of what you want for password hashing specifically.</p>
+
+  <h3>The Two Properties a Real Password Hashing Algorithm Needs</h3>
+  <table>
+    <tr><th>Property</th><th>Why It Matters</th><th>How It's Achieved</th></tr>
+    <tr><td><strong>Salting</strong></td><td>Defeats rainbow tables — the same password produces a <em>different</em> hash for every user, since each hash incorporates a unique random value</td><td>A random salt is generated per password, and (with BCrypt) stored <em>as part of</em> the resulting hash string itself — no separate salt column needed</td></tr>
+    <tr><td><strong>Deliberate slowness (work factor)</strong></td><td>Makes brute-force/dictionary attacks computationally expensive even with powerful hardware — milliseconds per guess instead of billions of guesses per second</td><td>An adjustable "cost factor" / number of iterations, tunable to stay slow even as hardware gets faster over time</td></tr>
+  </table>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'pe1')">BCryptPasswordEncoder</button>
+      <button class="tab-btn" onclick="showTab(this,'pe2')">Anatomy of a BCrypt hash</button>
+      <button class="tab-btn" onclick="showTab(this,'pe3')">DelegatingPasswordEncoder</button>
+    </div>
+    <div class="tab-content active" id="pe1"><pre><span class="an">@Bean</span>
+<span class="kw">public</span> PasswordEncoder <span class="mt">passwordEncoder</span>() {
+    <span class="kw">return new</span> BCryptPasswordEncoder();   <span class="cm">// default strength/work factor = 10</span>
+    <span class="cm">// higher strength (e.g. 12) = slower hashing = more resistant to brute-force,</span>
+    <span class="cm">// but also slower login for legitimate users — a deliberate, tunable trade-off</span>
+}
+
+<span class="cm">// registration:</span>
+String hashed = passwordEncoder.<span class="mt">encode</span>(rawPassword);  <span class="cm">// a NEW random salt generated every call</span>
+userRepository.<span class="mt">save</span>(<span class="kw">new</span> User(username, hashed));
+
+<span class="cm">// login:</span>
+<span class="kw">boolean</span> matches = passwordEncoder.<span class="mt">matches</span>(rawPasswordAttempt, storedHash);
+<span class="cm">// matches() extracts the salt FROM storedHash, re-hashes the attempt with</span>
+<span class="cm">// that same salt, and compares — never needs a separately stored salt column</span></pre></div>
+    <div class="tab-content" id="pe2"><pre>$2a$10$N9qo8uLOickgx2ZMRZoMy.MrqogSVZoRcXswkYByAf2cQVs1z8Ei6
+ │  │  └──────────────┬───────────────┘└─────────────┬────────────────┘
+ │  │           22-char SALT                    31-char HASH
+ │  └── cost factor (2^10 = 1024 iterations)
+ └── algorithm identifier ($2a = BCrypt variant)
+
+<span class="cm">// the salt is embedded directly IN the stored string — this is why matches()</span>
+<span class="cm">// never needs a separate salt column; it's self-contained</span></pre></div>
+    <div class="tab-content" id="pe3"><pre><span class="cm">// Spring Security's actual DEFAULT PasswordEncoder bean, if you don't override it —</span>
+<span class="cm">// supports MULTIPLE algorithms simultaneously via a prefix in the stored hash</span>
+<span class="an">@Bean</span>
+<span class="kw">public</span> PasswordEncoder <span class="mt">passwordEncoder</span>() {
+    <span class="kw">return</span> PasswordEncoderFactories.<span class="mt">createDelegatingPasswordEncoder</span>();
+}
+<span class="cm">// stores hashes prefixed like: {bcrypt}$2a$10$N9qo8u...</span>
+<span class="cm">// lets you MIGRATE algorithms over time — old {noop}/{sha256} hashes still verify</span>
+<span class="cm">// correctly, while all NEW hashes use the currently-configured (default: bcrypt) algorithm</span></pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 Why BCrypt (or Argon2) Over Generic Hashes — Stated Precisely</div>
+    <p>"BCrypt is a <strong>purpose-built password hashing algorithm</strong> — it automatically handles per-password salting (defeating rainbow tables) and has a tunable, deliberately slow work factor (defeating brute-force at scale), whereas general-purpose hashes like SHA-256/MD5 are designed to be <em>fast</em> — the exact opposite property you want for password storage." <strong>Argon2</strong> (winner of the 2015 Password Hashing Competition) is the more modern, even stronger recommendation for new systems, additionally resistant to GPU/ASIC-based cracking via its memory-hardness — worth mentioning as the current best-practice frontier beyond BCrypt.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why does BCrypt's encode() method produce a DIFFERENT output every time for the same input password, and is that a bug?</div>
+      <div class="qa-a"><p>Not a bug — this is the entire point of automatic per-call salting. Every call to <code>encode()</code> generates a fresh, cryptographically random salt, incorporates it into the hashing computation, and embeds that salt directly in the returned string. Two users with the identical password <code>"password123"</code> will get two completely different stored hash strings, which is exactly what defeats rainbow-table and cross-user pattern attacks — an attacker who cracks one user's hash learns nothing about any other user, even if they share the same underlying password.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>If BCrypt hashes don't store the salt in a separate column, how does matches() know which salt to use for comparison?</div>
+      <div class="qa-a"><p>The salt is <strong>encoded directly within the stored hash string itself</strong> (as shown in the anatomy breakdown above — the second segment). When <code>matches(raw, storedHash)</code> is called, BCrypt parses the stored string, extracts the algorithm version, cost factor, and salt from it, re-runs the exact same hashing computation on the raw input using that extracted salt, and compares the resulting hash segment to the one already stored. This self-contained format is a deliberate design choice that simplifies password storage schemas — no separate salt column is ever needed.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How would you safely migrate an existing user base from an old, weak hashing scheme (e.g., unsalted MD5) to BCrypt without forcing every user to reset their password?</div>
+      <div class="qa-a"><p><code>DelegatingPasswordEncoder</code> (Spring Security's actual default) is purpose-built for exactly this migration scenario: store existing legacy hashes prefixed with an identifier like <code>{md5}</code>, and configure new hashes to use <code>{bcrypt}</code> going forward. Existing users can still log in — their submitted password is verified against the legacy algorithm identified by the stored prefix. A common production pattern layers on top of this: upon a successful login using a legacy-hashed password, <strong>transparently re-hash and re-save</strong> that user's password using the new, stronger algorithm at that moment — gradually migrating the entire user base to the stronger scheme over time, purely through normal login activity, with zero forced password resets.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 11 -->
+<section class="topic" id="inmemory-users">
+  <div class="topic-head"><span class="topic-num">120–121</span><h2>Creating Users with InMemoryUserDetailsManager</h2></div>
+  <div class="topic-video">Videos: Creating users using InMemoryUserDetailsManager Parts 1 & 2</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'im1')">InMemoryUserDetailsManager bean</button></div>
+    <div class="tab-content active" id="im1"><pre><span class="an">@Bean</span>
+<span class="kw">public</span> UserDetailsService <span class="mt">userDetailsService</span>(PasswordEncoder encoder) {
+    UserDetails admin = User.<span class="mt">withUsername</span>(<span class="str">"admin"</span>)
+            .password(encoder.<span class="mt">encode</span>(<span class="str">"admin123"</span>))
+            .roles(<span class="str">"ADMIN"</span>)         <span class="cm">// stored internally as authority "ROLE_ADMIN"</span>
+            .build();
+
+    UserDetails user = User.<span class="mt">withUsername</span>(<span class="str">"nikhil"</span>)
+            .password(encoder.<span class="mt">encode</span>(<span class="str">"pass123"</span>))
+            .roles(<span class="str">"USER"</span>)
+            .build();
+
+    <span class="kw">return new</span> InMemoryUserDetailsManager(admin, user);
+}</pre></div>
+  </div>
+
+  <p><code>InMemoryUserDetailsManager</code> is a full <code>UserDetailsService</code> implementation backed purely by an in-memory collection — no database at all. It's an excellent tool for <strong>demos, prototyping, and understanding the <code>UserDetailsService</code> contract in isolation</strong>, but obviously unsuitable for production (users vanish on every restart, no persistence, no scaling across multiple instances).</p>
+
+  <div class="box warn">
+    <div class="box-title">⚠ The Production Path: A Custom UserDetailsService</div>
+    <p>Real applications implement <code>UserDetailsService</code> themselves, backed by a JPA repository (from Section 4) — <code>loadUserByUsername()</code> queries the database for the user, maps the result to a <code>UserDetails</code> implementation (often by having your own <code>User</code> entity implement <code>UserDetails</code> directly, or via a dedicated adapter class), and returns it. Everything else in the authentication flow (password matching, authority checking) works identically to the in-memory version — <code>InMemoryUserDetailsManager</code> exists purely to teach the contract without the added complexity of a real data layer.</p>
+  </div>
+</section>
+
+<!-- 12 -->
+<section class="topic" id="manual-auth">
+  <div class="topic-head"><span class="topic-num">122–123</span><h2>Invoking the Spring Security Authentication Flow Manually</h2></div>
+  <div class="topic-video">Videos: Invoking the Spring Security authentication flow manually Parts 1 & 2</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'ma1')">Manual login endpoint</button></div>
+    <div class="tab-content active" id="ma1"><pre><span class="an">@RestController</span>
+<span class="an">@RequestMapping</span>(<span class="str">"/api/v1/auth"</span>)
+<span class="an">@RequiredArgsConstructor</span>
+<span class="kw">public class</span> <span class="cl">AuthController</span> {
+
+    <span class="kw">private final</span> AuthenticationManager authenticationManager;
+
+    <span class="an">@PostMapping</span>(<span class="str">"/login"</span>)
+    <span class="kw">public</span> ResponseEntity&lt;String&gt; <span class="mt">login</span>(<span class="an">@RequestBody</span> LoginRequest request) {
+
+        <span class="cm">// step 1: build an UNAUTHENTICATED token from raw credentials</span>
+        Authentication authRequest =
+            <span class="kw">new</span> UsernamePasswordAuthenticationToken(request.<span class="mt">getUsername</span>(), request.<span class="mt">getPassword</span>());
+
+        <span class="cm">// step 2: hand it to the AuthenticationManager — this is where ALL the</span>
+        <span class="cm">// internal machinery from the "Internals" topic actually executes:</span>
+        <span class="cm">// UserDetailsService lookup + PasswordEncoder.matches(), end to end</span>
+        Authentication authResult = authenticationManager.<span class="mt">authenticate</span>(authRequest);
+        <span class="cm">// throws BadCredentialsException / DisabledException / etc. on failure —</span>
+        <span class="cm">// caught centrally by @RestControllerAdvice (Section 5)</span>
+
+        <span class="cm">// step 3: authentication succeeded — generate and return a JWT</span>
+        <span class="cm">// (the exact next topic in this section)</span>
+        String token = jwtService.<span class="mt">generateToken</span>(authResult);
+        <span class="kw">return</span> ResponseEntity.<span class="mt">ok</span>(token);
+    }
+}
+
+<span class="an">@Bean</span>
+<span class="kw">public</span> AuthenticationManager <span class="mt">authenticationManager</span>(AuthenticationConfiguration config) <span class="kw">throws</span> Exception {
+    <span class="kw">return</span> config.<span class="mt">getAuthenticationManager</span>();  <span class="cm">// exposes Spring's auto-configured manager as an injectable bean</span>
+}</pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 Why This Manual Invocation Matters — The Bridge to JWT</div>
+    <p>This is the precise architectural seam where a traditional, form-login-based Spring Security app becomes a modern, <strong>token-issuing</strong> API. Rather than letting Spring Security's own <code>UsernamePasswordAuthenticationFilter</code> handle a login form submission and establish a session, you build a <strong>plain <code>@RestController</code> login endpoint</strong> that manually drives the exact same underlying <code>AuthenticationManager</code>/<code>UserDetailsService</code>/<code>PasswordEncoder</code> machinery — but on success, instead of creating a session, you issue a stateless JWT that the client will present on every subsequent request. Everything from the internals topic still applies; only the final step (session vs token) changes.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>What's the exact difference between the UsernamePasswordAuthenticationToken passed INTO authenticate() versus the one returned FROM it?</div>
+      <div class="qa-a"><p>The one passed in is <strong>unauthenticated</strong> — constructed with just the raw username and raw password, and its <code>isAuthenticated()</code> flag is <code>false</code>. Internally, <code>AuthenticationManager</code> (via <code>ProviderManager</code> delegating to <code>DaoAuthenticationProvider</code>) looks up the user via <code>UserDetailsService</code>, verifies the password via <code>PasswordEncoder.matches()</code>, and upon success constructs and returns a <strong>new, fully authenticated</strong> <code>Authentication</code> object — this one populated with the user's granted authorities and <code>isAuthenticated()</code> returning <code>true</code>. This returned, authenticated object is what gets placed into <code>SecurityContextHolder</code> (in the traditional session-based flow) or, in the JWT flow, is what gets encoded into the token's claims.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 13 -->
+<section class="topic" id="jwt-explained">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">124</span><h2>JWT Tokens Explained — Modern Token-Based Authentication</h2></div>
+  <div class="topic-video">Video: JWT Tokens Explained - Modern Token-Based Authentication</div>
+
+  <h3>Session-Based vs Token-Based Authentication</h3>
+  <table>
+    <tr><th></th><th>Session-Based (traditional)</th><th>Token-Based (JWT)</th></tr>
+    <tr><td><strong>Server state</strong></td><td>Server stores session data (in memory or a shared store) keyed by a session ID</td><td><strong>Stateless</strong> — server stores nothing; the token itself carries all necessary claims</td></tr>
+    <tr><td><strong>Client stores</strong></td><td>A session ID, typically via cookie</td><td>The full JWT, typically sent in the <code>Authorization: Bearer &lt;token&gt;</code> header</td></tr>
+    <tr><td><strong>Scaling</strong></td><td>Requires sticky sessions or a shared session store (Redis) across server instances</td><td>Any server instance can validate any token independently — trivially horizontally scalable</td></tr>
+    <tr><td><strong>Revocation</strong></td><td>Trivial — just delete the server-side session</td><td>Hard — a token is valid until it expires; genuine revocation needs an extra mechanism (blocklist/short expiry)</td></tr>
+    <tr><td><strong>CSRF exposure</strong></td><td>Vulnerable (cookie-based) — needs CSRF tokens</td><td>Not vulnerable, if kept out of cookies (Section 6's CSRF discussion)</td></tr>
+  </table>
+
+  <h3>Anatomy of a JWT — Three Base64URL-Encoded Segments</h3>
+  <div class="diagram">eyJhbGciOiJIUzI1NiJ9 . eyJzdWIiOiJuaWtoaWwiLCJyb2xlIjoiQURNSU4ifQ . 5mZ8...signature...
+
+     ┌────────┐             ┌─────────┐                  ┌───────────┐
+     │ HEADER  │      .      │ PAYLOAD  │        .          │ SIGNATURE  │
+     └────────┘             └─────────┘                  └───────────┘
+     algorithm +            claims: user data              cryptographic proof
+     token type              (sub, role, exp, iat...)       the header+payload
+                                                             weren't tampered with
+
+DECODED HEADER:                    DECODED PAYLOAD:
+{                                  {
+  "alg": "HS256",                    "sub": "nikhil",
+  "typ": "JWT"                       "role": "ADMIN",
+}                                    "iat": 1710000000,
+                                     "exp": 1710003600
+                                   }</div>
+
+  <table>
+    <tr><th>Segment</th><th>Contains</th><th>Encrypted?</th></tr>
+    <tr><td><strong>Header</strong></td><td>Signing algorithm (<code>alg</code>) and token type (<code>typ</code>)</td><td>❌ No — just Base64URL <em>encoded</em>, not encrypted</td></tr>
+    <tr><td><strong>Payload (Claims)</strong></td><td>Arbitrary data about the subject — standard claims (<code>sub</code>, <code>iat</code>, <code>exp</code>) plus custom claims (roles, permissions)</td><td>❌ No — anyone can decode and read it; <strong>never put secrets here</strong></td></tr>
+    <tr><td><strong>Signature</strong></td><td>A cryptographic signature over the header+payload, using a secret key (HMAC) or private key (RSA)</td><td>N/A — this is what provides <strong>integrity</strong>, not confidentiality</td></tr>
+  </table>
+
+  <div class="box danger">
+    <div class="box-title">⚠ The Single Most Common JWT Misconception</div>
+    <p><strong>A JWT is signed, not encrypted.</strong> Anyone who intercepts a JWT — a network sniffer, a malicious browser extension, or simply pasting it into jwt.io — can trivially <strong>read</strong> the header and payload; Base64URL encoding is reversible by design, exactly like plain Base64 encoding discussed in the Encoding-vs-Encryption topic. The signature only guarantees the token <strong>hasn't been tampered with</strong> since it was issued — it does nothing to hide the payload's contents. Never place sensitive data (passwords, SSNs, secret internal flags) in a JWT payload.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why is JWT revocation fundamentally harder than session invalidation, and how would you handle "logout" or a compromised token in a real system?</div>
+      <div class="qa-a"><p>A session is a server-side record — logging out simply deletes it, instantly and universally invalidating that session everywhere. A JWT, by design, is <strong>self-contained and stateless</strong> — the server never "remembers" having issued it, so there's no natural place to delete a record from. Practical mitigations: (1) keep <strong>access token expiry short</strong> (minutes, not hours/days) so a compromised token has a small window of usefulness, (2) maintain a server-side <strong>token blocklist/denylist</strong> (in Redis, checked on every request) for explicitly revoked tokens before their natural expiry — this reintroduces some server state, a deliberate trade-off, and (3) use a <strong>refresh token</strong> pattern (a longer-lived, separately-stored token used only to mint new short-lived access tokens) so that revoking the refresh token effectively cuts off a compromised session's ability to get new access tokens, even though already-issued access tokens remain valid until their own short expiry.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What are the standard registered claims (iat, exp, sub, etc.) and why use them instead of just custom claim names?</div>
+      <div class="qa-a"><p>The JWT spec (RFC 7519) defines a small set of standard, reserved claim names with well-understood meaning: <code>sub</code> (subject — typically the username/user ID), <code>iat</code> (issued-at timestamp), <code>exp</code> (expiration timestamp), <code>iss</code> (issuer), <code>aud</code> (intended audience). Using these standard names rather than inventing your own equivalents (e.g., a custom <code>"expiresAt"</code> field) means every general-purpose JWT library across every language/framework understands and correctly validates them automatically (e.g., automatically rejecting an expired token based on <code>exp</code>) — interoperability and correctness for free, rather than reimplementing expiry-checking logic yourself.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 14 -->
+<section class="topic" id="jwt-signature">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">125</span><h2>How JWT Tokens Are Validated Using the Signature</h2></div>
+  <div class="topic-video">Video: How JWT tokens validated using signature</div>
+
+  <div class="diagram">TOKEN GENERATION (server, at login):
+  base64url(header) + "." + base64url(payload)
+        │
+        ▼
+  signature = HMAC-SHA256( header.payload , SECRET_KEY )
+        │
+        ▼
+  final token = header.payload.signature  ──▶ sent to client
+
+
+TOKEN VALIDATION (server, on every subsequent request):
+  incoming token split into header.payload.signature
+        │
+        ▼
+  recompute: HMAC-SHA256( header.payload , SAME SECRET_KEY )
+        │
+        ▼
+  compare recomputed signature to the signature IN the token
+        │
+   ┌────┴────┐
+  MATCH      NO MATCH
+   │            │
+   ▼            ▼
+Token is       Token was tampered with (or forged, or wrong key) —
+authentic —    REJECT immediately, throw SignatureException
+also check
+exp/iat claims</div>
+
+  <h3>HMAC (Symmetric) vs RSA (Asymmetric) Signing</h3>
+  <table>
+    <tr><th></th><th>HMAC (e.g. HS256)</th><th>RSA / ECDSA (e.g. RS256)</th></tr>
+    <tr><td><strong>Key model</strong></td><td>One shared secret key — same key both signs and verifies</td><td>Key pair — <strong>private key signs</strong>, <strong>public key verifies</strong></td></tr>
+    <tr><td><strong>Who can verify?</strong></td><td>Only whoever holds the shared secret</td><td>Anyone with the public key — including entirely separate services</td></tr>
+    <tr><td><strong>Who can issue new tokens?</strong></td><td>Anyone with the shared secret (same party that can verify)</td><td>Only the private-key holder — verifiers cannot forge new valid tokens</td></tr>
+    <tr><td><strong>Best fit</strong></td><td>A single monolithic app/service issuing and validating its own tokens</td><td>Microservices — an auth service signs with its private key; every other downstream service verifies using only the public key, without ever needing the ability to forge tokens themselves</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 Why Asymmetric Signing Matters for Microservices — A Common System Design Follow-Up</div>
+    <p>In a microservices architecture, distributing a <strong>shared HMAC secret</strong> to every service that needs to validate tokens means every one of those services could also <em>forge</em> valid tokens — a significant blast radius if any single service is compromised. With <strong>RSA/ECDSA</strong>, only the central Auth service holds the private signing key; every downstream microservice only needs the (non-secret) public key to verify signatures, and a compromised downstream service gains no ability to mint its own valid tokens. This asymmetry is precisely why RS256 is the standard choice in real-world microservices and OAuth2/OIDC systems (a natural bridge to discuss if asked about scaling this pattern).</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>An attacker intercepts a valid JWT and tries to modify the payload's "role" claim from USER to ADMIN, then re-sends it. Walk through exactly why this fails.</div>
+      <div class="qa-a"><p>The attacker can trivially Base64URL-decode the payload, edit the <code>role</code> claim, and re-encode it — but the <strong>signature</strong> segment was computed over the <em>original</em> header+payload bytes using a secret/private key the attacker doesn't possess. When the modified token reaches the server, the server recomputes what the signature <em>should</em> be for the tampered header+payload using its own secret key, and this recomputed signature will not match the (unchanged, now-stale) signature segment still attached to the forged token — the server immediately rejects it with a signature mismatch, before even looking at the claims' business meaning. This is the entire security guarantee JWT signing provides: tamper-evidence, not confidentiality.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>What is the "alg: none" JWT vulnerability, and how does a well-implemented validation library defend against it?</div>
+      <div class="qa-a"><p>A historical class of vulnerability where some poorly-implemented JWT libraries would trust the <code>alg</code> field <em>from the incoming token itself</em> to decide how to validate it — an attacker could craft a token with <code>"alg": "none"</code> and an empty signature, and a naive verifier would skip signature validation entirely, accepting any forged payload. The fix, now standard in every reputable JWT library, is for the <strong>server to hardcode/whitelist the expected algorithm</strong> (and its own known key) rather than trusting the token's self-declared algorithm — validation should always be "verify this token was signed with algorithm X using key Y," never "trust whatever algorithm the token claims to use." A related variant involves tricking an RS256 verifier into treating the public key as if it were an HMAC secret — also defeated by hardcoding the expected algorithm rather than trusting the token's header.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 15 -->
+<section class="topic" id="jwt-generate">
+  <div class="topic-head"><span class="topic-num">126–127</span><h2>Generating JWT Tokens in the Backend App</h2></div>
+  <div class="topic-video">Videos: Generating JWT token in backend app Parts 1 & 2</div>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'jg1')">JwtService — generation</button>
+      <button class="tab-btn" onclick="showTab(this,'jg2')">application.properties — secret & expiry</button>
+    </div>
+    <div class="tab-content active" id="jg1"><pre><span class="an">@Service</span>
+<span class="kw">public class</span> <span class="cl">JwtService</span> {
+
+    <span class="an">@Value</span>(<span class="str">"${jwt.secret}"</span>)
+    <span class="kw">private</span> String secretKey;   <span class="cm">// externalized — NEVER hardcoded in source</span>
+
+    <span class="an">@Value</span>(<span class="str">"${jwt.expiration-ms}"</span>)
+    <span class="kw">private long</span> expirationMs;
+
+    <span class="kw">public</span> String <span class="mt">generateToken</span>(Authentication authentication) {
+        String username = authentication.<span class="mt">getName</span>();
+        String roles = authentication.<span class="mt">getAuthorities</span>().<span class="mt">stream</span>()
+                .<span class="mt">map</span>(GrantedAuthority::<span class="mt">getAuthority</span>)
+                .<span class="mt">collect</span>(Collectors.<span class="mt">joining</span>(<span class="str">","</span>));
+
+        Date now = <span class="kw">new</span> Date();
+        Date expiry = <span class="kw">new</span> Date(now.<span class="mt">getTime</span>() + expirationMs);
+
+        <span class="kw">return</span> Jwts.<span class="mt">builder</span>()
+                .subject(username)
+                .claim(<span class="str">"roles"</span>, roles)         <span class="cm">// custom claim</span>
+                .issuedAt(now)
+                .expiration(expiry)
+                .signWith(<span class="mt">getSigningKey</span>())       <span class="cm">// HMAC key derived from the secret</span>
+                .compact();
+    }
+
+    <span class="kw">private</span> SecretKey <span class="mt">getSigningKey</span>() {
+        <span class="kw">byte</span>[] keyBytes = Decoders.<span class="mt">BASE64</span>.<span class="mt">decode</span>(secretKey);
+        <span class="kw">return</span> Keys.<span class="mt">hmacShaKeyFor</span>(keyBytes);
+    }
+}</pre></div>
+    <div class="tab-content" id="jg2"><pre><span class="cm"># NEVER commit a real secret to source control — this belongs in an</span>
+<span class="cm"># environment variable / secrets manager in any real deployment</span>
+jwt.secret=<span class="mt">dGhpc0lzQVZlcnlMb25nQW5kU2VjdXJlU2VjcmV0S2V5Rm9ySFMyNTY=</span>
+jwt.expiration-ms=<span class="mt">3600000</span>   <span class="cm"># 1 hour — deliberately SHORT-lived, per the revocation discussion above</span></pre></div>
+  </div>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Signing Key Requirements for HS256</div>
+    <p>The JWT spec's HMAC-SHA256 requires a signing key of <strong>at least 256 bits (32 bytes)</strong> — a short, weak, or guessable secret string dramatically weakens the entire signature guarantee, since a short key is brute-forceable. Always generate a cryptographically random secret of sufficient length, store it in a proper secrets manager (AWS Secrets Manager, HashiCorp Vault, or at minimum environment variables — never hardcoded or committed to git), and rotate it periodically as a security best practice.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why put roles/authorities directly in the JWT payload instead of looking them up from the database on every request?</div>
+      <div class="qa-a"><p>This is the entire point of statelessness — embedding the user's authorities directly in the signed token means a downstream request can be fully authorized <strong>without any database round-trip</strong>, since the token itself is cryptographically trustworthy (its signature guarantees the roles claim hasn't been tampered with since a legitimate login). The trade-off: if a user's role changes mid-session (e.g., an admin is demoted), that change won't take effect until their current token expires and they re-authenticate — a deliberate consequence of statelessness that's usually acceptable given short token expiries, but worth explicitly naming as a trade-off in a system design discussion, since it's a real staleness window some systems mitigate with very short-lived access tokens plus frequent refresh.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 16 -->
+<section class="topic" id="jwt-filter">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">128–129</span><h2>Building a Filter to Validate the JWT Token</h2></div>
+  <div class="topic-video">Videos: Building a filter on the backend to validate the JWT token Parts 1 & 2</div>
+
+  <p>This is where the Internals topic's filter-chain diagram becomes real, working code — a custom filter, inserted at exactly the point discussed earlier (<code>.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)</code>), that runs on <strong>every single incoming request</strong> to validate any presented JWT and populate <code>SecurityContextHolder</code> accordingly.</p>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'jf1')">JwtAuthFilter.java — the complete filter</button></div>
+    <div class="tab-content active" id="jf1"><pre><span class="an">@Component</span>
+<span class="an">@RequiredArgsConstructor</span>
+<span class="kw">public class</span> <span class="cl">JwtAuthFilter extends</span> OncePerRequestFilter {  <span class="cm">// guarantees exactly ONE execution per request</span>
+
+    <span class="kw">private final</span> JwtService jwtService;
+    <span class="kw">private final</span> UserDetailsService userDetailsService;
+
+    <span name="Override">@Override</span>
+    <span class="kw">protected void</span> <span class="mt">doFilterInternal</span>(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) <span class="kw">throws</span> ServletException, IOException {
+
+        String authHeader = request.<span class="mt">getHeader</span>(<span class="str">"Authorization"</span>);
+
+        <span class="cm">// no token, or wrong format — just pass through; let downstream</span>
+        <span class="cm">// authorization rules (authorizeHttpRequests) decide if that's OK</span>
+        <span class="kw">if</span> (authHeader == <span class="kw">null</span> || !authHeader.<span class="mt">startsWith</span>(<span class="str">"Bearer "</span>)) {
+            filterChain.<span class="mt">doFilter</span>(request, response);
+            <span class="kw">return</span>;
+        }
+
+        String token = authHeader.<span class="mt">substring</span>(<span class="mt">7</span>);   <span class="cm">// strip "Bearer " prefix</span>
+
+        <span class="kw">try</span> {
+            String username = jwtService.<span class="mt">extractUsername</span>(token);  <span class="cm">// parses + validates signature internally</span>
+
+            <span class="cm">// only proceed if we have a username AND nothing is already authenticated</span>
+            <span class="cm">// (avoids redundant work if some earlier mechanism already set it)</span>
+            <span class="kw">if</span> (username != <span class="kw">null</span> && SecurityContextHolder.<span class="mt">getContext</span>().<span class="mt">getAuthentication</span>() == <span class="kw">null</span>) {
+
+                UserDetails userDetails = userDetailsService.<span class="mt">loadUserByUsername</span>(username);
+
+                <span class="kw">if</span> (jwtService.<span class="mt">isTokenValid</span>(token, userDetails)) {  <span class="cm">// checks signature + expiry + username match</span>
+
+                    UsernamePasswordAuthenticationToken authToken =
+                        <span class="kw">new</span> UsernamePasswordAuthenticationToken(
+                            userDetails, <span class="kw">null</span>, userDetails.<span class="mt">getAuthorities</span>());
+                    authToken.<span class="mt">setDetails</span>(
+                        <span class="kw">new</span> WebAuthenticationDetailsSource().<span class="mt">buildDetails</span>(request));
+
+                    <span class="cm">// THIS is the line that makes the request "authenticated" from</span>
+                    <span class="cm">// here on — everything downstream (controllers, @PreAuthorize) sees</span>
+                    <span class="cm">// this user as the current principal</span>
+                    SecurityContextHolder.<span class="mt">getContext</span>().<span class="mt">setAuthentication</span>(authToken);
+                }
+            }
+        } <span class="kw">catch</span> (JwtException ex) {
+            <span class="cm">// invalid/expired/tampered token — do NOT throw; simply don't authenticate.</span>
+            <span class="cm">// downstream authorizeHttpRequests rules will correctly reject as unauthenticated</span>
+        }
+
+        filterChain.<span class="mt">doFilter</span>(request, response);  <span class="cm">// ALWAYS continue the chain — this filter never blocks by itself</span>
+    }
+}</pre></div>
+  </div>
+
+  <div class="diagram">Request arrives with header: Authorization: Bearer eyJhbGci...
+        │
+        ▼
+  JwtAuthFilter.doFilterInternal()
+        │
+        ├── extract token, validate signature + expiry
+        │
+        ├── VALID   ──▶ load UserDetails, build Authentication,
+        │                 SecurityContextHolder.setAuthentication(...)
+        │
+        └── INVALID/ABSENT ──▶ SecurityContext stays empty — no exception thrown here
+        │
+        ▼
+  filterChain.doFilter(request, response)  — ALWAYS called, request continues
+        │
+        ▼
+  ... rest of the filter chain (Section 7's diagram) ...
+        │
+        ▼
+  AuthorizationFilter — checks authorizeHttpRequests rules against
+  whatever IS (or isn't) in SecurityContextHolder right now
+        │
+   ┌────┴────┐
+ Authorized   Not authorized / not authenticated
+   │              │
+   ▼              ▼
+ Controller    403 Forbidden / 401 Unauthorized
+ executes      (via ExceptionTranslationFilter)</div>
+
+  <div class="box tip">
+    <div class="box-title">💡 Why OncePerRequestFilter, Specifically</div>
+    <p><code>OncePerRequestFilter</code> is a Spring-provided base class guaranteeing the filter's logic executes <strong>exactly once per request</strong>, even in scenarios involving internal request forwarding/dispatching within the servlet container where a naive raw <code>Filter</code> might otherwise run multiple times for the same logical request. Since JWT validation involves real computational work (signature verification, a potential database lookup via <code>UserDetailsService</code>), running it more than once per request would be both wasteful and a subtle source of bugs — this is why it's the standard, idiomatic base class for custom Spring Security filters.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Why the Filter Never Throws on an Invalid Token</div>
+    <p>Notice the filter <strong>catches <code>JwtException</code> and simply continues the chain</strong> rather than immediately rejecting the request itself. This is deliberate separation of concerns: this filter's <em>only</em> job is authentication (populating who the user is, if determinable) — <strong>authorization</strong> (deciding whether the request is allowed to proceed) is left entirely to the later <code>AuthorizationFilter</code>, which evaluates the <code>authorizeHttpRequests</code> rules. This keeps the two concerns cleanly separated exactly as established in the Internals topic, and correctly allows requests to endpoints marked <code>permitAll()</code> to succeed even with no token, an expired token, or a malformed token present.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why does the filter check "if getAuthentication() == null" before setting a new one — what scenario is this actually guarding against?</div>
+      <div class="qa-a"><p>It's a defensive guard against doing redundant, unnecessary work (like a fresh <code>UserDetailsService</code> database lookup) if the <code>SecurityContext</code> has somehow already been populated earlier in the chain for this same request — for instance, in a hybrid setup supporting both JWT and traditional session-based auth simultaneously, or when a request is internally forwarded/included within the servlet container and passes through the filter chain's context-setting logic more than once at a lower level. While less critical in a purely JWT-only, stateless configuration, this check is a widely-adopted defensive idiom for custom Spring Security filters.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Trace the complete end-to-end flow: a client logs in, receives a JWT, then calls a protected endpoint. Describe every step across both requests.</div>
+      <div class="qa-a"><p><strong>Request 1 (login):</strong> Client POSTs credentials to <code>/api/v1/auth/login</code> (a <code>permitAll()</code> endpoint) → <code>AuthController</code> builds an unauthenticated <code>UsernamePasswordAuthenticationToken</code> → hands it to <code>AuthenticationManager.authenticate()</code> → internally delegates to <code>DaoAuthenticationProvider</code> → calls <code>UserDetailsService.loadUserByUsername()</code> → verifies the password via <code>PasswordEncoder.matches()</code> → returns a fully authenticated <code>Authentication</code> → controller passes this to <code>JwtService.generateToken()</code> → a signed JWT is built and returned to the client in the response body. <strong>Request 2 (protected call):</strong> Client sends <code>Authorization: Bearer &lt;token&gt;</code> → request hits <code>JwtAuthFilter</code> (positioned before <code>UsernamePasswordAuthenticationFilter</code> in the chain) → filter extracts and validates the token's signature/expiry → loads the corresponding <code>UserDetails</code> → builds a new authenticated <code>Authentication</code> object and stores it in <code>SecurityContextHolder</code> → request continues down the chain → <code>AuthorizationFilter</code> checks the now-populated <code>SecurityContextHolder</code> against the endpoint's <code>authorizeHttpRequests</code> rule (e.g., <code>hasRole("ADMIN")</code>) → if satisfied, the request finally reaches <code>DispatcherServlet</code> and the controller method executes, with <code>SecurityContextHolder.getContext().getAuthentication()</code> accessible anywhere in that call stack.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- MASTER Q&A -->
+<section class="topic" id="interview-master">
+  <span class="section-badge">🎯 Rapid-Fire Round</span>
+  <div class="topic-head"><h2>Master Interview Q&A Bank — Section 6</h2></div>
+  <p class="dim">Spring Security and JWT questions are asked in nearly every mid-to-senior Java backend interview. These synthesize concepts across the whole section.</p>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Design a complete, production-appropriate authentication and authorization architecture for a new Spring Boot microservices system from scratch.</div>
+      <div class="qa-a"><p>A dedicated <strong>Auth service</strong> handling login/signup, hashing passwords with BCrypt/Argon2 (never plain hashing), issuing short-lived JWTs signed with <strong>RS256</strong> (asymmetric — so downstream services only need the public key, never the ability to forge tokens) plus a separately-stored, longer-lived refresh token for silent re-authentication. Every downstream microservice runs a stateless <code>JwtAuthFilter</code> validating tokens independently (no shared session store, no database round-trip needed for basic auth checks — true horizontal scalability). CORS configured explicitly per allowed frontend origin, CSRF disabled (justified specifically because auth is token-in-header, not cookie-based). Fine-grained authorization via <code>authorizeHttpRequests</code> path/method rules plus <code>@PreAuthorize</code> method-level checks for business-logic-level permission checks. A Redis-backed token denylist for explicit revocation before natural expiry. This ties together nearly every concept from this entire section into one coherent system design answer.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Where should a JWT be stored on the client — localStorage, sessionStorage, or a cookie — and what are the security trade-offs of each?</div>
+      <div class="qa-a"><p><strong>localStorage/sessionStorage:</strong> accessible to any JavaScript running on the page, making it vulnerable to <strong>XSS (Cross-Site Scripting)</strong> — if an attacker injects malicious JS (e.g., via an unsanitized user-generated content field), they can read the token directly and exfiltrate it. Not vulnerable to CSRF, since nothing is auto-attached by the browser. <strong>An httpOnly, Secure, SameSite cookie:</strong> inaccessible to JavaScript entirely (immune to XSS token theft), but reintroduces <strong>CSRF exposure</strong> since the browser auto-attaches cookies to requests — which is exactly why CSRF protection would need to be re-enabled (contradicting the earlier "disable CSRF for JWT" guidance, which specifically assumed header-based, non-cookie delivery). Modern best practice for high-security applications often uses httpOnly cookies for the token <em>combined with</em> re-enabled CSRF protection and a SameSite cookie attribute (mitigating most CSRF vectors on its own) — a genuinely nuanced trade-off worth discussing both sides of rather than giving a single "correct" answer.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What is @PreAuthorize, and how does it relate to the authorizeHttpRequests rules configured in SecurityFilterChain?</div>
+      <div class="qa-a"><p><code>@PreAuthorize("hasRole('ADMIN')")</code> is a <strong>method-level</strong> authorization annotation (enabled via <code>@EnableMethodSecurity</code>, shown in the Custom Security Configurations topic) implemented via <strong>AOP</strong> (an interceptor wraps the annotated method, checking the expression against <code>SecurityContextHolder</code>'s current authentication before allowing the method body to execute) — conceptually similar to how <code>@Transactional</code> works via proxying. <code>authorizeHttpRequests</code> rules in <code>SecurityFilterChain</code> operate at the <strong>HTTP/URL level</strong>, checked by the <code>AuthorizationFilter</code> before the request ever reaches a controller. The two are complementary, not competing: URL-level rules give a coarse-grained first line of defense (e.g., "everything under <code>/admin/**</code> requires ADMIN"), while <code>@PreAuthorize</code> allows finer-grained, business-logic-aware checks directly on service methods (e.g., "a user can only edit their own order" — a check that can't be expressed as a simple URL pattern).</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How would you implement a refresh token flow alongside short-lived access tokens?</div>
+      <div class="qa-a"><p>At login, issue <strong>two</strong> tokens: a short-lived <strong>access token</strong> (minutes, sent on every API request) and a longer-lived <strong>refresh token</strong> (days/weeks, stored more carefully — often httpOnly cookie or secure storage, and typically also persisted server-side, e.g. in a database table, specifically so it CAN be revoked, unlike a pure stateless access token). A dedicated <code>/api/v1/auth/refresh</code> endpoint accepts a valid, non-expired refresh token and issues a brand-new access token (and often a rotated new refresh token too, invalidating the old one — "refresh token rotation," which limits the damage if a refresh token is ever stolen, since using a stolen-but-already-used refresh token can be detected and the whole token family revoked). This pattern balances the security benefit of short-lived access tokens (limiting the damage window of a leaked token) against the UX cost of forcing frequent full re-logins.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What HTTP status code should an expired/invalid JWT produce, and how does that get wired up given the JwtAuthFilter doesn't throw exceptions itself?</div>
+      <div class="qa-a"><p>The correct status is <strong>401 Unauthorized</strong> (unauthenticated — the server doesn't know who's asking, per the 401-vs-403 distinction from Section 3). Since <code>JwtAuthFilter</code> deliberately swallows <code>JwtException</code> and just leaves <code>SecurityContextHolder</code> empty rather than throwing, the actual 401 response is generated later, by <code>ExceptionTranslationFilter</code> — when the downstream <code>AuthorizationFilter</code> subsequently finds no authenticated principal for a protected endpoint, it throws an <code>AuthenticationException</code>, which <code>ExceptionTranslationFilter</code> catches and translates into a 401 response (typically delegating to an <code>AuthenticationEntryPoint</code> bean, which can be customized to return a structured JSON error body consistent with Section 5's global exception handling shape, rather than Spring Security's default plain-text response).</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Explain the complete difference between BCrypt password hashing and JWT signature verification — both use cryptographic algorithms, but for fundamentally different purposes. Don't confuse them.</div>
+      <div class="qa-a"><p>They solve entirely different problems despite both living in the "security" topic area. <strong>BCrypt</strong> is about <strong>one-way, irreversible transformation</strong> — proving a submitted password matches a stored credential, with no way to recover the original from the hash, specifically defending against credential theft from a database breach. <strong>JWT signing (HMAC/RSA)</strong> is about <strong>tamper-evidence on data the server WANTS to be readable</strong> (the payload is meant to be decoded and used) — proving the token's contents haven't been altered since a trusted party issued it, not about hiding the contents at all (the payload is only Base64-encoded, fully reversible, as established earlier). Conflating "signing" with "hashing for storage," or assuming a JWT's payload is protected the way a BCrypt hash protects a password, is a common and revealing interview mistake.</p></div>
+    </div>
+  </div>
+
+  <div class="box info" style="margin-top:28px;">
+    <div class="box-title">ℹ Next Section</div>
+    <p>Paste the next section's video list whenever you're ready, and I'll build the next HTML notes doc in this same design system.</p>
+  </div>
+
+  <footer>GrowthScript Engineering — Spring Boot Interview Bible · Section 6 of N</footer>
+</section>
+
+</main>
+</div>
+
+<script>
+function toggleTheme(){
+  const body = document.body;
+  const cur = body.getAttribute('data-theme');
+  body.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+}
+function showTab(btn, id){
+  const block = btn.closest('.code-block');
+  block.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  block.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  block.querySelector('#'+id).classList.add('active');
+}
+document.querySelectorAll('.qa-q').forEach(q=>{
+  q.addEventListener('click', ()=> q.parentElement.classList.toggle('open'));
+});
+</script>
+</body>
+</html>

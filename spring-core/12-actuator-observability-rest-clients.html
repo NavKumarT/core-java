@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Section 12: Actuator, Observability & Modern REST Clients | GrowthScript Engineering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117; --bg-elev:#151b23; --bg-card:#1a2230; --border:#2a3441;
+  --text:#e6edf3; --text-dim:#9aa7b5; --text-faint:#6e7c8c;
+  --accent:#3fb950; --accent-soft:rgba(63,185,80,.12);
+  --blue:#58a6ff; --blue-soft:rgba(88,166,255,.12);
+  --warn:#f0883e; --warn-soft:rgba(240,136,62,.12);
+  --danger:#f85149; --danger-soft:rgba(248,81,73,.12);
+  --code-bg:#0a0e14; --sidebar-w:290px; --radius:10px;
+  --shadow:0 4px 16px rgba(0,0,0,.35);
+}
+[data-theme="light"]{
+  --bg:#f6f8fa; --bg-elev:#ffffff; --bg-card:#ffffff; --border:#d8dee4;
+  --text:#1b2430; --text-dim:#4b5563; --text-faint:#8a96a3;
+  --accent:#1a7f37; --accent-soft:rgba(26,127,55,.08);
+  --blue:#0969da; --blue-soft:rgba(9,105,218,.08);
+  --warn:#9a6700; --warn-soft:rgba(154,103,0,.08);
+  --danger:#cf222e; --danger-soft:rgba(207,34,46,.08);
+  --code-bg:#0d1117; --shadow:0 2px 10px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); line-height:1.65; font-size:15.5px; transition:background .2s,color .2s;}
+code, pre, .mono{font-family:'Space Mono',monospace;}
+a{color:var(--blue); text-decoration:none;}
+a:hover{text-decoration:underline;}
+.wrapper{display:flex; min-height:100vh;}
+.sidebar{width:var(--sidebar-w); flex-shrink:0; background:var(--bg-elev); border-right:1px solid var(--border); position:sticky; top:0; height:100vh; overflow-y:auto; padding:22px 16px 40px;}
+.sidebar::-webkit-scrollbar{width:6px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border); border-radius:3px;}
+.brand{display:flex; align-items:center; gap:10px; margin-bottom:4px;}
+.brand-badge{width:34px; height:34px; border-radius:8px; background:var(--accent); display:flex; align-items:center; justify-content:center; color:#0d1117; font-weight:800; font-family:'Space Mono',monospace; font-size:15px; flex-shrink:0;}
+.brand-text{font-weight:800; font-size:14.5px; letter-spacing:.2px;}
+.brand-sub{font-size:11px; color:var(--text-faint); margin-top:1px;}
+.theme-toggle{margin:16px 0 20px; width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; font-size:12.5px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px;}
+.nav-group{margin-bottom:6px;}
+.nav-label{font-size:10.5px; text-transform:uppercase; letter-spacing:.9px; color:var(--text-faint); font-weight:700; margin:18px 4px 8px;}
+.nav-link{display:block; padding:7px 10px; border-radius:7px; font-size:13px; color:var(--text-dim); border-left:2px solid transparent; margin-bottom:1px;}
+.nav-link:hover{background:var(--accent-soft); color:var(--text); text-decoration:none;}
+.nav-link.sub{padding-left:22px; font-size:12.3px;}
+.main{flex:1; min-width:0; padding:44px 56px 120px; max-width:980px;}
+.header-block{margin-bottom:44px; padding-bottom:28px; border-bottom:1px solid var(--border);}
+.eyebrow{font-family:'Space Mono',monospace; font-size:11.5px; color:var(--accent); font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:10px;}
+.header-block h1{font-size:32px; font-weight:800; letter-spacing:-.5px; margin-bottom:12px;}
+.header-block p{color:var(--text-dim); font-size:15px; max-width:680px;}
+.meta-row{display:flex; gap:18px; margin-top:16px; flex-wrap:wrap;}
+.meta-pill{font-size:11.5px; padding:5px 11px; border-radius:20px; background:var(--bg-card); border:1px solid var(--border); color:var(--text-dim); font-family:'Space Mono',monospace;}
+section.topic{margin-bottom:56px; scroll-margin-top:24px;}
+.topic-head{display:flex; align-items:baseline; gap:12px; margin-bottom:6px;}
+.topic-num{font-family:'Space Mono',monospace; color:var(--accent); font-weight:700; font-size:14px;}
+h2{font-size:23px; font-weight:800; letter-spacing:-.3px;}
+.topic-video{font-size:12px; color:var(--text-faint); margin-bottom:20px; margin-top:2px; font-family:'Space Mono',monospace;}
+h3{font-size:17.5px; font-weight:700; margin:26px 0 12px; color:var(--text);}
+h4{font-weight:700; margin:18px 0 8px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.4px; font-size:12.5px;}
+p{margin-bottom:13px; color:var(--text); font-size:15px;}
+p.dim{color:var(--text-dim);}
+ul, ol{margin:0 0 15px 22px;}
+li{margin-bottom:7px; font-size:14.8px;}
+strong{color:var(--text); font-weight:700;}
+.hl{color:var(--accent); font-weight:700;}
+.box{border-radius:var(--radius); padding:16px 18px; margin:18px 0; border:1px solid var(--border); font-size:14.3px;}
+.box-title{font-weight:700; font-size:12.5px; text-transform:uppercase; letter-spacing:.5px; margin-bottom:7px; display:flex; align-items:center; gap:7px;}
+.tip{background:var(--accent-soft); border-color:rgba(63,185,80,.3);} .tip .box-title{color:var(--accent);}
+.warn{background:var(--warn-soft); border-color:rgba(240,136,62,.3);} .warn .box-title{color:var(--warn);}
+.info{background:var(--blue-soft); border-color:rgba(88,166,255,.3);} .info .box-title{color:var(--blue);}
+.danger{background:var(--danger-soft); border-color:rgba(248,81,73,.3);} .danger .box-title{color:var(--danger);}
+.code-block{background:var(--code-bg); border-radius:var(--radius); overflow:hidden; margin:16px 0; border:1px solid var(--border); box-shadow:var(--shadow);}
+.tabs{display:flex; background:rgba(255,255,255,.03); border-bottom:1px solid rgba(255,255,255,.08); overflow-x:auto;}
+.tab-btn{padding:9px 16px; font-family:'Space Mono',monospace; font-size:12px; color:#8a96a3; background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap;}
+.tab-btn.active{color:#e6edf3; border-bottom-color:var(--accent);}
+.tab-content{display:none; padding:16px 18px; overflow-x:auto;}
+.tab-content.active{display:block;}
+.tab-content pre{color:#c9d1d9; font-size:13px; line-height:1.65; white-space:pre;}
+.tab-content .kw{color:#ff7b72;} .tab-content .str{color:#a5d6ff;} .tab-content .cm{color:#8b949e; font-style:italic;}
+.tab-content .an{color:#d2a8ff;} .tab-content .cl{color:#79c0ff;} .tab-content .mt{color:#d2a8ff;}
+table{width:100%; border-collapse:collapse; margin:16px 0; font-size:13.8px;}
+th{text-align:left; padding:9px 12px; background:var(--bg-card); border-bottom:2px solid var(--border); font-size:11.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--text-dim);}
+td{padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top;}
+tr:hover td{background:var(--accent-soft);}
+.qa-wrap{margin-top:18px;}
+.qa-item{border:1px solid var(--border); border-radius:var(--radius); margin-bottom:10px; overflow:hidden; background:var(--bg-card);}
+.qa-q{padding:14px 46px 14px 18px; cursor:pointer; font-weight:600; font-size:14.3px; position:relative; display:flex; align-items:center; gap:10px;}
+.qa-q:hover{background:var(--accent-soft);}
+.qa-tag{font-family:'Space Mono',monospace; font-size:9.5px; padding:2px 7px; border-radius:4px; font-weight:700; flex-shrink:0; text-transform:uppercase; letter-spacing:.3px;}
+.tag-faang{background:rgba(248,81,73,.15); color:var(--danger);}
+.tag-core{background:rgba(88,166,255,.15); color:var(--blue);}
+.qa-q::after{content:'+'; position:absolute; right:18px; top:50%; transform:translateY(-50%); font-size:20px; color:var(--text-faint); font-weight:400;}
+.qa-item.open .qa-q::after{content:'−';}
+.qa-a{max-height:0; overflow:hidden; transition:max-height .25s ease; padding:0 18px;}
+.qa-item.open .qa-a{max-height:1400px; padding:2px 18px 18px;}
+.qa-a p{font-size:14px; color:var(--text-dim);}
+.qa-a ul{margin-top:6px;}
+.qa-a li{color:var(--text-dim); font-size:13.8px;}
+.divider{height:1px; background:var(--border); margin:44px 0;}
+.section-badge{display:inline-block; background:var(--accent); color:#0d1117; font-family:'Space Mono',monospace; font-weight:700; font-size:11px; padding:4px 10px; border-radius:6px; margin-bottom:14px;}
+.diagram{background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin:18px 0; font-family:'Space Mono',monospace; font-size:12.5px; color:var(--text-dim); overflow-x:auto; white-space:pre; line-height:1.5;}
+footer{margin-top:60px; padding-top:24px; border-top:1px solid var(--border); color:var(--text-faint); font-size:12px;}
+@media(max-width:900px){
+  .sidebar{position:fixed; left:-100%; z-index:50; transition:left .2s; box-shadow:var(--shadow);}
+  .sidebar.open{left:0;}
+  .main{padding:24px 20px 100px;}
+  .mobile-toggle{display:block !important;}
+}
+.mobile-toggle{display:none; position:fixed; top:16px; left:16px; z-index:60; background:var(--accent); color:#0d1117; border:none; border-radius:8px; width:40px; height:40px; font-size:18px; font-weight:700;}
+</style>
+</head>
+<body data-theme="dark">
+
+<button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="wrapper">
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-badge">G</div>
+    <div>
+      <div class="brand-text">GrowthScript Eng.</div>
+      <div class="brand-sub">Spring Boot Bible</div>
+    </div>
+  </div>
+  <button class="theme-toggle" onclick="toggleTheme()">🌗 Toggle Theme</button>
+
+  <div class="nav-group">
+    <div class="nav-label">Spring Boot Actuator</div>
+    <a class="nav-link" href="#actuator-intro">214. Actuator — Built-in Health Monitor</a>
+    <a class="nav-link" href="#health-checks">215. Health Checks Made Easy</a>
+    <a class="nav-link" href="#beans-config-env">216. Beans, Config & Environment</a>
+    <a class="nav-link" href="#metrics-logs-mappings">217. Metrics, Logs & Mappings</a>
+    <a class="nav-link" href="#info-endpoint">218. Application Metadata via /info</a>
+    <a class="nav-link" href="#actuator-use-cases">219. Shutdown, Cache & Log Control</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Observability</div>
+    <a class="nav-link" href="#observability-intro">220. Observability & OpenTelemetry</a>
+    <a class="nav-link" href="#observability-stack">221. Micrometer, OTEL, OTLP, LGTM</a>
+    <a class="nav-link" href="#making-observable">222. Making Spring Boot Observable</a>
+    <a class="nav-link" href="#traces-in-action">223. Traces, Metrics & Logs in Action</a>
+    <a class="nav-link" href="#trace-ids-clients">224. Trace IDs Visible to Clients</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Consuming REST APIs</div>
+    <a class="nav-link" href="#api-consumers">225. Understanding API Consumers</a>
+    <a class="nav-link" href="#restclient-intro">226. Meet RestClient</a>
+    <a class="nav-link" href="#restclient-advanced">227. Advanced RestClient Usage</a>
+    <a class="nav-link" href="#http-service-client">228. HTTP Service Client</a>
+    <a class="nav-link" href="#http-service-consume">229. Consuming APIs with HTTP Service Client</a>
+    <a class="nav-link" href="#http-service-groups">230. HTTP Service Groups</a>
+    <a class="nav-link" href="#interview-master">Master Interview Q&A Bank</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<div class="header-block">
+  <div class="eyebrow">Java Backend Engineer · Spring Boot Course</div>
+  <h1>Section 12 — Actuator, Observability & Modern REST Clients</h1>
+  <p>The production-operations half of the course: Spring Boot Actuator's built-in health/metrics/management endpoints, then the modern observability stack (Micrometer, OpenTelemetry, OTLP, the LGTM stack) for distributed tracing — followed by a complete pivot from building APIs to <em>consuming</em> them, covering the modern <code>RestClient</code> and the fully declarative HTTP Interface (HTTP Service Client) approach.</p>
+  <div class="meta-row">
+    <span class="meta-pill">Videos 214–230 (17 videos)</span>
+    <span class="meta-pill">~2.7 hrs runtime</span>
+    <span class="meta-pill">FAANG + Fintech interview focus</span>
+    <span class="meta-pill">Builds on Sections 3, 8 & 10</span>
+  </div>
+</div>
+
+<!-- 214 -->
+<section class="topic" id="actuator-intro">
+  <div class="topic-head"><span class="topic-num">214</span><h2>Spring Boot Actuator — Your App's Built-in Health Monitor</h2></div>
+  <div class="topic-video">Video: Spring Boot Actuator - Your App's Built-in Health Monitor</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'ai1')">Dependency</button></div>
+    <div class="tab-content active" id="ai1"><pre><span class="kw">&lt;dependency&gt;</span>
+    <span class="kw">&lt;groupId&gt;</span>org.springframework.boot<span class="kw">&lt;/groupId&gt;</span>
+    <span class="kw">&lt;artifactId&gt;</span>spring-boot-starter-actuator<span class="kw">&lt;/artifactId&gt;</span>
+<span class="kw">&lt;/dependency&gt;</span>
+<span class="cm">&lt;!-- exactly one dependency, and — per Section 3's auto-configuration philosophy —
+     a whole family of production-monitoring endpoints activates automatically --&gt;</span></pre></div>
+  </div>
+
+  <p><strong>Actuator</strong> is Spring Boot's built-in production-readiness toolkit — a set of HTTP endpoints (under <code>/actuator/*</code> by default) exposing the internal state of a running application: health, metrics, configuration, active beans, and more, all without writing a single line of custom monitoring code.</p>
+
+  <div class="box tip">
+    <div class="box-title">💡 Why This Matters Beyond "It's Convenient"</div>
+    <p>In any real deployment — a Kubernetes cluster, a load balancer, a CI/CD pipeline — something external needs a reliable, standardized way to answer "is this instance actually healthy and ready to receive traffic?" without guessing. Actuator's <code>/actuator/health</code> endpoint is precisely that standardized signal, and its presence (or absence) is one of the clearest practical differentiators between a toy application and a genuinely production-operable one — which is exactly why this topic sits in a course section explicitly building toward production readiness.</p>
+  </div>
+</section>
+
+<!-- 215 -->
+<section class="topic" id="health-checks">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">215</span><h2>Health Checks Made Easy with Spring Boot Actuator</h2></div>
+  <div class="topic-video">Video: Health Checks Made Easy with Spring Boot Actuator</div>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'hc1')">GET /actuator/health</button>
+      <button class="tab-btn" onclick="showTab(this,'hc2')">Custom HealthIndicator</button>
+    </div>
+    <div class="tab-content active" id="hc1"><pre>{
+  <span class="str">"status"</span>: <span class="str">"UP"</span>,
+  <span class="str">"components"</span>: {
+    <span class="str">"db"</span>: { <span class="str">"status"</span>: <span class="str">"UP"</span>, <span class="str">"details"</span>: { <span class="str">"database"</span>: <span class="str">"MySQL"</span> } },
+    <span class="str">"diskSpace"</span>: { <span class="str">"status"</span>: <span class="str">"UP"</span>, <span class="str">"details"</span>: { <span class="str">"free"</span>: <span class="mt">42800000000</span> } },
+    <span class="str">"ping"</span>: { <span class="str">"status"</span>: <span class="str">"UP"</span> }
+  }
+}
+<span class="cm">// Actuator auto-detects relevant HealthIndicators based on what's on the</span>
+<span class="cm">// classpath (a DataSource present -&gt; automatic DB connectivity check —</span>
+<span class="cm">// the SAME conditional auto-configuration philosophy as Section 3)</span></pre></div>
+    <div class="tab-content" id="hc2"><pre><span class="an">@Component</span>
+<span class="kw">public class</span> <span class="cl">PaymentGatewayHealthIndicator implements</span> HealthIndicator {
+
+    <span name="Override">@Override</span>
+    <span class="kw">public</span> Health <span class="mt">health</span>() {
+        <span class="kw">try</span> {
+            <span class="kw">boolean</span> reachable = paymentGatewayClient.<span class="mt">ping</span>();
+            <span class="kw">return</span> reachable
+                ? Health.<span class="mt">up</span>().<span class="mt">withDetail</span>(<span class="str">"gateway"</span>, <span class="str">"Stripe"</span>).<span class="mt">build</span>()
+                : Health.<span class="mt">down</span>().<span class="mt">withDetail</span>(<span class="str">"reason"</span>, <span class="str">"unreachable"</span>).<span class="mt">build</span>();
+        } <span class="kw">catch</span> (Exception ex) {
+            <span class="kw">return</span> Health.<span class="mt">down</span>(ex).<span class="mt">build</span>();
+        }
+    }
+}
+<span class="cm">// now appears automatically as another component under /actuator/health,</span>
+<span class="cm">// aggregated into the overall UP/DOWN status alongside the built-in ones</span></pre></div>
+  </div>
+
+  <table>
+    <tr><th>Concept</th><th>Explanation</th></tr>
+    <tr><td><strong>Aggregate status</strong></td><td>The top-level <code>status</code> is computed from every individual <code>HealthIndicator</code> — if <em>any</em> component reports <code>DOWN</code>, the overall application status is <code>DOWN</code>, by default (this aggregation strategy is itself configurable)</td></tr>
+    <tr><td><strong>Liveness vs Readiness</strong></td><td>Kubernetes-aware Actuator distinguishes <code>/actuator/health/liveness</code> ("is the process alive and not deadlocked — should it be restarted if not?") from <code>/actuator/health/readiness</code> ("is it ready to receive traffic right now — should the load balancer route to it?") — two genuinely different questions Kubernetes probes separately</td></tr>
+  </table>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Liveness vs Readiness Is a Frequently-Tested, Precise Distinction</div>
+    <p>Conflating these is a real production risk: a <strong>liveness</strong> probe failure tells Kubernetes "this process is broken — kill and restart the container." A <strong>readiness</strong> probe failure tells Kubernetes "this instance is temporarily not able to serve traffic — stop routing to it, but don't restart it" (e.g., during a slow startup warming a cache, or a temporary downstream dependency outage the instance can recover from once the dependency returns). Wiring a downstream dependency's health (like the payment gateway example above) into the <strong>liveness</strong> probe by mistake would cause Kubernetes to repeatedly restart a perfectly healthy application instance every time an unrelated third-party service has a brief outage — a classic, avoidable self-inflicted incident.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Design the liveness and readiness probe strategy for a Spring Boot service with a database dependency and a downstream third-party API dependency.</div>
+      <div class="qa-a"><p><strong>Liveness</strong> should check only whether the application's own internal state is fundamentally healthy — the JVM is responsive, no deadlock, core internal components initialized correctly — deliberately <em>excluding</em> external dependency checks, since a liveness failure triggers a restart, and restarting won't fix a downstream outage (it would just cause unnecessary restart churn while the real problem persists elsewhere). <strong>Readiness</strong> should include the database connectivity check (the app genuinely cannot serve most requests without it) and, more debatably, the third-party API check — often configured as a <em>degraded but still ready</em> state if the third-party dependency is used by only a subset of endpoints (the app can still serve everything else), rather than marking the whole instance not-ready over one non-critical downstream dependency being temporarily unavailable. This distinction — what belongs in liveness vs readiness — is exactly the kind of precise, practical Kubernetes-operations judgment that separates surface-level Actuator knowledge from real production experience.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 216 -->
+<section class="topic" id="beans-config-env">
+  <div class="topic-head"><span class="topic-num">216</span><h2>Peeking Inside Spring — Beans, Config & Environment with Actuator</h2></div>
+  <div class="topic-video">Video: Peeking Inside Spring - Beans, Config & Environment with Actuator</div>
+
+  <table>
+    <tr><th>Endpoint</th><th>Exposes</th><th>Connects To</th></tr>
+    <tr><td><code>/actuator/beans</code></td><td>Every bean currently registered in the <code>ApplicationContext</code>, with its type and dependencies</td><td>Makes Section 1–2's abstract IoC container/bean concepts directly, visibly inspectable at runtime — genuinely useful for debugging an unexpected bean-wiring issue</td></tr>
+    <tr><td><code>/actuator/configprops</code></td><td>Every bound <code>@ConfigurationProperties</code> object and its current resolved values</td><td>Directly visualizes Section 11's <code>@ConfigurationProperties</code> topic — confirms exactly what values actually got bound in this running instance</td></tr>
+    <tr><td><code>/actuator/env</code></td><td>Every property source Spring's <code>Environment</code> is aware of, in precedence order, with the actual resolved value for each key</td><td>Makes Section 11's property-source precedence chain (CLI args &gt; JVM props &gt; env vars &gt; profile files &gt; defaults) directly observable — invaluable for debugging "why is this property not the value I expected"</td></tr>
+  </table>
+
+  <div class="box danger">
+    <div class="box-title">⚠ These Endpoints Can Leak Sensitive Data — Must Never Be Publicly Exposed Unauthenticated</div>
+    <p><code>/actuator/env</code> and <code>/actuator/configprops</code> can reveal database passwords, API keys, and other secrets bound from environment variables (Section 11) — Actuator automatically applies <strong>sanitization</strong> to common sensitive-sounding key patterns (masking values for keys containing <code>password</code>, <code>secret</code>, <code>token</code>, etc., by default), but this pattern-matching is not foolproof for custom, non-obviously-named secret properties. In any real deployment, these management endpoints must be secured — either via Spring Security rules restricting <code>/actuator/**</code> to admin roles only (Section 9's authorization patterns), or by exposing Actuator on a <strong>separate management port</strong> not reachable from the public internet at all (a common, more robust production pattern, configurable via <code>management.server.port</code>).</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>By default, are all these endpoints even reachable over HTTP without extra configuration?</div>
+      <div class="qa-a"><p>No — Spring Boot Actuator exposes only <code>/actuator/health</code> and <code>/actuator/info</code> over HTTP by default; every other endpoint (<code>beans</code>, <code>env</code>, <code>configprops</code>, <code>metrics</code>, etc.) must be explicitly opted into via <code>management.endpoints.web.exposure.include=health,info,beans,env,metrics</code> (or <code>=*</code> for everything, generally discouraged in production) in configuration. This "closed by default, opened deliberately" posture directly mirrors Spring Security's own default philosophy from Section 6 — a sensible, security-conscious default that requires an explicit, auditable decision to expose anything beyond the two safest, least-sensitive endpoints.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 217 -->
+<section class="topic" id="metrics-logs-mappings">
+  <div class="topic-head"><span class="topic-num">217</span><h2>Real-Time Insights with Actuator — Metrics, Logs & Mappings</h2></div>
+  <div class="topic-video">Video: Real-Time Insights with Actuator - Metrics, Logs & Mappings</div>
+
+  <table>
+    <tr><th>Endpoint</th><th>Exposes</th></tr>
+    <tr><td><code>/actuator/metrics</code></td><td>A list of available metric names; <code>/actuator/metrics/{name}</code> drills into a specific one — JVM memory/GC stats, HTTP request counts and latencies, database connection pool usage, and any custom metrics registered via Micrometer (foreshadowing the next major topic in this section)</td></tr>
+    <tr><td><code>/actuator/loggers</code></td><td>Every active logger and its current effective level — and, critically, supports a <strong>POST</strong> to change a logger's level <em>at runtime</em>, with no restart required</td></tr>
+    <tr><td><code>/actuator/mappings</code></td><td>Every registered Spring MVC request mapping — every controller method's URL pattern, HTTP method, and produces/consumes constraints (Section 3) — a live, always-accurate map of the API surface</td></tr>
+  </table>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'ml1')">Runtime log-level change — genuinely powerful</button></div>
+    <div class="tab-content active" id="ml1"><pre><span class="cm"># bump a specific package to DEBUG, live, in production, with zero redeploy —</span>
+<span class="cm"># directly solves the "how do I get more detail on this one live incident</span>
+<span class="cm"># without a full redeploy cycle" problem</span>
+curl -X POST http://localhost:8080/actuator/loggers/com.growthscript.service \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{"configuredLevel": "DEBUG"}'</span>
+
+<span class="cm"># and revert it back once the investigation is done:</span>
+curl -X POST http://localhost:8080/actuator/loggers/com.growthscript.service \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{"configuredLevel": "INFO"}'</span></pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 Directly Solving a Real Production Pain Point From Section 8</div>
+    <p>Section 8 flagged that leaving log level at <code>DEBUG</code> in production is dangerous (noise, performance, potential data exposure) but that DEBUG is often genuinely needed <em>temporarily</em> while investigating a live issue. The <code>/actuator/loggers</code> POST endpoint is exactly the tool that resolves this tension in practice — a targeted, temporary, reversible, zero-redeploy log-level escalation scoped to exactly the package under investigation, then reverted the moment the investigation concludes.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How could /actuator/mappings be used as a safety check in a CI/CD pipeline?</div>
+      <div class="qa-a"><p>An automated post-deployment smoke test can call <code>/actuator/mappings</code> on the freshly-deployed instance and assert that a known, expected set of critical endpoints is actually present and correctly mapped — catching a class of deployment bug that unit tests alone might miss, such as a controller accidentally excluded from component scanning (Section 1's scan-path bug), a misconfigured base package, or an unintended change to a route pattern that would silently break API consumers. It's a lightweight, live, ground-truth verification of "the API surface this build actually exposes matches what we expect," distinct from and complementary to functional endpoint testing.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 218 -->
+<section class="topic" id="info-endpoint">
+  <div class="topic-head"><span class="topic-num">218</span><h2>Exposing Application Metadata the Smart Way with Actuator</h2></div>
+  <div class="topic-video">Video: Exposing Application metadata Info the Smart Way with Actuator</div>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'info1')">Build-info + git-info auto-population</button>
+      <button class="tab-btn" onclick="showTab(this,'info2')">Custom InfoContributor</button>
+    </div>
+    <div class="tab-content active" id="info1"><pre><span class="cm">&lt;!-- pom.xml — these two Maven plugin executions AUTOMATICALLY populate
+     /actuator/info with build version/time and git commit details,
+     with ZERO manual property duplication --&gt;</span>
+<span class="kw">&lt;plugin&gt;</span>
+    <span class="kw">&lt;groupId&gt;</span>org.springframework.boot<span class="kw">&lt;/groupId&gt;</span>
+    <span class="kw">&lt;artifactId&gt;</span>spring-boot-maven-plugin<span class="kw">&lt;/artifactId&gt;</span>
+    <span class="kw">&lt;executions&gt;</span>
+        <span class="kw">&lt;execution&gt;</span>
+            <span class="kw">&lt;goals&gt;</span><span class="kw">&lt;goal&gt;</span>build-info<span class="kw">&lt;/goal&gt;</span><span class="kw">&lt;/goals&gt;</span>
+        <span class="kw">&lt;/execution&gt;</span>
+    <span class="kw">&lt;/executions&gt;</span>
+<span class="kw">&lt;/plugin&gt;</span>
+
+<span class="cm">// GET /actuator/info now automatically includes:</span>
+<span class="cm">// { "build": { "version": "1.4.2", "time": "2026-09-20T10:15:00Z" },</span>
+<span class="cm">//   "git": { "commit": { "id": "a1b2c3d" }, "branch": "main" } }</span></pre></div>
+    <div class="tab-content" id="info2"><pre><span class="an">@Component</span>
+<span class="kw">public class</span> <span class="cl">FeatureFlagsInfoContributor implements</span> InfoContributor {
+
+    <span name="Override">@Override</span>
+    <span class="kw">public void</span> <span class="mt">contribute</span>(Info.Builder builder) {
+        <span class="cm">// exposes runtime state — e.g., WHICH feature flags (Section 11's</span>
+        <span class="cm">// @ConditionalOnProperty pattern) are currently active in THIS deployment</span>
+        builder.<span class="mt">withDetail</span>(<span class="str">"featureFlags"</span>, Map.<span class="mt">of</span>(<span class="str">"newSearch"</span>, <span class="kw">true</span>, <span class="str">"betaCheckout"</span>, <span class="kw">false</span>));
+    }
+}</pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 A Genuinely Useful Operational Question This Answers Instantly</div>
+    <p>"Exactly which code is running on this specific instance right now?" is a question that sounds trivial but is genuinely hard to answer with confidence in a live incident without this — <code>/actuator/info</code> exposing the exact git commit hash and build timestamp lets an on-call engineer immediately confirm whether a suspected fix has actually been deployed to the instance they're looking at, without needing separate deployment-tracking tooling or guesswork based on deploy timestamps in a dashboard elsewhere.</p>
+  </div>
+</section>
+
+<!-- 219 -->
+<section class="topic" id="actuator-use-cases">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">219</span><h2>Powerful Actuator Use Cases — Shutdown, Cache & Log Control</h2></div>
+  <div class="topic-video">Video: Powerful Actuator Use Cases - Shutdown, Cache & Log Control</div>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'auc1')">Graceful shutdown endpoint</button>
+      <button class="tab-btn" onclick="showTab(this,'auc2')">Cache inspection & eviction via Actuator</button>
+    </div>
+    <div class="tab-content active" id="auc1"><pre><span class="cm"># management.endpoint.shutdown.enabled=true  (OFF by default — must opt in)</span>
+curl -X POST http://localhost:8080/actuator/shutdown
+<span class="cm">// triggers a GRACEFUL application shutdown — letting in-flight requests</span>
+<span class="cm">// complete and resources (DB connections, etc.) close cleanly, rather</span>
+<span class="cm">// than an abrupt kill -9</span></pre></div>
+    <div class="tab-content" id="auc2"><pre><span class="cm"># GET /actuator/caches — lists every registered cache region (Section 11's</span>
+<span class="cm"># "companies", "jobs" Caffeine caches) and their current entry counts</span>
+
+<span class="cm"># DELETE /actuator/caches/companies — evicts an ENTIRE cache region ON DEMAND,</span>
+<span class="cm"># without waiting for TTL expiry (Section 11) or writing a one-off @CacheEvict</span>
+<span class="cm"># endpoint just for this operational need</span>
+curl -X DELETE http://localhost:8080/actuator/caches/companies</pre></div>
+  </div>
+
+  <div class="box danger">
+    <div class="box-title">⚠ The Shutdown Endpoint Is Disabled by Default for an Obvious Reason</div>
+    <p>An exposed, unauthenticated <code>/actuator/shutdown</code> endpoint would let literally anyone who can reach it remotely terminate the application on demand — a trivial, catastrophic denial-of-service vector. It requires an explicit opt-in (<code>management.endpoint.shutdown.enabled=true</code>) precisely because of this risk, and in any real deployment must additionally be locked down behind authentication/authorization (or, more commonly, simply left disabled entirely and relying on the orchestration platform's own shutdown mechanisms — e.g., Kubernetes sending SIGTERM directly to the container — rather than exposing an HTTP-triggered shutdown at all).</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why is the ability to evict a specific cache region on demand via Actuator genuinely valuable in production, beyond just "it's convenient"?</div>
+      <div class="qa-a"><p>It provides an operational escape hatch for exactly the scenario Section 11's TTL discussion flagged as a real risk: data changed <strong>outside</strong> the application's own code paths (a direct database edit, a data-fix script, another service writing to a shared table) that <code>@CachePut</code>/<code>@CacheEvict</code> have no way to know about and TTL would only eventually self-correct. Rather than waiting out the TTL window or restarting the entire application (losing the whole cache's warm state, not just the affected entries) just to clear one specific stale cache region, an on-call engineer can surgically evict exactly the affected region via a single authenticated API call — a genuinely practical incident-response tool directly connecting back to the caching correctness concerns raised in the previous section.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 220 -->
+<section class="topic" id="observability-intro">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">220</span><h2>Introduction to Observability and OpenTelemetry</h2></div>
+  <div class="topic-video">Video: Introduction to Observability and OpenTelemetry</div>
+
+  <p><strong>Observability</strong> is the ability to understand a system's <em>internal state</em> purely from its <em>external outputs</em> — traditionally decomposed into three complementary pillars, each already touched on separately across this course:</p>
+
+  <table>
+    <tr><th>Pillar</th><th>Answers</th><th>Already Covered In</th></tr>
+    <tr><td><strong>Logs</strong></td><td>"What specifically happened, in detail, at this point in time?"</td><td>Section 8 — SLF4J/Logback</td></tr>
+    <tr><td><strong>Metrics</strong></td><td>"How is the system performing, in aggregate, over time?" (request rate, error rate, latency percentiles)</td><td>This section's Actuator topics</td></tr>
+    <tr><td><strong>Traces</strong></td><td>"What was the full journey of <em>this one specific request</em> as it moved through multiple services/components?"</td><td><strong>New in this section</strong> — the missing third pillar</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 Why Tracing Specifically Matters in a Microservices World</div>
+    <p>Logs and metrics answer questions about one service in isolation reasonably well — but in a microservices architecture (which Section 10's Saga-pattern discussion already gestured toward), a single user-facing request might fan out across five different services. When that request is slow or fails, "which of those five services, specifically, was the actual bottleneck or point of failure?" is a question <strong>logs and metrics alone cannot answer</strong> — each service's logs are isolated, with no inherent way to correlate "this log line in Service A" with "this log line in Service C" as belonging to the same originating request. <strong>Distributed tracing</strong> exists specifically to solve this: a single trace ID threads through every service a request touches, letting you reconstruct the complete, ordered, cross-service journey of one specific request after the fact.</p>
+  </div>
+
+  <p><strong>OpenTelemetry (OTEL)</strong> is a vendor-neutral, industry-standard specification and toolset (APIs, SDKs, and a common wire protocol) for generating and exporting exactly these three pillars in a consistent, portable way — instrument your code once against OpenTelemetry's API, and freely swap the backend that actually stores/visualizes the resulting data (Jaeger, Zipkin, Datadog, Grafana, many others) without re-instrumenting anything.</p>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why does OpenTelemetry's vendor-neutrality matter practically, rather than just picking one vendor's proprietary instrumentation SDK directly?</div>
+      <div class="qa-a"><p>This mirrors precisely the SLF4J-vs-Logback facade/implementation relationship from Section 8, applied to the whole observability domain: instrumenting application code directly against a specific vendor's proprietary SDK (e.g., a specific APM vendor's agent) creates lock-in — migrating to a different observability backend later means re-instrumenting the entire codebase. Instrumenting against OpenTelemetry's vendor-neutral API instead means the <em>backend</em> (where traces/metrics/logs are actually shipped and visualized) becomes a swappable configuration/infrastructure decision, not a pervasive code-level dependency — directly reducing vendor lock-in risk, a real and commonly-cited factor in enterprise observability-tooling decisions.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 221 -->
+<section class="topic" id="observability-stack">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">221</span><h2>Understanding the Observability Stack (Micrometer, OTEL, OTLP, LGTM)</h2></div>
+  <div class="topic-video">Video: Understanding the Observability Stack (Micrometer, OTEL, OTLP, LGTM)</div>
+
+  <div class="diagram">   YOUR SPRING BOOT APP
+┌─────────────────────────────────┐
+│  Micrometer                       │  ← the FACADE your Spring Boot code
+│  (facade for metrics + tracing,   │     actually interacts with (auto-wired
+│   the "SLF4J of observability")   │     into Actuator's /metrics automatically)
+└─────────────────────────────────┘
+              │
+              │  Micrometer Tracing bridges to OTEL's API/SDK
+              ▼
+┌─────────────────────────────────┐
+│  OpenTelemetry SDK                 │  ← generates the actual trace/metric/log
+│                                    │     data in OTEL's standard internal format
+└─────────────────────────────────┘
+              │
+              │  exported via OTLP (OpenTelemetry Protocol —
+              │  the standard WIRE FORMAT for shipping this data)
+              ▼
+┌─────────────────────────────────┐
+│  Observability BACKEND             │  ← where data is stored, queried, visualized
+│  e.g. the "LGTM" stack:            │
+│    L oki      (Logs)                │
+│    G rafana   (visualization/dashboards, the "front door" for all four)
+│    T empo     (Traces)              │
+│    M imir     (Metrics)             │
+└─────────────────────────────────┘</div>
+
+  <table>
+    <tr><th>Component</th><th>Role</th></tr>
+    <tr><td><strong>Micrometer</strong></td><td>The metrics/tracing <strong>facade</strong> Spring Boot has used internally for years (already silently powering Actuator's <code>/metrics</code> endpoint, this section's earlier topics) — exactly the SLF4J-equivalent for observability, per topic 220's Q&A</td></tr>
+    <tr><td><strong>OpenTelemetry (OTEL)</strong></td><td>The underlying, vendor-neutral SDK/specification Micrometer Tracing bridges to for the actual trace generation</td></tr>
+    <tr><td><strong>OTLP (OpenTelemetry Protocol)</strong></td><td>The standard <strong>wire format</strong> for transmitting telemetry data from an application to a backend collector — the interoperability layer that lets any OTEL-instrumented app talk to any OTLP-compatible backend</td></tr>
+    <tr><td><strong>LGTM Stack</strong></td><td>Grafana Labs' open-source observability backend bundle — <strong>L</strong>oki (log aggregation), <strong>G</strong>rafana (unified visualization/dashboarding across all three pillars), <strong>T</strong>empo (distributed trace storage), <strong>M</strong>imir (metrics storage) — one popular, cohesive, self-hostable choice among several viable backends</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 The Layering, Stated Precisely for an Interview</div>
+    <p>"Micrometer is the facade my Spring Boot code interacts with directly — I never call OpenTelemetry's API myself. Micrometer Tracing bridges to the OpenTelemetry SDK underneath, which generates the actual trace/span data and exports it over OTLP, the standard wire protocol, to whichever backend is configured to receive it — commonly the LGTM stack, though the whole point of this layered design is that the backend is swappable without touching application code." This mirrors, almost annotation-for-annotation, the JPA/Hibernate/Spring-Data-JPA three-layer relationship from Section 4.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>If Micrometer already powered Actuator's /metrics endpoint before OpenTelemetry entered the picture, what specifically does adding OTEL/OTLP contribute?</div>
+      <div class="qa-a"><p>Micrometer alone (pre-OTEL integration) handled metrics well but had no standardized, vendor-neutral mechanism for <strong>distributed tracing</strong> across services, nor a universal wire protocol for shipping that data anywhere. <strong>Micrometer Tracing</strong> is the newer bridge layer that lets Micrometer's existing metrics facade interoperate with OpenTelemetry's trace generation and OTLP export — meaning a Spring Boot application gets both metrics <em>and</em> distributed tracing through one consistent, familiar Micrometer-based API, while the actual trace data itself flows out through the industry-standard, vendor-neutral OTEL/OTLP pipeline rather than a Spring-specific or vendor-specific format.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 222 -->
+<section class="topic" id="making-observable">
+  <div class="topic-head"><span class="topic-num">222</span><h2>Making Spring Boot Observable with Minimal Code</h2></div>
+  <div class="topic-video">Video: Making Spring Boot Observable with Minimal Code</div>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'mo1')">Dependencies — the whole pipeline, minimal setup</button>
+      <button class="tab-btn" onclick="showTab(this,'mo2')">application.properties — exporting to an OTLP collector</button>
+    </div>
+    <div class="tab-content active" id="mo1"><pre><span class="kw">&lt;dependency&gt;</span>
+    <span class="kw">&lt;groupId&gt;</span>io.micrometer<span class="kw">&lt;/groupId&gt;</span>
+    <span class="kw">&lt;artifactId&gt;</span>micrometer-tracing-bridge-otel<span class="kw">&lt;/artifactId&gt;</span>
+<span class="kw">&lt;/dependency&gt;</span>
+<span class="kw">&lt;dependency&gt;</span>
+    <span class="kw">&lt;groupId&gt;</span>io.opentelemetry<span class="kw">&lt;/groupId&gt;</span>
+    <span class="kw">&lt;artifactId&gt;</span>opentelemetry-exporter-otlp<span class="kw">&lt;/artifactId&gt;</span>
+<span class="kw">&lt;/dependency&gt;</span>
+<span class="cm">&lt;!-- + spring-boot-starter-actuator, already added earlier in this section --&gt;</span></pre></div>
+    <div class="tab-content" id="mo2"><pre>management.tracing.sampling.probability=<span class="mt">1.0</span>   <span class="cm"># trace 100% of requests — see the sampling Q&A below</span>
+management.otlp.tracing.endpoint=<span class="str">http://localhost:4318/v1/traces</span>
+management.otlp.metrics.export.url=<span class="str">http://localhost:4318/v1/metrics</span>
+
+<span class="cm"># that's genuinely close to the entire application-side setup — every HTTP</span>
+<span class="cm"># request, database call (via Hibernate's own instrumentation), and outgoing</span>
+<span class="cm"># RestClient call (this section's later topic) is AUTOMATICALLY traced,</span>
+<span class="cm"># with ZERO manual span-creation code required for the common case</span></pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 "Minimal Code" Is the Point — Automatic Instrumentation</div>
+    <p>This continues the exact auto-configuration philosophy from Section 3, now applied to observability: Spring Boot auto-detects the Micrometer Tracing/OTEL dependencies on the classpath and automatically instruments Spring MVC request handling, JPA/Hibernate database calls, and outgoing HTTP client calls — generating and propagating trace spans without the developer writing any manual tracing code for these common cases. Manual, custom spans (for wrapping a specific piece of business logic you want separately visible in a trace) remain possible via Micrometer's <code>ObservationRegistry</code> API when genuinely needed, but the baseline, automatic coverage is deliberately broad.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why would you set sampling.probability to something less than 1.0 in a real production system, and what's the trade-off?</div>
+      <div class="qa-a"><p>Tracing every single request (100% sampling) at real production traffic volume generates a substantial volume of trace data — real storage, network, and backend-processing cost that scales linearly with request volume, which can become genuinely expensive or overwhelming at high scale. A lower sampling rate (e.g., <code>0.1</code> = trace 10% of requests) trades <strong>completeness</strong> for <strong>cost/overhead</strong> — still providing a statistically representative, useful picture of system latency/behavior for most debugging and performance-analysis purposes, without the full cost of universal tracing. A common, more sophisticated pattern is <strong>tail-based sampling</strong> at the collector level — sampling based on a trace's <em>outcome</em> (always keep traces that ended in an error or were unusually slow, sample normally-completing fast traces at a much lower rate) — getting the debugging value of full coverage for the traces that actually matter most, at a fraction of full-tracing's cost.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 223 -->
+<section class="topic" id="traces-in-action">
+  <div class="topic-head"><span class="topic-num">223</span><h2>Seeing Traces, Metrics & Logs in Action</h2></div>
+  <div class="topic-video">Video: Seeing Traces, Metrics & Logs in Action</div>
+
+  <div class="diagram">A single incoming request, visualized as a TRACE (a tree of SPANS):
+
+Trace ID: a1b2c3d4...
+│
+├── Span: HTTP GET /api/v1/jobs/42        [12ms total]
+│   │
+│   ├── Span: JobService.getJob()          [10ms]
+│   │   │
+│   │   ├── Span: SELECT FROM jobs         [3ms]   ← Hibernate auto-instrumented
+│   │   ├── Span: SELECT FROM companies    [2ms]   ← a SECOND query — is this an N+1? (Section 9!)
+│   │   └── Span: RestClient call to        [4ms]   ← an OUTGOING call to another
+│   │            recommendation-service              service, auto-instrumented too
+│   │
+│   └── (response serialization, etc.)     [2ms]</div>
+
+  <p>This is a genuinely powerful, hands-on payoff moment — a real trace visualized in a Grafana Tempo (or similar) dashboard makes Section 9's N+1 problem, previously only detectable via query-count logging or Hibernate statistics, <strong>visually obvious</strong>: two separate database-call spans nested under one request immediately suggest a potential N+1 pattern worth investigating, without needing to manually enable and parse SQL logging at all.</p>
+
+  <div class="box tip">
+    <div class="box-title">💡 A Direct, Concrete Callback to Section 9's N+1 Diagnostic Discussion</div>
+    <p>Section 9 listed several N+1-detection techniques (query logging, datasource proxies, Hibernate statistics, APM tools) and specifically flagged "APM tools that flag suspiciously repetitive query patterns" as the practical production approach. Distributed tracing, as demonstrated concretely in this topic, is exactly that mechanism made tangible — a trace visualization is often the <em>first</em> place a real N+1 problem becomes visible in production, well before anyone manually goes looking for it with a query-count investigation.</p>
+  </div>
+</section>
+
+<!-- 224 -->
+<section class="topic" id="trace-ids-clients">
+  <div class="topic-head"><span class="topic-num">224</span><h2>Making Trace IDs Visible to Clients</h2></div>
+  <div class="topic-video">Video: Making Trace IDs visible to Clients</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'ti1')">Exposing the trace ID in the response</button></div>
+    <div class="tab-content active" id="ti1"><pre><span class="cm"># application.properties</span>
+management.trace.http.include-headers=<span class="kw">true</span>
+
+<span class="cm"># response now includes a header like:</span>
+<span class="cm"># X-Trace-Id: a1b2c3d4e5f6...</span></pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 The Practical, Realistic Support-Workflow Payoff</div>
+    <p>When a client-side error occurs (an API consumer, per the very next topic's theme, or an end user reporting "something went wrong"), having the exact <strong>trace ID</strong> surfaced in the error response — and asking the reporting party to include it — lets an engineer jump <strong>directly</strong> to that one specific request's complete cross-service trace in the observability backend, rather than manually searching logs by approximate timestamp and guessing which of potentially thousands of concurrent requests corresponds to the reported issue. This closes the loop between Section 5's structured <code>ErrorResponse</code> shape (which could now include a <code>traceId</code> field) and this section's full tracing infrastructure — a small addition with an outsized practical debugging payoff.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Design an end-to-end incident-response workflow that uses everything covered across this section — Actuator, tracing, and exposed trace IDs.</div>
+      <div class="qa-a"><p>A user reports a failed checkout, including the <code>traceId</code> from their error response (this topic). An engineer pastes that trace ID directly into Grafana/Tempo (topic 221's LGTM stack) and immediately sees the complete cross-service span tree for that exact request — identifying, say, an unusually slow database span. They cross-reference Actuator's <code>/actuator/metrics</code> (this section, earlier topics) for that time window to confirm whether database latency was elevated system-wide or isolated to this one request, and check <code>/actuator/health</code>'s database component to rule out a connectivity issue. If deeper diagnostic detail is needed, they use <code>/actuator/loggers</code> to temporarily bump the relevant package to DEBUG in production (topic 217) without a redeploy, reproduce or wait for a similar request, then revert the log level once done. This complete workflow — from a user-facing trace ID through live metrics, health checks, and on-demand log-level changes — demonstrates genuine synthesis of every Actuator and observability topic in this section into one realistic operational scenario.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 225 -->
+<section class="topic" id="api-consumers">
+  <div class="topic-head"><span class="topic-num">225</span><h2>The Other Side of REST — Understanding API Consumers</h2></div>
+  <div class="topic-video">Video: The Other Side of REST - Understanding API Consumers</div>
+
+  <p>Every REST API topic from Section 3 onward has covered building/exposing APIs. This topic marks a deliberate pivot: real backend systems are frequently also <strong>consumers</strong> of other APIs — calling a payment gateway, a third-party data provider, or another internal microservice — and Spring provides purpose-built tooling for this exact role, moving beyond generic, low-level HTTP client libraries.</p>
+
+  <table>
+    <tr><th>Spring HTTP Client Option</th><th>Era / Status</th></tr>
+    <tr><td><code>RestTemplate</code></td><td>The long-standing classic — now in <strong>maintenance mode</strong>, no longer actively enhanced by the Spring team, though still present in countless existing codebases</td></tr>
+    <tr><td><code>WebClient</code></td><td>Spring WebFlux's reactive, non-blocking HTTP client — powerful but brings reactive-programming complexity even for simple, synchronous use cases</td></tr>
+    <tr><td><code>RestClient</code></td><td><strong>The modern, current recommendation</strong> for synchronous HTTP calls — a fluent, synchronous API introduced to replace <code>RestTemplate</code> without forcing reactive programming — this section's primary focus</td></tr>
+    <tr><td>HTTP Interface (HTTP Service Client)</td><td>A fully <strong>declarative</strong> layer built on top of <code>RestClient</code>/<code>WebClient</code> — define an interface, Spring generates the implementation — this section's final, most advanced topic</td></tr>
+  </table>
+</section>
+
+<!-- 226 -->
+<section class="topic" id="restclient-intro">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">226</span><h2>Meet RestClient — The Modern Way to Call REST APIs</h2></div>
+  <div class="topic-video">Video: Meet RestClient - The Modern Way to Call REST APIs</div>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'rc1')">Building a RestClient</button>
+      <button class="tab-btn" onclick="showTab(this,'rc2')">GET</button>
+      <button class="tab-btn" onclick="showTab(this,'rc3')">POST</button>
+    </div>
+    <div class="tab-content active" id="rc1"><pre><span class="an">@Configuration</span>
+<span class="kw">public class</span> <span class="cl">RestClientConfig</span> {
+
+    <span class="an">@Bean</span>
+    <span class="kw">public</span> RestClient <span class="mt">recommendationServiceClient</span>(RestClient.Builder builder) {
+        <span class="kw">return</span> builder
+                .baseUrl(<span class="str">"https://api.recommendations.internal"</span>)
+                .defaultHeader(<span class="str">"Accept"</span>, <span class="str">"application/json"</span>)
+                .build();
+    }
+}
+<span class="cm">// registered as a Spring bean — injectable anywhere, exactly like any other</span>
+<span class="cm">// dependency (Section 1's DI principles apply here too)</span></pre></div>
+    <div class="tab-content" id="rc2"><pre><span class="an">@Service</span>
+<span class="an">@RequiredArgsConstructor</span>
+<span class="kw">public class</span> <span class="cl">RecommendationService</span> {
+    <span class="kw">private final</span> RestClient recommendationServiceClient;
+
+    <span class="kw">public</span> List&lt;JobRecommendation&gt; <span class="mt">getRecommendations</span>(Long userId) {
+        <span class="kw">return</span> recommendationServiceClient.<span class="mt">get</span>()
+                .uri(<span class="str">"/users/{userId}/recommendations"</span>, userId)
+                .retrieve()
+                .body(<span class="kw">new</span> ParameterizedTypeReference&lt;List&lt;JobRecommendation&gt;&gt;() {});
+                <span class="cm">// fluent, readable, synchronous — the whole point of RestClient</span>
+    }
+}</pre></div>
+    <div class="tab-content" id="rc3"><pre><span class="kw">public</span> PaymentResponse <span class="mt">chargeCard</span>(PaymentRequest request) {
+    <span class="kw">return</span> paymentGatewayClient.<span class="mt">post</span>()
+            .uri(<span class="str">"/charges"</span>)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(request)
+            .retrieve()
+            .onStatus(HttpStatusCode::is4xxClientError, (req, res) -&gt; {
+                <span class="kw">throw new</span> PaymentGatewayException(<span class="str">"Payment rejected: "</span> + res.<span class="mt">getStatusCode</span>());
+            })
+            .body(PaymentResponse.<span class="kw">class</span>);
+}</pre></div>
+  </div>
+
+  <table>
+    <tr><th></th><th><code>RestTemplate</code></th><th><code>RestClient</code></th></tr>
+    <tr><td><strong>API style</strong></td><td>Method-per-verb (<code>getForObject</code>, <code>postForEntity</code>, ...) — many overloaded method signatures</td><td>Fluent, chained builder — one consistent, readable pattern regardless of the HTTP method</td></tr>
+    <tr><td><strong>Status</strong></td><td>Maintenance mode — not actively enhanced</td><td>Current, actively-developed recommendation</td></tr>
+    <tr><td><strong>Threading model</strong></td><td>Blocking/synchronous</td><td>Blocking/synchronous (deliberately, unlike WebClient) — a direct, non-reactive replacement</td></tr>
+    <tr><td><strong>Error handling</strong></td><td>Exceptions thrown by default on 4xx/5xx, less fluent customization</td><td><code>onStatus()</code> — clean, chainable, fine-grained error handling as part of the same fluent call</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 Why RestClient Exists at All, Given WebClient Already Covers HTTP Calls</div>
+    <p><code>WebClient</code> is reactive (built on Project Reactor's <code>Mono</code>/<code>Flux</code>) — genuinely powerful for non-blocking, high-concurrency scenarios, but it forces reactive-programming concepts onto every caller even when the surrounding application is a perfectly ordinary synchronous Spring MVC app (the kind built throughout this entire course) with no other reactive code anywhere. <code>RestClient</code> was introduced specifically to give synchronous Spring MVC applications a modern, fluent HTTP client API <strong>without</strong> requiring reactive programming at all — the direct, non-reactive successor <code>RestTemplate</code>'s maintenance-mode status was creating a real gap for.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How would you add distributed tracing (this section's earlier topics) to outgoing RestClient calls — is any extra work required?</div>
+      <div class="qa-a"><p>Generally no manual work is required — when Micrometer Tracing/OTEL (topic 222) is on the classpath and configured, Spring Boot's auto-configuration automatically instruments <code>RestClient</code> (and its predecessors) to create a child span for each outgoing HTTP call and correctly <strong>propagate the trace context</strong> (via standard <code>traceparent</code>-style headers) to the downstream service — meaning a call from Service A to Service B via <code>RestClient</code> automatically appears as a connected span within the same overall trace, exactly as shown in topic 223's example trace tree, with zero explicit tracing code written in the calling service.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 227 -->
+<section class="topic" id="restclient-advanced">
+  <div class="topic-head"><span class="topic-num">227</span><h2>Advanced RestClient Usage — Beyond Simple GET Calls</h2></div>
+  <div class="topic-video">Video: Advanced RestClient Usage - Beyond Simple GET Calls</div>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'rca1')">Query params, headers, and exchange() for full control</button>
+      <button class="tab-btn" onclick="showTab(this,'rca2')">Request/response interceptors</button>
+    </div>
+    <div class="tab-content active" id="rca1"><pre>List&lt;Job&gt; jobs = jobBoardClient.<span class="mt">get</span>()
+        .uri(uriBuilder -&gt; uriBuilder
+                .path(<span class="str">"/jobs"</span>)
+                .queryParam(<span class="str">"status"</span>, <span class="str">"OPEN"</span>)   <span class="cm">// mirrors Section 3's @RequestParam, now on the CALLING side</span>
+                .queryParam(<span class="str">"page"</span>, <span class="mt">0</span>)
+                .build())
+        .header(<span class="str">"X-API-Key"</span>, apiKey)
+        .retrieve()
+        .body(<span class="kw">new</span> ParameterizedTypeReference&lt;List&lt;Job&gt;&gt;() {});
+
+<span class="cm">// exchange() — the escape hatch for full request/response control,</span>
+<span class="cm">// analogous to Section 3's RequestEntity/ResponseEntity on the SERVER side</span>
+ResponseEntity&lt;Job&gt; response = jobBoardClient.<span class="mt">get</span>()
+        .uri(<span class="str">"/jobs/{id}"</span>, jobId)
+        .exchange((req, res) -&gt; {
+            <span class="kw">if</span> (res.<span class="mt">getStatusCode</span>().<span class="mt">is2xxSuccessful</span>()) {
+                <span class="kw">return</span> ResponseEntity.<span class="mt">ok</span>(res.<span class="mt">bodyTo</span>(Job.<span class="kw">class</span>));
+            }
+            <span class="kw">return</span> ResponseEntity.<span class="mt">status</span>(res.<span class="mt">getStatusCode</span>()).<span class="mt">build</span>();
+        });</pre></div>
+    <div class="tab-content" id="rca2"><pre><span class="an">@Bean</span>
+<span class="kw">public</span> RestClient <span class="mt">jobBoardClient</span>(RestClient.Builder builder) {
+    <span class="kw">return</span> builder
+            .baseUrl(<span class="str">"https://api.jobboard.com"</span>)
+            .requestInterceptor((request, body, execution) -&gt; {
+                <span class="cm">// runs on EVERY outgoing request — analogous to Section 6's JwtAuthFilter,</span>
+                <span class="cm">// but on the OUTGOING/client side rather than incoming</span>
+                log.<span class="mt">info</span>(<span class="str">"Calling: {} {}"</span>, request.<span class="mt">getMethod</span>(), request.<span class="mt">getURI</span>());
+                <span class="kw">return</span> execution.<span class="mt">execute</span>(request, body);
+            })
+            .build();
+}</pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 Request Interceptors as the Client-Side Mirror of Server-Side Filters</div>
+    <p>A <code>RestClient</code> request interceptor plays structurally the same role, on the <em>outgoing</em> side, as a Servlet <code>Filter</code>/Spring Security filter (Section 6) plays on the <em>incoming</em> side — a cross-cutting point to inject logic (logging, auth headers, tracing propagation) that applies uniformly to every request passing through, without duplicating that logic at every individual call site. It's the same cross-cutting-concern principle from Section 8's AOP discussion, expressed here via a client-specific interceptor mechanism rather than AOP directly.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How would you add automatic retry logic with exponential backoff to a RestClient call to a flaky third-party API?</div>
+      <div class="qa-a"><p><code>RestClient</code> itself has no built-in retry mechanism — retries are typically layered on via <strong>Spring Retry</strong> (<code>@Retryable</code>, itself another AOP-based annotation following the exact pattern from Section 8/10 — a marker annotation plus an interceptor) wrapping the service method that calls <code>RestClient</code>, configured with a backoff policy (e.g., <code>@Backoff(delay = 200, multiplier = 2)</code> for exponential backoff). It's important to combine this thoughtfully with idempotency considerations from Section 3's REST best practices — blindly retrying a non-idempotent POST (like the payment-charge example from topic 226) risks double-processing if the original request actually succeeded but the response was merely lost in transit; retries should generally be reserved for genuinely idempotent operations, or paired with an idempotency key the downstream API can use to safely deduplicate a retried request.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 228 -->
+<section class="topic" id="http-service-client">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">228</span><h2>Introducing HTTP Service Client — Declarative REST Calls</h2></div>
+  <div class="topic-video">Video: Introducing HTTP Service Client - Declarative REST Calls</div>
+
+  <p>This is the same declarative-over-imperative leap Spring Data JPA made for database repositories (Section 4) — now applied to <em>outgoing</em> HTTP calls: define an <strong>interface</strong> describing the desired calls, and Spring generates a working implementation automatically, with zero hand-written client code.</p>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'hsc1')">The interface — pure declaration</button>
+      <button class="tab-btn" onclick="showTab(this,'hsc2')">Wiring it up — a factory bean</button>
+    </div>
+    <div class="tab-content active" id="hsc1"><pre><span class="kw">public interface</span> <span class="cl">JobBoardClient</span> {
+
+    <span class="an">@GetExchange</span>(<span class="str">"/jobs/{id}"</span>)
+    Job <span class="mt">getJob</span>(<span class="an">@PathVariable</span> Long id);
+
+    <span class="an">@GetExchange</span>(<span class="str">"/jobs"</span>)
+    List&lt;Job&gt; <span class="mt">searchJobs</span>(<span class="an">@RequestParam</span> String status);
+
+    <span class="an">@PostExchange</span>(<span class="str">"/jobs"</span>)
+    Job <span class="mt">createJob</span>(<span class="an">@RequestBody</span> JobRequest request);
+
+    <span class="cm">// notice: these are the EXACT SAME annotations (@GetMapping's exchange</span>
+    <span class="cm">// equivalents) used to DEFINE endpoints in Section 3 — now used to DECLARE</span>
+    <span class="cm">// a call to someone ELSE's endpoint instead</span>
+}</pre></div>
+    <div class="tab-content" id="hsc2"><pre><span class="an">@Configuration</span>
+<span class="kw">public class</span> <span class="cl">JobBoardClientConfig</span> {
+
+    <span class="an">@Bean</span>
+    <span class="kw">public</span> JobBoardClient <span class="mt">jobBoardClient</span>(RestClient.Builder builder) {
+        RestClient restClient = builder.baseUrl(<span class="str">"https://api.jobboard.com"</span>).build();
+
+        HttpServiceProxyFactory factory = HttpServiceProxyFactory
+                .<span class="mt">builderFor</span>(RestClientAdapter.<span class="mt">create</span>(restClient))
+                .build();
+
+        <span class="kw">return</span> factory.<span class="mt">createClient</span>(JobBoardClient.<span class="kw">class</span>);   <span class="cm">// Spring generates the PROXY implementation —</span>
+    }                                                        <span class="cm">// no hand-written class implements this interface anywhere</span>
+}
+
+<span class="cm">// usage — indistinguishable from any other injected service:</span>
+<span class="an">@Service</span> <span class="an">@RequiredArgsConstructor</span>
+<span class="kw">public class</span> <span class="cl">JobAggregatorService</span> {
+    <span class="kw">private final</span> JobBoardClient jobBoardClient;
+    <span class="kw">public</span> Job <span class="mt">fetchExternalJob</span>(Long id) { <span class="kw">return</span> jobBoardClient.<span class="mt">getJob</span>(id); }
+}</pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 The Same "Proxy Implements the Interface at Runtime" Pattern, One More Time</div>
+    <p>This is worth calling out explicitly for how it rhymes with concepts already deeply covered: exactly like Spring Data JPA generates a working implementation for a bare <code>JpaRepository</code> interface (Section 4) via a runtime proxy, <code>HttpServiceProxyFactory</code> generates a working implementation for this <code>JobBoardClient</code> interface via a runtime proxy — <code>createClient()</code> returns a dynamically-generated object implementing the interface, translating each annotated method call into the appropriate underlying <code>RestClient</code> call. Recognizing this as "the same pattern, a different domain" rather than a brand-new, unrelated mechanism is exactly the kind of cross-topic synthesis that demonstrates deep understanding.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>What's the actual trade-off between using RestClient directly versus the declarative HTTP Interface approach — is one strictly better?</div>
+      <div class="qa-a"><p>Not strictly better — a genuine trade-off, the same one that generally exists between declarative and imperative approaches throughout the course (derived query methods vs <code>@Query</code>, Section 7/9). The HTTP Interface approach is more concise and readable for straightforward request/response calls, and keeps the "contract" of an external API clearly documented as a single, scannable interface. Direct <code>RestClient</code> usage remains necessary/preferable when a call needs genuinely custom logic that doesn't fit the declarative annotation model cleanly — complex conditional request-building, fine-grained per-call error handling beyond what a simple exception-mapping convention supports, or the <code>exchange()</code>-level full request/response control shown in topic 227. Many real applications use both: the HTTP Interface for the majority of simple, standard calls, and direct <code>RestClient</code> usage for the handful of calls with genuinely special requirements.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 229 -->
+<section class="topic" id="http-service-consume">
+  <div class="topic-head"><span class="topic-num">229</span><h2>Consuming Posts REST APIs Using HTTP Service Client</h2></div>
+  <div class="topic-video">Video: Consuming posts REST APIs using HTTP Service Client</div>
+
+  <p>A hands-on, complete worked example against a real public test API (a "posts" API, commonly JSONPlaceholder-style in tutorials) — declaring the full CRUD interface (<code>@GetExchange</code>, <code>@PostExchange</code>, <code>@PutExchange</code>, <code>@DeleteExchange</code>) and verifying each generated method genuinely performs the correct HTTP call, output side by side against what a direct <code>RestClient</code> call would have required — reinforcing the previous topic's trade-off discussion with concrete, hands-on evidence.</p>
+</section>
+
+<!-- 230 -->
+<section class="topic" id="http-service-groups">
+  <div class="topic-head"><span class="topic-num">230</span><h2>Organizing REST Calls with HTTP Service Groups</h2></div>
+  <div class="topic-video">Video: Organizing REST Calls with HTTP Service Groups</div>
+
+  <p>For applications consuming <strong>multiple</strong> external APIs (a payment gateway, a job board partner API, an email service), <strong>HTTP Service Groups</strong> provide a way to organize related interface-based clients together, sharing common base configuration (base URL, default headers, shared interceptors) without repeating that setup across every individual client's factory bean definition.</p>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'hsg1')">Grouping multiple client interfaces under shared config</button></div>
+    <div class="tab-content active" id="hsg1"><pre><span class="an">@Configuration</span>
+<span class="an">@ImportHttpServices</span>(group = <span class="str">"jobboard"</span>, types = {JobBoardClient.<span class="kw">class</span>, CompanyLookupClient.<span class="kw">class</span>})
+<span class="kw">public class</span> <span class="cl">JobBoardApiConfig</span> { }
+
+<span class="cm"># application.properties — ONE place to configure everything shared</span>
+<span class="cm"># across every client interface registered under the "jobboard" group</span>
+spring.http.client.jobboard.base-url=<span class="str">https://api.jobboard.com</span>
+spring.http.client.jobboard.connect-timeout=<span class="mt">5000</span>
+spring.http.client.jobboard.read-timeout=<span class="mt">10000</span></pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 Why This Matters as the Section's Closing Lesson</div>
+    <p>This directly extends Section 11's "grouping cohesive configuration" lesson (<code>@ConfigurationProperties</code>, grouping related properties into one class rather than scattered <code>@Value</code> fields) into the HTTP-client domain: rather than each individual client interface needing its own separately-configured <code>RestClient</code> bean with duplicated base-URL/timeout/header setup (as topic 228's single-client example showed), Service Groups let a whole family of related external-API clients share one coherent configuration block — the same underlying principle (group related concerns together, configure once) recurring in yet another part of the framework.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>How would you apply distributed tracing (this section's earlier topics) consistently across every client in an HTTP Service Group?</div>
+      <div class="qa-a"><p>Since HTTP Service Groups still build on top of <code>RestClient</code>/<code>WebClient</code> underneath, the same automatic tracing instrumentation from topic 226's Q&A applies uniformly to every client interface registered in the group — Micrometer Tracing/OTEL auto-configuration instruments the underlying HTTP client machinery, not each individual generated interface proxy separately, so every call made through any client in the group automatically gets a properly-propagated trace span with zero additional per-client configuration needed. This is a nice, concrete illustration of why building on a shared, well-instrumented foundation (rather than each client managing its own raw HTTP calls independently) pays off automatically across cross-cutting concerns like tracing.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- MASTER Q&A -->
+<section class="topic" id="interview-master">
+  <span class="section-badge">🎯 Rapid-Fire Round</span>
+  <div class="topic-head"><h2>Master Interview Q&A Bank — Section 12</h2></div>
+  <p class="dim">Production operability (Actuator, observability) and the modern approach to consuming APIs are both high-signal, senior-leaning topics — these synthesize across the full section.</p>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Design the complete production-readiness checklist for a new Spring Boot microservice about to go live, using only concepts from this section.</div>
+      <div class="qa-a"><p>(1) Actuator enabled with only <code>health</code>/<code>info</code> exposed publicly, everything else (<code>env</code>, <code>beans</code>, <code>configprops</code>, <code>loggers</code>) restricted to an authenticated admin role or a separate internal-only management port (topics 214–216). (2) Kubernetes liveness and readiness probes correctly wired to distinct Actuator health groups, with external dependency checks deliberately excluded from liveness (topic 215's Q&A). (3) The shutdown endpoint left disabled, relying on the orchestrator's native SIGTERM-based graceful shutdown instead (topic 219). (4) Micrometer Tracing/OTEL configured with a production-appropriate sampling rate (well below 100% at real scale, topic 222's Q&A), exporting to the organization's chosen backend. (5) Trace IDs surfaced in error responses for support workflows (topic 224). (6) Every outgoing call to another service or third-party API made via <code>RestClient</code> or an HTTP Interface, not a bare, unmanaged HTTP library call, ensuring automatic tracing propagation and consistent timeout/retry configuration (topics 226–230). This synthesizes essentially the entire section into one coherent go-live checklist.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>A trace shows a request took 800ms, with a 750ms span labeled simply "external-call" and no further breakdown. How would you improve observability here, and what would you check first?</div>
+      <div class="qa-a"><p>First check whether the external call is going through <code>RestClient</code>/an HTTP Interface (auto-instrumented, topic 226) or some unmanaged raw HTTP client bypassing Spring's observability auto-configuration entirely — a common root cause of exactly this kind of opaque, single-span external call with no further breakdown. If it is properly instrumented and genuinely is one atomic external call, the next step is checking whether the <em>downstream</em> service is itself instrumented and exporting traces to the same backend with proper trace-context propagation (topic 226's Q&A on automatic header propagation) — if so, this trace should actually continue as a connected child trace inside that downstream service, and the investigation moves there. If the downstream service is a third party outside your control and genuinely opaque, the 750ms is likely legitimately attributable to that external dependency's own latency, and the actionable next step becomes considering a timeout/circuit-breaker policy (Section 10's resilience-adjacent thinking) rather than further internal instrumentation.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Why might a team choose to still use RestTemplate in new code despite it being in maintenance mode?</div>
+      <div class="qa-a"><p>Legitimate reasons exist beyond simple inertia: an existing, large codebase already has extensive <code>RestTemplate</code> usage and shared interceptor/configuration infrastructure built around it, and the migration cost to <code>RestClient</code> — while mechanically straightforward given their similar underlying capabilities — isn't free at scale across dozens of call sites; a team might reasonably defer that migration to a dedicated effort rather than mixing both clients inconsistently across a codebase mid-transition. That said, for any <strong>new</strong> code with no existing constraint, <code>RestClient</code> is unambiguously the current recommendation — "maintenance mode, no longer actively enhanced" is a real, forward-looking risk signal worth citing directly when justifying that choice to a team still defaulting to <code>RestTemplate</code> out of habit.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Explain how Actuator's /actuator/metrics endpoint, Micrometer, and this section's tracing setup relate to each other — are they three separate systems or one?</div>
+      <div class="qa-a"><p>One underlying system, viewed from different angles. <strong>Micrometer</strong> is the single facade underneath both — it's what actually collects and holds metric data. Actuator's <code>/actuator/metrics</code> endpoint (topics 214–219) is simply an HTTP-exposed <strong>view</strong> into Micrometer's collected metrics, letting you query them ad hoc via a browser/curl. <strong>Micrometer Tracing</strong> (topics 220–224) extends that same Micrometer foundation to also generate and export distributed traces via the OTEL/OTLP pipeline to an external backend, rather than being queryable directly through Actuator itself. So: Micrometer is the common collection layer; Actuator exposes its metrics locally over HTTP for direct inspection; the OTEL/OTLP/LGTM pipeline is where its trace (and, via exporters, metric) data ultimately flows for full cross-service visualization — three complementary views of one coherent observability foundation, not three unrelated systems bolted together.</p></div>
+    </div>
+  </div>
+
+  <div class="box info" style="margin-top:28px;">
+    <div class="box-title">ℹ Next Section</div>
+    <p>Paste the next section's video list whenever you're ready, and I'll build the next HTML notes doc in this same design system.</p>
+  </div>
+
+  <footer>GrowthScript Engineering — Spring Boot Interview Bible · Section 12 of N</footer>
+</section>
+
+</main>
+</div>
+
+<script>
+function toggleTheme(){
+  const body = document.body;
+  const cur = body.getAttribute('data-theme');
+  body.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+}
+function showTab(btn, id){
+  const block = btn.closest('.code-block');
+  block.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  block.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  block.querySelector('#'+id).classList.add('active');
+}
+document.querySelectorAll('.qa-q').forEach(q=>{
+  q.addEventListener('click', ()=> q.parentElement.classList.toggle('open'));
+});
+</script>
+</body>
+</html>

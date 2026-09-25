@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Section 11: Caching, ManyToMany, Profile Management & Configuration | GrowthScript Engineering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117; --bg-elev:#151b23; --bg-card:#1a2230; --border:#2a3441;
+  --text:#e6edf3; --text-dim:#9aa7b5; --text-faint:#6e7c8c;
+  --accent:#3fb950; --accent-soft:rgba(63,185,80,.12);
+  --blue:#58a6ff; --blue-soft:rgba(88,166,255,.12);
+  --warn:#f0883e; --warn-soft:rgba(240,136,62,.12);
+  --danger:#f85149; --danger-soft:rgba(248,81,73,.12);
+  --code-bg:#0a0e14; --sidebar-w:290px; --radius:10px;
+  --shadow:0 4px 16px rgba(0,0,0,.35);
+}
+[data-theme="light"]{
+  --bg:#f6f8fa; --bg-elev:#ffffff; --bg-card:#ffffff; --border:#d8dee4;
+  --text:#1b2430; --text-dim:#4b5563; --text-faint:#8a96a3;
+  --accent:#1a7f37; --accent-soft:rgba(26,127,55,.08);
+  --blue:#0969da; --blue-soft:rgba(9,105,218,.08);
+  --warn:#9a6700; --warn-soft:rgba(154,103,0,.08);
+  --danger:#cf222e; --danger-soft:rgba(207,34,46,.08);
+  --code-bg:#0d1117; --shadow:0 2px 10px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); line-height:1.65; font-size:15.5px; transition:background .2s,color .2s;}
+code, pre, .mono{font-family:'Space Mono',monospace;}
+a{color:var(--blue); text-decoration:none;}
+a:hover{text-decoration:underline;}
+.wrapper{display:flex; min-height:100vh;}
+.sidebar{width:var(--sidebar-w); flex-shrink:0; background:var(--bg-elev); border-right:1px solid var(--border); position:sticky; top:0; height:100vh; overflow-y:auto; padding:22px 16px 40px;}
+.sidebar::-webkit-scrollbar{width:6px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border); border-radius:3px;}
+.brand{display:flex; align-items:center; gap:10px; margin-bottom:4px;}
+.brand-badge{width:34px; height:34px; border-radius:8px; background:var(--accent); display:flex; align-items:center; justify-content:center; color:#0d1117; font-weight:800; font-family:'Space Mono',monospace; font-size:15px; flex-shrink:0;}
+.brand-text{font-weight:800; font-size:14.5px; letter-spacing:.2px;}
+.brand-sub{font-size:11px; color:var(--text-faint); margin-top:1px;}
+.theme-toggle{margin:16px 0 20px; width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; font-size:12.5px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px;}
+.nav-group{margin-bottom:6px;}
+.nav-label{font-size:10.5px; text-transform:uppercase; letter-spacing:.9px; color:var(--text-faint); font-weight:700; margin:18px 4px 8px;}
+.nav-link{display:block; padding:7px 10px; border-radius:7px; font-size:13px; color:var(--text-dim); border-left:2px solid transparent; margin-bottom:1px;}
+.nav-link:hover{background:var(--accent-soft); color:var(--text); text-decoration:none;}
+.nav-link.sub{padding-left:22px; font-size:12.3px;}
+.main{flex:1; min-width:0; padding:44px 56px 120px; max-width:980px;}
+.header-block{margin-bottom:44px; padding-bottom:28px; border-bottom:1px solid var(--border);}
+.eyebrow{font-family:'Space Mono',monospace; font-size:11.5px; color:var(--accent); font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:10px;}
+.header-block h1{font-size:32px; font-weight:800; letter-spacing:-.5px; margin-bottom:12px;}
+.header-block p{color:var(--text-dim); font-size:15px; max-width:680px;}
+.meta-row{display:flex; gap:18px; margin-top:16px; flex-wrap:wrap;}
+.meta-pill{font-size:11.5px; padding:5px 11px; border-radius:20px; background:var(--bg-card); border:1px solid var(--border); color:var(--text-dim); font-family:'Space Mono',monospace;}
+section.topic{margin-bottom:56px; scroll-margin-top:24px;}
+.topic-head{display:flex; align-items:baseline; gap:12px; margin-bottom:6px;}
+.topic-num{font-family:'Space Mono',monospace; color:var(--accent); font-weight:700; font-size:14px;}
+h2{font-size:23px; font-weight:800; letter-spacing:-.3px;}
+.topic-video{font-size:12px; color:var(--text-faint); margin-bottom:20px; margin-top:2px; font-family:'Space Mono',monospace;}
+h3{font-size:17.5px; font-weight:700; margin:26px 0 12px; color:var(--text);}
+h4{font-weight:700; margin:18px 0 8px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.4px; font-size:12.5px;}
+p{margin-bottom:13px; color:var(--text); font-size:15px;}
+p.dim{color:var(--text-dim);}
+ul, ol{margin:0 0 15px 22px;}
+li{margin-bottom:7px; font-size:14.8px;}
+strong{color:var(--text); font-weight:700;}
+.hl{color:var(--accent); font-weight:700;}
+.box{border-radius:var(--radius); padding:16px 18px; margin:18px 0; border:1px solid var(--border); font-size:14.3px;}
+.box-title{font-weight:700; font-size:12.5px; text-transform:uppercase; letter-spacing:.5px; margin-bottom:7px; display:flex; align-items:center; gap:7px;}
+.tip{background:var(--accent-soft); border-color:rgba(63,185,80,.3);} .tip .box-title{color:var(--accent);}
+.warn{background:var(--warn-soft); border-color:rgba(240,136,62,.3);} .warn .box-title{color:var(--warn);}
+.info{background:var(--blue-soft); border-color:rgba(88,166,255,.3);} .info .box-title{color:var(--blue);}
+.danger{background:var(--danger-soft); border-color:rgba(248,81,73,.3);} .danger .box-title{color:var(--danger);}
+.code-block{background:var(--code-bg); border-radius:var(--radius); overflow:hidden; margin:16px 0; border:1px solid var(--border); box-shadow:var(--shadow);}
+.tabs{display:flex; background:rgba(255,255,255,.03); border-bottom:1px solid rgba(255,255,255,.08); overflow-x:auto;}
+.tab-btn{padding:9px 16px; font-family:'Space Mono',monospace; font-size:12px; color:#8a96a3; background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap;}
+.tab-btn.active{color:#e6edf3; border-bottom-color:var(--accent);}
+.tab-content{display:none; padding:16px 18px; overflow-x:auto;}
+.tab-content.active{display:block;}
+.tab-content pre{color:#c9d1d9; font-size:13px; line-height:1.65; white-space:pre;}
+.tab-content .kw{color:#ff7b72;} .tab-content .str{color:#a5d6ff;} .tab-content .cm{color:#8b949e; font-style:italic;}
+.tab-content .an{color:#d2a8ff;} .tab-content .cl{color:#79c0ff;} .tab-content .mt{color:#d2a8ff;}
+table{width:100%; border-collapse:collapse; margin:16px 0; font-size:13.8px;}
+th{text-align:left; padding:9px 12px; background:var(--bg-card); border-bottom:2px solid var(--border); font-size:11.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--text-dim);}
+td{padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top;}
+tr:hover td{background:var(--accent-soft);}
+.qa-wrap{margin-top:18px;}
+.qa-item{border:1px solid var(--border); border-radius:var(--radius); margin-bottom:10px; overflow:hidden; background:var(--bg-card);}
+.qa-q{padding:14px 46px 14px 18px; cursor:pointer; font-weight:600; font-size:14.3px; position:relative; display:flex; align-items:center; gap:10px;}
+.qa-q:hover{background:var(--accent-soft);}
+.qa-tag{font-family:'Space Mono',monospace; font-size:9.5px; padding:2px 7px; border-radius:4px; font-weight:700; flex-shrink:0; text-transform:uppercase; letter-spacing:.3px;}
+.tag-faang{background:rgba(248,81,73,.15); color:var(--danger);}
+.tag-core{background:rgba(88,166,255,.15); color:var(--blue);}
+.qa-q::after{content:'+'; position:absolute; right:18px; top:50%; transform:translateY(-50%); font-size:20px; color:var(--text-faint); font-weight:400;}
+.qa-item.open .qa-q::after{content:'−';}
+.qa-a{max-height:0; overflow:hidden; transition:max-height .25s ease; padding:0 18px;}
+.qa-item.open .qa-a{max-height:1400px; padding:2px 18px 18px;}
+.qa-a p{font-size:14px; color:var(--text-dim);}
+.qa-a ul{margin-top:6px;}
+.qa-a li{color:var(--text-dim); font-size:13.8px;}
+.divider{height:1px; background:var(--border); margin:44px 0;}
+.section-badge{display:inline-block; background:var(--accent); color:#0d1117; font-family:'Space Mono',monospace; font-weight:700; font-size:11px; padding:4px 10px; border-radius:6px; margin-bottom:14px;}
+.diagram{background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin:18px 0; font-family:'Space Mono',monospace; font-size:12.5px; color:var(--text-dim); overflow-x:auto; white-space:pre; line-height:1.5;}
+footer{margin-top:60px; padding-top:24px; border-top:1px solid var(--border); color:var(--text-faint); font-size:12px;}
+@media(max-width:900px){
+  .sidebar{position:fixed; left:-100%; z-index:50; transition:left .2s; box-shadow:var(--shadow);}
+  .sidebar.open{left:0;}
+  .main{padding:24px 20px 100px;}
+  .mobile-toggle{display:block !important;}
+}
+.mobile-toggle{display:none; position:fixed; top:16px; left:16px; z-index:60; background:var(--accent); color:#0d1117; border:none; border-radius:8px; width:40px; height:40px; font-size:18px; font-weight:700;}
+</style>
+</head>
+<body data-theme="dark">
+
+<button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="wrapper">
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-badge">G</div>
+    <div>
+      <div class="brand-text">GrowthScript Eng.</div>
+      <div class="brand-sub">Spring Boot Bible</div>
+    </div>
+  </div>
+  <button class="theme-toggle" onclick="toggleTheme()">🌗 Toggle Theme</button>
+
+  <div class="nav-group">
+    <div class="nav-label">Caching</div>
+    <a class="nav-link" href="#cache-essentials">186. @Cacheable, @CachePut, @CacheEvict</a>
+    <a class="nav-link" href="#cacheable-demo">187. @Cacheable Live Demo</a>
+    <a class="nav-link" href="#cache-sync-demo">188. @CachePut & @CacheEvict Demo</a>
+    <a class="nav-link" href="#ttl-caching">189. TTL-Based Caching</a>
+    <a class="nav-link" href="#caffeine">190. Caffeine Cache</a>
+    <a class="nav-link" href="#job-mgmt-apis">191–192. Job Management APIs</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Profile & Relationships</div>
+    <a class="nav-link" href="#profile-schema">193. Profile DB & Entities</a>
+    <a class="nav-link" href="#profile-apis">194. Profile/Resume/Image APIs</a>
+    <a class="nav-link" href="#profile-read">195. Profile Read APIs</a>
+    <a class="nav-link" href="#profile-demo">196. Profile Demo</a>
+    <a class="nav-link" href="#manytomany">197–198. @ManyToMany</a>
+    <a class="nav-link" href="#bookmarking">199. Save/Unsave Jobs</a>
+    <a class="nav-link" href="#when-not-manytomany">200. When NOT to Use @ManyToMany</a>
+    <a class="nav-link" href="#job-application">201–202. Job Application Workflow</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Externalized Configuration</div>
+    <a class="nav-link" href="#value-environment">203. @Value & Environment</a>
+    <a class="nav-link" href="#configuration-properties">204. @ConfigurationProperties</a>
+    <a class="nav-link" href="#propertysource">205. @PropertySource</a>
+    <a class="nav-link" href="#why-externalize">206. Why Externalize Config</a>
+    <a class="nav-link" href="#env-jvm-cli">207–208. Env Vars, JVM & CLI Args</a>
+    <a class="nav-link" href="#profiles">209–210. Spring Boot Profiles</a>
+    <a class="nav-link" href="#conditional-beans">211. Conditional Bean Creation</a>
+    <a class="nav-link" href="#per-env-logging">212. Per-Environment Logging</a>
+    <a class="nav-link" href="#employer-applications">213. Employer Application APIs</a>
+    <a class="nav-link" href="#interview-master">Master Interview Q&A Bank</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<div class="header-block">
+  <div class="eyebrow">Java Backend Engineer · Spring Boot Course</div>
+  <h1>Section 11 — Caching, ManyToMany, Profile Management & Configuration</h1>
+  <p>Four production-critical pillars: Spring's caching abstraction with TTL and Caffeine; a full user-profile feature with file uploads and a rigorously-taught <code>@ManyToMany</code> relationship (including when to deliberately avoid it); and externalized configuration — <code>@Value</code>, <code>@ConfigurationProperties</code>, environment variables, and Spring Profiles — the mechanism behind running one codebase safely across dev, staging, and production.</p>
+  <div class="meta-row">
+    <span class="meta-pill">Videos 186–213 (28 videos)</span>
+    <span class="meta-pill">~4.5 hrs runtime</span>
+    <span class="meta-pill">FAANG + Fintech interview focus</span>
+    <span class="meta-pill">Builds on Sections 4, 5, 8, 9 & 10</span>
+  </div>
+</div>
+
+<!-- 186 -->
+<section class="topic" id="cache-essentials">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">186</span><h2>Spring Caching Essentials — @Cacheable, @CachePut & @CacheEvict</h2></div>
+  <div class="topic-video">Video: Spring Caching Essentials - @Cacheable, @CachePut & @CacheEvict</div>
+
+  <p>Spring's caching abstraction is another concrete, built-in application of the annotation-based AOP pattern from Section 8 — a marker annotation plus an aspect that intercepts method calls, exactly like <code>@Transactional</code> (Section 10).</p>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'ce1')">Enabling caching</button>
+      <button class="tab-btn" onclick="showTab(this,'ce2')">@Cacheable</button>
+      <button class="tab-btn" onclick="showTab(this,'ce3')">@CachePut</button>
+      <button class="tab-btn" onclick="showTab(this,'ce4')">@CacheEvict</button>
+    </div>
+    <div class="tab-content active" id="ce1"><pre><span class="an">@SpringBootApplication</span>
+<span class="an">@EnableCaching</span>   <span class="cm">// activates Spring's caching AOP infrastructure — required, like Section 6's @EnableMethodSecurity</span>
+<span class="kw">public class</span> <span class="cl">JobPortalApplication</span> { ... }</pre></div>
+    <div class="tab-content" id="ce2"><pre><span class="an">@Service</span>
+<span class="kw">public class</span> <span class="cl">CompanyService</span> {
+
+    <span class="an">@Cacheable</span>(value = <span class="str">"companies"</span>, key = <span class="str">"#id"</span>)
+    <span class="kw">public</span> Company <span class="mt">getCompanyById</span>(Long id) {
+        <span class="cm">// this method body only EVER executes on a cache MISS —</span>
+        <span class="cm">// a cache HIT returns the cached value directly, never invoking this at all</span>
+        <span class="kw">return</span> companyRepository.<span class="mt">findById</span>(id)
+                .<span class="mt">orElseThrow</span>(() -&gt; <span class="kw">new</span> ResourceNotFoundException(<span class="str">"Company not found"</span>));
+    }
+}
+<span class="cm">// "companies" = the cache NAME (a named region); key = the SpEL expression</span>
+<span class="cm">// identifying which specific cache entry this call's result belongs to</span></pre></div>
+    <div class="tab-content" id="ce3"><pre><span class="an">@CachePut</span>(value = <span class="str">"companies"</span>, key = <span class="str">"#company.id"</span>)
+<span class="kw">public</span> Company <span class="mt">updateCompany</span>(Company company) {
+    <span class="cm">// UNLIKE @Cacheable, this ALWAYS executes the method body —</span>
+    <span class="cm">// then updates the cache with the fresh result, keeping cache and DB in sync</span>
+    <span class="kw">return</span> companyRepository.<span class="mt">save</span>(company);
+}</pre></div>
+    <div class="tab-content" id="ce4"><pre><span class="an">@CacheEvict</span>(value = <span class="str">"companies"</span>, key = <span class="str">"#id"</span>)
+<span class="kw">public void</span> <span class="mt">deleteCompany</span>(Long id) {
+    <span class="cm">// removes the entry from the cache — prevents serving stale data</span>
+    <span class="cm">// for a company that no longer exists at all</span>
+    companyRepository.<span class="mt">deleteById</span>(id);
+}
+
+<span class="cm">// evicting the WHOLE cache region at once — useful after a bulk operation</span>
+<span class="an">@CacheEvict</span>(value = <span class="str">"companies"</span>, allEntries = <span class="kw">true</span>)
+<span class="kw">public void</span> <span class="mt">bulkImportCompanies</span>(List&lt;Company&gt; companies) { ... }</pre></div>
+  </div>
+
+  <table>
+    <tr><th>Annotation</th><th>Method Body Executes?</th><th>Cache Effect</th><th>Typical Use</th></tr>
+    <tr><td><code>@Cacheable</code></td><td>Only on a cache <strong>miss</strong></td><td>Populates the cache with the result</td><td>Reads — <code>getById</code>, expensive lookups</td></tr>
+    <tr><td><code>@CachePut</code></td><td><strong>Always</strong></td><td>Overwrites the cache entry with the fresh result</td><td>Writes that should keep the cache in sync — <code>update</code></td></tr>
+    <tr><td><code>@CacheEvict</code></td><td><strong>Always</strong></td><td>Removes the entry (or the whole region) from the cache</td><td>Deletes, or any write where the cached value is now invalid</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 This Is Literally Section 8's @Around "Skip the Method" Example, Made Concrete</div>
+    <p>Section 8's <code>@Around</code> advice topic used a hypothetical caching aspect as its worked example of "an aspect that can skip <code>proceed()</code> entirely." <code>@Cacheable</code> is that exact hypothetical, now real: Spring's built-in caching interceptor checks the configured cache <em>before</em> deciding whether to invoke the real method at all — a cache hit means the underlying method (and everything inside it, including a database round-trip) never executes. Understanding this connection is exactly the kind of retroactive synthesis that demonstrates genuine understanding rather than memorized annotation syntax.</p>
+  </div>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Self-Invocation Breaks Caching Too — Same Root Cause as @Transactional</div>
+    <p>Because Spring's caching annotations are proxy-based AOP (identical mechanism to <code>@Transactional</code>, Section 10), calling a <code>@Cacheable</code> method from <strong>within the same class</strong> bypasses the proxy and silently skips caching entirely — the exact same self-invocation limitation flagged repeatedly since Section 4. This is worth stating explicitly as a pattern: <em>any</em> Spring annotation implemented via proxy-based AOP (<code>@Transactional</code>, <code>@Cacheable</code>/<code>@CachePut</code>/<code>@CacheEvict</code>, <code>@Async</code>, <code>@PreAuthorize</code>) shares this exact same limitation, for the exact same underlying reason.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why does @CachePut always execute the method body, when the whole point of caching is to AVOID executing the method?</div>
+      <div class="qa-a"><p>Because <code>@CachePut</code> solves a genuinely different problem than <code>@Cacheable</code>: it's for <strong>write</strong> operations, where the method's job is precisely to change the underlying data — skipping it would mean the update never actually happens at all. Its purpose isn't to avoid computation; it's to keep the cache <strong>synchronized</strong> with a write that must happen regardless, ensuring a subsequent <code>@Cacheable</code> read immediately after an update returns the fresh value rather than a now-stale cached one. Using <code>@Cacheable</code> on an update method would be a serious bug — it would skip the actual update entirely whenever a cache entry already exists for that key.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 187 -->
+<section class="topic" id="cacheable-demo">
+  <div class="topic-head"><span class="topic-num">187</span><h2>Live Demo — How @Cacheable Avoids Database Calls</h2></div>
+  <div class="topic-video">Video: Live Demo - How @Cacheable Avoids Database Calls</div>
+
+  <p>A hands-on verification using <code>spring.jpa.show-sql=true</code> (Section 9's N+1 diagnostic technique, reused here) — calling the same <code>@Cacheable</code> endpoint twice via Postman and observing the SQL query log fire only on the <em>first</em> call, confirming the second call returns directly from the in-memory cache with zero database round-trip, exactly as the theory predicted.</p>
+
+  <div class="box info">
+    <div class="box-title">ℹ Default Cache Provider — ConcurrentMapCacheManager</div>
+    <p>Without any additional caching library on the classpath, Spring Boot's default caching implementation is a simple <code>ConcurrentHashMap</code>-backed in-memory cache — functional for learning and small-scale use, but with <strong>no eviction policy, no size limit, and no TTL</strong> by default. This limitation is exactly what motivates the next two topics: TTL-based expiry and Caffeine as a genuinely production-capable caching library.</p>
+  </div>
+</section>
+
+<!-- 188 -->
+<section class="topic" id="cache-sync-demo">
+  <div class="topic-head"><span class="topic-num">188</span><h2>Keeping Cache in Sync — @CachePut & @CacheEvict Demo</h2></div>
+  <div class="topic-video">Video: Keeping Cache in Sync - @CachePut & @CacheEvict Demo</div>
+
+  <div class="diagram">1. GET  /companies/1   →  cache MISS → DB query → cache POPULATED (@Cacheable)
+2. GET  /companies/1   →  cache HIT  → NO DB query (@Cacheable)
+3. PUT  /companies/1   →  DB updated, cache OVERWRITTEN with fresh data (@CachePut)
+4. GET  /companies/1   →  cache HIT with FRESH data → NO DB query, but CORRECT result
+5. DELETE /companies/1 →  DB row deleted, cache entry REMOVED (@CacheEvict)
+6. GET  /companies/1   →  cache MISS (entry gone) → DB query → 404 (correctly, since it's deleted)</div>
+
+  <div class="box danger">
+    <div class="box-title">⚠ The Bug This Demo Is Specifically Designed to Prevent</div>
+    <p>If step 3 used <code>@Cacheable</code> instead of <code>@CachePut</code> (a genuine, common mistake), the update method would check the cache <em>first</em>, find the (now-stale) cached value from step 1 already present, and <strong>skip executing the update entirely</strong> — the database would never actually be updated, while the API would appear to succeed. This is a serious, silent correctness bug precisely analogous to Section 10's "forgot to call proceed()"/swallowed-exception class of AOP mistakes — caching bugs, like transaction bugs, tend to fail silently rather than throwing an obvious exception.</p>
+  </div>
+</section>
+
+<!-- 189 -->
+<section class="topic" id="ttl-caching">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">189</span><h2>Preventing Stale Data with TTL-Based Caching</h2></div>
+  <div class="topic-video">Video: Preventing Stale Data with TTL-Based Caching</div>
+
+  <p><strong>TTL (Time To Live)</strong> is an <strong>automatic expiry</strong> mechanism — a cache entry is evicted after a configured duration has elapsed, <em>regardless</em> of whether any explicit <code>@CacheEvict</code>/<code>@CachePut</code> call ever happens. This matters because <code>@CachePut</code>/<code>@CacheEvict</code> only keep the cache in sync for changes that go <strong>through your own application's code paths</strong> — they offer zero protection against staleness caused by data changed some other way (a direct database edit, another service writing to the same table, a batch job).</p>
+
+  <div class="box tip">
+    <div class="box-title">💡 TTL as a Safety Net, Not a Replacement for Explicit Invalidation</div>
+    <p>The correct mental model: explicit invalidation (<code>@CachePut</code>/<code>@CacheEvict</code>) should handle every change your own application code is aware of, keeping the cache correct <em>immediately</em>. TTL exists as a <strong>backstop</strong> for staleness from sources outside your application's control — bounding the maximum possible staleness window to "at most TTL seconds old," even in the worst case where explicit invalidation was somehow missed or bypassed. Relying on TTL alone (with no explicit invalidation at all) is a valid, simpler design choice specifically when your data can tolerate being up to TTL-seconds stale and the read volume justifies caching at all — a real trade-off decision, not a shortcut.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How would you choose an appropriate TTL value for a given piece of cached data?</div>
+      <div class="qa-a"><p>The decision balances two competing costs: a <strong>longer TTL</strong> means fewer cache misses/database round-trips (better performance, lower database load) but a larger window during which stale data might be served; a <strong>shorter TTL</strong> means fresher data but more frequent cache misses, reducing the caching benefit. The right value depends on the data's actual volatility and business tolerance for staleness — e.g., a company's name/description (rarely changes) can tolerate a long TTL (hours), while something like a job posting's current application count (changes frequently, and staleness could visibly mislead a user) needs a much shorter TTL (seconds to low minutes) or explicit invalidation instead of relying on TTL at all.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 190 -->
+<section class="topic" id="caffeine">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">190</span><h2>Boosting Cache Performance with Caffeine (TTL Included)</h2></div>
+  <div class="topic-video">Video: Boosting Cache Performance with Caffeine (TTL Included)</div>
+
+  <p><strong>Caffeine</strong> is a high-performance, in-memory Java caching library — the modern, actively-maintained successor to Google Guava's cache, and the caching provider Spring Boot auto-configures automatically once detected on the classpath (Section 3's auto-configuration philosophy applying here too), replacing the limited default <code>ConcurrentMapCacheManager</code> with zero code changes to the <code>@Cacheable</code> annotations themselves.</p>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'caf1')">Dependency</button>
+      <button class="tab-btn" onclick="showTab(this,'caf2')">Caffeine configuration with TTL</button>
+    </div>
+    <div class="tab-content active" id="caf1"><pre><span class="kw">&lt;dependency&gt;</span>
+    <span class="kw">&lt;groupId&gt;</span>com.github.ben-manes.caffeine<span class="kw">&lt;/groupId&gt;</span>
+    <span class="kw">&lt;artifactId&gt;</span>caffeine<span class="kw">&lt;/artifactId&gt;</span>
+<span class="kw">&lt;/dependency&gt;</span>
+<span class="cm">&lt;!-- Spring Boot's auto-configuration detects this and automatically swaps in
+     CaffeineCacheManager — no other code changes needed --&gt;</span></pre></div>
+    <div class="tab-content" id="caf2"><pre><span class="an">@Configuration</span>
+<span class="kw">public class</span> <span class="cl">CacheConfig</span> {
+
+    <span class="an">@Bean</span>
+    <span class="kw">public</span> CacheManager <span class="mt">cacheManager</span>() {
+        CaffeineCacheManager cacheManager = <span class="kw">new</span> CaffeineCacheManager(<span class="str">"companies"</span>, <span class="str">"jobs"</span>);
+        cacheManager.<span class="mt">setCaffeine</span>(Caffeine.<span class="mt">newBuilder</span>()
+                .expireAfterWrite(<span class="mt">10</span>, TimeUnit.MINUTES)   <span class="cm">// TTL from the previous topic, now REAL</span>
+                .maximumSize(<span class="mt">500</span>)                       <span class="cm">// bounds memory use — evicts LEAST RECENTLY USED entries past this size</span>
+                .recordStats());                       <span class="cm">// exposes hit/miss metrics — useful for Actuator/monitoring</span>
+        <span class="kw">return</span> cacheManager;
+    }
+}</pre></div>
+  </div>
+
+  <table>
+    <tr><th>Capability</th><th>Default <code>ConcurrentMapCacheManager</code></th><th>Caffeine</th></tr>
+    <tr><td>TTL / expiry</td><td>❌ None — entries live forever until manually evicted</td><td>✅ <code>expireAfterWrite</code> / <code>expireAfterAccess</code></td></tr>
+    <tr><td>Size-bounded eviction</td><td>❌ None — genuinely unbounded memory growth risk</td><td>✅ <code>maximumSize</code>, with a near-optimal LRU-like (Window TinyLFU) eviction policy</td></tr>
+    <tr><td>Statistics/metrics</td><td>❌ None</td><td>✅ Hit rate, eviction count, load time — integrates with Micrometer/Actuator</td></tr>
+    <tr><td>Production-appropriate?</td><td>❌ Learning/demo purposes only</td><td>✅ Yes — widely used in real production Spring Boot applications</td></tr>
+  </table>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Caffeine Is Still a Local, In-Memory Cache — Not a Distributed One</div>
+    <p>A critical limitation worth naming proactively: Caffeine's cache lives entirely <strong>within a single JVM instance's memory</strong>. In a horizontally-scaled deployment with multiple application instances behind a load balancer, <strong>each instance maintains its own independent Caffeine cache</strong> — a write on instance A that evicts/updates instance A's cache entry has no effect on instance B's still-stale cached copy. For true multi-instance cache consistency, a <strong>distributed cache</strong> (Redis, Memcached) shared across all instances is required instead — Caffeine remains an excellent choice specifically for single-instance deployments, or as a fast local "L1" cache layered in front of a shared "L2" distributed cache in more sophisticated architectures.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>In a horizontally-scaled Spring Boot deployment (5 instances behind a load balancer) using Caffeine, describe a concrete cache-staleness bug this architecture can produce, and how you'd fix it.</div>
+      <div class="qa-a"><p>A user's request to <strong>update</strong> a company (routed by the load balancer to instance A) correctly invalidates/updates instance A's local Caffeine cache via <code>@CachePut</code>. But instances B through E still hold their own independent, now-stale cached copies of that company — a subsequent GET request from the same user, routed to instance B by the load balancer, returns stale data despite the update having genuinely succeeded moments earlier. The architectural fix is switching to a <strong>distributed cache</strong> (Redis via <code>spring-boot-starter-data-redis</code> plus Spring's <code>RedisCacheManager</code>) — a single shared cache instance all 5 application instances read from and write to, so an update from any instance is immediately visible to reads from every other instance, eliminating the per-instance staleness entirely. This is a genuinely common, realistic system design question testing whether a candidate understands the difference between local and distributed caching.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 191-192 -->
+<section class="topic" id="job-mgmt-apis">
+  <div class="topic-head"><span class="topic-num">191–192</span><h2>Creating Job Management APIs for Employers</h2></div>
+  <div class="topic-video">Videos: Creating Job Management APIs for Employers - Parts 1 & 2</div>
+
+  <p>An applied capstone combining this section's caching with earlier authorization (Section 9), DTOs (Section 4), and transactions (Section 10) — full CRUD for employers managing their own job postings, with reads cached via <code>@Cacheable</code> and every write correctly paired with <code>@CachePut</code>/<code>@CacheEvict</code> to keep the cache honest.</p>
+
+  <div class="box tip">
+    <div class="box-title">💡 A Realistic Authorization Nuance This Feature Surfaces</div>
+    <p>Unlike Section 10's admin endpoints (gated by a simple <code>hasRole("ADMIN")</code> check), an employer managing their <em>own</em> job postings needs a check that a static role alone cannot express: "is the authenticated user the <em>owner</em> of this specific job posting?" — the exact resource-ownership pattern flagged as a limitation of pure role-based authorization back in Section 9's AUTHORITY-vs-ROLE discussion. This is typically implemented as an explicit service-layer check (comparing <code>job.getPostedBy().getId()</code> against the authenticated principal's ID from <code>SecurityContextHolder</code>) rather than anything expressible via <code>hasRole()</code>/<code>hasAuthority()</code> alone.</p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 193 -->
+<section class="topic" id="profile-schema">
+  <div class="topic-head"><span class="topic-num">193</span><h2>Designing the User Profile Database & JPA Entities</h2></div>
+  <div class="topic-video">Video: Designing the User Profile Database & JPA Entities</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'ps1')">UserProfile — @OneToOne with User</button></div>
+    <div class="tab-content active" id="ps1"><pre><span class="an">@Entity</span>
+<span class="an">@Table</span>(name = <span class="str">"user_profiles"</span>)
+<span class="kw">public class</span> <span class="cl">UserProfile</span> {
+    <span class="an">@Id</span> <span class="an">@GeneratedValue</span> <span class="kw">private</span> Long id;
+
+    <span class="an">@OneToOne</span>(fetch = FetchType.LAZY)   <span class="cm">// extends Section 5's OneToMany/ManyToOne coverage to a 1:1 case</span>
+    <span class="an">@JoinColumn</span>(name = <span class="str">"user_id"</span>, unique = <span class="kw">true</span>, nullable = <span class="kw">false</span>)   <span class="cm">// UNIQUE enforces true 1:1, not 1:N</span>
+    <span class="kw">private</span> User user;
+
+    <span class="kw">private</span> String fullName;
+    <span class="kw">private</span> String headline;
+    <span class="kw">private</span> String resumeUrl;      <span class="cm">// points to uploaded file storage — next topic</span>
+    <span class="kw">private</span> String profileImageUrl;
+}</pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 Why unique = true Is What Makes This Genuinely OneToOne, Not Just a Renamed ManyToOne</div>
+    <p>Structurally, a <code>@OneToOne</code> mapping with a foreign key looks almost identical to <code>@ManyToOne</code> (Section 5) — the real, enforced difference is the <strong>unique constraint</strong> on the foreign key column. Without it, nothing in the database actually prevents multiple <code>UserProfile</code> rows from referencing the same <code>user_id</code>, silently turning what's meant to be a strict one-to-one relationship into a de facto one-to-many at the data-integrity level, regardless of what the JPA annotation claims. This is a worthwhile detail to know cold — the annotation name alone (<code>@OneToOne</code>) doesn't enforce true one-to-one cardinality; the database constraint does.</p>
+  </div>
+</section>
+
+<!-- 194 -->
+<section class="topic" id="profile-apis">
+  <div class="topic-head"><span class="topic-num">194</span><h2>Creating REST APIs for User Profile, Resume & Image Upload</h2></div>
+  <div class="topic-video">Video: Creating REST APIs for User Profile, Resume & Image Upload</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'fu1')">Multipart file upload endpoint</button></div>
+    <div class="tab-content active" id="fu1"><pre><span class="an">@PostMapping</span>(value = <span class="str">"/resume"</span>, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+<span class="kw">public</span> ResponseEntity&lt;String&gt; <span class="mt">uploadResume</span>(
+        <span class="an">@RequestParam</span>(<span class="str">"file"</span>) MultipartFile file,
+        <span class="an">@AuthenticationPrincipal</span> UserDetails currentUser) {   <span class="cm">// pulls the SecurityContextHolder principal directly as a param</span>
+
+    <span class="kw">if</span> (file.<span class="mt">isEmpty</span>()) {
+        <span class="kw">throw new</span> IllegalArgumentException(<span class="str">"File must not be empty"</span>);
+    }
+    <span class="kw">if</span> (!<span class="str">"application/pdf"</span>.<span class="mt">equals</span>(file.<span class="mt">getContentType</span>())) {   <span class="cm">// content-type validation — never trust the client</span>
+        <span class="kw">throw new</span> InvalidFileTypeException(<span class="str">"Only PDF resumes are accepted"</span>);
+    }
+    <span class="kw">if</span> (file.<span class="mt">getSize</span>() &gt; <span class="mt">5</span> * <span class="mt">1024</span> * <span class="mt">1024</span>) {   <span class="cm">// 5MB limit — prevents abuse/resource exhaustion</span>
+        <span class="kw">throw new</span> FileTooLargeException(<span class="str">"Resume must not exceed 5MB"</span>);
+    }
+
+    String storedUrl = fileStorageService.<span class="mt">store</span>(file, currentUser.<span class="mt">getUsername</span>());
+    profileService.<span class="mt">updateResumeUrl</span>(currentUser.<span class="mt">getUsername</span>(), storedUrl);
+    <span class="kw">return</span> ResponseEntity.<span class="mt">ok</span>(storedUrl);
+}</pre></div>
+  </div>
+
+  <div class="box danger">
+    <div class="box-title">⚠ File Upload Endpoints Are a Real Security Surface — Never Trust Client-Supplied Metadata</div>
+    <p>A client-supplied <code>Content-Type</code> header or filename extension is trivially spoofable — an attacker can rename a malicious executable to <code>resume.pdf</code> and set <code>Content-Type: application/pdf</code> regardless of the file's actual contents. Production-grade file validation should inspect the file's actual <strong>magic bytes/binary signature</strong> (not just trust the declared content type), enforce a strict size limit (preventing denial-of-service via oversized uploads), store uploaded files <strong>outside</strong> the web-servable directory or in dedicated object storage (S3, GCS) rather than directly in a path the application server might execute, and generate a new, non-predictable filename server-side rather than trusting any client-supplied filename directly (preventing path traversal attacks like a filename of <code>../../etc/passwd</code>).</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What does @AuthenticationPrincipal do, and how does it connect to Section 6's SecurityContextHolder?</div>
+      <div class="qa-a"><p><code>@AuthenticationPrincipal</code> is a Spring Security convenience annotation that automatically injects the current request's authenticated principal directly as a controller method parameter — it's pure syntactic sugar over manually calling <code>SecurityContextHolder.getContext().getAuthentication().getPrincipal()</code> (the exact mechanism established in Section 6). Using it keeps controller code clean and avoids repeating that boilerplate lookup in every method that needs to know "who is making this request" — functionally identical to the manual approach, just more ergonomic.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 195 -->
+<section class="topic" id="profile-read">
+  <div class="topic-head"><span class="topic-num">195</span><h2>Building Read APIs to Display User Profile Details</h2></div>
+  <div class="topic-video">Video: Building Read APIs to Display User Profile Details</div>
+
+  <p>Applying <code>@Transactional(readOnly = true)</code> (Section 10) and DTO-based responses (Section 4) to expose profile data cleanly — with a deliberate distinction between a <strong>self-view</strong> (the full profile, including private fields the owner should see) and a <strong>public-view</strong> DTO (a subset of fields safe to expose to other users, e.g. when an employer views an applicant's profile) — reinforcing Section 4's "tailored views via different DTOs" principle in a genuinely privacy-relevant context this time.</p>
+</section>
+
+<!-- 196 -->
+<section class="topic" id="profile-demo">
+  <div class="topic-head"><span class="topic-num">196</span><h2>End-to-End Demo of Profile Management APIs</h2></div>
+  <div class="topic-video">Video: End-to-End Demo of Profile Management APIs</div>
+
+  <p>A full Postman-driven walkthrough: authenticate, upload a resume and profile image, update profile fields, then verify both the self-view and public-view read endpoints return the correctly-scoped data — confirming the whole vertical slice works together as designed.</p>
+</section>
+
+<!-- 197-198 -->
+<section class="topic" id="manytomany">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">197–198</span><h2>Understanding & Configuring @ManyToMany Relationships in JPA</h2></div>
+  <div class="topic-video">Videos: Understanding @ManyToMany Relationships in JPA · Configuring @ManyToMany Relationships in JPA Entities</div>
+
+  <p>This is the fourth and final relationship type in the course's JPA arc (after <code>@OneToMany</code>/<code>@ManyToOne</code> in Section 5 and <code>@OneToOne</code> earlier in this section) — modeling <strong>Users bookmarking/saving Jobs</strong>: a user can save many jobs, and a job can be saved by many users.</p>
+
+  <div class="diagram">TABLE users                TABLE saved_jobs (join table — NO ID column of its own,
+┌────┬──────────┐          just the two foreign keys, forming a COMPOSITE key)       TABLE jobs
+│ id │ username  │          ┌─────────┬────────┐                                    ┌────┬───────┐
+├────┼──────────┤          │ user_id  │ job_id  │                                    │ id │ title  │
+│ 1  │ nikhil    │◄─────────│ 1        │ 10       │───────────────────────────────────▶│ 10 │ ...    │
+│ 2  │ priya     │◄─────────│ 1        │ 11       │───────────────────────────────────▶│ 11 │ ...    │
+│                │◄─────────│ 2        │ 10       │───────────────────────────────────▶│    │        │
+└────┴──────────┘          └─────────┴────────┘                                    └────┴───────┘
+
+  nikhil saved BOTH job 10 and job 11.  job 10 was saved by BOTH nikhil and priya.
+  Neither side "owns" the relationship in a ManyToOne sense — it's genuinely bidirectional.</div>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'mtm1')">User.java — owning side</button>
+      <button class="tab-btn" onclick="showTab(this,'mtm2')">Job.java — inverse side</button>
+    </div>
+    <div class="tab-content active" id="mtm1"><pre><span class="an">@Entity</span>
+<span class="kw">public class</span> <span class="cl">User implements</span> UserDetails {
+    <span class="cm">// ... existing fields from Section 7</span>
+
+    <span class="an">@ManyToMany</span>(fetch = FetchType.LAZY)   <span class="cm">// LAZY is the sensible default here — see Section 5's</span>
+    <span class="an">@JoinTable</span>(                          <span class="cm">// eager-vs-lazy discussion; unlike roles, saved jobs can be UNBOUNDED</span>
+        name = <span class="str">"saved_jobs"</span>,
+        joinColumns = <span class="an">@JoinColumn</span>(name = <span class="str">"user_id"</span>),
+        inverseJoinColumns = <span class="an">@JoinColumn</span>(name = <span class="str">"job_id"</span>)
+    )
+    <span class="kw">private</span> Set&lt;Job&gt; savedJobs = <span class="kw">new</span> HashSet&lt;&gt;();   <span class="cm">// Set, not List — avoids duplicate saves, no meaningful order</span>
+}</pre></div>
+    <div class="tab-content" id="mtm2"><pre><span class="an">@Entity</span>
+<span class="kw">public class</span> <span class="cl">Job</span> {
+    <span class="cm">// ... existing fields from Section 5</span>
+
+    <span class="an">@ManyToMany</span>(mappedBy = <span class="str">"savedJobs"</span>, fetch = FetchType.LAZY)   <span class="cm">// INVERSE side —</span>
+    <span class="kw">private</span> Set&lt;User&gt; savedByUsers = <span class="kw">new</span> HashSet&lt;&gt;();      <span class="cm">// mappedBy, exactly like Section 5's @OneToMany</span>
+}</pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 The Join Table Is Structurally Identical to Section 7's user_roles Table</div>
+    <p>This is worth recognizing explicitly: Section 7's <code>users</code> ↔ <code>roles</code> relationship (via the <code>user_roles</code> join table) was <em>already</em> a <code>@ManyToMany</code> — the course simply hadn't named or formally taught the annotation yet at that point. The underlying database pattern (a join table holding two foreign keys, no meaningful identity of its own) is identical; this topic is where the general-purpose JPA annotation for that exact pattern finally gets its full, dedicated treatment.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>In a @ManyToMany, which side is the "owning" side, given that — unlike @OneToMany/@ManyToOne — there's no natural foreign-key asymmetry to determine it?</div>
+      <div class="qa-a"><p>Correct observation — unlike <code>@OneToMany</code>/<code>@ManyToOne</code> where the foreign key's physical location on one specific table makes the owning side unambiguous (Section 5), a <code>@ManyToMany</code> join table is symmetric by nature; there's no structural reason either side "must" own it. JPA resolves this by convention: whichever side declares <code>@JoinTable</code> (without <code>mappedBy</code>) is designated the <strong>owning</strong> side by the developer's explicit choice — it's the side Hibernate consults when deciding what to write to the join table. The other side uses <code>mappedBy</code> to declare itself the inverse/read-only-navigation side, exactly mirroring Section 5's <code>mappedBy</code> mechanics even though the underlying relationship shape is different. This is a deliberate <em>developer decision</em>, not something JPA infers from the schema the way it can for <code>@ManyToOne</code>.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 199 -->
+<section class="topic" id="bookmarking">
+  <div class="topic-head"><span class="topic-num">199</span><h2>Building Save & Unsave Job APIs (Bookmarking Feature)</h2></div>
+  <div class="topic-video">Video: Building Save & Unsave Job APIs (Bookmarking Feature)</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'sv1')">Save/unsave — mutating the owning side's collection</button></div>
+    <div class="tab-content active" id="sv1"><pre><span class="an">@Transactional</span>   <span class="cm">// Section 10's atomicity — the read-modify-save sequence must be consistent</span>
+<span class="kw">public void</span> <span class="mt">saveJob</span>(String username, Long jobId) {
+    User user = userRepository.<span class="mt">findByUsername</span>(username).<span class="mt">orElseThrow</span>();
+    Job job = jobRepository.<span class="mt">findById</span>(jobId).<span class="mt">orElseThrow</span>();
+    user.<span class="mt">getSavedJobs</span>().<span class="mt">add</span>(job);   <span class="cm">// mutating the OWNING side's collection —</span>
+    userRepository.<span class="mt">save</span>(user);         <span class="cm">// dirty checking (Section 4) generates the INSERT into saved_jobs</span>
+}
+
+<span class="an">@Transactional</span>
+<span class="kw">public void</span> <span class="mt">unsaveJob</span>(String username, Long jobId) {
+    User user = userRepository.<span class="mt">findByUsername</span>(username).<span class="mt">orElseThrow</span>();
+    user.<span class="mt">getSavedJobs</span>().<span class="mt">removeIf</span>(j -&gt; j.<span class="mt">getId</span>().<span class="mt">equals</span>(jobId));
+    userRepository.<span class="mt">save</span>(user);   <span class="cm">// generates the corresponding DELETE from saved_jobs</span>
+}</pre></div>
+  </div>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Mutating the Inverse Side Silently Does Nothing — The Bidirectional-Sync Trap, Again</div>
+    <p>This is the exact same trap flagged for <code>@OneToMany</code>/<code>@ManyToOne</code> in Section 5, reappearing here for <code>@ManyToMany</code>: calling <code>job.getSavedByUsers().add(user)</code> (mutating the <strong>inverse</strong>, <code>mappedBy</code> side) has <strong>zero effect</strong> on the actual <code>saved_jobs</code> join table — Hibernate only writes to the join table based on the state of the <strong>owning</strong> side's collection (<code>User.savedJobs</code>). Always mutate the owning side, exactly as shown above.</p>
+  </div>
+</section>
+
+<!-- 200 -->
+<section class="topic" id="when-not-manytomany">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">200</span><h2>When NOT to Use @ManyToMany in JPA</h2></div>
+  <div class="topic-video">Video: When NOT to Use @ManyToMany in JPA</div>
+
+  <p>A genuinely important, often-skipped lesson: <code>@ManyToMany</code> is frequently the <strong>wrong choice</strong> the moment the relationship needs to carry any data of its own beyond the bare fact that a link exists.</p>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'wnm1')">❌ The trap — @ManyToMany can't hold extra columns cleanly</button>
+      <button class="tab-btn" onclick="showTab(this,'wnm2')">✅ The fix — an explicit join entity</button>
+    </div>
+    <div class="tab-content active" id="wnm1"><pre><span class="cm">// what if "saving a job" needed to record WHEN it was saved, or a user's</span>
+<span class="cm">// PRIVATE NOTE about why they saved it? A plain @ManyToMany join table</span>
+<span class="cm">// has NO clean way to carry that extra data — it's just two foreign keys.</span>
+<span class="cm">// (Workarounds exist via @ElementCollection/composite keys, but they're</span>
+<span class="cm">// awkward and don't scale to real additional business logic on the link.)</span></pre></div>
+    <div class="tab-content" id="wnm2"><pre><span class="cm">// Replace @ManyToMany with an explicit ENTITY for the join table itself —</span>
+<span class="cm">// turning an implicit M:N into two explicit @OneToMany/@ManyToOne relationships</span>
+<span class="an">@Entity</span>
+<span class="an">@Table</span>(name = <span class="str">"saved_jobs"</span>)
+<span class="kw">public class</span> <span class="cl">SavedJob</span> {
+    <span class="an">@Id</span> <span class="an">@GeneratedValue</span> <span class="kw">private</span> Long id;   <span class="cm">// NOW has its own real identity</span>
+
+    <span class="an">@ManyToOne</span> <span class="an">@JoinColumn</span>(name = <span class="str">"user_id"</span>) <span class="kw">private</span> User user;
+    <span class="an">@ManyToOne</span> <span class="an">@JoinColumn</span>(name = <span class="str">"job_id"</span>) <span class="kw">private</span> Job job;
+
+    <span class="kw">private</span> LocalDateTime savedAt;     <span class="cm">// NOW trivial to add — it's just a normal entity field</span>
+    <span class="kw">private</span> String privateNote;
+}
+<span class="cm">// User now has: @OneToMany(mappedBy = "user") List<SavedJob> savedJobs;</span>
+<span class="cm">// Job now has:  @OneToMany(mappedBy = "job")  List<SavedJob> savedByEntries;</span></pre></div>
+  </div>
+
+  <table>
+    <tr><th>Situation</th><th>Recommended Approach</th></tr>
+    <tr><td>The relationship is purely "does a link exist" — no extra data</td><td><code>@ManyToMany</code> is fine, exactly as used for bookmarking above</td></tr>
+    <tr><td>The relationship needs a timestamp, status, note, or any other field of its own</td><td>An explicit join <strong>entity</strong> with two <code>@ManyToOne</code> relationships — genuinely simpler to extend, query, and reason about than fighting <code>@ManyToMany</code>'s limitations</td></tr>
+    <tr><td>You need to query/filter/sort by properties of the relationship itself (e.g., "jobs saved in the last 7 days")</td><td>Explicit join entity — its own queryable fields make this trivial; a plain <code>@ManyToMany</code> join table has no clean JPQL path to filter by</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 The General Principle This Teaches</div>
+    <p>"Use <code>@ManyToMany</code> only when the relationship is genuinely just a relationship — no attributes of its own. The moment a many-to-many link needs to carry <em>any</em> additional data, model the join table as its own first-class entity instead." This single sentence is one of the most practically valuable, frequently-tested pieces of JPA design judgment a candidate can demonstrate — many real production bugs and painful refactors trace back to starting with <code>@ManyToMany</code> and later needing to bolt on extra fields.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>You're asked to add a "date saved" timestamp to an existing @ManyToMany bookmarking feature already in production. Walk through the migration.</div>
+      <div class="qa-a"><p>This requires converting the implicit <code>@ManyToMany</code> join table into an explicit entity, as shown above — a genuine schema and code migration, not a small tweak. Steps: (1) create the new <code>SavedJob</code> entity and its table (via a proper migration tool — Flyway/Liquibase, per Section 4's <code>ddl-auto</code> production guidance, never relying on Hibernate's auto-DDL for a production schema change), (2) migrate existing <code>saved_jobs</code> join-table rows into the new entity's table structure (a one-time data migration script, since the new table needs a generated primary key the old join table never had), (3) replace the <code>@ManyToMany</code> mappings on both <code>User</code> and <code>Job</code> with the two <code>@OneToMany</code>/<code>@ManyToOne</code> pairs shown above, (4) update every service-layer method that read/wrote <code>user.getSavedJobs()</code> to work with the new entity relationship instead. This real migration cost is exactly the practical argument for choosing the explicit-entity design <em>upfront</em> whenever there's a reasonable chance the relationship might need extra data later — a valuable point to raise proactively in a system design interview.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 201-202 -->
+<section class="topic" id="job-application">
+  <div class="topic-head"><span class="topic-num">201–202</span><h2>Implementing Job Application Workflow Using REST APIs</h2></div>
+  <div class="topic-video">Videos: Implementing Job Application Workflow Using REST APIs · Live Demo - Apply & Withdraw Job APIs</div>
+
+  <p>A direct, deliberate application of the previous topic's lesson: a job <strong>application</strong> (unlike a bare bookmark) genuinely needs its own data — an application status (<code>APPLIED</code>, <code>UNDER_REVIEW</code>, <code>REJECTED</code>, <code>ACCEPTED</code>), an applied-at timestamp, possibly a cover note — so it's modeled from the start as an <strong>explicit join entity</strong> (<code>JobApplication</code>), not a <code>@ManyToMany</code>, directly reinforcing the "when NOT to use @ManyToMany" lesson in a realistic feature immediately following it.</p>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'ja1')">JobApplication — the explicit join entity, applied correctly</button></div>
+    <div class="tab-content active" id="ja1"><pre><span class="an">@Entity</span>
+<span class="an">@Table</span>(name = <span class="str">"job_applications"</span>,
+       uniqueConstraints = <span class="an">@UniqueConstraint</span>(columnNames = {<span class="str">"user_id"</span>, <span class="str">"job_id"</span>}))
+       <span class="cm">// prevents the SAME user applying to the SAME job twice — a real business rule,</span>
+       <span class="cm">// enforced at the database level exactly per Section 7's duplicate-prevention pattern</span>
+<span class="kw">public class</span> <span class="cl">JobApplication</span> {
+    <span class="an">@Id</span> <span class="an">@GeneratedValue</span> <span class="kw">private</span> Long id;
+
+    <span class="an">@ManyToOne</span> <span class="an">@JoinColumn</span>(name = <span class="str">"user_id"</span>) <span class="kw">private</span> User applicant;
+    <span class="an">@ManyToOne</span> <span class="an">@JoinColumn</span>(name = <span class="str">"job_id"</span>)  <span class="kw">private</span> Job job;
+
+    <span class="an">@Enumerated</span>(EnumType.STRING)
+    <span class="kw">private</span> ApplicationStatus status;   <span class="cm">// APPLIED, WITHDRAWN, UNDER_REVIEW, REJECTED, ACCEPTED</span>
+
+    <span class="kw">private</span> LocalDateTime appliedAt;
+}
+
+<span class="an">@Service</span>
+<span class="kw">public class</span> <span class="cl">ApplicationService</span> {
+
+    <span class="an">@Transactional</span>
+    <span class="kw">public void</span> <span class="mt">withdraw</span>(Long applicationId, String username) {
+        JobApplication app = applicationRepository.<span class="mt">findById</span>(applicationId).<span class="mt">orElseThrow</span>();
+        <span class="kw">if</span> (!app.<span class="mt">getApplicant</span>().<span class="mt">getUsername</span>().<span class="mt">equals</span>(username)) {
+            <span class="kw">throw new</span> AccessDeniedException(<span class="str">"Cannot withdraw another user's application"</span>);
+            <span class="cm">// resource-ownership check — Section 9's authorization pattern, applied here</span>
+        }
+        app.<span class="mt">setStatus</span>(ApplicationStatus.WITHDRAWN);   <span class="cm">// SOFT status change, not a hard delete —</span>
+    }                                                     <span class="cm">// preserves the application history/audit trail</span>
+}</pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 Withdraw as a Status Change, Not a Deletion — Worth Justifying Explicitly</div>
+    <p>Modeling "withdraw" as setting <code>status = WITHDRAWN</code> rather than deleting the <code>JobApplication</code> row preserves a full, queryable history — an employer can still see that a candidate applied and later withdrew, which is often genuinely valuable business information (and, in regulated industries, sometimes a compliance requirement to retain). This is the same underlying principle as Section 5's JPA auditing philosophy: prefer recording state transitions over destructively losing history, wherever the business domain can reasonably support it.</p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- 203 -->
+<section class="topic" id="value-environment">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">203</span><h2>Reading Config Values the Classic Way — @Value & Environment</h2></div>
+  <div class="topic-video">Video: Reading Config Values the Classic Way - @Value & Environment</div>
+
+  <p>Section 6's JWT service already used <code>@Value("${jwt.secret}")</code> without fully explaining the mechanism — this topic supplies that missing depth.</p>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'v1')">@Value injection</button>
+      <button class="tab-btn" onclick="showTab(this,'v2')">Environment abstraction — the lower-level API underneath @Value</button>
+    </div>
+    <div class="tab-content active" id="v1"><pre><span class="an">@Component</span>
+<span class="kw">public class</span> <span class="cl">MailService</span> {
+    <span class="an">@Value</span>(<span class="str">"${mail.from-address}"</span>)              <span class="kw">private</span> String fromAddress;
+    <span class="an">@Value</span>(<span class="str">"${mail.retry-count:3}"</span>)             <span class="kw">private int</span> retryCount;   <span class="cm">// :3 = default if property is absent</span>
+    <span class="an">@Value</span>(<span class="str">"#{'${mail.cc-list}'.split(',')}"</span>)   <span class="kw">private</span> List&lt;String&gt; ccList;  <span class="cm">// SpEL for more complex parsing</span>
+}</pre></div>
+    <div class="tab-content" id="v2"><pre><span class="an">@Component</span>
+<span class="an">@RequiredArgsConstructor</span>
+<span class="kw">public class</span> <span class="cl">DiagnosticsService</span> {
+    <span class="kw">private final</span> Environment env;   <span class="cm">// programmatic access — the abstraction @Value is sugar over</span>
+
+    <span class="kw">public void</span> <span class="mt">printConfig</span>() {
+        String value = env.<span class="mt">getProperty</span>(<span class="str">"mail.from-address"</span>);
+        <span class="kw">boolean</span> isProd = env.<span class="mt">acceptsProfiles</span>(Profiles.<span class="mt">of</span>(<span class="str">"prod"</span>));   <span class="cm">// used heavily later, Profiles topic</span>
+    }
+}</pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 @Value Is Syntactic Sugar Over Environment</div>
+    <p>Every <code>@Value("${...}")</code> injection is resolved, under the hood, via Spring's <code>Environment</code> abstraction (specifically a <code>PropertySourcesPlaceholderConfigurer</code> bean processor scanning for <code>${}</code> placeholders and resolving them against the <code>Environment</code>'s aggregated <code>PropertySource</code>s). Knowing this — rather than treating <code>@Value</code> as its own independent, unrelated mechanism — is what lets a candidate correctly reason about property resolution precedence questions, since <code>Environment</code> is the single underlying source of truth both mechanisms draw from.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>What are the practical downsides of @Value at scale, motivating the next topic's @ConfigurationProperties?</div>
+      <div class="qa-a"><p>Three real pain points: (1) <strong>scattered, repetitive declarations</strong> — a related group of properties (e.g., ten different mail settings) ends up as ten separate <code>@Value</code> fields, possibly duplicated across multiple classes that each need a subset, with no single place representing "the mail configuration" as a cohesive unit; (2) <strong>no compile-time type safety or validation</strong> for the property's structure — a typo in the property key string (<code>"mial.from-address"</code>) fails silently at runtime (the field is simply left at its default/null) rather than at compile time; (3) <strong>no support for binding nested/structured configuration</strong> (a list of objects, a nested map) cleanly — <code>@Value</code>'s SpEL workarounds for anything beyond a flat scalar value get unwieldy fast, as hinted at by the CC-list example above already needing SpEL just for a simple comma-split list.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 204 -->
+<section class="topic" id="configuration-properties">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">204</span><h2>Grouping Properties the Right Way with @ConfigurationProperties</h2></div>
+  <div class="topic-video">Video: Grouping Properties the Right Way with @ConfigurationProperties</div>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'cp1')">application.properties</button>
+      <button class="tab-btn" onclick="showTab(this,'cp2')">MailProperties — a type-safe, cohesive config class</button>
+      <button class="tab-btn" onclick="showTab(this,'cp3')">Usage — injected like any other bean</button>
+    </div>
+    <div class="tab-content active" id="cp1"><pre>mail.from-address=<span class="mt">noreply@growthscript.com</span>
+mail.retry-count=<span class="mt">3</span>
+mail.cc-list[0]=<span class="mt">admin@growthscript.com</span>
+mail.cc-list[1]=<span class="mt">support@growthscript.com</span>
+mail.smtp.host=<span class="mt">smtp.growthscript.com</span>   <span class="cm"># nested structure — binds to a nested class below</span>
+mail.smtp.port=<span class="mt">587</span></pre></div>
+    <div class="tab-content" id="cp2"><pre><span class="an">@ConfigurationProperties</span>(prefix = <span class="str">"mail"</span>)   <span class="cm">// binds every "mail.*" property to this ONE cohesive class</span>
+<span class="an">@Getter</span> <span class="an">@Setter</span>   <span class="cm">// @ConfigurationProperties REQUIRES setters (or a constructor-binding alternative)</span>
+<span class="kw">public class</span> <span class="cl">MailProperties</span> {
+    <span class="kw">private</span> String fromAddress;      <span class="cm">// automatically maps "from-address" (kebab-case) -&gt; fromAddress (camelCase)</span>
+    <span class="kw">private int</span> retryCount = <span class="mt">3</span>;      <span class="cm">// a plain Java default value — the idiomatic default-value mechanism here</span>
+    <span class="kw">private</span> List&lt;String&gt; ccList = <span class="kw">new</span> ArrayList&lt;&gt;();   <span class="cm">// clean LIST binding — no SpEL needed at all</span>
+    <span class="kw">private</span> Smtp smtp = <span class="kw">new</span> Smtp();               <span class="cm">// clean NESTED OBJECT binding</span>
+
+    <span class="an">@Getter</span> <span class="an">@Setter</span>
+    <span class="kw">public static class</span> <span class="cl">Smtp</span> {
+        <span class="kw">private</span> String host;
+        <span class="kw">private int</span> port;
+    }
+}</pre></div>
+    <div class="tab-content" id="cp3"><pre><span class="an">@Configuration</span>
+<span class="an">@EnableConfigurationProperties</span>(MailProperties.<span class="kw">class</span>)   <span class="cm">// registers it as a bean (alternative: @Component on MailProperties itself)</span>
+<span class="kw">public class</span> <span class="cl">MailConfig</span> { }
+
+<span class="an">@Service</span>
+<span class="an">@RequiredArgsConstructor</span>
+<span class="kw">public class</span> <span class="cl">MailService</span> {
+    <span class="kw">private final</span> MailProperties mailProperties;   <span class="cm">// injected like ANY bean — the WHOLE cohesive group at once</span>
+
+    <span class="kw">public void</span> <span class="mt">send</span>() {
+        String host = mailProperties.<span class="mt">getSmtp</span>().<span class="mt">getHost</span>();   <span class="cm">// clean, type-safe, IDE-autocompletable access</span>
+    }
+}</pre></div>
+  </div>
+
+  <table>
+    <tr><th></th><th><code>@Value</code></th><th><code>@ConfigurationProperties</code></th></tr>
+    <tr><td><strong>Scope</strong></td><td>One property, one field</td><td>A whole related group of properties, as one cohesive class</td></tr>
+    <tr><td><strong>Nested objects/lists</strong></td><td>Awkward — needs SpEL workarounds</td><td>Native, clean support</td></tr>
+    <tr><td><strong>Type safety</strong></td><td>Per-field only</td><td>The whole structure is validated/bound at once — pairs naturally with <code>@Validated</code> for Bean Validation on the config class itself</td></tr>
+    <tr><td><strong>IDE support</strong></td><td>None — property keys are just strings</td><td>Spring Boot's configuration-metadata annotation processor provides autocomplete in <code>application.properties</code> for IDEs that support it</td></tr>
+    <tr><td><strong>Best for</strong></td><td>A single, standalone value used in one or two places</td><td>Any cohesive group of related settings — the modern, recommended default</td></tr>
+  </table>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Can you combine @ConfigurationProperties with Bean Validation (Section 5) to fail fast on invalid configuration at startup?</div>
+      <div class="qa-a"><p>Yes — this is a genuinely valuable, underused pattern. Adding <code>@Validated</code> to the <code>@ConfigurationProperties</code> class alongside standard JSR-380 constraint annotations (<code>@NotBlank</code>, <code>@Min</code>, <code>@Pattern</code>) on its fields causes Spring Boot to <strong>validate the bound configuration at application startup</strong>, failing fast with a clear error if, say, <code>mail.smtp.port</code> is missing or out of a sane range — directly extending Section 1/2's "fail-fast at startup, not deep into production traffic" philosophy to configuration correctness itself, rather than discovering a bad config value only when the first email send attempt mysteriously fails in production.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 205 -->
+<section class="topic" id="propertysource">
+  <div class="topic-head"><span class="topic-num">205</span><h2>Loading Custom Property Files with @PropertySource</h2></div>
+  <div class="topic-video">Video: Loading Custom Property Files with @PropertySource</div>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'psrc1')">@PropertySource — loading a NON-default properties file</button></div>
+    <div class="tab-content active" id="psrc1"><pre><span class="an">@Configuration</span>
+<span class="an">@PropertySource</span>(<span class="str">"classpath:third-party-api.properties"</span>)   <span class="cm">// a file OTHER than application.properties,</span>
+<span class="kw">public class</span> <span class="cl">ThirdPartyConfig</span> { }                          <span class="cm">// NOT auto-loaded by Spring Boot by default</span>
+
+<span class="cm">// third-party-api.properties (separate file, e.g. for a self-contained,</span>
+<span class="cm">// reusable module's own config, kept deliberately distinct from the main app's)</span>
+<span class="cm">// stripe.api-key=sk_live_xxx</span>
+<span class="cm">// stripe.webhook-secret=whsec_xxx</span></pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 Why This Is Rarely Needed in a Typical Spring Boot App</div>
+    <p>Spring Boot already auto-loads <code>application.properties</code>/<code>application.yml</code> (and their profile-specific variants, covered a few topics ahead) with zero configuration — <code>@PropertySource</code> is specifically for loading an <em>additional</em>, separately-named properties file that Spring Boot wouldn't discover on its own, such as a properties file bundled inside a reusable internal library JAR that needs to ship with its own default configuration, decoupled from whatever application eventually consumes it.</p>
+  </div>
+</section>
+
+<!-- 206 -->
+<section class="topic" id="why-externalize">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">206</span><h2>Why Externalizing Configuration Matters in Real Projects</h2></div>
+  <div class="topic-video">Video: Why Externalizing Configuration Matters in Real Projects</div>
+
+  <p>This is the conceptual anchor for the rest of the configuration arc — the "why," ahead of several "how" topics.</p>
+
+  <table>
+    <tr><th>Reason</th><th>Explanation</th></tr>
+    <tr><td><strong>Different values per environment</strong></td><td>A database URL, external API key, or log level is almost never identical between local dev, staging, and production — hardcoding forces a code change (and redeploy) just to point at a different database</td></tr>
+    <tr><td><strong>Secrets must never live in source control</strong></td><td>A hardcoded database password or JWT secret (Section 6) committed to git is a permanent, extremely hard-to-fully-remediate security exposure — externalizing keeps secrets out of the codebase entirely</td></tr>
+    <tr><td><strong>The same build artifact should be deployable everywhere</strong></td><td>Building one JAR once and deploying that exact, tested artifact to every environment (rather than rebuilding per-environment with different hardcoded values baked in) is a core CI/CD and "build once, deploy everywhere" best practice — only possible if environment-specific values are supplied externally at deploy/runtime, not compiled in</td></tr>
+    <tr><td><strong>Operational flexibility without a code change</strong></td><td>Adjusting a timeout, feature flag, or connection pool size in response to a production incident should be a config change, not a full code-review-and-redeploy cycle</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 The Twelve-Factor App Connection</div>
+    <p>This entire principle is codified as Factor III ("Config") of the widely-referenced <strong>Twelve-Factor App</strong> methodology: <em>"Store config in the environment... strictly separate from code."</em> Citing this by name in an interview is a strong, concrete signal that a candidate's understanding of externalized configuration is grounded in established industry practice, not just "that's how the Spring Boot tutorial did it."</p>
+  </div>
+</section>
+
+<!-- 207-208 -->
+<section class="topic" id="env-jvm-cli">
+  <div class="topic-head"><span class="topic-num">207–208</span><h2>Environment Variables, JVM Args & CLI Args — Explained & Demoed</h2></div>
+  <div class="topic-video">Videos: Environment Variables, JVM Args & CLI Args Explained · Passing Config Using Env Variables, JVM & CLI - Live Demo</div>
+
+  <table>
+    <tr><th>Mechanism</th><th>Syntax</th><th>Typical Use</th></tr>
+    <tr><td><strong>Environment variable</strong></td><td><code>export DB_PASSWORD=secret</code>, read via <code>${DB_PASSWORD}</code> in properties, or Spring's automatic relaxed-binding maps <code>DB_PASSWORD</code> → <code>db.password</code></td><td>The standard mechanism for secrets and container/cloud-platform-supplied config (Docker, Kubernetes, most PaaS platforms inject config this way)</td></tr>
+    <tr><td><strong>JVM system property</strong></td><td><code>java -Dserver.port=9090 -jar app.jar</code></td><td>JVM-level settings, or a quick override without touching environment variables</td></tr>
+    <tr><td><strong>Command-line argument</strong></td><td><code>java -jar app.jar --server.port=9090</code></td><td>Ad-hoc overrides at startup, common in local development and scripts</td></tr>
+  </table>
+
+  <div class="diagram">Spring Boot's PROPERTY SOURCE PRECEDENCE (highest wins — abbreviated,
+covers the most commonly-tested layers):
+
+  1. Command-line arguments                (--server.port=9090)
+  2. JVM system properties                  (-Dserver.port=9090)
+  3. Environment variables                  (SERVER_PORT=9090)
+  4. Profile-specific application.properties (application-prod.properties)
+  5. Default application.properties          (application.properties)
+  6. @PropertySource-loaded files
+  7. Hardcoded default values                (e.g. @Value("${x:default}"), or a
+                                               plain field default in a @ConfigurationProperties class)</div>
+
+  <div class="box warn">
+    <div class="box-title">⚠ This Precedence Order Is a Frequently-Tested, Precise Detail</div>
+    <p>The exact ordering matters for real debugging scenarios — "why isn't my <code>application.properties</code> value taking effect" is very often answered by "a command-line argument or environment variable with the same key is overriding it, higher up this precedence chain." Command-line arguments sit at the very top specifically because they represent the most explicit, deliberate, closest-to-the-actual-invocation override — the same "most specific wins" philosophy that governs Spring's bean-resolution precedence (<code>@Qualifier</code> over <code>@Primary</code>, Section 2) and CSS specificity in an entirely different domain.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why does Spring Boot map an environment variable like DB_PASSWORD to the property key db.password automatically — what's the actual rule?</div>
+      <div class="qa-a"><p>This is Spring Boot's <strong>relaxed binding</strong> rule, which exists because operating-system environment variable names conventionally can't contain dots or lowercase-sensitive distinctions the way property keys can (shell environment variables are traditionally UPPER_SNAKE_CASE). Spring Boot's relaxed binding automatically considers <code>DB_PASSWORD</code>, <code>db.password</code>, <code>db-password</code>, and <code>DB.PASSWORD</code> as equivalent representations of the same logical property key — letting configuration flow naturally from whatever a given source's native naming convention is (shell env vars, YAML, <code>.properties</code> files) into one consistent internal property namespace, without requiring exact case/separator matching across sources.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 209-210 -->
+<section class="topic" id="profiles">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">209–210</span><h2>Environment-Specific Configuration Using Spring Boot Profiles</h2></div>
+  <div class="topic-video">Videos: Environment-Specific Configuration Using Spring Boot Profiles · Running the Same App Across Environments Using Profiles</div>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'pr1')">Profile-specific property files</button>
+      <button class="tab-btn" onclick="showTab(this,'pr2')">Activating a profile</button>
+      <button class="tab-btn" onclick="showTab(this,'pr3')">@Profile on a bean</button>
+    </div>
+    <div class="tab-content active" id="pr1"><pre><span class="cm"># application.properties — shared, environment-agnostic defaults</span>
+spring.application.name=<span class="mt">job-portal</span>
+
+<span class="cm"># application-local.properties — LOCAL dev overrides</span>
+spring.jpa.hibernate.ddl-auto=<span class="mt">update</span>          <span class="cm"># Section 4's guidance — safe ONLY locally</span>
+logging.level.com.growthscript=<span class="mt">DEBUG</span>
+
+<span class="cm"># application-prod.properties — PRODUCTION overrides</span>
+spring.jpa.hibernate.ddl-auto=<span class="mt">validate</span>        <span class="cm"># Section 4's production-safe setting</span>
+logging.level.com.growthscript=<span class="mt">INFO</span>
+spring.datasource.url=<span class="str">${DB_URL}</span>             <span class="cm"># pulled from an environment variable — this topic + previous topic combined</span></pre></div>
+    <div class="tab-content" id="pr2"><pre><span class="cm"># via command-line argument (highest precedence, per the previous topic)</span>
+java -jar app.jar --spring.profiles.active=prod
+
+<span class="cm"># via environment variable — the standard approach for containerized deployments</span>
+export SPRING_PROFILES_ACTIVE=prod
+
+<span class="cm"># multiple profiles can be active simultaneously, comma-separated:</span>
+<span class="cm">#   --spring.profiles.active=prod,eu-region</span></pre></div>
+    <div class="tab-content" id="pr3"><pre><span class="an">@Configuration</span>
+<span class="kw">public class</span> <span class="cl">DataSourceConfig</span> {
+
+    <span class="an">@Bean</span>
+    <span class="an">@Profile</span>(<span class="str">"local"</span>)   <span class="cm">// this bean ONLY registers when "local" is the active profile</span>
+    <span class="kw">public</span> DataSource <span class="mt">h2DataSource</span>() {
+        <span class="kw">return new</span> EmbeddedDatabaseBuilder().<span class="mt">setType</span>(EmbeddedDatabaseType.H2).<span class="mt">build</span>();
+    }
+
+    <span class="an">@Bean</span>
+    <span class="an">@Profile</span>(<span class="str">"prod"</span>)
+    <span class="kw">public</span> DataSource <span class="mt">productionDataSource</span>() {
+        <span class="kw">return</span> DataSourceBuilder.<span class="mt">create</span>()
+                .url(<span class="mt">System</span>.<span class="mt">getenv</span>(<span class="str">"DB_URL"</span>))
+                .build();
+    }
+}</pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 The Full Mental Model — Property Files vs @Profile on Beans</div>
+    <p>Profile-specific property <strong>files</strong> (<code>application-{profile}.properties</code>) override individual property <em>values</em> per environment — same beans exist everywhere, just configured differently. <code>@Profile</code> on a <strong>bean definition</strong> goes further, controlling whether an entire bean even <em>exists</em> in the context for a given environment — genuinely different beans (or entirely absent ones) per environment, not just different property values for the same bean. Both mechanisms are driven by the exact same <code>spring.profiles.active</code> switch, just operating at different granularities.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How do profile-specific property files interact with the property-source precedence order from the previous topic — which wins if application-prod.properties sets a value AND an environment variable also sets it?</div>
+      <div class="qa-a"><p>The environment variable wins — profile-specific property files sit <strong>below</strong> environment variables and JVM/command-line arguments in Spring Boot's overall precedence chain (as laid out in the previous topic's diagram). This is a deliberate, useful layering in practice: <code>application-prod.properties</code> establishes sensible, version-controlled <strong>defaults</strong> for the production profile, while genuinely sensitive or deployment-specific values (database passwords, API keys) are still supplied via environment variables at deploy time — getting the benefit of both mechanisms: checked-in, reviewable baseline config per environment, plus the ability to override specific sensitive or infrastructure-specific values without ever committing them to source control.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What happens if a bean is annotated @Profile("prod") but no profile is active at all (spring.profiles.active is unset)?</div>
+      <div class="qa-a"><p>The bean is <strong>not created</strong> — with no active profile matching <code>"prod"</code>, Spring simply skips registering it, exactly as if the profile condition evaluated to false. If the application genuinely needs a bean to exist even with no explicit profile active, Spring provides <code>@Profile("default")</code> specifically to match the implicit "default" profile that's considered active whenever <code>spring.profiles.active</code> is unset — a detail worth knowing to avoid a surprising "why is this bean missing" debugging session in a misconfigured environment where no profile was ever explicitly activated.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 211 -->
+<section class="topic" id="conditional-beans">
+  <div class="topic-head"><span class="topic-num">211</span><h2>Controlling Bean Creation Using Profiles & Conditions</h2></div>
+  <div class="topic-video">Video: Controlling Bean Creation Using Profiles & Conditions</div>
+
+  <p>This generalizes <code>@Profile</code> into the broader family of <strong>conditional bean registration</strong> annotations — directly extending Section 3's auto-configuration discussion of <code>@ConditionalOnClass</code>/<code>@ConditionalOnMissingBean</code>, now applied to <em>your own</em> beans rather than just observed in Spring Boot's internal auto-configuration classes.</p>
+
+  <table>
+    <tr><th>Annotation</th><th>Condition</th></tr>
+    <tr><td><code>@Profile("prod")</code></td><td>A specific profile is active — technically itself implemented as a <code>@Conditional</code> under the hood</td></tr>
+    <tr><td><code>@ConditionalOnProperty(name="feature.new-search.enabled", havingValue="true")</code></td><td>A specific property is set to a specific value — a genuine, simple <strong>feature flag</strong> mechanism</td></tr>
+    <tr><td><code>@ConditionalOnClass(RedisTemplate.class)</code></td><td>A specific class is present on the classpath (Section 3) — register a Redis-backed bean only if the Redis client library is actually included</td></tr>
+    <tr><td><code>@ConditionalOnMissingBean</code></td><td>No bean of that type already exists (Section 3) — lets user-defined beans cleanly override library/auto-configured defaults</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 A Concrete Feature-Flag Pattern</div>
+    <p><code>@ConditionalOnProperty</code> is a genuinely practical, simple way to implement feature flags without a dedicated feature-flag service: <code>@ConditionalOnProperty(name = "feature.new-search.enabled", havingValue = "true", matchIfMissing = false)</code> on a <code>@Service</code> implementation means that service (and everything it enables) simply doesn't exist in the application context at all unless the flag is explicitly turned on — a clean, zero-runtime-overhead way to gate an entire feature, toggleable per environment purely through configuration, no code redeploy required.</p>
+  </div>
+</section>
+
+<!-- 212 -->
+<section class="topic" id="per-env-logging">
+  <div class="topic-head"><span class="topic-num">212</span><h2>Controlling Logs per Environment with Logback & Profiles</h2></div>
+  <div class="topic-video">Video: Controlling Logs per Environment with Logback & Profiles</div>
+
+  <p>This closes the loop between Section 8's Logback appenders and this section's Profiles material — the <code>&lt;springProfile&gt;</code> tag shown (but not fully explained) back in Section 8's <code>logback-spring.xml</code> example finally gets its complete treatment.</p>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'pel1')">logback-spring.xml — full profile-driven logging</button></div>
+    <div class="tab-content active" id="pel1"><pre><span class="kw">&lt;springProfile</span> name=<span class="str">"local"</span><span class="kw">&gt;</span>
+    <span class="kw">&lt;root</span> level=<span class="str">"DEBUG"</span><span class="kw">&gt;</span>
+        <span class="kw">&lt;appender-ref</span> ref=<span class="str">"CONSOLE"</span> /<span class="kw">&gt;</span>   <span class="cm">&lt;!-- human-readable console, verbose — Section 8's local-dev appender --&gt;</span>
+    <span class="kw">&lt;/root&gt;</span>
+<span class="kw">&lt;/springProfile&gt;</span>
+
+<span class="kw">&lt;springProfile</span> name=<span class="str">"prod"</span><span class="kw">&gt;</span>
+    <span class="kw">&lt;root</span> level=<span class="str">"INFO"</span><span class="kw">&gt;</span>
+        <span class="kw">&lt;appender-ref</span> ref=<span class="str">"FILE"</span> /<span class="kw">&gt;</span>       <span class="cm">&lt;!-- rolling file, structured JSON — Section 8's production appender --&gt;</span>
+    <span class="kw">&lt;/root&gt;</span>
+<span class="kw">&lt;/springProfile&gt;</span>
+
+<span class="cm">&lt;!-- the SAME logback-spring.xml file, and the SAME "mvn package" build artifact
+     (per this section's "build once, deploy everywhere" principle), behaves
+     completely differently per environment — driven ENTIRELY by which profile
+     is active at runtime, with zero code or config-file changes between environments --&gt;</span></pre></div>
+  </div>
+
+  <div class="box info">
+    <div class="box-title">ℹ Why This Is a Meaningful Capstone for the Configuration Arc</div>
+    <p>This single file demonstrates every configuration-externalization principle from this section converging: <strong>the exact same build artifact</strong> (topic 206's "build once, deploy everywhere") uses <strong>profile-driven conditional logic</strong> (topics 209–211) to select entirely different <strong>Logback appenders</strong> (Section 8) — verbose console logging locally, structured production-grade file logging in prod — purely based on which profile is activated via an <strong>environment variable</strong> at deploy time (topics 207–208), with zero source code differences between environments whatsoever.</p>
+  </div>
+</section>
+
+<!-- 213 -->
+<section class="topic" id="employer-applications">
+  <div class="topic-head"><span class="topic-num">213</span><h2>Building Employer APIs to Manage Job Applications</h2></div>
+  <div class="topic-video">Video: Building Employer APIs to Manage Job Applications</div>
+
+  <p>The section's final capstone — employer-facing endpoints to review and update the status of applications submitted to their job postings (from topics 201–202's <code>JobApplication</code> entity), synthesizing nearly every mechanism covered across this large section: cached, paginated (Section 9) reads of applications; resource-ownership authorization (only the employer who posted the job may view/manage its applications, Section 9's pattern); <code>@Transactional</code> status transitions (Section 10); and the whole feature deployable identically across environments thanks to this section's externalized configuration work.</p>
+</section>
+
+<div class="divider"></div>
+
+<!-- MASTER Q&A -->
+<section class="topic" id="interview-master">
+  <span class="section-badge">🎯 Rapid-Fire Round</span>
+  <div class="topic-head"><h2>Master Interview Q&A Bank — Section 11</h2></div>
+  <p class="dim">Caching correctness, relationship-design judgment, and externalized configuration are all classic senior-level signals — these synthesize across the full section.</p>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Design a complete caching strategy for a product listing page that shows near-real-time inventory counts alongside largely-static product descriptions.</div>
+      <div class="qa-a"><p>Split the cache strategy by data volatility rather than caching the whole response uniformly: product descriptions/images (rarely change) use <code>@Cacheable</code> with a long TTL via Caffeine (topics 186, 189, 190) — high cache-hit rate, low staleness risk. Inventory counts (change frequently, and staleness directly misleads a purchasing decision) either skip caching entirely, use a very short TTL (seconds), or are fetched live and merged with the cached product data at the service layer rather than cached together as one unit — recognizing that caching an entire composite response at one uniform TTL forces the most volatile field to dictate the cache lifetime for everything, wastefully under-caching the genuinely stable data. If deployed across multiple instances, Redis (not Caffeine) is required for the counts to stay consistent across instances if any caching is applied to them at all (topic 190's distributed-cache discussion).</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>A teammate proposes modeling a "user follows user" (social-graph-style) feature as a plain @ManyToMany. Evaluate this design choice.</div>
+      <div class="qa-a"><p>Apply topic 200's decision framework directly: does "following" need any data of its own? In almost any real product, yes — at minimum a <code>followedAt</code> timestamp (for a "recently followed" feed), and very plausibly a notification-preference flag, a "close friend" tier, or similar metadata down the line. Per this section's explicit guidance, this strongly argues for an explicit join entity (<code>Follow</code>, with <code>follower</code>/<code>followee</code> <code>@ManyToOne</code> relationships and its own fields) from the start, rather than a bare <code>@ManyToMany</code> that would require the exact same painful migration walked through in topic 200's Q&A the moment a single additional field is needed. A candidate correctly identifying this upfront — rather than defaulting to <code>@ManyToMany</code> because "it's two entities pointing at each other" — demonstrates real, applied JPA design judgment rather than surface-level annotation knowledge.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Trace exactly how a database password gets from a Kubernetes Secret into a running Spring Boot pod's DataSource, using every mechanism covered in this section.</div>
+      <div class="qa-a"><p>A Kubernetes Secret is typically mounted into the pod as an <strong>environment variable</strong> (e.g. <code>DB_PASSWORD</code>) at container startup — this is the "environment variable" property source from topics 207–208. <code>application-prod.properties</code> (activated via <code>SPRING_PROFILES_ACTIVE=prod</code>, itself another environment variable, topics 209–210) references it as <code>spring.datasource.password=${DB_PASSWORD}</code> — a placeholder resolved against the <code>Environment</code> abstraction (topic 203). Because environment variables sit above profile-specific property files in Spring Boot's precedence chain (topic 207's diagram), this externally-injected secret value is what actually gets bound, and the exact same container image (this section's "build once, deploy everywhere" principle, topic 206) can be deployed to staging or production with entirely different secret values injected at the Kubernetes layer, with zero difference in the application code or even the built JAR itself.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why might @CacheEvict(allEntries = true) after every single write be a worse design than targeted, key-specific eviction — even though it's simpler to write?</div>
+      <div class="qa-a"><p>Evicting the entire cache region on every write defeats much of caching's benefit for any read traffic touching entries <em>unrelated</em> to what actually changed — every other cached entry in that region is discarded and must be recomputed/re-fetched on its next read, even though nothing about it actually became stale. Under moderate write frequency, this can result in a cache that's almost perpetually cold for practical purposes, especially for a cache region holding many independent entities (e.g., all companies) where updating one shouldn't invalidate every other company's cached data. Targeted eviction (evicting only the specific key affected, as shown in topic 186's demo) preserves the cache's effectiveness for everything unaffected by a given write — the correct default unless there's a specific reason the entire region's data is genuinely interdependent.</p></div>
+    </div>
+  </div>
+
+  <div class="box info" style="margin-top:28px;">
+    <div class="box-title">ℹ Next Section</div>
+    <p>Paste the next section's video list whenever you're ready, and I'll build the next HTML notes doc in this same design system.</p>
+  </div>
+
+  <footer>GrowthScript Engineering — Spring Boot Interview Bible · Section 11 of N</footer>
+</section>
+
+</main>
+</div>
+
+<script>
+function toggleTheme(){
+  const body = document.body;
+  const cur = body.getAttribute('data-theme');
+  body.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+}
+function showTab(btn, id){
+  const block = btn.closest('.code-block');
+  block.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  block.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  block.querySelector('#'+id).classList.add('active');
+}
+document.querySelectorAll('.qa-q').forEach(q=>{
+  q.addEventListener('click', ()=> q.parentElement.classList.toggle('open'));
+});
+</script>
+</body>
+</html>
