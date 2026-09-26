@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Section 13: Deploying Spring Boot to AWS | GrowthScript Engineering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117; --bg-elev:#151b23; --bg-card:#1a2230; --border:#2a3441;
+  --text:#e6edf3; --text-dim:#9aa7b5; --text-faint:#6e7c8c;
+  --accent:#3fb950; --accent-soft:rgba(63,185,80,.12);
+  --blue:#58a6ff; --blue-soft:rgba(88,166,255,.12);
+  --warn:#f0883e; --warn-soft:rgba(240,136,62,.12);
+  --danger:#f85149; --danger-soft:rgba(248,81,73,.12);
+  --code-bg:#0a0e14; --sidebar-w:290px; --radius:10px;
+  --shadow:0 4px 16px rgba(0,0,0,.35);
+}
+[data-theme="light"]{
+  --bg:#f6f8fa; --bg-elev:#ffffff; --bg-card:#ffffff; --border:#d8dee4;
+  --text:#1b2430; --text-dim:#4b5563; --text-faint:#8a96a3;
+  --accent:#1a7f37; --accent-soft:rgba(26,127,55,.08);
+  --blue:#0969da; --blue-soft:rgba(9,105,218,.08);
+  --warn:#9a6700; --warn-soft:rgba(154,103,0,.08);
+  --danger:#cf222e; --danger-soft:rgba(207,34,46,.08);
+  --code-bg:#0d1117; --shadow:0 2px 10px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); line-height:1.65; font-size:15.5px; transition:background .2s,color .2s;}
+code, pre, .mono{font-family:'Space Mono',monospace;}
+a{color:var(--blue); text-decoration:none;}
+a:hover{text-decoration:underline;}
+.wrapper{display:flex; min-height:100vh;}
+.sidebar{width:var(--sidebar-w); flex-shrink:0; background:var(--bg-elev); border-right:1px solid var(--border); position:sticky; top:0; height:100vh; overflow-y:auto; padding:22px 16px 40px;}
+.sidebar::-webkit-scrollbar{width:6px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border); border-radius:3px;}
+.brand{display:flex; align-items:center; gap:10px; margin-bottom:4px;}
+.brand-badge{width:34px; height:34px; border-radius:8px; background:var(--accent); display:flex; align-items:center; justify-content:center; color:#0d1117; font-weight:800; font-family:'Space Mono',monospace; font-size:15px; flex-shrink:0;}
+.brand-text{font-weight:800; font-size:14.5px; letter-spacing:.2px;}
+.brand-sub{font-size:11px; color:var(--text-faint); margin-top:1px;}
+.theme-toggle{margin:16px 0 20px; width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; font-size:12.5px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px;}
+.nav-group{margin-bottom:6px;}
+.nav-label{font-size:10.5px; text-transform:uppercase; letter-spacing:.9px; color:var(--text-faint); font-weight:700; margin:18px 4px 8px;}
+.nav-link{display:block; padding:7px 10px; border-radius:7px; font-size:13px; color:var(--text-dim); border-left:2px solid transparent; margin-bottom:1px;}
+.nav-link:hover{background:var(--accent-soft); color:var(--text); text-decoration:none;}
+.nav-link.sub{padding-left:22px; font-size:12.3px;}
+.main{flex:1; min-width:0; padding:44px 56px 120px; max-width:980px;}
+.header-block{margin-bottom:44px; padding-bottom:28px; border-bottom:1px solid var(--border);}
+.eyebrow{font-family:'Space Mono',monospace; font-size:11.5px; color:var(--accent); font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:10px;}
+.header-block h1{font-size:32px; font-weight:800; letter-spacing:-.5px; margin-bottom:12px;}
+.header-block p{color:var(--text-dim); font-size:15px; max-width:680px;}
+.meta-row{display:flex; gap:18px; margin-top:16px; flex-wrap:wrap;}
+.meta-pill{font-size:11.5px; padding:5px 11px; border-radius:20px; background:var(--bg-card); border:1px solid var(--border); color:var(--text-dim); font-family:'Space Mono',monospace;}
+section.topic{margin-bottom:56px; scroll-margin-top:24px;}
+.topic-head{display:flex; align-items:baseline; gap:12px; margin-bottom:6px;}
+.topic-num{font-family:'Space Mono',monospace; color:var(--accent); font-weight:700; font-size:14px;}
+h2{font-size:23px; font-weight:800; letter-spacing:-.3px;}
+.topic-video{font-size:12px; color:var(--text-faint); margin-bottom:20px; margin-top:2px; font-family:'Space Mono',monospace;}
+h3{font-size:17.5px; font-weight:700; margin:26px 0 12px; color:var(--text);}
+h4{font-weight:700; margin:18px 0 8px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.4px; font-size:12.5px;}
+p{margin-bottom:13px; color:var(--text); font-size:15px;}
+p.dim{color:var(--text-dim);}
+ul, ol{margin:0 0 15px 22px;}
+li{margin-bottom:7px; font-size:14.8px;}
+strong{color:var(--text); font-weight:700;}
+.hl{color:var(--accent); font-weight:700;}
+.box{border-radius:var(--radius); padding:16px 18px; margin:18px 0; border:1px solid var(--border); font-size:14.3px;}
+.box-title{font-weight:700; font-size:12.5px; text-transform:uppercase; letter-spacing:.5px; margin-bottom:7px; display:flex; align-items:center; gap:7px;}
+.tip{background:var(--accent-soft); border-color:rgba(63,185,80,.3);} .tip .box-title{color:var(--accent);}
+.warn{background:var(--warn-soft); border-color:rgba(240,136,62,.3);} .warn .box-title{color:var(--warn);}
+.info{background:var(--blue-soft); border-color:rgba(88,166,255,.3);} .info .box-title{color:var(--blue);}
+.danger{background:var(--danger-soft); border-color:rgba(248,81,73,.3);} .danger .box-title{color:var(--danger);}
+.code-block{background:var(--code-bg); border-radius:var(--radius); overflow:hidden; margin:16px 0; border:1px solid var(--border); box-shadow:var(--shadow);}
+.tabs{display:flex; background:rgba(255,255,255,.03); border-bottom:1px solid rgba(255,255,255,.08); overflow-x:auto;}
+.tab-btn{padding:9px 16px; font-family:'Space Mono',monospace; font-size:12px; color:#8a96a3; background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap;}
+.tab-btn.active{color:#e6edf3; border-bottom-color:var(--accent);}
+.tab-content{display:none; padding:16px 18px; overflow-x:auto;}
+.tab-content.active{display:block;}
+.tab-content pre{color:#c9d1d9; font-size:13px; line-height:1.65; white-space:pre;}
+.tab-content .kw{color:#ff7b72;} .tab-content .str{color:#a5d6ff;} .tab-content .cm{color:#8b949e; font-style:italic;}
+.tab-content .an{color:#d2a8ff;} .tab-content .cl{color:#79c0ff;} .tab-content .mt{color:#d2a8ff;}
+table{width:100%; border-collapse:collapse; margin:16px 0; font-size:13.8px;}
+th{text-align:left; padding:9px 12px; background:var(--bg-card); border-bottom:2px solid var(--border); font-size:11.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--text-dim);}
+td{padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top;}
+tr:hover td{background:var(--accent-soft);}
+.qa-wrap{margin-top:18px;}
+.qa-item{border:1px solid var(--border); border-radius:var(--radius); margin-bottom:10px; overflow:hidden; background:var(--bg-card);}
+.qa-q{padding:14px 46px 14px 18px; cursor:pointer; font-weight:600; font-size:14.3px; position:relative; display:flex; align-items:center; gap:10px;}
+.qa-q:hover{background:var(--accent-soft);}
+.qa-tag{font-family:'Space Mono',monospace; font-size:9.5px; padding:2px 7px; border-radius:4px; font-weight:700; flex-shrink:0; text-transform:uppercase; letter-spacing:.3px;}
+.tag-faang{background:rgba(248,81,73,.15); color:var(--danger);}
+.tag-core{background:rgba(88,166,255,.15); color:var(--blue);}
+.qa-q::after{content:'+'; position:absolute; right:18px; top:50%; transform:translateY(-50%); font-size:20px; color:var(--text-faint); font-weight:400;}
+.qa-item.open .qa-q::after{content:'−';}
+.qa-a{max-height:0; overflow:hidden; transition:max-height .25s ease; padding:0 18px;}
+.qa-item.open .qa-a{max-height:1400px; padding:2px 18px 18px;}
+.qa-a p{font-size:14px; color:var(--text-dim);}
+.qa-a ul{margin-top:6px;}
+.qa-a li{color:var(--text-dim); font-size:13.8px;}
+.divider{height:1px; background:var(--border); margin:44px 0;}
+.section-badge{display:inline-block; background:var(--accent); color:#0d1117; font-family:'Space Mono',monospace; font-weight:700; font-size:11px; padding:4px 10px; border-radius:6px; margin-bottom:14px;}
+.diagram{background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin:18px 0; font-family:'Space Mono',monospace; font-size:12.5px; color:var(--text-dim); overflow-x:auto; white-space:pre; line-height:1.5;}
+footer{margin-top:60px; padding-top:24px; border-top:1px solid var(--border); color:var(--text-faint); font-size:12px;}
+@media(max-width:900px){
+  .sidebar{position:fixed; left:-100%; z-index:50; transition:left .2s; box-shadow:var(--shadow);}
+  .sidebar.open{left:0;}
+  .main{padding:24px 20px 100px;}
+  .mobile-toggle{display:block !important;}
+}
+.mobile-toggle{display:none; position:fixed; top:16px; left:16px; z-index:60; background:var(--accent); color:#0d1117; border:none; border-radius:8px; width:40px; height:40px; font-size:18px; font-weight:700;}
+</style>
+</head>
+<body data-theme="dark">
+
+<button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="wrapper">
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-badge">G</div>
+    <div>
+      <div class="brand-text">GrowthScript Eng.</div>
+      <div class="brand-sub">Spring Boot Bible</div>
+    </div>
+  </div>
+  <button class="theme-toggle" onclick="toggleTheme()">🌗 Toggle Theme</button>
+
+  <div class="nav-group">
+    <div class="nav-label">Section 13 · Deploying to AWS</div>
+    <a class="nav-link" href="#prod-prep">231. Preparing for Production</a>
+    <a class="nav-link" href="#rds">232. AWS RDS (MySQL)</a>
+    <a class="nav-link" href="#elastic-beanstalk">233. Elastic Beanstalk Deployment</a>
+    <a class="nav-link" href="#validating-deployment">234. Validating Cloud Deployment</a>
+    <a class="nav-link" href="#deleting-resources">235. Deleting Cloud Resources</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">AWS Fundamentals for Backend Devs</div>
+    <a class="nav-link" href="#compute-landscape">AWS Compute: EC2 vs EB vs ECS/EKS vs Lambda</a>
+    <a class="nav-link" href="#networking">VPC, Security Groups & Subnets</a>
+    <a class="nav-link" href="#iam">IAM — Users, Roles & Policies</a>
+    <a class="nav-link" href="#load-balancing-scaling">Load Balancing & Auto Scaling</a>
+    <a class="nav-link" href="#secrets-storage">Secrets Manager, Parameter Store & S3</a>
+    <a class="nav-link" href="#deployment-strategies">Deployment Strategies</a>
+    <a class="nav-link" href="#interview-master">Master Interview Q&A Bank</a>
+  </div>
+</aside>
+
+<main class="main">
+
+<div class="header-block">
+  <div class="eyebrow">Java Backend Engineer · Spring Boot Course</div>
+  <h1>Section 13 — Deploying Spring Boot to AWS</h1>
+  <p>The final, capstone section: taking a Spring Boot application from "runs on my machine" to a real, live cloud deployment — an AWS RDS MySQL database, Elastic Beanstalk-managed compute, end-to-end validation, and responsible resource cleanup. Because so many Spring Boot roles now expect working AWS knowledge, this section also builds out the broader AWS mental model (compute options, networking, IAM, load balancing, secrets management) that interviewers routinely probe well beyond the literal course videos.</p>
+  <div class="meta-row">
+    <span class="meta-pill">Videos 231–235 (5 videos)</span>
+    <span class="meta-pill">~42 min runtime</span>
+    <span class="meta-pill">+ Extended AWS Fundamentals</span>
+    <span class="meta-pill">Builds on Sections 4, 6, 10, 11 & 12</span>
+  </div>
+</div>
+
+<!-- 231 -->
+<section class="topic" id="prod-prep">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">231</span><h2>Preparing Your Spring Boot App for Production</h2></div>
+  <div class="topic-video">Video: Preparing Your Spring Boot App for Production</div>
+
+  <p>This is a synthesis checkpoint — every item here is a callback to a specific earlier section, now assembled into one pre-deployment checklist.</p>
+
+  <table>
+    <tr><th>Checklist Item</th><th>From</th></tr>
+    <tr><td><code>spring.jpa.hibernate.ddl-auto=validate</code> (never <code>update</code>/<code>create</code>)</td><td>Section 4</td></tr>
+    <tr><td>A real schema-migration tool (Flyway/Liquibase) owning the production schema</td><td>Section 4</td></tr>
+    <tr><td>All secrets (DB password, JWT signing key) externalized via environment variables — none hardcoded or committed</td><td>Sections 6, 11</td></tr>
+    <tr><td>A dedicated <code>prod</code> Spring Profile with production-appropriate logging level (<code>INFO</code>, not <code>DEBUG</code>) and appender (structured file/JSON, not just console)</td><td>Sections 8, 11</td></tr>
+    <tr><td>CORS configured with an explicit allow-list of real frontend origins — never a wildcard</td><td>Section 4</td></tr>
+    <tr><td>Actuator exposed narrowly (<code>health</code>, <code>info</code> only, publicly) with everything else secured or on a private port</td><td>Section 12</td></tr>
+    <tr><td>Global exception handling in place so no stack trace ever leaks to a client response</td><td>Section 5</td></tr>
+    <tr><td>The application packaged as an executable, self-contained JAR (or a container image)</td><td>Section 1's Maven coverage</td></tr>
+  </table>
+
+  <div class="code-block">
+    <div class="tabs"><button class="tab-btn active" onclick="showTab(this,'pp1')">Building the deployable artifact</button></div>
+    <div class="tab-content active" id="pp1"><pre><span class="cm"># produces target/job-portal-1.0.0.jar — a self-contained "fat jar"</span>
+<span class="cm"># (Section 1's Maven coverage) bundling the embedded Tomcat server and</span>
+<span class="cm"># every dependency, runnable with nothing but a JVM on the target host</span>
+mvn clean package -DskipTests
+
+<span class="cm"># sanity-check it runs standalone before it ever touches AWS:</span>
+java -jar target/job-portal-1.0.0.jar --spring.profiles.active=prod</pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 Why This Checklist-Style Recap Matters for Interviews</div>
+    <p>"What would you check before deploying a Spring Boot app to production?" is an extremely common practical interview question precisely because it tests whether a candidate's knowledge is <em>integrated</em> rather than a pile of disconnected facts. Being able to rattle off this exact list — and explain <em>why</em> each item matters, tracing back to the specific failure mode it prevents — is a strong, concrete signal of production experience, even for a candidate who has only worked through a structured course rather than a live job.</p>
+  </div>
+</section>
+
+<!-- 232 -->
+<section class="topic" id="rds">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">232</span><h2>Creating a Cloud Database with AWS RDS (MySQL)</h2></div>
+  <div class="topic-video">Video: Creating a Cloud Database with AWS RDS (MySQL)</div>
+
+  <p><strong>RDS (Relational Database Service)</strong> is AWS's <strong>managed</strong> relational database offering — AWS handles provisioning, patching, backups, and failover, so the team never has to <code>ssh</code> into a box and manually run <code>apt install mysql-server</code> the way Section 4's local Docker MySQL setup worked. This directly parallels Section 4's own "why Docker instead of installing MySQL locally" argument, one layer further up the stack: RDS is to production infrastructure what Docker Compose was to local development.</p>
+
+  <div class="diagram">RDS SETUP CHECKLIST (the moving parts):
+
+  DB Engine + Version         -> MySQL 8.0 (matching what Section 4 used locally)
+  Instance Class               -> e.g. db.t3.micro (Free Tier eligible - right-sized
+                                   for learning/small workloads, NOT production scale)
+  Storage                      -> allocated GB, with optional auto-scaling
+  VPC + Subnet Group           -> WHICH network the database lives inside (see the
+                                   Networking section below)
+  Security Group                -> the FIREWALL rule controlling who can even reach
+                                   port 3306 at all (see Networking section)
+  Master username/password     -> NEVER reused elsewhere, ideally auto-generated
+                                   and stored in Secrets Manager, not typed by hand
+  Public accessibility          -> "No" in any real setup - the database should NEVER
+                                   be directly reachable from the public internet
+  Multi-AZ deployment           -> optional automatic standby replica in a second
+                                   Availability Zone, for high availability</div>
+
+  <div class="box danger">
+    <div class="box-title">⚠ "Public Accessibility: No" Is a Critical, Frequently-Tested Security Default</div>
+    <p>An RDS instance should <strong>never</strong> be directly reachable from the public internet — it should sit in a <strong>private subnet</strong>, reachable <em>only</em> from the application's own compute resources (the Elastic Beanstalk-managed EC2 instances, in this section's setup) via a tightly-scoped security group rule, never from <code>0.0.0.0/0</code>. This is the cloud-infrastructure equivalent of Section 9's "never expose Actuator's sensitive endpoints publicly" principle — the database is the single most sensitive resource in the entire system, and the blast radius of a publicly-reachable, directly-attackable database is enormous compared to almost any other misconfiguration.</p>
+  </div>
+
+  <table>
+    <tr><th>Concept</th><th>What It Means</th></tr>
+    <tr><td><strong>Multi-AZ</strong></td><td>AWS automatically maintains a synchronously-replicated standby copy of the database in a <em>different</em> Availability Zone (a physically separate data center within the same region) — if the primary fails, AWS automatically fails over to the standby, typically within seconds to low minutes, with no application-level code changes needed</td></tr>
+    <tr><td><strong>Read Replica</strong></td><td>A separate, <em>asynchronously</em>-replicated copy specifically for offloading read traffic — directly connects to Section 10's <code>readOnly=true</code> transaction discussion, whose real payoff (routing reads to a replica) requires exactly this kind of infrastructure to exist</td></tr>
+    <tr><td><strong>Automated backups</strong></td><td>RDS can automatically take daily snapshots and retain transaction logs, enabling point-in-time recovery to any second within the retention window — infrastructure-level durability beyond what Section 4's local Docker-volume persistence provided</td></tr>
+    <tr><td><strong>Parameter Group</strong></td><td>A named set of database engine configuration values (e.g., MySQL's <code>max_connections</code>) — the RDS equivalent of a <code>my.cnf</code> file, but managed declaratively through AWS rather than edited directly on a server</td></tr>
+  </table>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Multi-AZ vs Read Replicas — both involve a second copy of the database. What's the fundamental difference in purpose, and could a system need both?</div>
+      <div class="qa-a"><p><strong>Multi-AZ exists for availability/disaster recovery</strong> — its standby is not directly usable for serving any traffic at all (in the classic Multi-AZ model); its sole job is to be ready to instantly become the new primary if the original primary fails, via synchronous replication guaranteeing zero data loss on failover. <strong>Read replicas exist for scaling read throughput</strong> — they're asynchronously replicated (meaning a small, real replication lag exists, connecting back to Section 10's isolation-level/staleness discussion) and are actively queryable, specifically to offload read-heavy traffic away from the primary. A real production system commonly uses <strong>both simultaneously</strong>: Multi-AZ for the primary's own failover resilience, plus one or more read replicas (which can themselves be Multi-AZ) to scale read capacity — they solve genuinely different problems and are not substitutes for each other.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Why would a team choose RDS over simply running MySQL themselves on an EC2 instance, given EC2 is generally cheaper?</div>
+      <div class="qa-a"><p>RDS's higher cost buys away substantial <strong>undifferentiated operational burden</strong>: automated backups and point-in-time recovery, automated minor-version patching, Multi-AZ failover, and read-replica management all come essentially "for free" (i.e., without a team having to build and maintain that automation themselves). Self-managing MySQL on EC2 means a team is directly responsible for all of that — writing and testing their own backup scripts, handling patching windows, building their own failover automation — real engineering time that could instead go toward the application itself. The trade-off genuinely favors RDS for the vast majority of teams; self-managed database-on-EC2 is typically only justified by very specific needs RDS doesn't support (an unusual database engine/version, extremely fine-grained OS-level tuning) or extreme cost sensitivity at a scale where the operational trade-off has been carefully re-evaluated.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 233 -->
+<section class="topic" id="elastic-beanstalk">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">233</span><h2>Deploying Spring Boot to AWS Using Elastic Beanstalk</h2></div>
+  <div class="topic-video">Video: Deploying Spring Boot to AWS Using Elastic Beanstalk</div>
+
+  <p><strong>Elastic Beanstalk (EB)</strong> is AWS's <strong>Platform-as-a-Service (PaaS)</strong> offering — you upload your application artifact (the JAR built in topic 231), and EB automatically provisions and wires together every piece of underlying infrastructure needed to run it: EC2 instances, an Auto Scaling Group, an Application Load Balancer, security groups, and CloudWatch monitoring — all without the developer manually configuring any of those services individually.</p>
+
+  <div class="diagram">WHAT ELASTIC BEANSTALK ACTUALLY PROVISIONS UNDERNEATH, AUTOMATICALLY:
+
+                    Application Load Balancer (ALB)
+                              |
+                 distributes traffic across
+                              |
+            +-----------------+-----------------+
+            v                  v                  v
+      EC2 Instance #1    EC2 Instance #2    EC2 Instance #3      <- an Auto Scaling
+      (runs your JAR      (runs your JAR      (runs your JAR         Group manages
+       via embedded         via embedded         via embedded          how many of
+       Tomcat, Section 3)   Tomcat)              Tomcat)                these exist
+            |                  |                  |
+            +-----------------+-----------------+
+                              v
+                    CloudWatch (logs + metrics,
+                    connects to Section 12's
+                    observability discussion)
+                              |
+                              v
+                    AWS RDS MySQL (topic 232 -
+                    provisioned SEPARATELY, then
+                    connected via environment
+                    variables, per Section 11)</div>
+
+  <table>
+    <tr><th>EB Concept</th><th>Explanation</th></tr>
+    <tr><td><strong>Application</strong></td><td>The top-level logical container in EB — represents your Spring Boot project conceptually</td></tr>
+    <tr><td><strong>Environment</strong></td><td>A specific, running deployment of that application (e.g., <code>job-portal-prod</code>, <code>job-portal-staging</code>) — each environment gets its own full stack of EC2/ALB/Auto Scaling resources, directly mirroring Section 11's Spring Profiles concept but at the infrastructure level rather than the application-config level</td></tr>
+    <tr><td><strong>Platform</strong></td><td>The pre-configured runtime stack EB provisions the EC2 instances with — "Corretto 17 running on 64bit Amazon Linux 2023" for a Spring Boot app, meaning EB handles installing and configuring the correct JVM automatically</td></tr>
+    <tr><td><strong>Environment properties</strong></td><td>EB's mechanism for injecting <strong>environment variables</strong> into the running application — the exact same mechanism Section 11 taught in the abstract (<code>SPRING_PROFILES_ACTIVE</code>, <code>DB_PASSWORD</code>, etc.), now configured through EB's console/CLI instead of a local shell</td></tr>
+  </table>
+
+  <div class="code-block">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(this,'eb1')">Setting environment properties — connecting directly to RDS</button>
+      <button class="tab-btn" onclick="showTab(this,'eb2')">.ebextensions — advanced, declarative EB configuration</button>
+    </div>
+    <div class="tab-content active" id="eb1"><pre><span class="cm"># configured via the EB console (Configuration -&gt; Software -&gt; Environment properties)</span>
+<span class="cm"># or the EB CLI — becomes available to the JVM EXACTLY as any environment</span>
+<span class="cm"># variable would, per Section 11's precedence chain</span>
+
+SPRING_PROFILES_ACTIVE=prod
+SPRING_DATASOURCE_URL=jdbc:mysql://job-portal-db.xxxxx.rds.amazonaws.com:3306/jobportal
+SPRING_DATASOURCE_USERNAME=<span class="mt">admin</span>
+SPRING_DATASOURCE_PASSWORD=<span class="mt">{{resolve:secretsmanager:job-portal/db-password}}</span>
+JWT_SECRET=<span class="mt">{{resolve:secretsmanager:job-portal/jwt-secret}}</span>
+
+<span class="cm"># notice: the RDS instance from topic 232 is connected PURELY through</span>
+<span class="cm"># externalized configuration — zero application code changes, exactly as</span>
+<span class="cm"># Section 11's "why externalize configuration" topic argued for</span></pre></div>
+    <div class="tab-content" id="eb2"><pre><span class="cm"># .ebextensions/01-environment.config — checked into the project repo,</span>
+<span class="cm"># declaratively configuring EB infrastructure AS CODE rather than manual</span>
+<span class="cm"># console clicking (the same "config as code, not manual setup" principle</span>
+<span class="cm"># that motivated Docker Compose over manual "docker run" in Section 4)</span>
+<span class="kw">option_settings:</span>
+  <span class="kw">aws:elasticbeanstalk:application:environment:</span>
+    <span class="kw">SERVER_PORT:</span> <span class="mt">5000</span>
+  <span class="kw">aws:autoscaling:asg:</span>
+    <span class="kw">MinSize:</span> <span class="mt">2</span>
+    <span class="kw">MaxSize:</span> <span class="mt">4</span></pre></div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-title">💡 EB as "Training Wheels" for Understanding the Full AWS Compute Stack</div>
+    <p>The most valuable way to think about Elastic Beanstalk for interview purposes: it doesn't replace EC2/ALB/Auto Scaling — it <strong>automatically provisions and wires them together</strong> using sensible defaults. Everything EB does under the hood is a real, individually-inspectable AWS resource (visible and directly editable in the EC2/ELB consoles) — meaning the skills learned deploying via EB (environment variables, health checks, scaling) transfer directly to understanding and eventually hand-configuring the same underlying services without EB's automation layer, which is exactly the trajectory a growing team often takes as its infrastructure needs become more custom than EB's opinionated defaults comfortably support.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How does Elastic Beanstalk know whether a deployed instance is healthy enough to receive traffic — does this connect to anything covered earlier in the course?</div>
+      <div class="qa-a"><p>Directly, yes — EB's Application Load Balancer performs periodic HTTP health checks against a configurable path on each EC2 instance, and Spring Boot Actuator's <code>/actuator/health</code> endpoint (Section 12) is the standard, idiomatic target to point that health check at. If an instance's health check starts failing, the ALB stops routing new traffic to it, and the Auto Scaling Group can be configured to automatically terminate and replace an unhealthy instance — the exact same liveness/readiness philosophy from Section 12's Kubernetes discussion, just implemented through AWS's own load-balancer/Auto-Scaling-Group health-check mechanism rather than Kubernetes probes specifically. This is a genuinely excellent, concrete example of how Section 12's Actuator investment pays off directly in a real cloud deployment.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>What's the practical trade-off of using Elastic Beanstalk versus manually configuring EC2, an ALB, and an Auto Scaling Group yourself?</div>
+      <div class="qa-a"><p>EB trades <strong>fine-grained control</strong> for <strong>speed and simplicity</strong> — for a standard Spring Boot web application, EB's defaults handle the vast majority of real needs (health-checked instances behind a load balancer, automatic scaling, rolling deployments) with a fraction of the manual setup time, letting a small team or an individual developer get a genuinely production-viable deployment running in minutes rather than hours of manually wiring together individual AWS services and their interconnected configuration. The trade-off appears once an application's infrastructure needs diverge meaningfully from EB's opinionated defaults — highly custom networking topology, non-standard scaling triggers, or infrastructure shared/coordinated tightly with other non-EB-managed services — at which point a team often migrates to hand-configured EC2/ECS/Kubernetes for the additional control, exactly the trajectory the previous tip described.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 234 -->
+<section class="topic" id="validating-deployment">
+  <div class="topic-head"><span class="topic-num">234</span><h2>Validating Cloud Deployment — End-to-End Testing</h2></div>
+  <div class="topic-video">Video: Validating Cloud Deployment - End-to-End Testing</div>
+
+  <p>This closes the loop on nearly the entire course, verified against a genuinely live, internet-reachable deployment rather than <code>localhost</code>:</p>
+
+  <ol>
+    <li>Hit the EB environment's public URL's <code>/actuator/health</code> endpoint (Section 12) and confirm <code>{"status":"UP"}</code>, including the <code>db</code> component — proving connectivity all the way through to RDS (topic 232).</li>
+    <li>Register a new user and log in via Postman (Sections 6–7), confirming a real JWT is issued and the database write genuinely persisted in RDS, not just an in-memory/local dev artifact.</li>
+    <li>Exercise the full CRUD surface built across the course — job postings, applications, profile uploads — against the live URL, confirming CORS (Section 4), authorization rules (Section 9), and caching behavior (Section 11) all function identically to local testing.</li>
+    <li>Check CloudWatch logs (fed by the same Logback configuration from Section 8/11, now shipping to AWS's log aggregation rather than a local file) to confirm structured, environment-appropriate logging is actually flowing.</li>
+  </ol>
+
+  <div class="box tip">
+    <div class="box-title">💡 Why This Step Is Not Optional, Even for a Learning Project</div>
+    <p>A deployment that merely "shows a running status in the AWS console" is not the same as a deployment that is genuinely <strong>functionally correct end-to-end</strong> — a misconfigured environment variable, an overly-restrictive security group rule, or a CORS misconfiguration can all leave an application technically "running" while being completely unusable by any real client. This validation step is the cloud-deployment equivalent of Section 4's Postman-driven end-to-end demo — proof the whole system genuinely works together, not just that each individual piece was configured without an error message.</p>
+  </div>
+</section>
+
+<!-- 235 -->
+<section class="topic" id="deleting-resources">
+  <span class="section-badge">Deep Dive — Highest Interview Weight</span>
+  <div class="topic-head"><span class="topic-num">235</span><h2>Deleting Cloud Resources — Avoiding Unnecessary Costs</h2></div>
+  <div class="topic-video">Video: Deleting Cloud Resources - Avoiding Unnecessary Costs</div>
+
+  <p>A genuinely important, frequently-overlooked closing lesson: cloud resources <strong>bill continuously for as long as they exist</strong>, regardless of whether they're actually being used — an EB environment and an RDS instance left running after a learning exercise will keep generating charges indefinitely.</p>
+
+  <table>
+    <tr><th>Resource</th><th>What to Check Before Deleting</th></tr>
+    <tr><td>Elastic Beanstalk environment</td><td>Terminating the environment automatically tears down its EC2 instances, Auto Scaling Group, and Load Balancer together — but confirm this actually happened in the EC2 console afterward, since orphaned resources can sometimes survive an incomplete termination</td></tr>
+    <tr><td>RDS instance</td><td>By default, RDS <strong>takes a final snapshot</strong> on deletion unless explicitly told to skip it — an easily-missed setting that leaves a (billed, if past the free tier) snapshot lingering indefinitely; deliberately decide whether you want that final snapshot or not</td></tr>
+    <tr><td>Any associated Elastic IP addresses</td><td>AWS charges for an Elastic IP that is allocated but <em>not</em> currently attached to a running resource — a very easy-to-miss lingering cost specifically because it looks "free" if you don't know this rule</td></tr>
+    <tr><td>S3 buckets / CloudWatch log groups</td><td>Storage-based resources continue billing for their stored data even after the compute resources that created them are gone</td></tr>
+  </table>
+
+  <div class="box danger">
+    <div class="box-title">⚠ Set a Billing Alarm — The Single Best Piece of Practical Advice Here</div>
+    <p>Beyond manually remembering to delete resources, configuring an <strong>AWS Budgets billing alarm</strong> (a free feature) to email/notify if account spending crosses a small threshold (e.g., $5) is the practical safety net every learner and every real production account should have — catching a forgotten resource, a runaway Auto Scaling Group, or a genuine misconfiguration before it becomes a meaningful, surprising bill, rather than discovering it weeks later.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>Why would a real production team NOT simply delete and recreate an RDS instance to save costs when it's not actively needed (e.g., overnight)?</div>
+      <div class="qa-a"><p>Unlike compute (which can be trivially stopped and restarted, or scaled to zero via Auto Scaling for genuinely idle periods), a database holds <strong>stateful, valuable data</strong> — deleting and recreating it isn't a cost-neutral, reversible operation the way stopping a stateless EC2 instance is, since every deletion risks permanent data loss unless a careful backup/restore process is followed perfectly. For genuinely non-production, cost-sensitive environments (a demo/staging database used only during business hours), the more common practice is to <strong>stop</strong> the RDS instance (available for up to 7 consecutive days per stop, after which AWS auto-restarts it) rather than delete it — pausing compute billing while the underlying storage (and its data) persists safely, a meaningfully different and much safer operation than deletion.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- AWS FUNDAMENTALS EXTENDED -->
+<section class="topic" id="compute-landscape">
+  <span class="section-badge">Extended AWS Fundamentals — Frequently Asked in Interviews</span>
+  <div class="topic-head"><h2>AWS Compute Landscape — EC2 vs Elastic Beanstalk vs ECS/EKS vs Lambda</h2></div>
+  <p class="dim">Beyond the literal course videos: job postings expecting "AWS knowledge" from a Spring Boot developer are almost always testing whether a candidate can reason about this exact landscape and justify a choice — not just "have you used Elastic Beanstalk."</p>
+
+  <table>
+    <tr><th>Service</th><th>Abstraction Level</th><th>Best Fit</th></tr>
+    <tr><td><strong>EC2</strong></td><td>Raw virtual machines — you manage the OS, runtime, deployment, and scaling entirely yourself</td><td>Maximum control; teams with existing infrastructure automation, or highly custom needs</td></tr>
+    <tr><td><strong>Elastic Beanstalk</strong></td><td>PaaS — upload an artifact, AWS provisions and wires EC2/ALB/Auto Scaling automatically (this section's focus)</td><td>Small teams/individual developers wanting a fast, low-effort production deployment without deep infra expertise</td></tr>
+    <tr><td><strong>ECS (Elastic Container Service)</strong></td><td>Container orchestration — deploy Docker images (directly connecting to Section 4's Docker coverage) with AWS managing container placement/scaling, using either EC2 or the serverless Fargate launch type</td><td>Teams already containerizing their apps (as this course's Section 4 taught) wanting more control than EB but less operational overhead than raw Kubernetes</td></tr>
+    <tr><td><strong>EKS (Elastic Kubernetes Service)</strong></td><td>Managed Kubernetes — AWS runs the Kubernetes control plane; you still manage workload deployment via standard Kubernetes manifests</td><td>Teams standardized on Kubernetes (often for multi-cloud portability or complex orchestration needs) directly connecting to Section 12's Kubernetes-aware health-check discussion</td></tr>
+    <tr><td><strong>Lambda</strong></td><td>Serverless functions — no server management at all; code runs only in response to an event/request, billed per invocation</td><td>Event-driven, intermittent, or highly variable-traffic workloads; a poor fit for a persistent, stateful Spring Boot monolith with a long JVM startup time (though Spring Cloud Function/GraalVM native images can narrow this gap for specific use cases)</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 The One-Sentence Version, Worth Having Ready</div>
+    <p>"EC2 gives you a virtual machine and total control; Elastic Beanstalk automates the EC2/ALB/Auto-Scaling setup for a traditional app like ours; ECS/EKS are for container-based workloads at varying levels of orchestration control, building directly on the Docker skills from Section 4; Lambda is for event-driven, stateless functions rather than a persistent server process — a poor natural fit for a typical long-running Spring Boot application, though not impossible with the right tooling."</p>
+  </div>
+</section>
+
+<!-- Networking -->
+<section class="topic" id="networking">
+  <span class="section-badge">Extended AWS Fundamentals — Frequently Asked in Interviews</span>
+  <div class="topic-head"><h2>VPC, Security Groups & Subnets — The Networking Model Underneath Everything</h2></div>
+
+  <div class="diagram">                          VPC (Virtual Private Cloud)
+                    - your own isolated slice of AWS's network
++----------------------------------------------------------------------+
+|                                                                        |
+|   PUBLIC SUBNET                          PRIVATE SUBNET               |
+|  +-------------------+                 +-------------------+         |
+|  |  Application Load  |                 |  EC2 instances    |         |
+|  |  Balancer           |----------------&gt;|  (running your    |         |
+|  |  (internet-facing)   |  routes traffic |   Spring Boot JAR)|         |
+|  +-------------------+                 +--------+----------+         |
+|                                                    |                    |
+|                                                    v                    |
+|                                          +-------------------+         |
+|                                          |  RDS MySQL         |         |
+|                                          |  (topic 232 -      |         |
+|                                          |   PRIVATE, never    |         |
+|                                          |   internet-facing)  |         |
+|                                          +-------------------+         |
++----------------------------------------------------------------------+
+    Internet Gateway (only the PUBLIC subnet has a route to it)</div>
+
+  <table>
+    <tr><th>Concept</th><th>Role</th><th>Analogy to Something Already Covered</th></tr>
+    <tr><td><strong>VPC</strong></td><td>An isolated, private network within AWS that all your resources live inside</td><td>Conceptually similar to Docker's own network isolation (Section 4), one layer up</td></tr>
+    <tr><td><strong>Public Subnet</strong></td><td>Has a route to the internet (via an Internet Gateway) — where internet-facing resources like the ALB live</td><td>—</td></tr>
+    <tr><td><strong>Private Subnet</strong></td><td>No direct internet route — where the database and (often) the application servers themselves live, reachable only from within the VPC</td><td>Directly implements topic 232's "RDS should never be publicly accessible" principle at the infrastructure level</td></tr>
+    <tr><td><strong>Security Group</strong></td><td>A <em>stateful</em> virtual firewall attached to a specific resource (an EC2 instance, an RDS instance) — controls exactly what traffic is allowed in/out, by port, protocol, and source</td><td>Conceptually the cloud-infrastructure equivalent of Section 6's <code>authorizeHttpRequests</code> rules — a set of explicit allow rules, deny-by-default</td></tr>
+    <tr><td><strong>Network ACL (NACL)</strong></td><td>A <em>stateless</em> firewall operating at the subnet level (broader, coarser than a security group) — evaluated in addition to, not instead of, security groups</td><td>—</td></tr>
+  </table>
+
+  <div class="box warn">
+    <div class="box-title">⚠ The Precise, Frequently-Tested Security Group Rule for This Course's Architecture</div>
+    <p>The correct security group configuration for the RDS instance from topic 232 is: allow inbound traffic on port <strong>3306</strong> (MySQL) <em>only</em> from the security group attached to the Elastic Beanstalk EC2 instances — <strong>never</strong> from <code>0.0.0.0/0</code> (meaning "anywhere on the internet"). This is expressible in the AWS console/CLI as a security-group-to-security-group reference rather than an IP range, which is more robust than an IP-based rule since it automatically continues to work correctly even as EB's Auto Scaling Group adds or removes instances with different IP addresses over time.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>What's the practical difference between a Security Group and a Network ACL, and why do both exist?</div>
+      <div class="qa-a"><p><strong>Security Groups</strong> are <em>stateful</em> (a rule allowing inbound traffic on a port automatically allows the corresponding outbound response traffic, with no separate outbound rule needed) and apply at the individual <strong>instance</strong> level — the primary, fine-grained tool for controlling access to a specific resource, exactly as used for the RDS rule above. <strong>NACLs</strong> are <em>stateless</em> (inbound and outbound rules must both be explicitly defined, since nothing is automatically inferred) and apply at the <strong>subnet</strong> level, evaluated as an additional, broader layer before traffic even reaches a security group's rules. Both existing together provides defense-in-depth — a NACL can act as a coarse, subnet-wide safety net (e.g., explicitly blocking a known-malicious IP range at the subnet boundary) independent of and prior to whatever fine-grained rules individual security groups define, though in practice most teams rely primarily on security groups and leave NACLs at their permissive defaults unless there's a specific broader-boundary need.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- IAM -->
+<section class="topic" id="iam">
+  <span class="section-badge">Extended AWS Fundamentals — Frequently Asked in Interviews</span>
+  <div class="topic-head"><h2>IAM — Users, Roles & Policies</h2></div>
+
+  <p><strong>IAM (Identity and Access Management)</strong> is AWS's own authentication/authorization system — and the parallel to Section 6/9's Spring Security material is close enough to be genuinely useful for building intuition quickly.</p>
+
+  <table>
+    <tr><th>IAM Concept</th><th>Role</th><th>Spring Security Parallel</th></tr>
+    <tr><td><strong>IAM User</strong></td><td>A long-lived identity representing a specific person or application, with its own credentials (password, access keys)</td><td>Roughly analogous to a <code>User</code> entity (Section 7)</td></tr>
+    <tr><td><strong>IAM Policy</strong></td><td>A JSON document defining exactly what actions are allowed/denied on which AWS resources — explicit, deny-by-default</td><td>Analogous to a <code>GrantedAuthority</code> collection (Section 9) — a set of specific permissions</td></tr>
+    <tr><td><strong>IAM Role</strong></td><td>A set of permissions that can be <strong>assumed temporarily</strong> by a trusted entity (an EC2 instance, a Lambda function, another AWS account) — no long-lived credentials involved at all</td><td>No direct Spring Security equivalent — closer to a temporary, scoped JWT (Section 6) issued for a specific purpose and automatically expiring</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 The Single Most Important IAM Best Practice for a Backend Developer to Know</div>
+    <p><strong>An EC2 instance (or an Elastic Beanstalk environment) should be given an IAM Role, not hardcoded IAM User access keys</strong> — an <strong>Instance Profile</strong> attaches an IAM Role directly to the EC2 instance, letting the application code call other AWS services (S3, Secrets Manager) using temporary, automatically-rotated credentials that AWS manages entirely behind the scenes, with zero access keys ever appearing in application configuration or source code at all. This is the AWS-native analog of Section 11's entire "never hardcode secrets" externalized-configuration philosophy, applied specifically to AWS-to-AWS authentication rather than application-level secrets like a database password.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Why is an IAM Role considered significantly more secure than a hardcoded IAM User access key pair, beyond just "it's the recommended practice"?</div>
+      <div class="qa-a"><p>A hardcoded access key pair is a <strong>long-lived, static secret</strong> — if it leaks (accidentally committed to a public repo, exposed in a log, present in a compromised container image), it remains valid and exploitable until someone notices and manually rotates it, potentially a long exposure window. An IAM Role's credentials are <strong>automatically generated, short-lived, and continuously rotated</strong> by AWS's internal metadata service, and are scoped to a specific instance's lifetime — there is no static secret to ever leak in the first place, since the credentials aren't retrieved via any mechanism an attacker examining application code or config could directly discover; they're fetched dynamically from the instance's own metadata endpoint at runtime by the AWS SDK. This is a structurally stronger security posture, not merely a "best practice by convention" — directly paralleling why Section 6 preferred short-lived JWTs with a refresh mechanism over long-lived static tokens.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- Load Balancing & Scaling -->
+<section class="topic" id="load-balancing-scaling">
+  <span class="section-badge">Extended AWS Fundamentals — Frequently Asked in Interviews</span>
+  <div class="topic-head"><h2>Load Balancing & Auto Scaling</h2></div>
+
+  <table>
+    <tr><th>Concept</th><th>Explanation</th></tr>
+    <tr><td><strong>Application Load Balancer (ALB)</strong></td><td>Operates at Layer 7 (HTTP) — can route based on URL path/host header, terminate TLS/HTTPS, and perform the health checks discussed in topic 233's Q&A. The correct choice for a typical REST API like this course's job portal.</td></tr>
+    <tr><td><strong>Network Load Balancer (NLB)</strong></td><td>Operates at Layer 4 (TCP) — far higher raw throughput and lower latency, but no HTTP-aware routing/health-check capability. Used for extreme-performance or non-HTTP (raw TCP) workloads — not the typical choice for a Spring Boot REST API.</td></tr>
+    <tr><td><strong>Auto Scaling Group (ASG)</strong></td><td>Automatically adds/removes EC2 instances based on a defined scaling policy (e.g., target average CPU utilization, or request count per instance) — directly extends Section 6's "stateless JWT enables horizontal scaling" discussion into concrete, automated infrastructure that <em>acts</em> on that statelessness</td></tr>
+  </table>
+
+  <div class="box danger">
+    <div class="box-title">⚠ Auto Scaling Genuinely Requires the Statelessness Section 6 Argued For</div>
+    <p>This is worth stating explicitly as a direct, concrete payoff: an Auto Scaling Group can terminate any instance at any time (scaling down, or replacing an unhealthy one) and start fresh new instances at any time (scaling up) — an application relying on <strong>server-side session state</strong> (the architecture Section 7's CSRF topic built and explicitly warned doesn't scale horizontally) would silently lose active user sessions every time the ASG scales down an instance holding those sessions, or would need sticky-session load-balancer configuration as an awkward workaround. The stateless JWT architecture built across Sections 6–7 is precisely what makes Auto Scaling behave correctly and transparently — any request can be served by any instance, with zero session-affinity requirements at all.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>During a deployment (a new application version rolling out), how does the ALB avoid routing traffic to an instance that's mid-restart or not yet ready?</div>
+      <div class="qa-a"><p>The ALB continuously health-checks every registered instance (via the Actuator-backed health check from topic 233's Q&A) and only routes traffic to instances currently reporting healthy — an instance being replaced during a rolling deployment is automatically taken out of the routing pool the moment its health check starts failing (or before it's added to the pool at all, if using a "connection draining"/deregistration-delay configuration that waits for in-flight requests to complete before removing an old instance). This is the mechanism underneath Elastic Beanstalk's rolling deployment strategy, covered next.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- Secrets & Storage -->
+<section class="topic" id="secrets-storage">
+  <span class="section-badge">Extended AWS Fundamentals — Frequently Asked in Interviews</span>
+  <div class="topic-head"><h2>Secrets Manager, Parameter Store & S3</h2></div>
+
+  <table>
+    <tr><th>Service</th><th>Purpose</th><th>Connects To</th></tr>
+    <tr><td><strong>AWS Secrets Manager</strong></td><td>Purpose-built for storing sensitive credentials (DB passwords, API keys, Section 6's JWT signing secret) with automatic rotation support and fine-grained IAM-based access control</td><td>Section 11's "secrets must never live in source control" principle, now with a real managed service rather than just "an environment variable somewhere"</td></tr>
+    <tr><td><strong>AWS Systems Manager Parameter Store</strong></td><td>A more general-purpose configuration store — can hold plain (non-secret) config values for free, or encrypted "SecureString" values for a lower cost than Secrets Manager, without built-in automatic rotation</td><td>Section 11's <code>@ConfigurationProperties</code>/externalized-config discussion — a real backing store for exactly that kind of externalized, environment-specific configuration</td></tr>
+    <tr><td><strong>Amazon S3</strong></td><td>Durable, scalable object storage — the standard, correct place to store user-uploaded files (resumes, profile images) rather than the local application server's own disk</td><td>Directly extends Section 11's file-upload topic, which explicitly recommended "dedicated object storage (S3, GCS)" over storing uploads on the app server's own filesystem</td></tr>
+  </table>
+
+  <div class="box warn">
+    <div class="box-title">⚠ Why Local-Disk File Storage Breaks the Moment You Add a Second Instance</div>
+    <p>This is a very concrete, easy-to-miss consequence of horizontal scaling (this section's Auto Scaling discussion): if Section 11's resume/profile-image upload feature saved files to the EC2 instance's own local disk, a file uploaded while a request happened to land on Instance A would be <strong>completely invisible</strong> to a later request that the load balancer routes to Instance B — each instance has its own separate, non-shared disk. S3 solves this structurally: every instance in the Auto Scaling Group reads and writes to the exact same shared, durable object store, regardless of which specific instance handled any given request — making file storage genuinely stateless-compatible in the same way the JWT architecture made authentication stateless-compatible.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Design the complete, correct file-upload architecture for Section 11's resume-upload feature, now that it needs to run on a horizontally-scaled Elastic Beanstalk environment.</div>
+      <div class="qa-a"><p>The Spring Boot upload endpoint (Section 11's <code>MultipartFile</code> handling) receives the file, validates it (content-type/size, per Section 11's security warning), then uploads it directly to an <strong>S3 bucket</strong> via the AWS SDK — using an <strong>IAM Role</strong> attached to the EB EC2 instances (this section's IAM topic) rather than hardcoded AWS credentials, scoped via an IAM policy to only allow <code>PutObject</code>/<code>GetObject</code> on that specific bucket. The application stores only the resulting S3 object key/URL in the <code>UserProfile</code> entity's <code>resumeUrl</code> field (Section 11's schema) — the actual file bytes never touch the EC2 instance's own persistent disk at all beyond transient in-memory/temp handling during the upload request itself. This answer synthesizes Section 11's upload feature, this section's IAM and S3 material, and the Auto-Scaling-driven statelessness requirement into one complete, correct, production-appropriate design.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- Deployment Strategies -->
+<section class="topic" id="deployment-strategies">
+  <span class="section-badge">Extended AWS Fundamentals — Frequently Asked in Interviews</span>
+  <div class="topic-head"><h2>Deployment Strategies — Rolling, Blue/Green & Immutable</h2></div>
+
+  <table>
+    <tr><th>Strategy</th><th>How It Works</th><th>Trade-off</th></tr>
+    <tr><td><strong>All at once</strong></td><td>Every instance updated simultaneously</td><td>Fastest, but causes a full outage during the deploy window — never appropriate for a real production system</td></tr>
+    <tr><td><strong>Rolling</strong></td><td>Instances updated in small batches, one batch at a time, with the ALB routing only to still-healthy instances throughout</td><td>Zero downtime, but the old and new application versions run <strong>simultaneously</strong> for the duration of the rollout — requires the new version to be backward-compatible with whatever the old version expects (a real constraint on database schema changes, in particular)</td></tr>
+    <tr><td><strong>Immutable</strong></td><td>An entirely new, full-size set of instances is provisioned with the new version, health-checked completely, and only then does traffic cut over — the old instances are then terminated</td><td>Safest (a bad deploy never touches any traffic at all until proven healthy), but temporarily doubles resource usage/cost during the deployment window</td></tr>
+    <tr><td><strong>Blue/Green</strong></td><td>Two complete, independent environments ("blue" = current live, "green" = new version) exist simultaneously; traffic is cut over (often instantly, via DNS or load-balancer target swap) once "green" is fully validated</td><td>Enables instant, trivial rollback (just cut traffic back to "blue"), but requires maintaining two full environments, and needs careful handling of any shared stateful resources (like the RDS database) between them</td></tr>
+  </table>
+
+  <div class="box tip">
+    <div class="box-title">💡 Why "Rolling" Deployments Directly Constrain How You Change a Database Schema</div>
+    <p>This is a genuinely important, often-overlooked connection back to Section 4's Flyway/Liquibase discussion: during a <strong>rolling</strong> deployment, old and new application code run against the <em>same</em> database <strong>simultaneously</strong> for some period — meaning a schema migration that renames or removes a column the old version still expects would break every still-running old-version instance mid-rollout. The safe pattern is <strong>backward-compatible, multi-step migrations</strong>: add a new column alongside the old one (deploy 1), migrate the application to write to both and read from the new one (deploy 2), then finally drop the old column only once every instance is confirmed running the new version (deploy 3) — a direct, practical consequence of choosing rolling deployments that's easy to overlook until it causes a real production incident.</p>
+  </div>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Elastic Beanstalk supports several of these deployment policies out of the box. How would you choose between "Rolling with additional batch" and "Immutable" for a production job-portal API?</div>
+      <div class="qa-a"><p>"Rolling with additional batch" (EB briefly provisions one extra batch of new-version instances before starting to remove old ones, avoiding the reduced-capacity dip a plain rolling deployment causes mid-rollout) is a reasonable middle ground for most workloads — solid deployment safety without doubling the entire fleet's cost for the deployment window. "Immutable" is the stronger, more conservative choice specifically when a deployment carries genuine risk of being fundamentally broken (a major dependency upgrade, a significant refactor) — its complete test-before-cutover behavior means a catastrophically bad deploy never receives any real user traffic at all, at the cost of temporarily doubling compute spend during the rollout. For routine, low-risk deploys of a well-tested change, the extra cost/complexity of full immutable deployments is usually unnecessary; reserving it for higher-risk releases is the pragmatic, commonly-cited approach.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- MASTER Q&A -->
+<section class="topic" id="interview-master">
+  <span class="section-badge">🎯 Rapid-Fire Round</span>
+  <div class="topic-head"><h2>Master Interview Q&A Bank — Section 13</h2></div>
+  <p class="dim">These questions probe whether a candidate's AWS knowledge is genuinely operational — the kind that shows up in real "tell me about a system you deployed" conversations, not just service-name recall.</p>
+
+  <div class="qa-wrap">
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Walk through the complete, secure architecture for deploying this course's job-portal application to AWS production, from a request hitting the internet to the database — naming every component and why it's there.</div>
+      <div class="qa-a"><p>A request hits a Route 53 DNS record, resolving to an <strong>Application Load Balancer</strong> in a public subnet (this section's Networking topic), which terminates HTTPS and performs Actuator-backed health checks (Section 12) against instances in an <strong>Auto Scaling Group</strong> (this section's Scaling topic) running in a private subnet — each instance an EC2 host running the Spring Boot JAR (Section 1) under an <strong>Elastic Beanstalk</strong>-managed environment (topic 233), authenticating requests via stateless JWTs (Sections 6–7) that require zero server-side session state, making horizontal scaling correct by construction. Each instance carries an <strong>IAM Role</strong> (this section's IAM topic), not hardcoded credentials, granting scoped access to <strong>Secrets Manager</strong> (for the DB password and JWT signing key) and <strong>S3</strong> (for resume/profile-image uploads, per this section's Secrets & Storage Q&A). Database writes go to <strong>RDS MySQL</strong> (topic 232) in its own private subnet, reachable only via a security-group-to-security-group rule from the application instances, with Multi-AZ enabled for failover and automated backups for durability. Deploys use a <strong>rolling</strong> strategy (this section's Deployment Strategies topic) with schema migrations designed to be backward-compatible across the rollout window, per Flyway/Liquibase practices from Section 4. This is the complete, synthesized answer this entire course — and especially this final section — was building toward.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>Your Elastic Beanstalk application intermittently returns 502 Bad Gateway errors under moderate load, though CPU utilization looks normal. Walk through your diagnostic process using this section's concepts.</div>
+      <div class="qa-a"><p>A 502 from the ALB typically means the ALB couldn't get a valid response from a backend instance in time — normal CPU rules out simple compute exhaustion, so the investigation shifts elsewhere. Check: (1) the ALB's target-group health-check settings — an overly aggressive health-check timeout/interval combined with a slow Actuator health check (e.g., a health indicator that itself makes a slow downstream call, Section 12's health-check design discussion) could be flapping instances in and out of the healthy pool; (2) whether database connection pool exhaustion is occurring — check RDS's <code>DatabaseConnections</code> CloudWatch metric against the configured HikariCP pool size, since a connection-pool bottleneck (possibly from Section 10's "long-running transaction holding a connection open during a slow external call" pitfall) would cause request threads to queue and time out well before CPU utilization rises meaningfully; (3) whether the Auto Scaling Group's scaling policy is too conservative, only reacting after load has already caused timeouts rather than scaling proactively ahead of demand; (4) trace data (Section 12) for the affected time window, to see exactly which span within a slow/failed request is the actual bottleneck rather than guessing. This kind of multi-hypothesis, evidence-driven diagnostic process — rather than jumping to a single guessed fix — is exactly what a strong production-operations answer looks like.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-core">Core</span>A teammate suggests storing the RDS database password directly as a hardcoded Elastic Beanstalk environment property (typed into the console) rather than referencing Secrets Manager. What's the actual risk, given it's still "externalized" per Section 11's principles?</div>
+      <div class="qa-a"><p>It's a genuine improvement over hardcoding in source code, but still falls short of best practice in a few concrete ways: (1) EB environment properties are visible in plaintext to anyone with read access to the EB console/API for that environment — broader exposure than Secrets Manager's fine-grained IAM-policy-gated access; (2) there's no automatic rotation — a compromised password requires a manual, coordinated update across every place it's referenced; (3) it isn't centrally audited or versioned the way Secrets Manager tracks secret access and changes. The practical middle ground many teams use is exactly what topic 233 demonstrated — reference the secret's Secrets Manager ARN from within the EB environment property value itself (<code>{{resolve:secretsmanager:...}}</code>), getting environment-variable-based externalization's simplicity while the actual secret value lives in, and is protected by, the purpose-built secrets-management service.</p></div>
+    </div>
+    <div class="qa-item">
+      <div class="qa-q"><span class="qa-tag tag-faang">FAANG</span>How would this entire architecture need to change if the team decided to migrate from Elastic Beanstalk to ECS/Fargate?</div>
+      <div class="qa-a"><p>The application itself needs almost no code changes — this is the direct payoff of Section 4's Docker containerization work: the same Spring Boot JAR, packaged into a Docker image via a Dockerfile, becomes the deployable artifact instead of a raw JAR uploaded to EB. Infrastructure concepts largely carry over conceptually (an ALB, an Auto-Scaling-equivalent via ECS Service's desired-count and scaling policies, IAM Roles now attached via ECS Task Roles instead of an EC2 Instance Profile) but are configured through ECS task definitions and service definitions rather than EB's more opinionated, automatic wiring. The most significant genuine difference is operational control: ECS/Fargate requires explicitly defining container resource limits (CPU/memory), health-check commands, and networking mode, where EB previously handled sensible defaults automatically — trading EB's convenience for finer-grained control, exactly the trade-off named in topic 233's Q&A about when teams outgrow EB's defaults. Externalized configuration (environment variables, Secrets Manager references) and the stateless-JWT/S3-file-storage architecture remain entirely unchanged, since neither depends on which specific compute platform is running the container.</p></div>
+    </div>
+  </div>
+
+  <div class="box info" style="margin-top:28px;">
+    <div class="box-title">ℹ Course Complete</div>
+    <p>This closes out the full Spring Boot & microservices interview-prep series — from IoC fundamentals through REST APIs, JPA, Spring Security, JWT, AOP, transactions, caching, observability, and finally deploying the whole thing to AWS. If you revisit any earlier section's notes, every cross-reference woven through this final section should now read as a genuinely connected, end-to-end system rather than a list of separate topics.</p>
+  </div>
+
+  <footer>GrowthScript Engineering — Spring Boot Interview Bible · Section 13 of 13 (Final)</footer>
+</section>
+
+</main>
+</div>
+
+<script>
+function toggleTheme(){
+  const body = document.body;
+  const cur = body.getAttribute('data-theme');
+  body.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+}
+function showTab(btn, id){
+  const block = btn.closest('.code-block');
+  block.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  block.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  block.querySelector('#'+id).classList.add('active');
+}
+document.querySelectorAll('.qa-q').forEach(q=>{
+  q.addEventListener('click', ()=> q.parentElement.classList.toggle('open'));
+});
+</script>
+</body>
+</html>
