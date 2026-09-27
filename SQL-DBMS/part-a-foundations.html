@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Part A · Foundations — DBMS &amp; SQL Interview Bible</title>
+<script>try{var t=localStorage.getItem("bible-theme");if(t==="light"||t==="dark"){document.documentElement.setAttribute("data-theme",t);}}catch(e){}</script>
+<style>
+:root{
+  --paper:#FAFAFA; --paper-2:#F1F1F3; --ink:#1B1B1F; --ink-soft:#6B6B72;
+  --accent:#3E63DD; --accent-2:#B3261E; --rule:#E4E4E8;
+  --code-bg:#F4F4F6; --code-text:#1B1B1F;
+  --good:#1E7A4C; --bad:#B3261E; color-scheme:light dark;
+}
+:root:not([data-theme="light"]){ @media (prefers-color-scheme: dark){
+  --paper:#121214; --paper-2:#1C1C1F; --ink:#EDEDEF; --ink-soft:#9A9AA2;
+  --accent:#8FABFF; --accent-2:#FF8983; --rule:#2B2B2F; --code-bg:#1A1A1D; --code-text:#EDEDEF;
+  --good:#4ADE80; --bad:#FF6B6B;
+}}
+:root[data-theme="dark"]{
+  --paper:#121214; --paper-2:#1C1C1F; --ink:#EDEDEF; --ink-soft:#9A9AA2;
+  --accent:#8FABFF; --accent-2:#FF8983; --rule:#2B2B2F; --code-bg:#1A1A1D; --code-text:#EDEDEF;
+  --good:#4ADE80; --bad:#FF6B6B;
+}
+*{box-sizing:border-box;}
+html{scroll-padding-top:1rem;}
+body{margin:0; background:var(--paper); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-size:17px; line-height:1.65;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);}
+h1,h2,h3,h4{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700; color:var(--ink); font-weight:600; line-height:1.2; letter-spacing:-0.01em;}
+a{color:var(--accent);}
+code,pre,kbd{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;}
+pre{background:var(--code-bg); color:var(--code-text); padding:1rem 1.1rem; border-radius:6px; overflow-x:auto; font-size:0.88rem; line-height:1.55;}
+code{background:var(--paper-2); padding:0.12em 0.4em; border-radius:4px; font-size:0.88em;}
+pre code{background:none; padding:0;}
+table{border-collapse:collapse; width:100%; font-size:0.95rem; margin:1rem 0;}
+th,td{border:1px solid var(--rule); padding:0.5rem 0.7rem; text-align:left; vertical-align:top;}
+th{background:var(--paper-2); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700;}
+blockquote{margin:1.2rem 0; padding:0.2rem 1.2rem; border-left:3px solid var(--accent-2); color:var(--ink-soft); font-style:italic;}
+hr{border:none; border-top:1px solid var(--rule); margin:2.5rem 0;}
+.key{color:var(--accent-2); font-weight:600;}
+.tag{display:inline-block; font-size:0.72rem; letter-spacing:0.03em; color:var(--ink-soft); border:1px solid var(--rule); border-radius:20px; padding:0.15rem 0.7rem; margin:0 0.3rem 0.3rem 0;}
+.callout{background:var(--paper-2); border-radius:8px; padding:1rem 1.3rem; margin:1.3rem 0;}
+.callout.warn{border-left:3px solid var(--bad);}
+.callout.tip{border-left:3px solid var(--good);}
+.wrap{max-width:1100px; margin:0 auto; padding:0 1.4rem;}
+.layout{display:grid; grid-template-columns:210px minmax(0,720px); gap:3rem; align-items:start;}
+@media (max-width:880px){.layout{grid-template-columns:1fr;} .rail{position:static !important; order:2;}}
+.rail{position:sticky; top:1.2rem; font-size:0.85rem;}
+.rail h4{margin:0 0 0.6rem; font-size:0.75rem; letter-spacing:0.04em; color:var(--ink-soft); text-transform:uppercase; font-family:inherit; font-weight:600;}
+.rail a{display:block; color:var(--ink-soft); text-decoration:none; padding:0.3rem 0; border-left:2px solid transparent;}
+.rail a:hover{color:var(--accent); border-left-color:var(--accent); padding-left:0.5rem;}
+header.top{border-bottom:1px solid var(--rule); padding:2.6rem 0 1.6rem;}
+.eyebrow{color:var(--ink-soft); font-size:0.85rem; margin-bottom:0.4rem;}
+h1.title{font-size:2.5rem; margin:0 0 0.5rem;}
+.dek{color:var(--ink-soft); font-size:1.05rem; max-width:60ch; margin:0;}
+main.wrap{padding-top:2.4rem; padding-bottom:5rem;}
+article{max-width:720px;}
+.erd{border:1px solid var(--rule); border-radius:8px; padding:1.4rem; margin:1.3rem 0; background:var(--paper-2); font-family:"IBM Plex Mono",monospace; font-size:0.85rem; line-height:1.5; white-space:pre; overflow-x:auto;}
+footer{border-top:1px solid var(--rule); padding:2rem 0; text-align:center; color:var(--ink-soft); font-size:0.85rem;}
+footer a{color:var(--ink-soft);}
+details.qa{border:1px solid var(--rule); border-radius:8px; padding:0.9rem 1.2rem; margin:0.7rem 0; background:var(--paper-2);}
+details.qa summary{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700; cursor:pointer; list-style:none;}
+details.qa summary::-webkit-details-marker{display:none;}
+details.qa summary::before{content:"Q ·  "; color:var(--accent-2);}
+details.qa[open] summary{margin-bottom:0.6rem;}
+details.qa p{margin:0.3rem 0 0;}
+
+.theme-toggle{position:fixed; top:1rem; right:1.2rem; z-index:80; width:2.3rem; height:2.3rem; border-radius:50%;
+  border:1px solid var(--rule); background:var(--paper-2); color:var(--ink); display:flex; align-items:center;
+  justify-content:center; cursor:pointer; font-size:1.05rem; line-height:1; padding:0;
+  box-shadow:0 1px 3px rgba(0,0,0,0.08); transition:border-color .15s, transform .1s;
+  top:calc(1rem + env(safe-area-inset-top,0px));}
+.theme-toggle:hover{border-color:var(--accent); transform:translateY(-1px);}
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" onclick="__toggleBibleTheme()">◑</button>
+<header class="top"><div class="wrap">
+  <div class="eyebrow">DBMS &amp; SQL Interview Bible · Part A of 8</div>
+  <h1 class="title">Foundations</h1>
+  <p class="dek">Core relational concepts, ER modeling, and keys &amp; constraints — the vocabulary every later part builds on. Examples use PostgreSQL.</p>
+</div></header>
+
+<main class="wrap">
+<div class="layout">
+<nav class="rail">
+  <h4>In this part</h4>
+  <a href="#m1">1. DBMS core concepts</a>
+  <a href="#m2">2. ER modeling &amp; schema design</a>
+  <a href="#m3">3. Keys &amp; constraints</a>
+  <a href="#faq">Popular interview Q&amp;A</a>
+  <h4 style="margin-top:1.6rem;">Whole bible</h4>
+  <a href="part-b-normalization.html">B · Normalization</a>
+  <a href="part-c-sql-mastery.html">C · SQL Mastery</a>
+  <a href="part-d-transactions.html">D · Transactions</a>
+  <a href="part-e-indexing-performance.html">E · Indexing &amp; Perf</a>
+  <a href="part-f-distributed-data.html">F · Distributed Data</a>
+  <a href="part-g-security-ops.html">G · Security &amp; Ops</a>
+  <a href="part-h-interview-sim.html">H · Interview Sim</a>
+  <a href="part-i-top20-sql.html">I · Top 20 SQL Qs</a>
+</nav>
+
+<article>
+
+<section id="m1">
+<h2>1 · DBMS core concepts</h2>
+
+<p>A <strong>DBMS</strong> is software that lets you create, query, update and administer data while enforcing rules about its shape and integrity. An <strong>RDBMS</strong> (PostgreSQL, MySQL, Oracle, SQL Server) is a DBMS built around the relational model: data lives in tables (relations), rows are tuples, and relationships are expressed through shared key values rather than physical pointers.</p>
+
+<p>The interview-relevant question is rarely "what is a DBMS" — it's <span class="key">why relational, and when not</span>. Be ready to argue both directions.</p>
+
+<table>
+<tr><th></th><th>Relational (SQL)</th><th>Non-relational (NoSQL)</th></tr>
+<tr><td>Schema</td><td>Fixed, enforced at write time</td><td>Flexible / schema-on-read</td></tr>
+<tr><td>Consistency model</td><td>Strong, ACID by default</td><td>Often tunable — eventual to strong</td></tr>
+<tr><td>Relationships</td><td>First-class (joins, FKs)</td><td>Denormalized / embedded, app-managed</td></tr>
+<tr><td>Scale pattern</td><td>Vertical first, horizontal via sharding</td><td>Horizontal by design (partition-native)</td></tr>
+<tr><td>Best fit</td><td>Transactional systems, financial data, anything needing multi-row invariants</td><td>High write throughput, flexible/evolving schema, huge single-key lookups</td></tr>
+</table>
+
+<div class="callout tip"><strong>Interview framing that scores well:</strong> "I'd reach for Postgres when the data has strong relationships and I need transactional guarantees — orders, ledgers, inventory. I'd reach for a document or wide-column store when access patterns are simple key lookups at massive scale, like a session store or activity feed, and I'm willing to denormalize." This is almost verbatim what gets asked in the DB-choice portion of "Design X" system-design rounds.</div>
+
+<p><strong>CAP theorem</strong> gets name-dropped constantly but is usually mis-explained. It only applies <em>during a network partition</em>: you must choose between Consistency (every read sees the latest write) and Availability (every request gets a response). Outside of a partition, you can have both. A single-node Postgres instance is CA in practice — the tradeoff becomes real once you replicate across nodes.</p>
+</section>
+
+<hr>
+
+<section id="m2">
+<h2>2 · ER modeling &amp; schema design</h2>
+
+<p>An <strong>Entity-Relationship diagram</strong> is the design step before tables exist. Interviewers use it to see whether you can translate a fuzzy business description into a clean structure before you touch SQL.</p>
+
+<p><strong>Vocabulary you must use precisely:</strong></p>
+<ul>
+<li><span class="key">Entity</span> — a thing with independent existence (Student, Order, Book).</li>
+<li><span class="key">Weak entity</span> — cannot be uniquely identified without its owning entity (an OrderLineItem only makes sense tied to an Order; its key is a composite of the owner's key + a discriminator).</li>
+<li><span class="key">Attribute</span> — simple, composite, derived, or multi-valued (multi-valued attributes signal you need a separate table, not a comma-separated column).</li>
+<li><span class="key">Cardinality</span> — 1:1, 1:N, M:N. M:N always resolves into a junction/associative table with two FKs.</li>
+</ul>
+
+<p><strong>Worked example — "Design a schema for a library system"</strong> (a real recurring prompt):</p>
+
+<div class="erd">Book (1) ────── (N) BookCopy ────── (N) Loan ────── (N) ────── (1) Member
+   book_id PK        copy_id PK          loan_id PK              member_id PK
+   title             book_id FK          copy_id FK
+   isbn              status             member_id FK
+                                          checkout_date
+                                          due_date
+                                          return_date (nullable)
+
+Book ── (N) ── BookAuthor ── (N) ── Author      &lt;-- resolves the M:N
+   book_id FK                book_id
+                             author_id FK ─── Author.author_id PK</div>
+
+<p>Notice the reasoning, which is what's actually being graded: a <code>Book</code> (the title, "Dune") is distinct from a <code>BookCopy</code> (a specific physical copy that can be checked out) — collapsing these is the single most common mistake candidates make, and it's exactly the kind of subtlety that separates a 1:1-thinking SDE1 answer from an SDE2 one. <code>Loan</code> is a genuine entity (not just a join table) because it carries its own attributes (dates) that don't belong to either Member or BookCopy.</p>
+
+<div class="callout warn"><strong>Common trap:</strong> modeling a many-to-many relationship as two foreign keys jammed into one of the two tables instead of a junction table. If you find yourself repeating rows to represent multiple associations, you're missing a table.</div>
+
+<p>When asked to "design a schema" cold, narrate this order out loud — it reads as structured thinking rather than guessing:</p>
+<ol>
+<li>List the core entities (nouns in the prompt).</li>
+<li>For each pair of entities, state the cardinality and whether the relationship itself needs attributes.</li>
+<li>Resolve every M:N into a junction table.</li>
+<li>Assign primary keys (prefer surrogate keys for anything mutable — see Module 3).</li>
+<li>Only then write <code>CREATE TABLE</code>.</li>
+</ol>
+</section>
+
+<hr>
+
+<section id="m3">
+<h2>3 · Keys &amp; constraints</h2>
+
+<p>Constraints are the database's way of refusing to store nonsense, regardless of what your application code does or forgets to do. Interviewers probe this because ORM-shaped developers sometimes think validation belongs only in the app layer.</p>
+
+<table>
+<tr><th>Key type</th><th>Definition</th><th>Notes</th></tr>
+<tr><td>Primary key (PK)</td><td>Uniquely identifies a row; implies NOT NULL + UNIQUE</td><td>Exactly one per table. Prefer a surrogate (auto-increment / UUID) over a natural key that might legitimately change (email, SSN).</td></tr>
+<tr><td>Candidate key</td><td>Any column set that <em>could</em> serve as PK</td><td>The one you don't pick becomes a...</td></tr>
+<tr><td>Unique key / alternate key</td><td>Enforces uniqueness, allows NULLs</td><td>e.g. <code>email</code> when the surrogate <code>id</code> is the PK.</td></tr>
+<tr><td>Foreign key (FK)</td><td>References a PK/unique key in another table</td><td>Enforces referential integrity — you cannot insert an order for a customer_id that doesn't exist.</td></tr>
+<tr><td>Composite key</td><td>PK made of &gt;1 column</td><td>Common in junction tables: <code>(book_id, author_id)</code>.</td></tr>
+<tr><td>Super key</td><td>Any superset of a candidate key that's still unique</td><td>Mostly a normalization-theory term (see Part B, BCNF).</td></tr>
+</table>
+
+<p><strong>Constraint types beyond keys:</strong></p>
+<pre><code>CREATE TABLE loan (
+  loan_id       BIGSERIAL PRIMARY KEY,
+  copy_id       BIGINT NOT NULL REFERENCES book_copy(copy_id),
+  member_id     BIGINT NOT NULL REFERENCES member(member_id),
+  checkout_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  due_date      DATE NOT NULL,
+  return_date   DATE,
+  CHECK (due_date > checkout_date),
+  CHECK (return_date IS NULL OR return_date >= checkout_date)
+);</code></pre>
+
+<ul>
+<li><span class="key">NOT NULL</span> — domain integrity; a due date must exist.</li>
+<li><span class="key">CHECK</span> — arbitrary boolean invariant on a row (or, in Postgres, across columns).</li>
+<li><span class="key">UNIQUE</span> — no two rows share a value (or tuple of values).</li>
+<li><span class="key">FOREIGN KEY ... ON DELETE</span> — decide the behavior explicitly: <code>CASCADE</code> (delete children too), <code>RESTRICT</code>/<code>NO ACTION</code> (block the delete), <code>SET NULL</code> (orphan gracefully). Interviewers like asking which you'd pick for a specific relationship — e.g. deleting a <code>Member</code> who still has an open <code>Loan</code> should be <code>RESTRICT</code>, not <code>CASCADE</code>, because silently deleting loan history is a data-integrity bug waiting to happen.</li>
+</ul>
+
+<div class="callout"><strong>A strong interview answer, condensed:</strong> "Entity integrity is enforced by the primary key, referential integrity by foreign keys, and domain integrity by CHECK/NOT NULL/data types. I push as many of these into the schema as possible — application-level validation can be bypassed by a bad migration, a second service, or a manual psql session; a CHECK constraint can't."</div>
+
+<p><strong>NULL semantics</strong> deserve their own paragraph because they trip people up in both DBMS theory and SQL practice: NULL means "unknown," not zero or empty string. This is why <code>NULL = NULL</code> evaluates to NULL (not true), why you need <code>IS NULL</code> instead of <code>= NULL</code>, and why a NULL in a UNIQUE column doesn't collide with another NULL (per SQL standard — Postgres follows this).</p>
+</section>
+
+<hr>
+
+<section id="faq">
+<h2>Popular interview questions — Foundations</h2>
+<p>Asked almost verbatim across Amazon, Google, Uber and Flipkart-style loops. Try answering out loud before opening each one.</p>
+
+<details class="qa"><summary>When would you choose a relational database over a NoSQL store, concretely?</summary>
+<p>When the data has real relationships that must stay consistent across multiple rows/tables — orders touching inventory and payments — and you need multi-row transactional guarantees. Pick NoSQL when the access pattern is simple key-based lookups at very high write throughput and the schema will keep evolving (activity feeds, session stores, product catalogs with wildly varying attributes).</p></details>
+
+<details class="qa"><summary>Explain CAP theorem without hand-waving.</summary>
+<p>CAP only bites during a network partition between nodes. You then choose Consistency (every node returns the latest write, at the cost of refusing some requests) or Availability (every node answers, possibly with stale data). Outside a partition you can have both — a single-node Postgres is not "sacrificing" anything; CAP is irrelevant until you replicate across a network boundary.</p></details>
+
+<details class="qa"><summary>Weak entity vs strong entity — give a concrete example.</summary>
+<p>A strong entity has its own primary key and independent existence (Book). A weak entity has no independent identity — it's identified only via its owner's key plus a discriminator (an OrderLineItem is meaningless without its Order; its key is <code>(order_id, line_number)</code>).</p></details>
+
+<details class="qa"><summary>How do you model a many-to-many relationship?</summary>
+<p>Introduce a junction (associative) table with a foreign key to each side, and a composite primary key of both foreign keys (or a surrogate key plus a unique constraint on the pair). If the relationship itself has attributes — like a Loan having checkout/due dates between Member and BookCopy — that table is a genuine entity, not just a join table.</p></details>
+
+<details class="qa"><summary>Primary key vs unique key — what's the actual difference?</summary>
+<p>Both enforce uniqueness. A primary key additionally forbids NULLs and there can only be one per table (it's the canonical identity). A table can have several unique keys/constraints, and unique columns (other than the PK) may allow a NULL, per the SQL standard.</p></details>
+
+<details class="qa"><summary>Candidate key vs super key vs primary key?</summary>
+<p>A super key is any column set that uniquely identifies a row (possibly with redundant extra columns). A candidate key is a <em>minimal</em> super key — remove any column and uniqueness breaks. The primary key is the one candidate key you choose to be the table's official identity; the rest become alternate/unique keys.</p></details>
+
+<details class="qa"><summary>What does <code>ON DELETE CASCADE</code> do, and when should you avoid it?</summary>
+<p>It automatically deletes child rows when the referenced parent row is deleted. Avoid it whenever the child rows are historical or audit-relevant — e.g. deleting a Member should not silently cascade-delete their Loan history; use <code>RESTRICT</code> there and force an explicit, intentional cleanup path instead.</p></details>
+
+<details class="qa"><summary>Why doesn't <code>NULL = NULL</code> evaluate to <code>TRUE</code>?</summary>
+<p>NULL represents "unknown," not a value. Comparing two unknowns can't logically resolve to true or false, so SQL returns NULL (which is treated as not-true in a WHERE clause). This is why you must use <code>IS NULL</code> / <code>IS NOT NULL</code> rather than <code>=</code>.</p></details>
+
+</section>
+
+</article>
+</div>
+</main>
+
+<footer>DBMS &amp; SQL Interview Bible · Part A: Foundations · continued in Part B: Normalization</footer>
+
+<script>
+function __currentIsDark(){
+  var t = document.documentElement.getAttribute("data-theme");
+  if(t) return t === "dark";
+  try{ return window.matchMedia("(prefers-color-scheme: dark)").matches; }catch(e){ return false; }
+}
+function __updateToggleIcon(){
+  var btn = document.getElementById("themeToggle");
+  if(!btn) return;
+  btn.textContent = __currentIsDark() ? "☀" : "☽";
+}
+function __toggleBibleTheme(){
+  try{
+    var next = __currentIsDark() ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    localStorage.setItem("bible-theme", next);
+  }catch(e){}
+  __updateToggleIcon();
+}
+document.addEventListener("DOMContentLoaded", __updateToggleIcon);
+</script>
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Part G · Security &amp; Ops — DBMS &amp; SQL Interview Bible</title>
+<script>try{var t=localStorage.getItem("bible-theme");if(t==="light"||t==="dark"){document.documentElement.setAttribute("data-theme",t);}}catch(e){}</script>
+<style>
+:root{
+  --paper:#FAFAFA; --paper-2:#F1F1F3; --ink:#1B1B1F; --ink-soft:#6B6B72;
+  --accent:#3E63DD; --accent-2:#B3261E; --rule:#E4E4E8;
+  --code-bg:#F4F4F6; --code-text:#1B1B1F;
+  --good:#1E7A4C; --bad:#B3261E; color-scheme:light dark;
+}
+:root:not([data-theme="light"]){ @media (prefers-color-scheme: dark){
+  --paper:#121214; --paper-2:#1C1C1F; --ink:#EDEDEF; --ink-soft:#9A9AA2;
+  --accent:#8FABFF; --accent-2:#FF8983; --rule:#2B2B2F; --code-bg:#1A1A1D; --code-text:#EDEDEF;
+  --good:#4ADE80; --bad:#FF6B6B;
+}}
+:root[data-theme="dark"]{
+  --paper:#121214; --paper-2:#1C1C1F; --ink:#EDEDEF; --ink-soft:#9A9AA2;
+  --accent:#8FABFF; --accent-2:#FF8983; --rule:#2B2B2F; --code-bg:#1A1A1D; --code-text:#EDEDEF;
+  --good:#4ADE80; --bad:#FF6B6B;
+}
+*{box-sizing:border-box;}
+html{scroll-padding-top:1rem;}
+body{margin:0; background:var(--paper); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-size:17px; line-height:1.65;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);}
+h1,h2,h3,h4{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700; color:var(--ink); font-weight:600; line-height:1.2; letter-spacing:-0.01em;}
+a{color:var(--accent);}
+code,pre,kbd{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;}
+pre{background:var(--code-bg); color:var(--code-text); padding:1rem 1.1rem; border-radius:6px; overflow-x:auto; font-size:0.86rem; line-height:1.55;}
+code{background:var(--paper-2); padding:0.12em 0.4em; border-radius:4px; font-size:0.88em;}
+pre code{background:none; padding:0;}
+table{border-collapse:collapse; width:100%; font-size:0.94rem; margin:1rem 0;}
+th,td{border:1px solid var(--rule); padding:0.5rem 0.7rem; text-align:left; vertical-align:top;}
+th{background:var(--paper-2); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700;}
+blockquote{margin:1.2rem 0; padding:0.2rem 1.2rem; border-left:3px solid var(--accent-2); color:var(--ink-soft); font-style:italic;}
+hr{border:none; border-top:1px solid var(--rule); margin:2.5rem 0;}
+.key{color:var(--accent-2); font-weight:600;}
+.callout{background:var(--paper-2); border-radius:8px; padding:1rem 1.3rem; margin:1.3rem 0;}
+.callout.warn{border-left:3px solid var(--bad);}
+.callout.tip{border-left:3px solid var(--good);}
+.wrap{max-width:1100px; margin:0 auto; padding:0 1.4rem;}
+.layout{display:grid; grid-template-columns:210px minmax(0,720px); gap:3rem; align-items:start;}
+@media (max-width:880px){.layout{grid-template-columns:1fr;} .rail{position:static !important; order:2;}}
+.rail{position:sticky; top:1.2rem; font-size:0.85rem;}
+.rail h4{margin:0 0 0.6rem; font-size:0.75rem; letter-spacing:0.04em; color:var(--ink-soft); text-transform:uppercase; font-family:inherit; font-weight:600;}
+.rail a{display:block; color:var(--ink-soft); text-decoration:none; padding:0.28rem 0; border-left:2px solid transparent;}
+.rail a:hover{color:var(--accent); border-left-color:var(--accent); padding-left:0.5rem;}
+header.top{border-bottom:1px solid var(--rule); padding:2.6rem 0 1.6rem;}
+.eyebrow{color:var(--ink-soft); font-size:0.85rem; margin-bottom:0.4rem;}
+h1.title{font-size:2.5rem; margin:0 0 0.5rem;}
+.dek{color:var(--ink-soft); font-size:1.05rem; max-width:60ch; margin:0;}
+main.wrap{padding-top:2.4rem; padding-bottom:5rem;}
+article{max-width:720px;}
+footer{border-top:1px solid var(--rule); padding:2rem 0; text-align:center; color:var(--ink-soft); font-size:0.85rem;}
+footer a{color:var(--ink-soft);}
+details.qa{border:1px solid var(--rule); border-radius:8px; padding:0.9rem 1.2rem; margin:0.7rem 0; background:var(--paper-2);}
+details.qa summary{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700; cursor:pointer; list-style:none;}
+details.qa summary::-webkit-details-marker{display:none;}
+details.qa summary::before{content:"Q ·  "; color:var(--accent-2);}
+details.qa[open] summary{margin-bottom:0.6rem;}
+details.qa p{margin:0.3rem 0 0;}
+
+.theme-toggle{position:fixed; top:1rem; right:1.2rem; z-index:80; width:2.3rem; height:2.3rem; border-radius:50%;
+  border:1px solid var(--rule); background:var(--paper-2); color:var(--ink); display:flex; align-items:center;
+  justify-content:center; cursor:pointer; font-size:1.05rem; line-height:1; padding:0;
+  box-shadow:0 1px 3px rgba(0,0,0,0.08); transition:border-color .15s, transform .1s;
+  top:calc(1rem + env(safe-area-inset-top,0px));}
+.theme-toggle:hover{border-color:var(--accent); transform:translateY(-1px);}
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" onclick="__toggleBibleTheme()">◑</button>
+<header class="top"><div class="wrap">
+  <div class="eyebrow">DBMS &amp; SQL Interview Bible · Part G of 8</div>
+  <h1 class="title">Security &amp; Ops</h1>
+  <p class="dek">The part senior interviewers use to check whether you've actually operated a database in production, not just queried one: injection defense, access control, safe migrations, and the failure patterns everyone eventually hits.</p>
+</div></header>
+
+<main class="wrap">
+<div class="layout">
+<nav class="rail">
+  <h4>In this part</h4>
+  <a href="#m25">25. SQL injection &amp; access control</a>
+  <a href="#m26">26. Zero-downtime migrations &amp; failure patterns</a>
+  <a href="#faq">Popular interview Q&amp;A</a>
+  <h4 style="margin-top:1.6rem;">Whole bible</h4>
+  <a href="part-a-foundations.html">A · Foundations</a>
+  <a href="part-b-normalization.html">B · Normalization</a>
+  <a href="part-c-sql-mastery.html">C · SQL Mastery</a>
+  <a href="part-d-transactions.html">D · Transactions</a>
+  <a href="part-e-indexing-performance.html">E · Indexing &amp; Perf</a>
+  <a href="part-f-distributed-data.html">F · Distributed Data</a>
+  <a href="part-h-interview-sim.html">H · Interview Sim</a>
+  <a href="part-i-top20-sql.html">I · Top 20 SQL Qs (next)</a>
+</nav>
+
+<article>
+
+<section id="m25">
+<h2>25 · SQL injection &amp; access control</h2>
+
+<p><strong>SQL injection</strong> happens when untrusted input is concatenated directly into a query string, letting an attacker change the query's structure, not just its data:</p>
+<pre><code>-- Vulnerable: string concatenation
+String query = "SELECT * FROM users WHERE username = '" + input + "'";
+-- input = "' OR '1'='1"  turns the query into:
+-- SELECT * FROM users WHERE username = '' OR '1'='1'   -- returns every row</code></pre>
+
+<p><strong>The fix is always parameterized queries / prepared statements</strong> — input is sent to the database separately from the query structure, so it's bound as a literal value and can never be interpreted as SQL:</p>
+<pre><code>-- Safe: parameterized
+PreparedStatement stmt = conn.prepareStatement("SELECT * FROM users WHERE username = ?");
+stmt.setString(1, input);</code></pre>
+
+<div class="callout warn"><strong>Interview trap:</strong> "escaping quotes" (manually replacing <code>'</code> with <code>''</code>) is a legacy, error-prone mitigation, not the answer to give first — there are always encoding edge cases it misses. Lead with parameterized queries/ORMs that parameterize by default; mention escaping only as the historical alternative.</div>
+
+<p><strong>Defense in depth</strong> beyond parameterization: least-privilege database accounts (the application's DB user shouldn't have DROP/ALTER rights it never needs), input validation as a second layer (not a replacement), and never building dynamic SQL by interpolating identifiers (table/column names) from user input at all if avoidable — parameterization doesn't cover identifiers, only values.</p>
+
+<p><strong>Access control (DCL — Data Control Language):</strong></p>
+<pre><code>CREATE ROLE app_readonly;
+GRANT SELECT ON orders, customer TO app_readonly;
+
+CREATE ROLE app_writer;
+GRANT SELECT, INSERT, UPDATE ON orders TO app_writer;
+REVOKE DELETE ON orders FROM app_writer;   -- explicit even if never granted, for clarity in review</code></pre>
+
+<p>Standard pattern: define roles by function (read-only reporting user, application writer, migration/admin user) rather than granting broad permissions to a single shared credential — this limits blast radius if any one credential leaks, and makes an audit ("what can this service actually do") answerable at a glance.</p>
+</section>
+
+<hr>
+
+<section id="m26">
+<h2>26 · Zero-downtime migrations &amp; production failure patterns</h2>
+
+<p><strong>The core problem:</strong> a naive schema change (add a NOT NULL column, rename a column, change a type) can lock the table for the duration of a full table rewrite, or briefly break every running application instance that hasn't deployed the matching code yet. The standard technique is the <strong>expand-contract pattern</strong>, splitting one "migration" into several small, individually safe deploys:</p>
+
+<ol>
+<li><strong>Expand</strong> — add the new column/table as nullable (or with a cheap default), without removing or renaming anything old. Old code keeps working untouched.</li>
+<li><strong>Migrate/backfill</strong> — populate the new column in batches (never one giant UPDATE locking the whole table), and start dual-writing from the application (write to both old and new) once code supports it.</li>
+<li><strong>Cut over</strong> — deploy application code that reads from the new column/table, once backfill is confirmed complete and dual-writes are flowing.</li>
+<li><strong>Contract</strong> — once nothing reads the old column, drop it in a separate, later deploy.</li>
+</ol>
+
+<div class="callout warn"><strong>Concretely, for "add a NOT NULL column with a default" on a large table:</strong> older Postgres versions had to rewrite every row to backfill the default, taking an exclusive lock for the duration. Modern Postgres (11+) can add a column with a constant default without a full rewrite, but a NOT NULL constraint still requires validating existing rows — for a genuinely huge table, add the column nullable, backfill in batches, then add the NOT NULL constraint with <code>NOT VALID</code> followed by a separate, non-blocking <code>VALIDATE CONSTRAINT</code> pass.</div>
+
+<p><strong>Common production failure patterns</strong> worth naming proactively in an interview:</p>
+<ul>
+<li><strong>Connection pool exhaustion</strong> — every connection to Postgres is a full OS process with real memory overhead; an application opening unbounded connections (or a leaked-connection bug) starves the database. Fix with an external pooler (PgBouncer) and bounded pool sizes in the app.</li>
+<li><strong>Long-running transaction blocking VACUUM</strong> — an old open transaction prevents MVCC from reclaiming dead row versions system-wide, not just in its own table, causing gradual bloat and slowdown across the database.</li>
+<li><strong>Missing index discovered only in production</strong> — a query that was fast on a small staging dataset does a sequential scan at production scale; caught via slow-query logs or <code>pg_stat_statements</code>, fixed via <code>CREATE INDEX CONCURRENTLY</code> so the index build doesn't lock writes.</li>
+<li><strong>Replication lag spikes</strong> under write bursts, causing stale reads on followers (Part F) — often surfaces as "it worked when I tested it, then broke under load."</li>
+<li><strong>Thundering herd on cache expiry</strong> — a hot key's cache entry expires and every concurrent request falls through to the database at once; mitigated with jittered TTLs or a lock/single-flight pattern around the recompute.</li>
+</ul>
+</section>
+
+<hr>
+
+<section id="faq">
+<h2>Popular interview questions — Security &amp; Ops</h2>
+
+<details class="qa"><summary>How exactly does a parameterized query prevent SQL injection?</summary>
+<p>The query structure is sent to the database separately from the input values, and compiled/planned before the values are bound. The database therefore treats the input strictly as a literal value, never as part of the SQL syntax — there's no string concatenation step for an attacker to exploit, regardless of what characters the input contains.</p></details>
+
+<details class="qa"><summary>Why is "escaping quotes" not considered a sufficient defense?</summary>
+<p>It's a manual, error-prone blocklist approach — different encodings, character sets, or context (e.g. inside a LIKE pattern, or a dynamically built identifier) all have their own escaping rules, and missing one reopens the hole. Parameterized queries eliminate the entire class of bug rather than trying to sanitize around it.</p></details>
+
+<details class="qa"><summary>Why use separate database roles instead of one shared application credential?</summary>
+<p>Least privilege — if a credential leaks or a bug executes unexpected SQL, the blast radius is limited to whatever that specific role can do. A reporting/read-only service should never hold DELETE or DDL rights it doesn't need.</p></details>
+
+<details class="qa"><summary>What's the expand-contract pattern and why is it necessary?</summary>
+<p>It splits a risky schema change into safe incremental steps — add new structure without touching old (expand), backfill and dual-write, cut application code over once verified, then remove the old structure later (contract). It's necessary because a rolling deployment means old and new application code run simultaneously against the same database for a period, and a naive one-shot migration can break whichever version is running at the wrong moment, or lock the table outright.</p></details>
+
+<details class="qa"><summary>How would you add an index to a large production table without blocking writes?</summary>
+<p><code>CREATE INDEX CONCURRENTLY</code> — it builds the index without holding the exclusive lock a normal CREATE INDEX takes, at the cost of taking longer and needing a retry if it fails partway (it can leave behind an invalid index that must be dropped and retried).</p></details>
+
+<details class="qa"><summary>What causes connection pool exhaustion, and how do you prevent it?</summary>
+<p>Each database connection carries real server-side overhead (a full backend process in Postgres), so an application opening too many connections, or leaking connections it forgets to close, can starve the database of capacity. Prevent it with a bounded connection pool in the application and/or an external pooler like PgBouncer sitting between the app and the database.</p></details>
+
+</section>
+
+</article>
+</div>
+</main>
+
+<footer>DBMS &amp; SQL Interview Bible · Part G: Security &amp; Ops · continued in Part H: Interview Simulation</footer>
+
+<script>
+function __currentIsDark(){
+  var t = document.documentElement.getAttribute("data-theme");
+  if(t) return t === "dark";
+  try{ return window.matchMedia("(prefers-color-scheme: dark)").matches; }catch(e){ return false; }
+}
+function __updateToggleIcon(){
+  var btn = document.getElementById("themeToggle");
+  if(!btn) return;
+  btn.textContent = __currentIsDark() ? "☀" : "☽";
+}
+function __toggleBibleTheme(){
+  try{
+    var next = __currentIsDark() ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    localStorage.setItem("bible-theme", next);
+  }catch(e){}
+  __updateToggleIcon();
+}
+document.addEventListener("DOMContentLoaded", __updateToggleIcon);
+</script>
+</body>
+</html>

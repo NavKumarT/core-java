@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Part E · Storage, Indexing &amp; Performance — DBMS &amp; SQL Interview Bible</title>
+<script>try{var t=localStorage.getItem("bible-theme");if(t==="light"||t==="dark"){document.documentElement.setAttribute("data-theme",t);}}catch(e){}</script>
+<style>
+:root{
+  --paper:#FAFAFA; --paper-2:#F1F1F3; --ink:#1B1B1F; --ink-soft:#6B6B72;
+  --accent:#3E63DD; --accent-2:#B3261E; --rule:#E4E4E8;
+  --code-bg:#F4F4F6; --code-text:#1B1B1F;
+  --good:#1E7A4C; --bad:#B3261E; color-scheme:light dark;
+}
+:root:not([data-theme="light"]){ @media (prefers-color-scheme: dark){
+  --paper:#121214; --paper-2:#1C1C1F; --ink:#EDEDEF; --ink-soft:#9A9AA2;
+  --accent:#8FABFF; --accent-2:#FF8983; --rule:#2B2B2F; --code-bg:#1A1A1D; --code-text:#EDEDEF;
+  --good:#4ADE80; --bad:#FF6B6B;
+}}
+:root[data-theme="dark"]{
+  --paper:#121214; --paper-2:#1C1C1F; --ink:#EDEDEF; --ink-soft:#9A9AA2;
+  --accent:#8FABFF; --accent-2:#FF8983; --rule:#2B2B2F; --code-bg:#1A1A1D; --code-text:#EDEDEF;
+  --good:#4ADE80; --bad:#FF6B6B;
+}
+*{box-sizing:border-box;}
+html{scroll-padding-top:1rem;}
+body{margin:0; background:var(--paper); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-size:17px; line-height:1.65;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);}
+h1,h2,h3,h4{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700; color:var(--ink); font-weight:600; line-height:1.2; letter-spacing:-0.01em;}
+a{color:var(--accent);}
+code,pre,kbd{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;}
+pre{background:var(--code-bg); color:var(--code-text); padding:1rem 1.1rem; border-radius:6px; overflow-x:auto; font-size:0.86rem; line-height:1.55;}
+code{background:var(--paper-2); padding:0.12em 0.4em; border-radius:4px; font-size:0.88em;}
+pre code{background:none; padding:0;}
+table{border-collapse:collapse; width:100%; font-size:0.94rem; margin:1rem 0;}
+th,td{border:1px solid var(--rule); padding:0.5rem 0.7rem; text-align:left; vertical-align:top;}
+th{background:var(--paper-2); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700;}
+blockquote{margin:1.2rem 0; padding:0.2rem 1.2rem; border-left:3px solid var(--accent-2); color:var(--ink-soft); font-style:italic;}
+hr{border:none; border-top:1px solid var(--rule); margin:2.5rem 0;}
+.key{color:var(--accent-2); font-weight:600;}
+.callout{background:var(--paper-2); border-radius:8px; padding:1rem 1.3rem; margin:1.3rem 0;}
+.callout.warn{border-left:3px solid var(--bad);}
+.callout.tip{border-left:3px solid var(--good);}
+.wrap{max-width:1100px; margin:0 auto; padding:0 1.4rem;}
+.layout{display:grid; grid-template-columns:210px minmax(0,720px); gap:3rem; align-items:start;}
+@media (max-width:880px){.layout{grid-template-columns:1fr;} .rail{position:static !important; order:2;}}
+.rail{position:sticky; top:1.2rem; font-size:0.85rem;}
+.rail h4{margin:0 0 0.6rem; font-size:0.75rem; letter-spacing:0.04em; color:var(--ink-soft); text-transform:uppercase; font-family:inherit; font-weight:600;}
+.rail a{display:block; color:var(--ink-soft); text-decoration:none; padding:0.28rem 0; border-left:2px solid transparent;}
+.rail a:hover{color:var(--accent); border-left-color:var(--accent); padding-left:0.5rem;}
+header.top{border-bottom:1px solid var(--rule); padding:2.6rem 0 1.6rem;}
+.eyebrow{color:var(--ink-soft); font-size:0.85rem; margin-bottom:0.4rem;}
+h1.title{font-size:2.5rem; margin:0 0 0.5rem;}
+.dek{color:var(--ink-soft); font-size:1.05rem; max-width:60ch; margin:0;}
+main.wrap{padding-top:2.4rem; padding-bottom:5rem;}
+article{max-width:720px;}
+footer{border-top:1px solid var(--rule); padding:2rem 0; text-align:center; color:var(--ink-soft); font-size:0.85rem;}
+footer a{color:var(--ink-soft);}
+details.qa{border:1px solid var(--rule); border-radius:8px; padding:0.9rem 1.2rem; margin:0.7rem 0; background:var(--paper-2);}
+details.qa summary{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700; cursor:pointer; list-style:none;}
+details.qa summary::-webkit-details-marker{display:none;}
+details.qa summary::before{content:"Q ·  "; color:var(--accent-2);}
+details.qa[open] summary{margin-bottom:0.6rem;}
+details.qa p{margin:0.3rem 0 0;}
+
+.theme-toggle{position:fixed; top:1rem; right:1.2rem; z-index:80; width:2.3rem; height:2.3rem; border-radius:50%;
+  border:1px solid var(--rule); background:var(--paper-2); color:var(--ink); display:flex; align-items:center;
+  justify-content:center; cursor:pointer; font-size:1.05rem; line-height:1; padding:0;
+  box-shadow:0 1px 3px rgba(0,0,0,0.08); transition:border-color .15s, transform .1s;
+  top:calc(1rem + env(safe-area-inset-top,0px));}
+.theme-toggle:hover{border-color:var(--accent); transform:translateY(-1px);}
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" onclick="__toggleBibleTheme()">◑</button>
+<header class="top"><div class="wrap">
+  <div class="eyebrow">DBMS &amp; SQL Interview Bible · Part E of 8</div>
+  <h1 class="title">Storage, Indexing &amp; Performance</h1>
+  <p class="dek">How to pick the right index, read an EXPLAIN plan without guessing, and enough storage-engine internals to explain <em>why</em> — plus views, materialized views, procedures and triggers, done right.</p>
+</div></header>
+
+<main class="wrap">
+<div class="layout">
+<nav class="rail">
+  <h4>In this part</h4>
+  <a href="#m17">17. Indexing deep dive</a>
+  <a href="#m18">18. Reading EXPLAIN &amp; the optimizer</a>
+  <a href="#m19">19. Storage engine internals</a>
+  <a href="#m20">20. Views, procs, triggers, cursors</a>
+  <a href="#faq">Popular interview Q&amp;A</a>
+  <h4 style="margin-top:1.6rem;">Whole bible</h4>
+  <a href="part-a-foundations.html">A · Foundations</a>
+  <a href="part-b-normalization.html">B · Normalization</a>
+  <a href="part-c-sql-mastery.html">C · SQL Mastery</a>
+  <a href="part-d-transactions.html">D · Transactions</a>
+  <a href="part-f-distributed-data.html">F · Distributed Data (next)</a>
+  <a href="part-g-security-ops.html">G · Security &amp; Ops</a>
+  <a href="part-h-interview-sim.html">H · Interview Sim</a>
+  <a href="part-i-top20-sql.html">I · Top 20 SQL Qs</a>
+</nav>
+
+<article>
+
+<section id="m17">
+<h2>17 · Indexing deep dive</h2>
+
+<p>An index is a separate, ordered data structure that lets the engine find rows without scanning the whole table — the tradeoff is always <strong>faster reads, slower/heavier writes, extra storage.</strong></p>
+
+<table>
+<tr><th>Index type</th><th>Structure</th><th>Good for</th><th>Bad for</th></tr>
+<tr><td><span class="key">B-tree</span> (default, almost everywhere)</td><td>Balanced tree, sorted keys, O(log n) lookup</td><td>Equality, range queries (<code>&gt;</code>, <code>&lt;</code>, <code>BETWEEN</code>), ORDER BY, prefix matches (<code>LIKE 'abc%'</code>)</td><td>Nothing much — it's the safe general default</td></tr>
+<tr><td><span class="key">Hash</span></td><td>Hash table of key → row pointer</td><td>Pure equality lookups only</td><td>Any range query, ORDER BY — no notion of "nearby" keys</td></tr>
+<tr><td><span class="key">Bitmap</span></td><td>A bitmap per distinct value, marking which rows have it</td><td>Low-cardinality columns (status: active/inactive/pending) combined with AND/OR across several such columns</td><td>High-cardinality columns (user_id) — bitmap per value becomes as large as the table</td></tr>
+<tr><td><span class="key">GIN / GiST</span> (Postgres-specific)</td><td>Inverted index / generalized search tree</td><td>Full-text search, array containment, JSONB, geospatial</td><td>Not a general substitute for B-tree on scalar columns</td></tr>
+</table>
+
+<p><strong>Composite indexes</strong> — an index on <code>(a, b, c)</code> is usable for filters on <code>a</code> alone, <code>a AND b</code>, or <code>a AND b AND c</code> (leftmost-prefix rule), but generally <em>not</em> usable for a filter on <code>b</code> alone. Column order should follow: equality columns first, then the range/sort column last.</p>
+
+<p><strong>Covering index</strong> — an index that includes every column the query needs, so the engine never touches the base table (heap) at all ("index-only scan"):</p>
+<pre><code>CREATE INDEX idx_orders_covering ON orders (customer_id) INCLUDE (order_date, total);
+-- SELECT order_date, total FROM orders WHERE customer_id = 42;  -- never reads the heap</code></pre>
+
+<div class="callout warn"><strong>When an index hurts:</strong> every index must be updated on every INSERT/UPDATE/DELETE that touches an indexed column — a table with 8 indexes pays that cost 8 times per write. High-write, low-read tables (an events/audit log) often intentionally carry few or no secondary indexes. Also watch for indexes that never get used because the planner decides a sequential scan is cheaper anyway — small tables, or filters matching a large fraction of rows, often make an index scan slower than a seq scan due to random I/O.</div>
+</section>
+
+<hr>
+
+<section id="m18">
+<h2>18 · Reading EXPLAIN &amp; the optimizer</h2>
+
+<p>The optimizer is cost-based: it estimates the cost of several candidate plans (using table statistics — row counts, value distribution) and picks the cheapest one. <code>EXPLAIN ANALYZE</code> actually runs the query and shows real vs estimated numbers — always prefer it over plain <code>EXPLAIN</code> when debugging, since estimates can be badly wrong on stale statistics.</p>
+
+<pre><code>EXPLAIN ANALYZE
+SELECT * FROM orders WHERE customer_id = 42 ORDER BY order_date DESC LIMIT 10;
+
+-- Limit  (cost=0.42..8.89 rows=10 width=64) (actual time=0.03..0.05 rows=10 loops=1)
+--   ->  Index Scan Backward using idx_orders_customer_date on orders
+--         (cost=0.42..423.10 rows=500 width=64) (actual time=0.03..0.04 rows=10 loops=1)
+--         Index Cond: (customer_id = 42)</code></pre>
+
+<table>
+<tr><th>Plan node</th><th>Meaning</th></tr>
+<tr><td><span class="key">Seq Scan</span></td><td>Reads the entire table. Fine for small tables or when most rows match; a red flag on a large table with a selective filter and no matching index.</td></tr>
+<tr><td><span class="key">Index Scan</span></td><td>Uses an index to find matching rows, then fetches each from the heap.</td></tr>
+<tr><td><span class="key">Index Only Scan</span></td><td>Satisfies the query entirely from the index (covering index) — no heap access.</td></tr>
+<tr><td><span class="key">Bitmap Heap Scan / Bitmap Index Scan</span></td><td>Builds an in-memory bitmap of matching row locations first, then fetches them in physical order — used when many (but not almost-all) rows match.</td></tr>
+<tr><td><span class="key">Nested Loop</span></td><td>For each outer row, scan/probe the inner side. Cheap when the outer side is small.</td></tr>
+<tr><td><span class="key">Hash Join</span></td><td>Build a hash table from the smaller side, probe it with the larger side. Good for large, unsorted equi-joins.</td></tr>
+<tr><td><span class="key">Merge Join</span></td><td>Both sides pre-sorted (or sorted by the planner), then merged in one pass. Good when both sides are already ordered by the join key.</td></tr>
+</table>
+
+<div class="callout tip"><strong>The debugging habit worth stating out loud in an interview:</strong> "If <code>actual rows</code> is wildly different from the planner's <code>rows</code> estimate, statistics are stale — I'd run <code>ANALYZE</code> on the table before trusting the plan further. If a query is slow and I see a Seq Scan on a large table with a highly selective WHERE clause, that's my first candidate for a missing index."</div>
+</section>
+
+<hr>
+
+<section id="m19">
+<h2>19 · Storage engine internals (practical depth)</h2>
+
+<p>You don't need to reimplement Postgres to answer this well — you need the mental model of how a write actually becomes durable and how reads avoid re-reading disk every time.</p>
+
+<ul>
+<li><strong>Pages</strong> — the unit of I/O (typically 8KB in Postgres). Rows are packed into pages; the engine always reads/writes whole pages, never individual rows, from disk.</li>
+<li><strong>Buffer pool / shared buffers</strong> — an in-memory cache of recently used pages. A read that hits the buffer pool skips disk entirely; this is why "working set fits in RAM" is such a common performance heuristic.</li>
+<li><strong>Write-Ahead Log (WAL)</strong> — before a change is applied to the actual data pages, it's appended to a sequential log file. COMMIT only returns success once the WAL record is flushed to durable storage — sequential log writes are far cheaper than random writes to data pages, which is why this design is faster <em>and</em> crash-safe: on restart, the engine replays the WAL to reconstruct any changes that hadn't made it to the data pages yet.</li>
+<li><strong>MVCC row versions &amp; VACUUM</strong> — Postgres never overwrites a row in place on UPDATE; it writes a new row version and marks the old one dead. This is what makes non-blocking MVCC reads possible (Part D), but dead versions accumulate and must be reclaimed — that's <code>VACUUM</code>'s job; a table under heavy UPDATE/DELETE churn that isn't vacuumed enough will bloat.</li>
+</ul>
+
+<div class="callout"><strong>One sentence that ties it together:</strong> "A write goes: WAL record appended and flushed (durability), then the actual data page is updated in the buffer pool and written back to disk later (lazily, via checkpoints) — separating 'durable' from 'applied to the data file' is exactly what makes crash recovery possible."</div>
+</section>
+
+<hr>
+
+<section id="m20">
+<h2>20 · Views, materialized views, procedures, triggers, cursors</h2>
+
+<table>
+<tr><th>Object</th><th>What it is</th><th>Interview trap</th></tr>
+<tr><td><span class="key">View</span></td><td>A saved query, no separate storage — re-executed against live data every time it's queried.</td><td>People sometimes assume a view is a performance optimization. It isn't — it's a naming/security convenience. It can even be slower if it wraps an expensive query used repeatedly.</td></tr>
+<tr><td><span class="key">Materialized view</span></td><td>A view whose result <em>is</em> physically stored, refreshed on a schedule or on demand (<code>REFRESH MATERIALIZED VIEW</code>).</td><td>Data can be stale between refreshes — you're trading freshness for read speed. Know whether your use case (a nightly analytics dashboard) can tolerate that or not (a live balance).</td></tr>
+<tr><td><span class="key">Stored procedure / function</span></td><td>Precompiled logic stored and executed inside the database.</td><td>Great for reducing network round-trips and centralizing business rules that must never be bypassed; the tradeoff is business logic split across the app layer and the DB layer, harder to version-control/test/deploy uniformly, and a form of vendor lock-in.</td></tr>
+<tr><td><span class="key">Trigger</span></td><td>A function that fires automatically on INSERT/UPDATE/DELETE.</td><td>Useful for invariants that must never be skipped (audit logging, denormalized counter maintenance), but overuse makes the system's actual behavior invisible from application code — a classic "spooky action at a distance" complaint from teams that inherit a trigger-heavy schema.</td></tr>
+<tr><td><span class="key">Cursor</span></td><td>A handle for iterating a result set row-by-row inside procedural code.</td><td>Row-by-row processing is almost always slower than a set-based query — reach for a cursor only when you genuinely can't express the logic as one query (e.g., calling an external API per row inside a procedure).</td></tr>
+</table>
+
+<div class="callout tip"><strong>A strong, differentiated answer on "view vs materialized view":</strong> "I'd use a view purely for readability/security — hiding a complex join behind a simple name, or restricting which columns a role can see. I'd only reach for a materialized view once I've measured that the underlying query is genuinely expensive and re-run often, and I'm willing to accept a defined staleness window — it's a deliberate caching decision, not a default."</div>
+</section>
+
+<hr>
+
+<section id="faq">
+<h2>Popular interview questions — Storage, Indexing &amp; Performance</h2>
+
+<details class="qa"><summary>When would an index actually make a query slower, or not get used at all?</summary>
+<p>Indexes add write overhead on every INSERT/UPDATE/DELETE touching indexed columns, so a write-heavy, rarely-queried table can be net-slower with more indexes. Even when it exists, the planner may skip an index if the filter matches a large fraction of the table — random-access index lookups can cost more than one sequential scan in that case.</p></details>
+
+<details class="qa"><summary>What's the leftmost-prefix rule for composite indexes?</summary>
+<p>A composite index on (a, b, c) can serve queries filtering on a, on (a,b), or on (a,b,c), but not on b or c alone — the engine can only use the index by matching from its leftmost column inward.</p></details>
+
+<details class="qa"><summary>What is a covering index / index-only scan?</summary>
+<p>An index that includes every column a query needs (via the key columns or an INCLUDE clause), so the engine can answer the query from the index alone without touching the underlying table (heap) at all — the fastest possible read path.</p></details>
+
+<details class="qa"><summary>What does EXPLAIN ANALYZE give you that plain EXPLAIN doesn't?</summary>
+<p>Plain EXPLAIN shows the planner's cost <em>estimates</em> without running the query. EXPLAIN ANALYZE actually executes it and reports real elapsed time and real row counts alongside the estimates — letting you spot cases where stale statistics caused the planner to pick a bad plan.</p></details>
+
+<details class="qa"><summary>Hash join vs nested loop vs merge join — how does the optimizer choose?</summary>
+<p>Based on estimated cost given table sizes and existing sort order: nested loop wins when one side is small; hash join wins for large, unsorted equi-joins (build a hash table on the smaller side); merge join wins when both sides are already sorted on the join key, avoiding an extra sort step.</p></details>
+
+<details class="qa"><summary>Why does Postgres need VACUUM?</summary>
+<p>Because MVCC never updates a row in place — an UPDATE writes a new row version and marks the old one dead rather than overwriting it, so old versions accumulate. VACUUM reclaims that dead space; without it, a heavily updated table bloats and both storage and scan performance degrade.</p></details>
+
+<details class="qa"><summary>Is a view a performance optimization?</summary>
+<p>No — a regular view is just a saved query, re-executed against live data every time. It's a naming/security abstraction, not a cache. A materialized view is the one that actually stores results and can improve read performance, at the cost of staleness between refreshes.</p></details>
+
+</section>
+
+</article>
+</div>
+</main>
+
+<footer>DBMS &amp; SQL Interview Bible · Part E: Storage, Indexing &amp; Performance · continued in Part F: Distributed Data</footer>
+
+<script>
+function __currentIsDark(){
+  var t = document.documentElement.getAttribute("data-theme");
+  if(t) return t === "dark";
+  try{ return window.matchMedia("(prefers-color-scheme: dark)").matches; }catch(e){ return false; }
+}
+function __updateToggleIcon(){
+  var btn = document.getElementById("themeToggle");
+  if(!btn) return;
+  btn.textContent = __currentIsDark() ? "☀" : "☽";
+}
+function __toggleBibleTheme(){
+  try{
+    var next = __currentIsDark() ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    localStorage.setItem("bible-theme", next);
+  }catch(e){}
+  __updateToggleIcon();
+}
+document.addEventListener("DOMContentLoaded", __updateToggleIcon);
+</script>
+</body>
+</html>

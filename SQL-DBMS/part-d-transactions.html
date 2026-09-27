@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Part D · Transactions &amp; Concurrency — DBMS &amp; SQL Interview Bible</title>
+<script>try{var t=localStorage.getItem("bible-theme");if(t==="light"||t==="dark"){document.documentElement.setAttribute("data-theme",t);}}catch(e){}</script>
+<style>
+:root{
+  --paper:#FAFAFA; --paper-2:#F1F1F3; --ink:#1B1B1F; --ink-soft:#6B6B72;
+  --accent:#3E63DD; --accent-2:#B3261E; --rule:#E4E4E8;
+  --code-bg:#F4F4F6; --code-text:#1B1B1F;
+  --good:#1E7A4C; --bad:#B3261E; color-scheme:light dark;
+}
+:root:not([data-theme="light"]){ @media (prefers-color-scheme: dark){
+  --paper:#121214; --paper-2:#1C1C1F; --ink:#EDEDEF; --ink-soft:#9A9AA2;
+  --accent:#8FABFF; --accent-2:#FF8983; --rule:#2B2B2F; --code-bg:#1A1A1D; --code-text:#EDEDEF;
+  --good:#4ADE80; --bad:#FF6B6B;
+}}
+:root[data-theme="dark"]{
+  --paper:#121214; --paper-2:#1C1C1F; --ink:#EDEDEF; --ink-soft:#9A9AA2;
+  --accent:#8FABFF; --accent-2:#FF8983; --rule:#2B2B2F; --code-bg:#1A1A1D; --code-text:#EDEDEF;
+  --good:#4ADE80; --bad:#FF6B6B;
+}
+*{box-sizing:border-box;}
+html{scroll-padding-top:1rem;}
+body{margin:0; background:var(--paper); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-size:17px; line-height:1.65;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);}
+h1,h2,h3,h4{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700; color:var(--ink); font-weight:600; line-height:1.2; letter-spacing:-0.01em;}
+a{color:var(--accent);}
+code,pre,kbd{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;}
+pre{background:var(--code-bg); color:var(--code-text); padding:1rem 1.1rem; border-radius:6px; overflow-x:auto; font-size:0.86rem; line-height:1.55;}
+code{background:var(--paper-2); padding:0.12em 0.4em; border-radius:4px; font-size:0.88em;}
+pre code{background:none; padding:0;}
+table{border-collapse:collapse; width:100%; font-size:0.94rem; margin:1rem 0;}
+th,td{border:1px solid var(--rule); padding:0.5rem 0.7rem; text-align:left; vertical-align:top;}
+th{background:var(--paper-2); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700;}
+blockquote{margin:1.2rem 0; padding:0.2rem 1.2rem; border-left:3px solid var(--accent-2); color:var(--ink-soft); font-style:italic;}
+hr{border:none; border-top:1px solid var(--rule); margin:2.5rem 0;}
+.key{color:var(--accent-2); font-weight:600;}
+.callout{background:var(--paper-2); border-radius:8px; padding:1rem 1.3rem; margin:1.3rem 0;}
+.callout.warn{border-left:3px solid var(--bad);}
+.callout.tip{border-left:3px solid var(--good);}
+.wrap{max-width:1100px; margin:0 auto; padding:0 1.4rem;}
+.layout{display:grid; grid-template-columns:210px minmax(0,720px); gap:3rem; align-items:start;}
+@media (max-width:880px){.layout{grid-template-columns:1fr;} .rail{position:static !important; order:2;}}
+.rail{position:sticky; top:1.2rem; font-size:0.85rem;}
+.rail h4{margin:0 0 0.6rem; font-size:0.75rem; letter-spacing:0.04em; color:var(--ink-soft); text-transform:uppercase; font-family:inherit; font-weight:600;}
+.rail a{display:block; color:var(--ink-soft); text-decoration:none; padding:0.28rem 0; border-left:2px solid transparent;}
+.rail a:hover{color:var(--accent); border-left-color:var(--accent); padding-left:0.5rem;}
+header.top{border-bottom:1px solid var(--rule); padding:2.6rem 0 1.6rem;}
+.eyebrow{color:var(--ink-soft); font-size:0.85rem; margin-bottom:0.4rem;}
+h1.title{font-size:2.5rem; margin:0 0 0.5rem;}
+.dek{color:var(--ink-soft); font-size:1.05rem; max-width:60ch; margin:0;}
+main.wrap{padding-top:2.4rem; padding-bottom:5rem;}
+article{max-width:720px;}
+footer{border-top:1px solid var(--rule); padding:2rem 0; text-align:center; color:var(--ink-soft); font-size:0.85rem;}
+footer a{color:var(--ink-soft);}
+details.qa{border:1px solid var(--rule); border-radius:8px; padding:0.9rem 1.2rem; margin:0.7rem 0; background:var(--paper-2);}
+details.qa summary{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700; cursor:pointer; list-style:none;}
+details.qa summary::-webkit-details-marker{display:none;}
+details.qa summary::before{content:"Q ·  "; color:var(--accent-2);}
+details.qa[open] summary{margin-bottom:0.6rem;}
+details.qa p{margin:0.3rem 0 0;}
+
+.theme-toggle{position:fixed; top:1rem; right:1.2rem; z-index:80; width:2.3rem; height:2.3rem; border-radius:50%;
+  border:1px solid var(--rule); background:var(--paper-2); color:var(--ink); display:flex; align-items:center;
+  justify-content:center; cursor:pointer; font-size:1.05rem; line-height:1; padding:0;
+  box-shadow:0 1px 3px rgba(0,0,0,0.08); transition:border-color .15s, transform .1s;
+  top:calc(1rem + env(safe-area-inset-top,0px));}
+.theme-toggle:hover{border-color:var(--accent); transform:translateY(-1px);}
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" onclick="__toggleBibleTheme()">◑</button>
+<header class="top"><div class="wrap">
+  <div class="eyebrow">DBMS &amp; SQL Interview Bible · Part D of 8</div>
+  <h1 class="title">Transactions &amp; Concurrency</h1>
+  <p class="dek">ACID, isolation levels and the anomalies they trade off, locking and deadlocks, MVCC, and distributed transactions. This is where interviewers test whether you understand consequences, not just definitions.</p>
+</div></header>
+
+<main class="wrap">
+<div class="layout">
+<nav class="rail">
+  <h4>In this part</h4>
+  <a href="#m13">13. ACID, with a worked example</a>
+  <a href="#m14">14. Isolation levels &amp; anomalies</a>
+  <a href="#m15">15. Locking, deadlocks, 2PL vs MVCC</a>
+  <a href="#m16">16. Savepoints &amp; distributed transactions</a>
+  <a href="#faq">Popular interview Q&amp;A</a>
+  <h4 style="margin-top:1.6rem;">Whole bible</h4>
+  <a href="part-a-foundations.html">A · Foundations</a>
+  <a href="part-b-normalization.html">B · Normalization</a>
+  <a href="part-c-sql-mastery.html">C · SQL Mastery</a>
+  <a href="part-e-indexing-performance.html">E · Indexing &amp; Perf (next)</a>
+  <a href="part-f-distributed-data.html">F · Distributed Data</a>
+  <a href="part-g-security-ops.html">G · Security &amp; Ops</a>
+  <a href="part-h-interview-sim.html">H · Interview Sim</a>
+  <a href="part-i-top20-sql.html">I · Top 20 SQL Qs</a>
+</nav>
+
+<article>
+
+<section id="m13">
+<h2>13 · ACID, with a worked example</h2>
+
+<p>Use one example for all four properties — a bank transfer — because interviewers usually ask you to "explain ACID with an example" directly:</p>
+
+<pre><code>BEGIN;
+UPDATE accounts SET balance = balance - 100 WHERE id = 1;  -- debit Asha
+UPDATE accounts SET balance = balance + 100 WHERE id = 2;  -- credit Ravi
+COMMIT;</code></pre>
+
+<table>
+<tr><th>Property</th><th>Guarantee</th><th>In this example</th></tr>
+<tr><td><span class="key">Atomicity</span></td><td>All statements in the transaction succeed, or none do.</td><td>If the credit to Ravi fails (constraint violation, crash), the debit from Asha is rolled back too — money never vanishes mid-transfer.</td></tr>
+<tr><td><span class="key">Consistency</span></td><td>The database moves from one valid state to another — all constraints/invariants hold before and after.</td><td>A CHECK constraint (<code>balance >= 0</code>) prevents the transaction from ever leaving an account negative; this is a joint responsibility of the engine (enforcing constraints) and the application (writing correct logic).</td></tr>
+<tr><td><span class="key">Isolation</span></td><td>Concurrent transactions don't see each other's uncommitted intermediate state.</td><td>A second transaction reading Asha's balance mid-transfer shouldn't see the post-debit, pre-credit "money is gone" state — governed by isolation level, see Module 14.</td></tr>
+<tr><td><span class="key">Durability</span></td><td>Once committed, the change survives a crash immediately after.</td><td>Achieved via a write-ahead log (WAL) — the commit is only acknowledged once the log record is flushed to durable storage, so a crash right after COMMIT doesn't lose the transfer.</td></tr>
+</table>
+
+<div class="callout tip"><strong>Interview framing:</strong> "Atomicity and durability are mechanisms the engine gives you almost for free via the transaction log. Isolation is a dial you actively choose (isolation level). Consistency is the one I have to earn myself — the engine only enforces the constraints I actually declared."</div>
+</section>
+
+<hr>
+
+<section id="m14">
+<h2>14 · Isolation levels &amp; anomalies</h2>
+
+<p>Isolation levels exist because full serial execution (one transaction at a time) is correct but too slow. Each weaker level allows a specific anomaly in exchange for concurrency.</p>
+
+<table>
+<tr><th>Anomaly</th><th>What happens</th></tr>
+<tr><td><span class="key">Dirty read</span></td><td>Transaction A reads a row that transaction B has modified but not yet committed. If B rolls back, A used data that never officially existed.</td></tr>
+<tr><td><span class="key">Non-repeatable read</span></td><td>A reads a row twice in the same transaction and gets different values, because B committed an update to that row in between.</td></tr>
+<tr><td><span class="key">Phantom read</span></td><td>A re-runs the same range query twice and gets a different <em>set of rows</em>, because B inserted/deleted a row matching the range in between.</td></tr>
+<tr><td><span class="key">Lost update</span></td><td>A and B both read the same row, both compute a new value based on that read, and whichever writes second silently overwrites the other's update.</td></tr>
+</table>
+
+<table>
+<tr><th>SQL standard isolation level</th><th>Dirty read</th><th>Non-repeatable read</th><th>Phantom read</th></tr>
+<tr><td>Read Uncommitted</td><td>Possible</td><td>Possible</td><td>Possible</td></tr>
+<tr><td>Read Committed <span style="color:var(--ink-soft);">(Postgres default)</span></td><td>Prevented</td><td>Possible</td><td>Possible</td></tr>
+<tr><td>Repeatable Read</td><td>Prevented</td><td>Prevented</td><td>Possible <span style="color:var(--ink-soft);">(prevented in Postgres specifically, via MVCC snapshotting — stricter than the standard requires)</span></td></tr>
+<tr><td>Serializable</td><td>Prevented</td><td>Prevented</td><td>Prevented</td></tr>
+</table>
+
+<pre><code>BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+-- ... statements ...
+COMMIT;</code></pre>
+
+<div class="callout warn"><strong>The follow-up question that catches people:</strong> "Why does Postgres's Repeatable Read already prevent phantoms, when the SQL standard says it doesn't have to?" Postgres implements isolation via <strong>MVCC snapshots</strong> rather than the pessimistic locking the standard was originally written around — a Repeatable Read transaction sees one consistent snapshot of the whole database for its entire duration, so a concurrent insert simply isn't visible at all, phantom or otherwise. At Serializable, Postgres adds runtime dependency-cycle detection (SSI — Serializable Snapshot Isolation) on top of that snapshot to catch write skew, the one anomaly snapshotting alone can't prevent.</div>
+
+<div class="callout"><strong>Write skew</strong> — the anomaly Serializable specifically exists to catch, and a good one to bring up unprompted: two transactions each read overlapping data, each independently satisfy a constraint based on that read, and both commit — but the constraint is violated once both changes are combined. Classic example: a hospital rule "at least one doctor must be on call"; two of the two on-call doctors each independently check "is someone else covering" and both go off-call, leaving zero — each transaction was individually valid against what it read.</div>
+</section>
+
+<hr>
+
+<section id="m15">
+<h2>15 · Locking, deadlocks, 2PL vs MVCC</h2>
+
+<p><strong>Lock types:</strong> shared (S) locks for reads, exclusive (X) locks for writes. Two-Phase Locking (2PL) is the classical concurrency-control protocol: a transaction acquires all the locks it needs (growing phase) before releasing any (shrinking phase), guaranteeing serializability.</p>
+
+<p><strong>MVCC (Multi-Version Concurrency Control)</strong> — what Postgres actually uses day to day — takes a different approach: writers don't block readers and readers don't block writers. Instead of locking rows for reads, each row keeps enough version history that a transaction can see the snapshot as it existed when its transaction started. Locks are still used, but mainly to serialize concurrent <em>writes</em> to the same row, not to protect reads.</p>
+
+<div class="callout tip"><strong>The line that shows real understanding:</strong> "2PL is pessimistic and lock-based — correct, but a reader can block a writer and vice versa. MVCC is optimistic about reads — a reader never blocks a writer because it's reading an older, consistent version, at the cost of extra storage (old row versions) that needs to be cleaned up — which is exactly what Postgres's VACUUM process does."</div>
+
+<p><strong>Deadlocks</strong> happen when transaction A holds a lock B wants, and B holds a lock A wants — a cycle in the wait-for graph. Databases don't avoid this proactively by default; they <em>detect</em> it: Postgres periodically checks for a cycle in the wait-for graph and aborts one transaction (the "victim") with an error, letting the other proceed.</p>
+
+<pre><code>-- Classic deadlock: two transactions update the same two rows in opposite order
+-- Txn A:                          Txn B:
+UPDATE accounts SET ... WHERE id=1;  UPDATE accounts SET ... WHERE id=2;
+UPDATE accounts SET ... WHERE id=2;  UPDATE accounts SET ... WHERE id=1;
+-- A waits on B's lock on row 2, B waits on A's lock on row 1 -- cycle</code></pre>
+
+<p><strong>Prevention in application code:</strong> always acquire locks (update rows) in a consistent global order — e.g. always update the lower account id first, regardless of which side of the transfer it's on. This eliminates the cycle by construction rather than relying on the database's detector-and-abort fallback.</p>
+</section>
+
+<hr>
+
+<section id="m16">
+<h2>16 · Savepoints &amp; distributed transactions</h2>
+
+<p><strong>Savepoints</strong> allow a partial rollback inside one transaction, without aborting the whole thing:</p>
+<pre><code>BEGIN;
+UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+SAVEPOINT before_credit;
+UPDATE accounts SET balance = balance + 100 WHERE id = 2;
+-- suppose a business-rule check fails here
+ROLLBACK TO SAVEPOINT before_credit;   -- undo just the credit, keep the debit pending
+-- ... try an alternate credit target, then COMMIT or ROLLBACK the whole txn</code></pre>
+
+<p><strong>Distributed transactions</strong> span more than one database/service — e.g. a payment DB and an inventory DB owned by different services. The classical protocol is <strong>Two-Phase Commit (2PC)</strong>:</p>
+<ol>
+<li><strong>Prepare phase</strong> — the coordinator asks every participant "can you commit?"; each participant does all the work, writes it durably, and replies yes/no, but does not yet finalize.</li>
+<li><strong>Commit phase</strong> — if every participant said yes, the coordinator tells everyone to commit for real; if any said no, it tells everyone to abort.</li>
+</ol>
+
+<div class="callout warn"><strong>Why 2PC is unpopular at product-company scale:</strong> the coordinator is a single point of blocking — if it crashes after some participants are prepared but before the final decision is sent, those participants sit holding locks indefinitely. Modern systems usually prefer the <strong>Saga pattern</strong> instead: break the distributed operation into a sequence of local transactions, each with a defined compensating action, and run compensations in reverse order if a later step fails, trading strict atomicity for availability and explicit, application-level error handling.</div>
+</section>
+
+<hr>
+
+<section id="faq">
+<h2>Popular interview questions — Transactions &amp; Concurrency</h2>
+
+<details class="qa"><summary>Explain the four ACID properties with an example.</summary>
+<p>Use a bank transfer: Atomicity means both the debit and credit happen or neither does; Consistency means declared invariants (balance ≥ 0) always hold; Isolation means a concurrent transaction never sees the momentary "debited but not yet credited" state; Durability means once COMMIT returns, the transfer survives a crash, because it's been flushed to the write-ahead log.</p></details>
+
+<details class="qa"><summary>What's the difference between a non-repeatable read and a phantom read?</summary>
+<p>A non-repeatable read is about re-reading the <em>same row</em> and getting a different value because it was updated. A phantom read is about re-running the <em>same range query</em> and getting a different set of rows because a matching row was inserted or deleted in between.</p></details>
+
+<details class="qa"><summary>What is a lost update, and which isolation level prevents it?</summary>
+<p>Two transactions read the same row, each compute a new value from that read, and the second write silently clobbers the first's update. Read Committed does not prevent it (each individual statement is committed-consistent, but the read-then-write sequence isn't atomic); Repeatable Read and Serializable do, since Postgres detects the conflicting concurrent update and forces one transaction to retry.</p></details>
+
+<details class="qa"><summary>2PL vs MVCC — what's the practical tradeoff?</summary>
+<p>2PL is lock-based and pessimistic: correctness is enforced by blocking, so readers and writers can block each other. MVCC lets readers see a consistent snapshot of old row versions without blocking writers (and vice versa), at the cost of keeping multiple row versions around, which is why Postgres needs VACUUM to reclaim dead versions.</p></details>
+
+<details class="qa"><summary>How does a database detect a deadlock, and what does it do about it?</summary>
+<p>It periodically checks the wait-for graph between blocked transactions for a cycle. If found, it aborts one transaction (the "victim," often the one that would be cheapest to roll back) with an explicit deadlock error, releasing its locks so the other can proceed. The application is expected to retry the aborted transaction.</p></details>
+
+<details class="qa"><summary>How would you prevent deadlocks at the application level, proactively?</summary>
+<p>Always acquire/update rows in a fixed, consistent global order across all transactions (e.g., always the lower primary key first) so a circular wait can never form, rather than relying on the database's detect-and-abort fallback.</p></details>
+
+<details class="qa"><summary>Why is Two-Phase Commit rarely used across microservices at scale, and what replaces it?</summary>
+<p>2PC's coordinator is a blocking single point of failure — if it dies mid-protocol, participants can be left holding locks indefinitely, hurting availability. The Saga pattern is the common replacement: a sequence of local transactions each with a compensating action, run in reverse to "undo" a partially completed distributed operation if a later step fails.</p></details>
+
+</section>
+
+</article>
+</div>
+</main>
+
+<footer>DBMS &amp; SQL Interview Bible · Part D: Transactions &amp; Concurrency · continued in Part E: Indexing &amp; Performance</footer>
+
+<script>
+function __currentIsDark(){
+  var t = document.documentElement.getAttribute("data-theme");
+  if(t) return t === "dark";
+  try{ return window.matchMedia("(prefers-color-scheme: dark)").matches; }catch(e){ return false; }
+}
+function __updateToggleIcon(){
+  var btn = document.getElementById("themeToggle");
+  if(!btn) return;
+  btn.textContent = __currentIsDark() ? "☀" : "☽";
+}
+function __toggleBibleTheme(){
+  try{
+    var next = __currentIsDark() ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    localStorage.setItem("bible-theme", next);
+  }catch(e){}
+  __updateToggleIcon();
+}
+document.addEventListener("DOMContentLoaded", __updateToggleIcon);
+</script>
+</body>
+</html>

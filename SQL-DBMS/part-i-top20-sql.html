@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Part I · Top SQL Questions — DBMS &amp; SQL Interview Bible</title>
+<script>try{var t=localStorage.getItem("bible-theme");if(t==="light"||t==="dark"){document.documentElement.setAttribute("data-theme",t);}}catch(e){}</script>
+<style>
+:root{
+  --paper:#FAFAFA; --paper-2:#F1F1F3; --ink:#1B1B1F; --ink-soft:#6B6B72;
+  --accent:#3E63DD; --accent-2:#B3261E; --rule:#E4E4E8;
+  --code-bg:#F4F4F6; --code-text:#1B1B1F;
+  --good:#1E7A4C; --bad:#B3261E; color-scheme:light dark;
+}
+:root:not([data-theme="light"]){ @media (prefers-color-scheme: dark){
+  --paper:#121214; --paper-2:#1C1C1F; --ink:#EDEDEF; --ink-soft:#9A9AA2;
+  --accent:#8FABFF; --accent-2:#FF8983; --rule:#2B2B2F; --code-bg:#1A1A1D; --code-text:#EDEDEF;
+  --good:#4ADE80; --bad:#FF6B6B;
+}}
+:root[data-theme="dark"]{
+  --paper:#121214; --paper-2:#1C1C1F; --ink:#EDEDEF; --ink-soft:#9A9AA2;
+  --accent:#8FABFF; --accent-2:#FF8983; --rule:#2B2B2F; --code-bg:#1A1A1D; --code-text:#EDEDEF;
+  --good:#4ADE80; --bad:#FF6B6B;
+}
+*{box-sizing:border-box;}
+html{scroll-padding-top:1rem;}
+body{margin:0; background:var(--paper); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-size:17px; line-height:1.65;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);}
+h1,h2,h3,h4{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700; color:var(--ink); font-weight:600; line-height:1.2; letter-spacing:-0.01em;}
+a{color:var(--accent);}
+code,pre,kbd{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;}
+pre{background:var(--code-bg); color:var(--code-text); padding:1rem 1.1rem; border-radius:6px; overflow-x:auto; font-size:0.86rem; line-height:1.55;}
+code{background:var(--paper-2); padding:0.12em 0.4em; border-radius:4px; font-size:0.88em;}
+pre code{background:none; padding:0;}
+table{border-collapse:collapse; width:100%; font-size:0.94rem; margin:1rem 0;}
+th,td{border:1px solid var(--rule); padding:0.5rem 0.7rem; text-align:left; vertical-align:top;}
+th{background:var(--paper-2); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700;}
+hr{border:none; border-top:1px solid var(--rule); margin:2.5rem 0;}
+.key{color:var(--accent-2); font-weight:600;}
+.callout{background:var(--paper-2); border-radius:8px; padding:1rem 1.3rem; margin:1.3rem 0;}
+.callout.warn{border-left:3px solid var(--bad);}
+.callout.tip{border-left:3px solid var(--good);}
+.wrap{max-width:1100px; margin:0 auto; padding:0 1.4rem;}
+.layout{display:grid; grid-template-columns:210px minmax(0,720px); gap:3rem; align-items:start;}
+@media (max-width:880px){.layout{grid-template-columns:1fr;} .rail{position:static !important; order:2;}}
+.rail{position:sticky; top:1.2rem; font-size:0.85rem;}
+.rail h4{margin:0 0 0.6rem; font-size:0.75rem; letter-spacing:0.04em; color:var(--ink-soft); text-transform:uppercase; font-family:inherit; font-weight:600;}
+.rail a{display:block; color:var(--ink-soft); text-decoration:none; padding:0.24rem 0; border-left:2px solid transparent;}
+.rail a:hover{color:var(--accent); border-left-color:var(--accent); padding-left:0.5rem;}
+header.top{border-bottom:1px solid var(--rule); padding:2.6rem 0 1.6rem;}
+.eyebrow{color:var(--ink-soft); font-size:0.85rem; margin-bottom:0.4rem;}
+h1.title{font-size:2.5rem; margin:0 0 0.5rem;}
+.dek{color:var(--ink-soft); font-size:1.05rem; max-width:60ch; margin:0;}
+main.wrap{padding-top:2.4rem; padding-bottom:5rem;}
+article{max-width:720px;}
+footer{border-top:1px solid var(--rule); padding:2rem 0; text-align:center; color:var(--ink-soft); font-size:0.85rem;}
+footer a{color:var(--ink-soft);}
+.q{border:1px solid var(--rule); border-radius:8px; padding:1.1rem 1.3rem; margin:1.1rem 0; background:var(--paper-2);}
+.q h3{margin:0 0 0.5rem; font-size:1.08rem; display:flex; gap:0.6rem; align-items:baseline;}
+.qnum{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700; color:var(--accent-2); font-weight:600; min-width:1.6rem;}
+.q p{margin:0.5rem 0;}
+details.prob{border:1px solid var(--rule); border-radius:8px; padding:1rem 1.3rem; margin:1rem 0; background:var(--paper-2);}
+details.prob summary{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700; cursor:pointer; list-style:none; font-size:1.03rem; display:flex; gap:0.6rem;}
+details.prob summary::-webkit-details-marker{display:none;}
+details.prob .qnum2{color:var(--accent-2); min-width:1.8rem;}
+details.prob p{margin:0.6rem 0 0;}
+
+.theme-toggle{position:fixed; top:1rem; right:1.2rem; z-index:80; width:2.3rem; height:2.3rem; border-radius:50%;
+  border:1px solid var(--rule); background:var(--paper-2); color:var(--ink); display:flex; align-items:center;
+  justify-content:center; cursor:pointer; font-size:1.05rem; line-height:1; padding:0;
+  box-shadow:0 1px 3px rgba(0,0,0,0.08); transition:border-color .15s, transform .1s;
+  top:calc(1rem + env(safe-area-inset-top,0px));}
+.theme-toggle:hover{border-color:var(--accent); transform:translateY(-1px);}
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" onclick="__toggleBibleTheme()">◑</button>
+<header class="top"><div class="wrap">
+  <div class="eyebrow">DBMS &amp; SQL Interview Bible · Part I of 9 (bonus)</div>
+  <h1 class="title">Top SQL Interview Questions</h1>
+  <p class="dek">Cross-referenced against recent candidate-reported SQL rounds (2025–2026 senior/SDE2 loops, data-engineering "real asks" lists, and community threads). Two halves: 20 concept questions, then 20 pure "write a query to..." implementation problems, solved. If you only have an hour before the interview, this is the page to drill.</p>
+</div></header>
+
+<main class="wrap">
+<div class="layout">
+<nav class="rail">
+  <h4>Concept Qs (1–20)</h4>
+  <a href="#q1">1–5 Core clauses &amp; constraints</a>
+  <a href="#q6">6–8 Joins</a>
+  <a href="#q9">9–11 Indexes</a>
+  <a href="#q12">12–14 Window functions</a>
+  <a href="#q15">15–17 Design &amp; transactions</a>
+  <a href="#q18">18–20 Concurrency &amp; sets</a>
+  <h4 style="margin-top:1.6rem;">Write-a-query (21–40)</h4>
+  <a href="#p21">21–25 Grouping &amp; filters</a>
+  <a href="#p26">26–30 Aggregation &amp; joins</a>
+  <a href="#p31">31–35 Window &amp; running calcs</a>
+  <a href="#p36">36–40 Hierarchy, pivot &amp; fraud</a>
+  <h4 style="margin-top:1.6rem;">Whole bible</h4>
+  <a href="part-a-foundations.html">A · Foundations</a>
+  <a href="part-b-normalization.html">B · Normalization</a>
+  <a href="part-c-sql-mastery.html">C · SQL Mastery</a>
+  <a href="part-d-transactions.html">D · Transactions</a>
+  <a href="part-e-indexing-performance.html">E · Indexing &amp; Perf</a>
+  <a href="part-f-distributed-data.html">F · Distributed Data</a>
+  <a href="part-g-security-ops.html">G · Security &amp; Ops</a>
+  <a href="part-h-interview-sim.html">H · Interview Sim</a>
+</nav>
+
+<article>
+
+<div class="q" id="q1"><h3><span class="qnum">1</span> WHERE vs HAVING — what's the difference?</h3>
+<p>WHERE filters individual rows <em>before</em> grouping happens; HAVING filters entire groups <em>after</em> aggregation. You cannot use an aggregate function in WHERE (<code>WHERE COUNT(*) &gt; 1</code> is a syntax error) because aggregates don't exist until GROUP BY has run. Full execution-order breakdown: <a href="part-c-sql-mastery.html#m6">Part C, Module 6</a>.</p></div>
+
+<div class="q"><h3><span class="qnum">2</span> DELETE vs TRUNCATE vs DROP</h3>
+<p><code>DELETE</code> removes rows one at a time (can be filtered with WHERE, is logged row-by-row, triggers fire, fully rollback-able). <code>TRUNCATE</code> deallocates the table's data pages wholesale — faster, minimally logged, resets identity/auto-increment counters, cannot be filtered, and in most engines can't be rolled back as cheaply as DELETE (Postgres is an exception: it's transactional there too). <code>DROP</code> removes the table definition itself, including its schema, indexes, and constraints — nothing is left to query.</p></div>
+
+<div class="q"><h3><span class="qnum">3</span> CHAR vs VARCHAR vs TEXT</h3>
+<p><code>CHAR(n)</code> is fixed-length, space-padded to n — predictable storage, marginal speed benefit, wastes space on variable-length data. <code>VARCHAR(n)</code> is variable-length up to a cap n — the common default. <code>TEXT</code> is variable-length with no practical cap. In Postgres specifically, all three actually use the same underlying storage mechanism and have near-identical performance — the choice there is really about whether you want a length constraint documented/enforced (VARCHAR(n)) versus none (TEXT), not a performance decision like it can be in some other engines.</p></div>
+
+<div class="q"><h3><span class="qnum">4</span> Primary key vs unique key vs foreign key vs composite key</h3>
+<p>Primary key: the table's one official identity, NOT NULL + unique. Unique key: also enforces uniqueness, but a table can have several, and (per the SQL standard) they can allow one NULL. Foreign key: references a primary/unique key in another table, enforcing referential integrity. Composite key: any of the above spanning more than one column together — common on junction tables, e.g. <code>PRIMARY KEY (student_id, course_id)</code>. Full treatment: <a href="part-a-foundations.html#m3">Part A, Module 3</a>.</p></div>
+
+<div class="q"><h3><span class="qnum">5</span> What are constraints, and why put them in the database instead of the app layer?</h3>
+<p>NOT NULL, CHECK, UNIQUE, PRIMARY/FOREIGN KEY — they enforce domain, entity, and referential integrity regardless of which application, script, or manual session touches the data. App-layer validation can be bypassed by a second service, a bad migration, or a direct DB session; a CHECK constraint cannot.</p></div>
+
+<div class="q" id="q6"><h3><span class="qnum">6</span> Walk through all JOIN types with an example.</h3>
+<p>INNER (only matches on both sides), LEFT (all left rows, NULLs for unmatched right), RIGHT (mirror of LEFT), FULL OUTER (union of LEFT and RIGHT), CROSS (Cartesian product — every row × every row). Full table with examples and the two most common join bugs (fan-out, WHERE-turns-LEFT-into-INNER): <a href="part-c-sql-mastery.html#m7">Part C, Module 7</a>.</p></div>
+
+<div class="q"><h3><span class="qnum">7</span> What is a self-join, and when would you use one?</h3>
+<p>A table joined to itself via two aliases, used to compare rows within the same table — the standard example is comparing an employee's salary to their manager's, where both are rows in the same <code>employee</code> table linked by <code>manager_id</code>.</p></div>
+
+<div class="q"><h3><span class="qnum">8</span> IN vs EXISTS vs JOIN for filtering — which do you pick, and why?</h3>
+<p>All three can express "rows that have a match elsewhere," but they behave differently on NULLs and scale differently. <code>EXISTS</code> (and <code>NOT EXISTS</code>) short-circuits on the first match and is NULL-safe. <code>IN</code> is fine for filtering against a small, NULL-free literal list, but <code>NOT IN</code> silently returns zero rows if the subquery result contains even one NULL — a very commonly asked trap. A <code>JOIN</code> is the right call when you also need columns from the other table in the output, not just a filter; a plain existence check that discards the other table's columns is better expressed as EXISTS to avoid accidental row duplication from a one-to-many join.</p></div>
+
+<div class="q" id="q9"><h3><span class="qnum">9</span> What is an index, how does it work, and what's the tradeoff?</h3>
+<p>A separate, ordered structure (commonly a B-tree) that lets the engine locate rows without a full table scan — faster reads, at the cost of extra storage and slower writes (every index must be updated on every INSERT/UPDATE/DELETE touching its columns). Full type-by-type breakdown (B-tree/hash/bitmap/GIN-GiST) and when an index actually hurts: <a href="part-e-indexing-performance.html#m17">Part E, Module 17</a>.</p></div>
+
+<div class="q"><h3><span class="qnum">10</span> Clustered vs non-clustered index — what's the difference?</h3>
+<p>A clustered index determines the physical storage order of the table's rows — there can only be one per table (in Postgres, this isn't maintained automatically like in SQL Server/MySQL InnoDB; Postgres's <code>CLUSTER</code> command physically reorders once but doesn't keep it clustered on future writes). A non-clustered (secondary) index is a separate structure of pointers back to the table's rows — a table can have many. Interviewers most often want you to know: clustered = physical row order (one only), non-clustered = extra lookup structure (many allowed).</p></div>
+
+<div class="q"><h3><span class="qnum">11</span> What is a covering index?</h3>
+<p>An index that contains every column a query needs, so the engine can answer entirely from the index without touching the table itself — an "index-only scan," the fastest possible read path. See the worked <code>CREATE INDEX ... INCLUDE (...)</code> example: <a href="part-e-indexing-performance.html#m17">Part E, Module 17</a>.</p></div>
+
+<div class="q" id="q12"><h3><span class="qnum">12</span> RANK vs DENSE_RANK vs ROW_NUMBER — differences, with ties.</h3>
+<p><code>ROW_NUMBER()</code> always gives unique sequential numbers, even on ties (arbitrary tiebreak). <code>RANK()</code> gives tied rows the same rank, then skips the next rank by the tie count (1,1,3). <code>DENSE_RANK()</code> gives tied rows the same rank with no gap (1,1,2). Pick DENSE_RANK when "2nd highest" must not disappear because two rows tied for 1st.</p></div>
+
+<div class="q"><h3><span class="qnum">13</span> How do you find the Nth highest salary?</h3>
+<pre><code>SELECT salary FROM (
+  SELECT salary, DENSE_RANK() OVER (ORDER BY salary DESC) AS rnk
+  FROM employee
+) t WHERE rnk = :N;</code></pre>
+<p>The single most-repeated live-coding SQL question across almost every product-company loop. Full problem bank with 9 more of these solved: <a href="part-c-sql-mastery.html#m12">Part C, Module 12</a>.</p></div>
+
+<div class="q"><h3><span class="qnum">14</span> How do you calculate a rolling average / running total?</h3>
+<pre><code>SELECT day, revenue,
+       AVG(revenue) OVER (ORDER BY day ROWS BETWEEN 6 PRECEDING AND CURRENT ROW) AS moving_avg_7d,
+       SUM(revenue) OVER (ORDER BY day) AS running_total
+FROM daily_revenue;</code></pre>
+<p>Window frame clauses (<code>ROWS BETWEEN ... AND ...</code>) are the mechanism — full walkthrough: <a href="part-c-sql-mastery.html#m9">Part C, Module 9</a>.</p></div>
+
+<div class="q" id="q15"><h3><span class="qnum">15</span> Subquery vs CTE — when do you use which?</h3>
+<p>A CTE (<code>WITH</code>) is named and readable, and in modern Postgres (12+) is inlined into the plan at the same cost as an equivalent subquery when it has no side effects — so the choice is mostly about readability and reuse (referencing the same intermediate result more than once) rather than performance. Reach for a plain subquery for a simple, one-off, single-use filter where a full CTE header feels like overhead. Recursive CTEs are the one case with no subquery equivalent — required for hierarchical data. Details: <a href="part-c-sql-mastery.html#m8">Part C, Module 8</a>.</p></div>
+
+<div class="q"><h3><span class="qnum">16</span> Explain normalization. When would you intentionally denormalize?</h3>
+<p>Normalization eliminates insert/update/delete anomalies by ensuring each fact is stored exactly once (1NF→BCNF). You'd deliberately denormalize for proven, read-heavy hot paths (precomputed counters, materialized views) or for correctness-preserving snapshots (locking in a price at time of purchase so a later catalog change doesn't rewrite history). Full anomaly-by-anomaly mapping: <a href="part-b-normalization.html#anomalies">Part B, Module 4a</a>.</p></div>
+
+<div class="q"><h3><span class="qnum">17</span> What are the ACID properties, and why do they matter?</h3>
+<p>Atomicity (all-or-nothing), Consistency (invariants always hold), Isolation (concurrent transactions don't see each other's half-done state), Durability (a commit survives a crash). They matter because without them, a crash or a concurrent request mid-transaction can leave the database in a state that's internally contradictory — money debited but never credited, for example. Worked bank-transfer example: <a href="part-d-transactions.html#m13">Part D, Module 13</a>.</p></div>
+
+<div class="q" id="q18"><h3><span class="qnum">18</span> What is a deadlock, and how do you prevent one?</h3>
+<p>Two transactions each hold a lock the other is waiting for — a cycle in the wait-for graph. The database detects the cycle and aborts one transaction (the victim) to break it. Prevent it proactively by always acquiring/updating rows in a consistent global order across every transaction, so a circular wait can never form. Full section: <a href="part-d-transactions.html#m15">Part D, Module 15</a>.</p></div>
+
+<div class="q"><h3><span class="qnum">19</span> UNION vs UNION ALL</h3>
+<p>UNION combines two result sets and removes duplicates (an implicit sort/hash dedup pass). UNION ALL combines and keeps everything, with no dedup cost. Default to UNION ALL unless you specifically need distinct rows across the combined sets — using UNION out of habit is a common, avoidable performance regression.</p></div>
+
+<div class="q"><h3><span class="qnum">20</span> Why does NOT IN sometimes return zero rows unexpectedly?</h3>
+<p>If the subquery behind <code>NOT IN</code> returns even a single NULL, every comparison evaluates to NULL rather than true/false, because <code>x NOT IN (a, NULL)</code> expands to <code>x != a AND x != NULL</code> — and that last term is always NULL, which poisons the whole AND for every row. The NULL-safe fix is <code>NOT EXISTS</code> or a <code>LEFT JOIN ... WHERE ... IS NULL</code>. This exact trap shows up disguised inside "find customers who never ordered"-style questions across almost every SQL round — see it solved both ways: <a href="part-c-sql-mastery.html#m12">Part C, Module 12</a>.</p></div>
+
+<hr>
+
+<h2 id="p21" style="margin-top:0.5rem;">Write-a-query drill: 20 implementation problems</h2>
+<p>Pure "give me a SQL query to get X" prompts, the way they actually get read out loud in a live-coding round. Distinct from Part C's problem bank — no overlap, so drill both. Solutions assume Postgres.</p>
+
+<details class="prob"><summary><span class="qnum2">21</span> Write a query to find duplicate email addresses in a users table.</summary>
+<pre><code>SELECT email, COUNT(*) AS cnt
+FROM person
+GROUP BY email
+HAVING COUNT(*) > 1;</code></pre></details>
+
+<details class="prob"><summary><span class="qnum2">22</span> Write a query to swap seat assignments in pairs (odd/even id, last odd stays put if count is odd) — the classic "Exchange Seats" problem.</summary>
+<pre><code>SELECT
+  CASE
+    WHEN id % 2 = 1 AND id = (SELECT MAX(id) FROM seat) THEN id   -- last odd seat unchanged
+    WHEN id % 2 = 1 THEN id + 1
+    ELSE id - 1
+  END AS id,
+  student
+FROM seat
+ORDER BY id;</code></pre></details>
+
+<details class="prob"><summary><span class="qnum2">23</span> Write a query to find the department with the highest average salary.</summary>
+<pre><code>SELECT department_id, AVG(salary) AS avg_salary
+FROM employee
+GROUP BY department_id
+ORDER BY avg_salary DESC
+LIMIT 1;</code></pre></details>
+
+<details class="prob"><summary><span class="qnum2">24</span> Write a query to list employees hired in the last 90 days.</summary>
+<pre><code>SELECT * FROM employee
+WHERE hire_date >= CURRENT_DATE - INTERVAL '90 days';</code></pre></details>
+
+<details class="prob"><summary><span class="qnum2">25</span> Write a query to find categories that have zero products in them.</summary>
+<pre><code>SELECT c.category_id, c.name
+FROM category c
+LEFT JOIN product p ON p.category_id = c.category_id
+WHERE p.product_id IS NULL;</code></pre></details>
+
+<details class="prob"><summary><span class="qnum2">26</span> Write a query to calculate each product's percentage contribution to total revenue.</summary>
+<pre><code>SELECT product_id,
+       SUM(revenue) AS product_revenue,
+       ROUND(100.0 * SUM(revenue) / SUM(SUM(revenue)) OVER (), 2) AS pct_of_total
+FROM sales
+GROUP BY product_id;</code></pre>
+<p>The trick: <code>SUM(SUM(revenue)) OVER ()</code> — an aggregate wrapped in a window function with no PARTITION BY gives the grand total alongside each group's own subtotal.</p></details>
+
+<details class="prob"><summary><span class="qnum2">27</span> Write a query to get each customer's first and last order date.</summary>
+<pre><code>SELECT customer_id, MIN(order_date) AS first_order, MAX(order_date) AS last_order
+FROM orders
+GROUP BY customer_id;</code></pre></details>
+
+<details class="prob"><summary><span class="qnum2">28</span> Write a query to find customers who placed at least one order in every month of 2026.</summary>
+<pre><code>SELECT customer_id
+FROM orders
+WHERE EXTRACT(YEAR FROM order_date) = 2026
+GROUP BY customer_id
+HAVING COUNT(DISTINCT EXTRACT(MONTH FROM order_date)) = 12;</code></pre></details>
+
+<details class="prob"><summary><span class="qnum2">29</span> Write a query to find the most frequently ordered product within each category.</summary>
+<pre><code>SELECT category_id, product_id, order_count FROM (
+  SELECT p.category_id, p.product_id, COUNT(*) AS order_count,
+         ROW_NUMBER() OVER (PARTITION BY p.category_id ORDER BY COUNT(*) DESC) AS rn
+  FROM order_items oi JOIN product p ON p.product_id = oi.product_id
+  GROUP BY p.category_id, p.product_id
+) t WHERE rn = 1;</code></pre></details>
+
+<details class="prob"><summary><span class="qnum2">30</span> Write a query to detect overlapping bookings for the same resource (e.g. a meeting room double-booked).</summary>
+<pre><code>SELECT a.booking_id, b.booking_id
+FROM booking a
+JOIN booking b ON a.resource_id = b.resource_id
+  AND a.booking_id < b.booking_id
+  AND a.start_time < b.end_time
+  AND b.start_time < a.end_time;</code></pre>
+<p>The overlap condition — <code>a.start &lt; b.end AND b.start &lt; a.end</code> — is the general-purpose pattern for any interval-overlap check; memorize it as a unit rather than re-deriving it live.</p></details>
+
+<details class="prob"><summary><span class="qnum2">31</span> Write a query to compute the running (cumulative) count of distinct users active-to-date, by day.</summary>
+<pre><code>WITH first_seen AS (
+  SELECT user_id, MIN(activity_date) AS first_date
+  FROM activity
+  GROUP BY user_id
+)
+SELECT first_date,
+       SUM(COUNT(*)) OVER (ORDER BY first_date) AS cumulative_unique_users
+FROM first_seen
+GROUP BY first_date
+ORDER BY first_date;</code></pre>
+<p>Key idea: a running count of <em>distinct</em> users equals a running total of each user's <em>first-seen</em> date — reduces an otherwise awkward "distinct within a window" problem to a plain running SUM.</p></details>
+
+<details class="prob"><summary><span class="qnum2">32</span> Write a query to produce a comma-separated list of employee names per department.</summary>
+<pre><code>SELECT department_id, STRING_AGG(name, ', ' ORDER BY name) AS employees
+FROM employee
+GROUP BY department_id;</code></pre></details>
+
+<details class="prob"><summary><span class="qnum2">33</span> Write a query to show each employee's salary alongside the difference from their department's average.</summary>
+<pre><code>SELECT employee_id, name, salary,
+       ROUND(salary - AVG(salary) OVER (PARTITION BY department_id), 2) AS diff_from_dept_avg
+FROM employee;</code></pre></details>
+
+<details class="prob"><summary><span class="qnum2">34</span> Write a query to find the percentage of users whose first purchase happened on their signup day.</summary>
+<pre><code>WITH first_order AS (
+  SELECT user_id, MIN(order_date) AS first_order_date FROM orders GROUP BY user_id
+)
+SELECT ROUND(100.0 * COUNT(*) FILTER (WHERE f.first_order_date = u.signup_date) / COUNT(*), 2) AS same_day_pct
+FROM users u JOIN first_order f ON f.user_id = u.user_id;</code></pre></details>
+
+<details class="prob"><summary><span class="qnum2">35</span> Write a query to find the longest streak of consecutive days a stock's closing price increased.</summary>
+<pre><code>WITH flagged AS (
+  SELECT trade_date, close_price,
+         CASE WHEN close_price > LAG(close_price) OVER (ORDER BY trade_date) THEN 1 ELSE 0 END AS is_up
+  FROM stock_price
+),
+grouped AS (
+  SELECT trade_date,
+         trade_date - (ROW_NUMBER() OVER (ORDER BY trade_date))::int AS grp
+  FROM flagged WHERE is_up = 1
+)
+SELECT COUNT(*) AS streak_len, MIN(trade_date) AS streak_start, MAX(trade_date) AS streak_end
+FROM grouped
+GROUP BY grp
+ORDER BY streak_len DESC
+LIMIT 1;</code></pre>
+<p>Same gaps-and-islands mechanics as Part C, Module 10 — applied to "up days" instead of login days.</p></details>
+
+<details class="prob"><summary><span class="qnum2">36</span> Write a query to find the manager with the most direct reports.</summary>
+<pre><code>SELECT manager_id, COUNT(*) AS direct_reports
+FROM employee
+WHERE manager_id IS NOT NULL
+GROUP BY manager_id
+ORDER BY direct_reports DESC
+LIMIT 1;</code></pre></details>
+
+<details class="prob"><summary><span class="qnum2">37</span> Write a query to pivot monthly revenue into one column per month, for each product.</summary>
+<pre><code>SELECT product_id,
+  SUM(CASE WHEN EXTRACT(MONTH FROM sale_date) = 1 THEN revenue ELSE 0 END) AS jan,
+  SUM(CASE WHEN EXTRACT(MONTH FROM sale_date) = 2 THEN revenue ELSE 0 END) AS feb,
+  SUM(CASE WHEN EXTRACT(MONTH FROM sale_date) = 3 THEN revenue ELSE 0 END) AS mar
+  -- ... repeat the same CASE pattern through month 12
+FROM sales
+GROUP BY product_id;</code></pre>
+<p>Postgres has no native PIVOT keyword (unlike SQL Server) — conditional aggregation is the portable answer every time.</p></details>
+
+<details class="prob"><summary><span class="qnum2">38</span> Write a query to find the customer with the highest total lifetime spend.</summary>
+<pre><code>SELECT customer_id, SUM(total) AS lifetime_spend
+FROM orders
+GROUP BY customer_id
+ORDER BY lifetime_spend DESC
+LIMIT 1;</code></pre></details>
+
+<details class="prob"><summary><span class="qnum2">39</span> Write a query to find the average number of days between consecutive orders, per customer.</summary>
+<pre><code>WITH gaps AS (
+  SELECT customer_id, order_date,
+         order_date - LAG(order_date) OVER (PARTITION BY customer_id ORDER BY order_date) AS gap
+  FROM orders
+)
+SELECT customer_id, AVG(gap) AS avg_days_between_orders
+FROM gaps
+WHERE gap IS NOT NULL
+GROUP BY customer_id;</code></pre></details>
+
+<details class="prob"><summary><span class="qnum2">40</span> Write a query to flag potential fraud: users with more than 5 transactions within any 5-minute window.</summary>
+<pre><code>SELECT user_id, txn_time, txn_count_in_window
+FROM (
+  SELECT user_id, txn_time,
+         COUNT(*) OVER (
+           PARTITION BY user_id ORDER BY txn_time
+           RANGE BETWEEN INTERVAL '5 minutes' PRECEDING AND CURRENT ROW
+         ) AS txn_count_in_window
+  FROM transactions
+) t
+WHERE txn_count_in_window > 5;</code></pre>
+<p>A <code>RANGE</code> frame (time-based) rather than <code>ROWS</code> (row-count-based) is what makes this a true sliding time window instead of a fixed number of preceding rows — a distinction worth naming explicitly if asked.</p></details>
+
+</article>
+</div>
+</main>
+
+<footer>DBMS &amp; SQL Interview Bible · Part I: Top SQL Questions · back to <a href="index.html">the Index</a></footer>
+
+<script>
+function __currentIsDark(){
+  var t = document.documentElement.getAttribute("data-theme");
+  if(t) return t === "dark";
+  try{ return window.matchMedia("(prefers-color-scheme: dark)").matches; }catch(e){ return false; }
+}
+function __updateToggleIcon(){
+  var btn = document.getElementById("themeToggle");
+  if(!btn) return;
+  btn.textContent = __currentIsDark() ? "☀" : "☽";
+}
+function __toggleBibleTheme(){
+  try{
+    var next = __currentIsDark() ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    localStorage.setItem("bible-theme", next);
+  }catch(e){}
+  __updateToggleIcon();
+}
+document.addEventListener("DOMContentLoaded", __updateToggleIcon);
+</script>
+</body>
+</html>

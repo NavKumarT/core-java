@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Part H · Interview Simulation — DBMS &amp; SQL Interview Bible</title>
+<script>try{var t=localStorage.getItem("bible-theme");if(t==="light"||t==="dark"){document.documentElement.setAttribute("data-theme",t);}}catch(e){}</script>
+<style>
+:root{
+  --paper:#FAFAFA; --paper-2:#F1F1F3; --ink:#1B1B1F; --ink-soft:#6B6B72;
+  --accent:#3E63DD; --accent-2:#B3261E; --rule:#E4E4E8;
+  --code-bg:#F4F4F6; --code-text:#1B1B1F;
+  --good:#1E7A4C; --bad:#B3261E; color-scheme:light dark;
+}
+:root:not([data-theme="light"]){ @media (prefers-color-scheme: dark){
+  --paper:#121214; --paper-2:#1C1C1F; --ink:#EDEDEF; --ink-soft:#9A9AA2;
+  --accent:#8FABFF; --accent-2:#FF8983; --rule:#2B2B2F; --code-bg:#1A1A1D; --code-text:#EDEDEF;
+  --good:#4ADE80; --bad:#FF6B6B;
+}}
+:root[data-theme="dark"]{
+  --paper:#121214; --paper-2:#1C1C1F; --ink:#EDEDEF; --ink-soft:#9A9AA2;
+  --accent:#8FABFF; --accent-2:#FF8983; --rule:#2B2B2F; --code-bg:#1A1A1D; --code-text:#EDEDEF;
+  --good:#4ADE80; --bad:#FF6B6B;
+}
+*{box-sizing:border-box;}
+html{scroll-padding-top:1rem;}
+body{margin:0; background:var(--paper); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-size:17px; line-height:1.65;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);}
+h1,h2,h3,h4{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700; color:var(--ink); font-weight:600; line-height:1.2; letter-spacing:-0.01em;}
+a{color:var(--accent);}
+code,pre,kbd{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;}
+pre{background:var(--code-bg); color:var(--code-text); padding:1rem 1.1rem; border-radius:6px; overflow-x:auto; font-size:0.86rem; line-height:1.55;}
+code{background:var(--paper-2); padding:0.12em 0.4em; border-radius:4px; font-size:0.88em;}
+pre code{background:none; padding:0;}
+table{border-collapse:collapse; width:100%; font-size:0.94rem; margin:1rem 0;}
+th,td{border:1px solid var(--rule); padding:0.5rem 0.7rem; text-align:left; vertical-align:top;}
+th{background:var(--paper-2); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700;}
+blockquote{margin:1.2rem 0; padding:0.2rem 1.2rem; border-left:3px solid var(--accent-2); color:var(--ink-soft); font-style:italic;}
+hr{border:none; border-top:1px solid var(--rule); margin:2.5rem 0;}
+.key{color:var(--accent-2); font-weight:600;}
+.callout{background:var(--paper-2); border-radius:8px; padding:1rem 1.3rem; margin:1.3rem 0;}
+.callout.warn{border-left:3px solid var(--bad);}
+.callout.tip{border-left:3px solid var(--good);}
+.wrap{max-width:1100px; margin:0 auto; padding:0 1.4rem;}
+.layout{display:grid; grid-template-columns:210px minmax(0,720px); gap:3rem; align-items:start;}
+@media (max-width:880px){.layout{grid-template-columns:1fr;} .rail{position:static !important; order:2;}}
+.rail{position:sticky; top:1.2rem; font-size:0.85rem;}
+.rail h4{margin:0 0 0.6rem; font-size:0.75rem; letter-spacing:0.04em; color:var(--ink-soft); text-transform:uppercase; font-family:inherit; font-weight:600;}
+.rail a{display:block; color:var(--ink-soft); text-decoration:none; padding:0.28rem 0; border-left:2px solid transparent;}
+.rail a:hover{color:var(--accent); border-left-color:var(--accent); padding-left:0.5rem;}
+header.top{border-bottom:1px solid var(--rule); padding:2.6rem 0 1.6rem;}
+.eyebrow{color:var(--ink-soft); font-size:0.85rem; margin-bottom:0.4rem;}
+h1.title{font-size:2.5rem; margin:0 0 0.5rem;}
+.dek{color:var(--ink-soft); font-size:1.05rem; max-width:60ch; margin:0;}
+main.wrap{padding-top:2.4rem; padding-bottom:5rem;}
+article{max-width:720px;}
+footer{border-top:1px solid var(--rule); padding:2rem 0; text-align:center; color:var(--ink-soft); font-size:0.85rem;}
+footer a{color:var(--ink-soft);}
+.rf{display:grid; grid-template-columns:1fr; gap:0.5rem; margin:1rem 0;}
+.rf div{border-left:2px solid var(--rule); padding:0.4rem 0 0.4rem 0.9rem;}
+.rf b{color:var(--accent);}
+
+.theme-toggle{position:fixed; top:1rem; right:1.2rem; z-index:80; width:2.3rem; height:2.3rem; border-radius:50%;
+  border:1px solid var(--rule); background:var(--paper-2); color:var(--ink); display:flex; align-items:center;
+  justify-content:center; cursor:pointer; font-size:1.05rem; line-height:1; padding:0;
+  box-shadow:0 1px 3px rgba(0,0,0,0.08); transition:border-color .15s, transform .1s;
+  top:calc(1rem + env(safe-area-inset-top,0px));}
+.theme-toggle:hover{border-color:var(--accent); transform:translateY(-1px);}
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" onclick="__toggleBibleTheme()">◑</button>
+<header class="top"><div class="wrap">
+  <div class="eyebrow">DBMS &amp; SQL Interview Bible · Part H of 8 (final)</div>
+  <h1 class="title">Interview Simulation</h1>
+  <p class="dek">A rapid-fire cheat sheet for the night before, notes on what each company's rounds tend to probe, and a mock drilling script so you can rehearse handling "why," "what if," and "how would you debug" follow-ups out loud.</p>
+</div></header>
+
+<main class="wrap">
+<div class="layout">
+<nav class="rail">
+  <h4>In this part</h4>
+  <a href="#m27">27. Rapid-fire cheat sheet</a>
+  <a href="#m28">28. Company-pattern notes</a>
+  <a href="#m29">29. Mock interview drilling script</a>
+  <h4 style="margin-top:1.6rem;">Whole bible</h4>
+  <a href="part-a-foundations.html">A · Foundations</a>
+  <a href="part-b-normalization.html">B · Normalization</a>
+  <a href="part-c-sql-mastery.html">C · SQL Mastery</a>
+  <a href="part-d-transactions.html">D · Transactions</a>
+  <a href="part-e-indexing-performance.html">E · Indexing &amp; Perf</a>
+  <a href="part-f-distributed-data.html">F · Distributed Data</a>
+  <a href="part-g-security-ops.html">G · Security &amp; Ops</a>
+  <a href="part-i-top20-sql.html">I · Top 20 SQL Qs (next)</a>
+</nav>
+
+<article>
+
+<section id="m27">
+<h2>27 · Rapid-fire cheat sheet</h2>
+<p>One line each, for the last-night skim. If any line doesn't fully make sense, that's your signal to jump back into that part.</p>
+
+<div class="rf">
+<div><b>ACID</b> — Atomic (all-or-nothing), Consistent (invariants hold), Isolated (concurrent txns don't see each other's half-done work), Durable (survives a crash post-commit).</div>
+<div><b>Isolation anomalies, weakest→strongest prevented:</b> Read Uncommitted (none) → Read Committed (dirty read) → Repeatable Read (+ non-repeatable read) → Serializable (+ phantom + write skew).</div>
+<div><b>Normal forms:</b> 1NF atomic values → 2NF no partial dependency (whole key) → 3NF no transitive dependency → BCNF every determinant is a candidate key.</div>
+<div><b>Anomalies fixed:</b> insert &amp; delete (splitting into own tables), update (removing duplication of a fact across rows).</div>
+<div><b>Index default:</b> B-tree for equality + range + sort. Hash only for pure equality. Bitmap for low-cardinality AND/OR. GIN/GiST for full-text/JSON/geo.</div>
+<div><b>Composite index rule:</b> leftmost-prefix — usable left-to-right, not from the middle.</div>
+<div><b>View vs materialized view:</b> view = saved query, re-run live every time; materialized view = physically stored, refreshed on a schedule — a real caching decision.</div>
+<div><b>2PL vs MVCC:</b> 2PL blocks readers/writers with locks; MVCC lets readers see an old snapshot without blocking writers, at the cost of VACUUM cleanup.</div>
+<div><b>CAP:</b> only matters during a network partition — pick Consistency (refuse/delay) or Availability (serve possibly-stale) per request, not once for the whole system.</div>
+<div><b>Sharding:</b> range (hotspot risk) vs hash (even, kills range queries) vs consistent hashing (minimal reshuffle on scale in/out).</div>
+<div><b>WHERE vs HAVING:</b> WHERE filters rows before GROUP BY; HAVING filters groups after aggregation.</div>
+<div><b>NOT IN vs NOT EXISTS:</b> NOT IN silently breaks (returns zero rows) if the subquery contains a NULL; NOT EXISTS/LEFT JOIN+IS NULL are NULL-safe.</div>
+<div><b>UNION vs UNION ALL:</b> UNION dedups (costs a sort/hash pass); UNION ALL doesn't — default to ALL unless you need distinct rows.</div>
+<div><b>SQL injection fix:</b> parameterized queries/prepared statements — never string concatenation, and escaping alone isn't sufficient.</div>
+<div><b>Zero-downtime schema change:</b> expand (add nullable) → backfill/dual-write → cut over → contract (drop old) — never one big destructive step.</div>
+<div><b>2PC vs Saga:</b> 2PC = blocking coordinator, strict atomicity across services; Saga = sequence of local transactions with compensating rollbacks, favors availability.</div>
+</div>
+</section>
+
+<hr>
+
+<section id="m28">
+<h2>28 · Company-pattern notes</h2>
+<p>General shape drawn from recent candidate-reported experiences — treat as tendencies to prepare for, not guarantees of any specific loop.</p>
+
+<table>
+<tr><th>Pattern</th><th>What tends to show up</th></tr>
+<tr><td>Amazon-style (Leadership-Principles-driven bar raisers)</td><td>SQL asked as a practical mid-round exercise (write a query live), DBMS theory folded into system-design ("Design an inventory system") rather than asked standalone — expect the interviewer to push on <em>why</em> a design choice after you make it.</td></tr>
+<tr><td>Google/large-search-style</td><td>Heavier on algorithmic reasoning about data structures behind indexes (why B-tree, complexity arguments) and distributed-systems tradeoffs (CAP, replication) over raw SQL syntax.</td></tr>
+<tr><td>Uber/Lyft/ride-and-delivery-style</td><td>Geospatial and high-write-throughput scenarios recur heavily (see Part F's ride-sharing case study) — location data, matching under contention, and consistency-vs-latency tradeoffs are a near-guaranteed sub-topic.</td></tr>
+<tr><td>Fintech/payments-style</td><td>Transactions and isolation levels get disproportionate depth — expect a "walk me through what could go wrong with this transfer code" style probe, and questions about idempotency for retried payment requests.</td></tr>
+<tr><td>High-growth product/e-commerce-style (Flipkart, DoorDash-style)</td><td>Schema design for catalogs/orders/inventory is common, plus a strong emphasis on the SQL problem bank (Part C, Module 12) as a timed, live-coding segment.</td></tr>
+</table>
+
+<div class="callout tip"><strong>Universal pattern across all of them:</strong> the first answer you give is rarely the whole test — the follow-up ("why not X instead," "what if this got 100x bigger," "how would you know this was slow in production") is where SDE2-level signal actually gets collected. Prepare to defend, not just state, every design choice.</div>
+</section>
+
+<hr>
+
+<section id="m29">
+<h2>29 · Mock interview drilling script</h2>
+<p>Read the interviewer prompts, answer out loud before reading the notes, then check yourself against the "what a strong answer covers" line. This mirrors how a real follow-up chain actually runs.</p>
+
+<blockquote>"Design a schema for an e-commerce order system." <br><span style="color:var(--ink-soft); font-style:normal; font-size:0.9rem;">→ what a strong answer covers: entities (customer, product, order, order_line, payment), M:N resolved via order_line, price snapshotted on order_line not referenced live from product (Part B, Module 5).</span></blockquote>
+
+<blockquote>"Why did you snapshot the price instead of just joining to the product table?" <br><span style="color:var(--ink-soft); font-style:normal; font-size:0.9rem;">→ tests whether you understand denormalization is a deliberate correctness choice, not laziness — a later price change must never rewrite a historical invoice.</span></blockquote>
+
+<blockquote>"Now this table has 500 million rows and reads are slow. What do you do?" <br><span style="color:var(--ink-soft); font-style:normal; font-size:0.9rem;">→ expects: check EXPLAIN ANALYZE first, don't guess; look for a missing/unused index; consider whether the access pattern needs partitioning (by date range, likely, for an orders table) before jumping to sharding.</span></blockquote>
+
+<blockquote>"Two customers are checking out the last unit of the same product at the same time. Walk me through what happens." <br><span style="color:var(--ink-soft); font-style:normal; font-size:0.9rem;">→ expects: name the race condition explicitly, then the fix — a transaction with either row-level locking (SELECT ... FOR UPDATE) or an atomic conditional decrement (UPDATE ... WHERE stock > 0), not just "wrap it in a transaction" without saying what isolation/locking actually does the work.</span></blockquote>
+
+<blockquote>"Now the checkout service and the inventory service are two separate databases owned by two teams. Does your answer change?" <br><span style="color:var(--ink-soft); font-style:normal; font-size:0.9rem;">→ expects: recognize this is now a distributed transaction problem, name 2PC's blocking-coordinator downside, and propose a Saga with an explicit compensating action (release the reservation) if payment fails after inventory was decremented.</span></blockquote>
+
+<blockquote>"A teammate wants to add 12 indexes to this table to speed up every dashboard query. Any concerns?" <br><span style="color:var(--ink-soft); font-style:normal; font-size:0.9rem;">→ expects: push back constructively — every index taxes every write; ask about the actual write volume and query patterns before agreeing, and suggest consolidating into fewer, well-chosen composite/covering indexes instead.</span></blockquote>
+
+<div class="callout"><strong>The meta-skill being tested across all of this:</strong> narrate your reasoning, not just your conclusion. "I'd check X before assuming Y" reads as production experience; a confident final answer with no diagnostic step in front of it reads as memorized theory.</div>
+</section>
+
+</article>
+</div>
+</main>
+
+<footer>DBMS &amp; SQL Interview Bible · Part H: Interview Simulation · end of the bible — back to <a href="part-a-foundations.html">Part A</a></footer>
+
+<script>
+function __currentIsDark(){
+  var t = document.documentElement.getAttribute("data-theme");
+  if(t) return t === "dark";
+  try{ return window.matchMedia("(prefers-color-scheme: dark)").matches; }catch(e){ return false; }
+}
+function __updateToggleIcon(){
+  var btn = document.getElementById("themeToggle");
+  if(!btn) return;
+  btn.textContent = __currentIsDark() ? "☀" : "☽";
+}
+function __toggleBibleTheme(){
+  try{
+    var next = __currentIsDark() ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    localStorage.setItem("bible-theme", next);
+  }catch(e){}
+  __updateToggleIcon();
+}
+document.addEventListener("DOMContentLoaded", __updateToggleIcon);
+</script>
+</body>
+</html>

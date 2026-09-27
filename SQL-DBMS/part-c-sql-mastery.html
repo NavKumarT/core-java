@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Part C · SQL Mastery — DBMS &amp; SQL Interview Bible</title>
+<script>try{var t=localStorage.getItem("bible-theme");if(t==="light"||t==="dark"){document.documentElement.setAttribute("data-theme",t);}}catch(e){}</script>
+<style>
+:root{
+  --paper:#FAFAFA; --paper-2:#F1F1F3; --ink:#1B1B1F; --ink-soft:#6B6B72;
+  --accent:#3E63DD; --accent-2:#B3261E; --rule:#E4E4E8;
+  --code-bg:#F4F4F6; --code-text:#1B1B1F;
+  --good:#1E7A4C; --bad:#B3261E; color-scheme:light dark;
+}
+:root:not([data-theme="light"]){ @media (prefers-color-scheme: dark){
+  --paper:#121214; --paper-2:#1C1C1F; --ink:#EDEDEF; --ink-soft:#9A9AA2;
+  --accent:#8FABFF; --accent-2:#FF8983; --rule:#2B2B2F; --code-bg:#1A1A1D; --code-text:#EDEDEF;
+  --good:#4ADE80; --bad:#FF6B6B;
+}}
+:root[data-theme="dark"]{
+  --paper:#121214; --paper-2:#1C1C1F; --ink:#EDEDEF; --ink-soft:#9A9AA2;
+  --accent:#8FABFF; --accent-2:#FF8983; --rule:#2B2B2F; --code-bg:#1A1A1D; --code-text:#EDEDEF;
+  --good:#4ADE80; --bad:#FF6B6B;
+}
+*{box-sizing:border-box;}
+html{scroll-padding-top:1rem;}
+body{margin:0; background:var(--paper); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-size:17px; line-height:1.65;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);}
+h1,h2,h3,h4{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700; color:var(--ink); font-weight:600; line-height:1.2; letter-spacing:-0.01em;}
+a{color:var(--accent);}
+code,pre,kbd{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;}
+pre{background:var(--code-bg); color:var(--code-text); padding:1rem 1.1rem; border-radius:6px; overflow-x:auto; font-size:0.86rem; line-height:1.55;}
+code{background:var(--paper-2); padding:0.12em 0.4em; border-radius:4px; font-size:0.88em;}
+pre code{background:none; padding:0;}
+table{border-collapse:collapse; width:100%; font-size:0.94rem; margin:1rem 0;}
+th,td{border:1px solid var(--rule); padding:0.5rem 0.7rem; text-align:left; vertical-align:top;}
+th{background:var(--paper-2); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700;}
+blockquote{margin:1.2rem 0; padding:0.2rem 1.2rem; border-left:3px solid var(--accent-2); color:var(--ink-soft); font-style:italic;}
+hr{border:none; border-top:1px solid var(--rule); margin:2.5rem 0;}
+.key{color:var(--accent-2); font-weight:600;}
+.callout{background:var(--paper-2); border-radius:8px; padding:1rem 1.3rem; margin:1.3rem 0;}
+.callout.warn{border-left:3px solid var(--bad);}
+.callout.tip{border-left:3px solid var(--good);}
+.wrap{max-width:1100px; margin:0 auto; padding:0 1.4rem;}
+.layout{display:grid; grid-template-columns:210px minmax(0,720px); gap:3rem; align-items:start;}
+@media (max-width:880px){.layout{grid-template-columns:1fr;} .rail{position:static !important; order:2;}}
+.rail{position:sticky; top:1.2rem; font-size:0.85rem;}
+.rail h4{margin:0 0 0.6rem; font-size:0.75rem; letter-spacing:0.04em; color:var(--ink-soft); text-transform:uppercase; font-family:inherit; font-weight:600;}
+.rail a{display:block; color:var(--ink-soft); text-decoration:none; padding:0.28rem 0; border-left:2px solid transparent;}
+.rail a:hover{color:var(--accent); border-left-color:var(--accent); padding-left:0.5rem;}
+header.top{border-bottom:1px solid var(--rule); padding:2.6rem 0 1.6rem;}
+.eyebrow{color:var(--ink-soft); font-size:0.85rem; margin-bottom:0.4rem;}
+h1.title{font-size:2.5rem; margin:0 0 0.5rem;}
+.dek{color:var(--ink-soft); font-size:1.05rem; max-width:60ch; margin:0;}
+main.wrap{padding-top:2.4rem; padding-bottom:5rem;}
+article{max-width:720px;}
+footer{border-top:1px solid var(--rule); padding:2rem 0; text-align:center; color:var(--ink-soft); font-size:0.85rem;}
+footer a{color:var(--ink-soft);}
+details.qa{border:1px solid var(--rule); border-radius:8px; padding:0.9rem 1.2rem; margin:0.7rem 0; background:var(--paper-2);}
+details.qa summary{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700; cursor:pointer; list-style:none;}
+details.qa summary::-webkit-details-marker{display:none;}
+details.qa summary::before{content:"Q ·  "; color:var(--accent-2);}
+details.qa[open] summary{margin-bottom:0.6rem;}
+details.qa p{margin:0.3rem 0 0;}
+details.prob{border:1px solid var(--rule); border-radius:8px; padding:1rem 1.3rem; margin:1rem 0; background:var(--paper-2);}
+details.prob summary{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700; cursor:pointer; list-style:none; font-size:1.03rem;}
+details.prob summary::-webkit-details-marker{display:none;}
+details.prob summary::before{content:"▸ "; color:var(--accent);}
+details.prob[open] summary::before{content:"▾ "; }
+
+.theme-toggle{position:fixed; top:1rem; right:1.2rem; z-index:80; width:2.3rem; height:2.3rem; border-radius:50%;
+  border:1px solid var(--rule); background:var(--paper-2); color:var(--ink); display:flex; align-items:center;
+  justify-content:center; cursor:pointer; font-size:1.05rem; line-height:1; padding:0;
+  box-shadow:0 1px 3px rgba(0,0,0,0.08); transition:border-color .15s, transform .1s;
+  top:calc(1rem + env(safe-area-inset-top,0px));}
+.theme-toggle:hover{border-color:var(--accent); transform:translateY(-1px);}
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" onclick="__toggleBibleTheme()">◑</button>
+<header class="top"><div class="wrap">
+  <div class="eyebrow">DBMS &amp; SQL Interview Bible · Part C of 8</div>
+  <h1 class="title">SQL Mastery</h1>
+  <p class="dek">The part that actually gets tested live, on a shared screen, in real time. Query anatomy, joins, subqueries vs CTEs, window functions, aggregate patterns, set ops — and a curated bank of the SQL problems that keep recurring across product-company loops.</p>
+</div></header>
+
+<main class="wrap">
+<div class="layout">
+<nav class="rail">
+  <h4>In this part</h4>
+  <a href="#m6">6. Query anatomy &amp; execution order</a>
+  <a href="#m7">7. Joins, deeply</a>
+  <a href="#m8">8. Subqueries vs CTEs vs derived tables</a>
+  <a href="#m9">9. Window functions</a>
+  <a href="#m10">10. Aggregate patterns</a>
+  <a href="#m11">11. Set operations</a>
+  <a href="#m12">12. Real-interview problem bank</a>
+  <a href="#faq">Popular interview Q&amp;A</a>
+  <h4 style="margin-top:1.6rem;">Whole bible</h4>
+  <a href="part-a-foundations.html">A · Foundations</a>
+  <a href="part-b-normalization.html">B · Normalization</a>
+  <a href="part-d-transactions.html">D · Transactions</a>
+  <a href="part-e-indexing-performance.html">E · Indexing &amp; Perf</a>
+  <a href="part-f-distributed-data.html">F · Distributed Data</a>
+  <a href="part-g-security-ops.html">G · Security &amp; Ops</a>
+  <a href="part-h-interview-sim.html">H · Interview Sim</a>
+  <a href="part-i-top20-sql.html">I · Top 20 SQL Qs</a>
+</nav>
+
+<article>
+
+<section id="m6">
+<h2>6 · Query anatomy &amp; execution order</h2>
+
+<p>You <em>write</em> a query in this order:</p>
+<pre><code>SELECT ... FROM ... JOIN ... ON ... WHERE ... GROUP BY ... HAVING ... ORDER BY ... LIMIT ...</code></pre>
+
+<p>The engine <em>evaluates</em> it in a completely different order — and almost every "why doesn't my alias work" bug traces back to not knowing this:</p>
+
+<table>
+<tr><th>Step</th><th>Clause</th><th>What happens</th></tr>
+<tr><td>1</td><td><code>FROM</code> / <code>JOIN</code></td><td>Build the working row set from all source tables.</td></tr>
+<tr><td>2</td><td><code>WHERE</code></td><td>Filter individual rows. Aggregates don't exist yet — you cannot reference a SELECT alias or an aggregate here.</td></tr>
+<tr><td>3</td><td><code>GROUP BY</code></td><td>Collapse rows into groups.</td></tr>
+<tr><td>4</td><td><code>HAVING</code></td><td>Filter <em>groups</em>, now that aggregates exist.</td></tr>
+<tr><td>5</td><td><code>SELECT</code></td><td>Compute output expressions/aliases.</td></tr>
+<tr><td>6</td><td><code>DISTINCT</code></td><td>De-duplicate the projected rows.</td></tr>
+<tr><td>7</td><td><code>ORDER BY</code></td><td>Sort — SELECT aliases <em>are</em> visible here.</td></tr>
+<tr><td>8</td><td><code>LIMIT</code> / <code>OFFSET</code></td><td>Trim the final row count.</td></tr>
+</table>
+
+<div class="callout warn"><strong>This is why:</strong> <code>WHERE total_price &gt; 100</code> fails if <code>total_price</code> is a SELECT alias for <code>price*qty</code> — WHERE runs before SELECT computes it. You must repeat the expression, or move the filter to <code>HAVING</code> if it's post-aggregation, or wrap in a CTE/subquery. It's also why <code>WHERE COUNT(*) &gt; 1</code> is always a syntax error and <code>HAVING COUNT(*) &gt; 1</code> is correct — aggregates only exist after GROUP BY.</div>
+</section>
+
+<hr>
+
+<section id="m7">
+<h2>7 · Joins, deeply</h2>
+
+<table>
+<tr><th>Join</th><th>Returns</th></tr>
+<tr><td><code>INNER JOIN</code></td><td>Only rows with a match on both sides.</td></tr>
+<tr><td><code>LEFT JOIN</code></td><td>All left rows; unmatched right columns are NULL.</td></tr>
+<tr><td><code>RIGHT JOIN</code></td><td>Mirror of LEFT — rarely used, most people rewrite as LEFT by swapping table order.</td></tr>
+<tr><td><code>FULL OUTER JOIN</code></td><td>Union of LEFT and RIGHT — all rows from both sides, NULLs where unmatched.</td></tr>
+<tr><td><code>CROSS JOIN</code></td><td>Cartesian product — every row of A with every row of B. Rare on purpose; common by accident (forgotten ON clause).</td></tr>
+<tr><td>Self join</td><td>A table joined to itself via two aliases — the standard way to compare rows within one table (employee ↔ manager).</td></tr>
+</table>
+
+<p><strong>Semi-join and anti-join</strong> are patterns, not keywords, but interviewers expect the vocabulary:</p>
+<pre><code>-- Semi-join: customers who have placed at least one order (no duplication even if they have many orders)
+SELECT c.* FROM customer c WHERE EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.customer_id);
+
+-- Anti-join: customers who have never ordered
+SELECT c.* FROM customer c WHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.customer_id);
+-- Equivalent LEFT JOIN / IS NULL form (watch for NULLs with NOT IN — see FAQ):
+SELECT c.* FROM customer c LEFT JOIN orders o ON o.customer_id = c.customer_id WHERE o.customer_id IS NULL;</code></pre>
+
+<div class="callout warn"><strong>Bug #1 — the fan-out trap.</strong> Joining <code>orders</code> to <code>order_items</code> (one-to-many) and then <code>SUM(orders.total)</code> in the same query double-counts the order total once per line item. Fix: aggregate <code>order_items</code> down to one row per order in a subquery/CTE <em>before</em> joining, or use a separate scalar subquery for each metric instead of joining everything into one flat row set.</div>
+
+<div class="callout warn"><strong>Bug #2 — WHERE silently turns a LEFT JOIN into an INNER JOIN.</strong> <code>LEFT JOIN orders o ON ... WHERE o.status = 'shipped'</code> drops every customer with no matching order, because NULL fails the WHERE filter. If you want to keep all customers but filter which orders count, move the condition into the <code>ON</code> clause: <code>LEFT JOIN orders o ON o.customer_id = c.customer_id AND o.status = 'shipped'</code>.</div>
+</section>
+
+<hr>
+
+<section id="m8">
+<h2>8 · Subqueries vs CTEs vs derived tables</h2>
+
+<p><strong>Scalar subquery</strong> — returns one value, used where a single value is expected: <code>SELECT name, (SELECT COUNT(*) FROM orders o WHERE o.customer_id = c.customer_id) AS order_count FROM customer c;</code></p>
+
+<p><strong>Correlated subquery</strong> — references the outer query's row, so conceptually re-runs once per outer row. This is the performance trap: a correlated subquery in the SELECT list or WHERE clause can turn an O(N) query into O(N·M) unless the optimizer can rewrite it into a join/semi-join (modern Postgres often can, but don't assume it always will — profile with EXPLAIN, see Part E).</p>
+
+<p><strong>CTE (<code>WITH</code>)</strong> — a named, readable subquery. In Postgres 12+, a non-recursive CTE is <em>inlined</em> into the main query by the planner (same performance as an equivalent subquery) unless it has side effects (a data-modifying CTE) or you force materialization with <code>MATERIALIZED</code>. Pre-12 Postgres always materialized CTEs as an optimization fence — worth knowing the version-dependent behavior exists, even if you don't memorize the exact cutoff.</p>
+
+<p><strong>Recursive CTE</strong> — the standard tool for hierarchical/graph-shaped data (org charts, category trees, bill-of-materials):</p>
+<pre><code>WITH RECURSIVE org_chart AS (
+  SELECT employee_id, name, manager_id, 1 AS depth
+  FROM employee WHERE manager_id IS NULL         -- anchor: the CEO
+  UNION ALL
+  SELECT e.employee_id, e.name, e.manager_id, oc.depth + 1
+  FROM employee e
+  JOIN org_chart oc ON e.manager_id = oc.employee_id  -- recursive step
+)
+SELECT * FROM org_chart ORDER BY depth;</code></pre>
+<p>Two-part structure every time: an <em>anchor</em> query (base case) UNION ALL'd with a <em>recursive</em> query that joins the CTE to itself, terminating when the recursive step returns no new rows.</p>
+</section>
+
+<hr>
+
+<section id="m9">
+<h2>9 · Window functions</h2>
+
+<p>The single highest-leverage SQL topic for interviews — almost every "hard" SQL problem in a real loop reduces to picking the right window function. The shape is always:</p>
+<pre><code>function() OVER (PARTITION BY col ORDER BY col [ROWS/RANGE BETWEEN ... AND ...])</code></pre>
+<p><code>PARTITION BY</code> resets the calculation per group (like a per-group GROUP BY, but rows aren't collapsed). <code>ORDER BY</code> inside OVER defines the row sequence for ranking/running calculations.</p>
+
+<table>
+<tr><th>Function</th><th>Behavior on ties</th><th>Typical use</th></tr>
+<tr><td><code>ROW_NUMBER()</code></td><td>Always unique, arbitrary tiebreak</td><td>Dedup rows, pick "the first N per group"</td></tr>
+<tr><td><code>RANK()</code></td><td>Ties share a rank, next rank skips</td><td>"Nth highest salary" when ties should share a place</td></tr>
+<tr><td><code>DENSE_RANK()</code></td><td>Ties share a rank, no gap</td><td>"Nth distinct highest value"</td></tr>
+<tr><td><code>LAG(col, n)</code> / <code>LEAD(col, n)</code></td><td>—</td><td>Compare a row to the previous/next row (day-over-day delta)</td></tr>
+<tr><td><code>NTILE(n)</code></td><td>—</td><td>Split ordered rows into n roughly-equal buckets (quartiles)</td></tr>
+<tr><td><code>SUM()/AVG() OVER (...ROWS BETWEEN ...)</code></td><td>—</td><td>Running total, moving average</td></tr>
+</table>
+
+<pre><code>-- Nth highest salary per department (N=2), ties handled with DENSE_RANK
+SELECT * FROM (
+  SELECT employee_id, department_id, salary,
+         DENSE_RANK() OVER (PARTITION BY department_id ORDER BY salary DESC) AS rnk
+  FROM employee
+) ranked WHERE rnk = 2;
+
+-- 7-day moving average of daily revenue
+SELECT day, revenue,
+       AVG(revenue) OVER (ORDER BY day ROWS BETWEEN 6 PRECEDING AND CURRENT ROW) AS moving_avg_7d
+FROM daily_revenue;
+
+-- Running cumulative total
+SELECT day, revenue, SUM(revenue) OVER (ORDER BY day) AS running_total
+FROM daily_revenue;</code></pre>
+
+<div class="callout tip"><strong>Postgres shortcut worth knowing:</strong> <code>SELECT DISTINCT ON (department_id) *</code> ... <code>ORDER BY department_id, salary DESC</code> is Postgres-specific sugar for "top 1 row per group" that avoids the ROW_NUMBER-subquery dance entirely. Mention it, but default to <code>ROW_NUMBER()</code> in an interview since it's portable across engines.</div>
+</section>
+
+<hr>
+
+<section id="m10">
+<h2>10 · Aggregate patterns</h2>
+
+<p><strong>WHERE vs HAVING</strong> — the most-asked one-liner in every list: WHERE filters rows before grouping; HAVING filters groups after aggregation. <code>WHERE dept = 'eng' GROUP BY manager HAVING COUNT(*) > 5</code> — WHERE removes non-eng rows first, HAVING then keeps only managers with more than 5 remaining reports.</p>
+
+<p><strong>Gaps-and-islands</strong> — detecting runs of consecutive values (consecutive login days, consecutive price increases). The standard trick: subtract a row-number from a date/sequence — rows in the same "island" produce the same difference:</p>
+<pre><code>SELECT user_id, login_date,
+       login_date - (ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY login_date))::int AS grp
+FROM logins;
+-- rows sharing the same (user_id, grp) are one unbroken streak of consecutive days</code></pre>
+
+<p><strong>Deduplication</strong> — keep one row per key, discard the rest. Standard pattern:</p>
+<pre><code>DELETE FROM employee e
+USING (
+  SELECT ctid, ROW_NUMBER() OVER (PARTITION BY email ORDER BY employee_id) AS rn
+  FROM employee
+) d
+WHERE e.ctid = d.ctid AND d.rn > 1;</code></pre>
+
+<p><strong>Pivoting</strong> without a PIVOT keyword (Postgres has none built in) — conditional aggregation:</p>
+<pre><code>SELECT department_id,
+       SUM(CASE WHEN gender = 'F' THEN 1 ELSE 0 END) AS female_count,
+       SUM(CASE WHEN gender = 'M' THEN 1 ELSE 0 END) AS male_count
+FROM employee GROUP BY department_id;</code></pre>
+</section>
+
+<hr>
+
+<section id="m11">
+<h2>11 · Set operations</h2>
+<table>
+<tr><th>Operator</th><th>Behavior</th><th>Cost note</th></tr>
+<tr><td><code>UNION</code></td><td>Combines and removes duplicate rows</td><td>Implies a dedup pass (sort or hash) over the combined set — costs more.</td></tr>
+<tr><td><code>UNION ALL</code></td><td>Combines, keeps duplicates</td><td>No dedup pass — always prefer this when you already know the sets are disjoint or duplicates are acceptable/desired.</td></tr>
+<tr><td><code>INTERSECT</code></td><td>Rows present in both sets</td><td>Also dedups implicitly.</td></tr>
+<tr><td><code>EXCEPT</code></td><td>Rows in the first set, not the second</td><td>Order matters — not symmetric.</td></tr>
+</table>
+<div class="callout tip"><strong>Interview one-liner:</strong> "I default to UNION ALL and only pay for UNION's dedup when I actually need distinct rows — using UNION out of habit is a common accidental performance regression."</div>
+</section>
+
+<hr>
+
+<section id="m12">
+<h2>12 · Real-interview problem bank</h2>
+<p>Each of these has shown up, close to verbatim, in product-company SQL rounds. Solutions assume Postgres.</p>
+
+<details class="prob"><summary>Find the Nth highest salary without LIMIT/OFFSET (portable across engines)</summary>
+<pre><code>SELECT salary FROM (
+  SELECT salary, DENSE_RANK() OVER (ORDER BY salary DESC) AS rnk
+  FROM employee
+) t WHERE rnk = :N;</code></pre>
+<p>DENSE_RANK avoids skipping a place on ties, so "2nd highest" doesn't disappear if two people tie for 1st.</p></details>
+
+<details class="prob"><summary>Second highest salary per department</summary>
+<pre><code>SELECT department_id, salary FROM (
+  SELECT department_id, salary,
+         DENSE_RANK() OVER (PARTITION BY department_id ORDER BY salary DESC) AS rnk
+  FROM employee
+) t WHERE rnk = 2;</code></pre></details>
+
+<details class="prob"><summary>Employees who earn more than their manager</summary>
+<pre><code>SELECT e.name AS employee, e.salary, m.name AS manager, m.salary AS manager_salary
+FROM employee e
+JOIN employee m ON e.manager_id = m.employee_id
+WHERE e.salary > m.salary;</code></pre>
+<p>A textbook self-join — the same table plays two roles via two aliases.</p></details>
+
+<details class="prob"><summary>Users active on 3+ consecutive days</summary>
+<pre><code>WITH islands AS (
+  SELECT user_id, login_date,
+         login_date - (ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY login_date))::int AS grp
+  FROM logins
+)
+SELECT user_id, grp, COUNT(*) AS streak_len, MIN(login_date) AS streak_start, MAX(login_date) AS streak_end
+FROM islands GROUP BY user_id, grp HAVING COUNT(*) >= 3;</code></pre></details>
+
+<details class="prob"><summary>Remove duplicate rows, keep the earliest by id</summary>
+<pre><code>DELETE FROM t a USING t b
+WHERE a.id > b.id AND a.dedup_key = b.dedup_key;</code></pre>
+<p>Self-anti-join on the natural key, keeping the smaller id.</p></details>
+
+<details class="prob"><summary>Top 3 highest-paid employees in each department</summary>
+<pre><code>SELECT * FROM (
+  SELECT *, ROW_NUMBER() OVER (PARTITION BY department_id ORDER BY salary DESC) AS rn
+  FROM employee
+) t WHERE rn <= 3;</code></pre></details>
+
+<details class="prob"><summary>Month-over-month revenue growth %</summary>
+<pre><code>SELECT month, revenue,
+       ROUND(100.0 * (revenue - LAG(revenue) OVER (ORDER BY month)) / LAG(revenue) OVER (ORDER BY month), 2) AS growth_pct
+FROM monthly_revenue;</code></pre></details>
+
+<details class="prob"><summary>Find customers who never placed an order</summary>
+<pre><code>SELECT c.* FROM customer c
+LEFT JOIN orders o ON o.customer_id = c.customer_id
+WHERE o.order_id IS NULL;</code></pre>
+<p>Avoid <code>NOT IN (SELECT customer_id FROM orders)</code> here — if a single NULL sneaks into <code>orders.customer_id</code>, <code>NOT IN</code> silently returns zero rows for the entire query. LEFT JOIN/IS NULL or NOT EXISTS are both NULL-safe.</p></details>
+
+<details class="prob"><summary>Median salary per department (no MEDIAN() function in Postgres)</summary>
+<pre><code>SELECT department_id, PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY salary) AS median_salary
+FROM employee GROUP BY department_id;</code></pre></details>
+
+</section>
+
+<hr>
+
+<section id="faq">
+<h2>Popular interview questions — SQL Mastery</h2>
+
+<details class="qa"><summary>Why does <code>NOT IN</code> with a subquery sometimes return zero rows unexpectedly?</summary>
+<p>If the subquery's result set contains even one NULL, <code>NOT IN</code> evaluates to NULL (not true) for every comparison, because <code>x NOT IN (a, b, NULL)</code> expands to <code>x!=a AND x!=b AND x!=NULL</code>, and the last term is always NULL, poisoning the whole AND. Use <code>NOT EXISTS</code> or a LEFT JOIN/IS NULL instead — both are NULL-safe.</p></details>
+
+<details class="qa"><summary>Difference between RANK, DENSE_RANK and ROW_NUMBER?</summary>
+<p>ROW_NUMBER always assigns unique, sequential numbers even on ties. RANK gives tied rows the same rank but skips the next rank by the count of ties (1,1,3). DENSE_RANK gives tied rows the same rank with no gap (1,1,2).</p></details>
+
+<details class="qa"><summary>When would a correlated subquery be slower than a join, and how would you detect it?</summary>
+<p>When the planner can't rewrite the correlated subquery into a semi-join, it effectively re-executes the inner query per outer row, turning a linear scan into a nested-loop-like cost. Detect it with <code>EXPLAIN ANALYZE</code> — look for a large "loops" count on the inner plan node relative to outer rows (see Part E for the full EXPLAIN walkthrough).</p></details>
+
+<details class="qa"><summary>What causes duplicate rows to appear after a JOIN that "shouldn't" have duplicates?</summary>
+<p>Almost always a fan-out: joining a one-to-many relationship (orders → order_items) without pre-aggregating the many side first. Every matching child row multiplies the parent row in the output.</p></details>
+
+<details class="qa"><summary>UNION vs UNION ALL — which do you default to, and why?</summary>
+<p>UNION ALL, because it skips the implicit dedup (sort/hash) pass. Only use UNION when you specifically need distinct rows across the combined sets — treating UNION as the "safe default" is a common unnecessary performance cost.</p></details>
+
+<details class="qa"><summary>How do you get the "top N per group" — walk through it.</summary>
+<p>Wrap a <code>ROW_NUMBER() OVER (PARTITION BY group_col ORDER BY sort_col DESC)</code> in a subquery or CTE, then filter the outer query on <code>rn &lt;= N</code>. RANK/DENSE_RANK instead of ROW_NUMBER if ties should be allowed to tie for the Nth spot.</p></details>
+
+<details class="qa"><summary>What's a CTE's actual runtime behavior in modern Postgres — is it always materialized?</summary>
+<p>No — since Postgres 12, a non-recursive CTE with no side effects is inlined into the main query plan by default (same cost as an equivalent subquery), unless you explicitly force materialization with the <code>MATERIALIZED</code> keyword or the CTE has side effects (e.g. it's a data-modifying statement).</p></details>
+
+</section>
+
+</article>
+</div>
+</main>
+
+<footer>DBMS &amp; SQL Interview Bible · Part C: SQL Mastery · continued in Part D: Transactions</footer>
+
+<script>
+function __currentIsDark(){
+  var t = document.documentElement.getAttribute("data-theme");
+  if(t) return t === "dark";
+  try{ return window.matchMedia("(prefers-color-scheme: dark)").matches; }catch(e){ return false; }
+}
+function __updateToggleIcon(){
+  var btn = document.getElementById("themeToggle");
+  if(!btn) return;
+  btn.textContent = __currentIsDark() ? "☀" : "☽";
+}
+function __toggleBibleTheme(){
+  try{
+    var next = __currentIsDark() ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    localStorage.setItem("bible-theme", next);
+  }catch(e){}
+  __updateToggleIcon();
+}
+document.addEventListener("DOMContentLoaded", __updateToggleIcon);
+</script>
+</body>
+</html>

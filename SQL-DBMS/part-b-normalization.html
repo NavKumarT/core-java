@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Part B · Normalization — DBMS &amp; SQL Interview Bible</title>
+<script>try{var t=localStorage.getItem("bible-theme");if(t==="light"||t==="dark"){document.documentElement.setAttribute("data-theme",t);}}catch(e){}</script>
+<style>
+:root{
+  --paper:#FAFAFA; --paper-2:#F1F1F3; --ink:#1B1B1F; --ink-soft:#6B6B72;
+  --accent:#3E63DD; --accent-2:#B3261E; --rule:#E4E4E8;
+  --code-bg:#F4F4F6; --code-text:#1B1B1F;
+  --good:#1E7A4C; --bad:#B3261E; color-scheme:light dark;
+}
+:root:not([data-theme="light"]){ @media (prefers-color-scheme: dark){
+  --paper:#121214; --paper-2:#1C1C1F; --ink:#EDEDEF; --ink-soft:#9A9AA2;
+  --accent:#8FABFF; --accent-2:#FF8983; --rule:#2B2B2F; --code-bg:#1A1A1D; --code-text:#EDEDEF;
+  --good:#4ADE80; --bad:#FF6B6B;
+}}
+:root[data-theme="dark"]{
+  --paper:#121214; --paper-2:#1C1C1F; --ink:#EDEDEF; --ink-soft:#9A9AA2;
+  --accent:#8FABFF; --accent-2:#FF8983; --rule:#2B2B2F; --code-bg:#1A1A1D; --code-text:#EDEDEF;
+  --good:#4ADE80; --bad:#FF6B6B;
+}
+*{box-sizing:border-box;}
+html{scroll-padding-top:1rem;}
+body{margin:0; background:var(--paper); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-size:17px; line-height:1.65;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);}
+h1,h2,h3,h4{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700; color:var(--ink); font-weight:600; line-height:1.2; letter-spacing:-0.01em;}
+a{color:var(--accent);}
+code,pre,kbd{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;}
+pre{background:var(--code-bg); color:var(--code-text); padding:1rem 1.1rem; border-radius:6px; overflow-x:auto; font-size:0.88rem; line-height:1.55;}
+code{background:var(--paper-2); padding:0.12em 0.4em; border-radius:4px; font-size:0.88em;}
+pre code{background:none; padding:0;}
+table{border-collapse:collapse; width:100%; font-size:0.95rem; margin:1rem 0;}
+th,td{border:1px solid var(--rule); padding:0.5rem 0.7rem; text-align:left; vertical-align:top;}
+th{background:var(--paper-2); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700;}
+blockquote{margin:1.2rem 0; padding:0.2rem 1.2rem; border-left:3px solid var(--accent-2); color:var(--ink-soft); font-style:italic;}
+hr{border:none; border-top:1px solid var(--rule); margin:2.5rem 0;}
+.key{color:var(--accent-2); font-weight:600;}
+.callout{background:var(--paper-2); border-radius:8px; padding:1rem 1.3rem; margin:1.3rem 0;}
+.callout.warn{border-left:3px solid var(--bad);}
+.callout.tip{border-left:3px solid var(--good);}
+.wrap{max-width:1100px; margin:0 auto; padding:0 1.4rem;}
+.layout{display:grid; grid-template-columns:210px minmax(0,720px); gap:3rem; align-items:start;}
+@media (max-width:880px){.layout{grid-template-columns:1fr;} .rail{position:static !important; order:2;}}
+.rail{position:sticky; top:1.2rem; font-size:0.85rem;}
+.rail h4{margin:0 0 0.6rem; font-size:0.75rem; letter-spacing:0.04em; color:var(--ink-soft); text-transform:uppercase; font-family:inherit; font-weight:600;}
+.rail a{display:block; color:var(--ink-soft); text-decoration:none; padding:0.3rem 0; border-left:2px solid transparent;}
+.rail a:hover{color:var(--accent); border-left-color:var(--accent); padding-left:0.5rem;}
+header.top{border-bottom:1px solid var(--rule); padding:2.6rem 0 1.6rem;}
+.eyebrow{color:var(--ink-soft); font-size:0.85rem; margin-bottom:0.4rem;}
+h1.title{font-size:2.5rem; margin:0 0 0.5rem;}
+.dek{color:var(--ink-soft); font-size:1.05rem; max-width:60ch; margin:0;}
+main.wrap{padding-top:2.4rem; padding-bottom:5rem;}
+article{max-width:720px;}
+footer{border-top:1px solid var(--rule); padding:2rem 0; text-align:center; color:var(--ink-soft); font-size:0.85rem;}
+footer a{color:var(--ink-soft);}
+details.qa{border:1px solid var(--rule); border-radius:8px; padding:0.9rem 1.2rem; margin:0.7rem 0; background:var(--paper);}
+details.qa summary{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700; cursor:pointer; list-style:none;}
+details.qa summary::-webkit-details-marker{display:none;}
+details.qa summary::before{content:"Q ·  "; color:var(--accent-2);}
+details.qa[open] summary{margin-bottom:0.6rem;}
+details.qa p{margin:0.3rem 0 0;}
+
+.theme-toggle{position:fixed; top:1rem; right:1.2rem; z-index:80; width:2.3rem; height:2.3rem; border-radius:50%;
+  border:1px solid var(--rule); background:var(--paper-2); color:var(--ink); display:flex; align-items:center;
+  justify-content:center; cursor:pointer; font-size:1.05rem; line-height:1; padding:0;
+  box-shadow:0 1px 3px rgba(0,0,0,0.08); transition:border-color .15s, transform .1s;
+  top:calc(1rem + env(safe-area-inset-top,0px));}
+.theme-toggle:hover{border-color:var(--accent); transform:translateY(-1px);}
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" onclick="__toggleBibleTheme()">◑</button>
+<header class="top"><div class="wrap">
+  <div class="eyebrow">DBMS &amp; SQL Interview Bible · Part B of 8</div>
+  <h1 class="title">Normalization &amp; Schema Design</h1>
+  <p class="dek">The #1 asked DBMS theory topic. Interviewers rarely want the textbook definition — they want you to spot anomalies, normalize a messy table live, and know when to reverse the process.</p>
+</div></header>
+
+<main class="wrap">
+<div class="layout">
+<nav class="rail">
+  <h4>In this part</h4>
+  <a href="#anomalies">4a. Update/insert/delete anomalies</a>
+  <a href="#m4">4b. Normalization, 1NF → BCNF → 4NF</a>
+  <a href="#m5">5. Denormalization tradeoffs</a>
+  <a href="#faq">Popular interview Q&amp;A</a>
+  <h4 style="margin-top:1.6rem;">Whole bible</h4>
+  <a href="part-a-foundations.html">A · Foundations</a>
+  <a href="part-c-sql-mastery.html">C · SQL Mastery</a>
+  <a href="part-d-transactions.html">D · Transactions</a>
+  <a href="part-e-indexing-performance.html">E · Indexing &amp; Perf</a>
+  <a href="part-f-distributed-data.html">F · Distributed Data</a>
+  <a href="part-g-security-ops.html">G · Security &amp; Ops</a>
+  <a href="part-h-interview-sim.html">H · Interview Sim</a>
+  <a href="part-i-top20-sql.html">I · Top 20 SQL Qs</a>
+</nav>
+
+<article>
+
+<section id="anomalies">
+<h2>4a · Update, insert &amp; delete anomalies</h2>
+
+<p>Anomalies are the actual <em>problem</em> that normalization solves — if you can't name them concretely, "normalize this table" answers come out as memorized rules with no motivation. All three anomalies come from the same root cause: <strong>one fact is stored redundantly, in multiple rows, instead of once.</strong></p>
+
+<p>Use one deliberately bad table as the running example for the rest of this part:</p>
+
+<pre><code>-- Denormalized "orders" table (the starting point)
+order_id | customer_name | customer_email | product_name | product_price | qty | supplier_name | supplier_country
+   1     | Asha Rao      | asha@x.com     | USB-C Cable  | 499           |  2  | Anker         | China
+   2     | Asha Rao      | asha@x.com     | USB-C Cable  | 499           |  1  | Anker         | China
+   3     | Ravi Iyer     | ravi@x.com     | Mechanical KB| 3499          |  1  | Keychron      | China</code></pre>
+
+<table>
+<tr><th>Anomaly</th><th>What it means</th><th>Concrete failure in the table above</th></tr>
+<tr><td><span class="key">Insert anomaly</span></td><td>You cannot record fact A without also being forced to record unrelated fact B, because they live in the same row.</td><td>You cannot add a new product ("Wireless Mouse") to the catalog until <em>someone places an order for it</em> — <code>product_name</code>/<code>product_price</code> only exist attached to an <code>order_id</code>. A product with zero orders has no row to live in.</td></tr>
+<tr><td><span class="key">Update anomaly</span></td><td>A single real-world fact is duplicated across many rows, so changing it means updating N rows — miss one and the data is now internally inconsistent.</td><td>Anker raises the price of the USB-C Cable to ₹599. You must update it in <em>every</em> order row that mentions that product (rows 1 and 2). Update only row 1 and the table now asserts the same product had two different prices at the same time — a silent correctness bug, not a crash.</td></tr>
+<tr><td><span class="key">Delete anomaly</span></td><td>Deleting one fact accidentally erases a second, unrelated fact that happened to be riding along in the same row.</td><td>Delete order 3 (a return/cancellation) and you lose <em>all knowledge</em> that "Mechanical KB" exists, that it costs 3499, and that Keychron (based in China) supplies it — because that product's only row was that one order.</td></tr>
+</table>
+
+<div class="callout warn"><strong>The mental model interviewers are checking for:</strong> anomalies aren't three unrelated rules to memorize — they're three symptoms of the same disease (a fact that should be atomic and singular is instead smeared across many rows). Normalization is the cure: move each fact to the one table where it belongs, referenced by key rather than repeated by value.</div>
+</section>
+
+<hr>
+
+<section id="m4">
+<h2>4b · Normalization: 1NF → BCNF → 4NF</h2>
+
+<p>Normalization is the discipline of structuring tables so that <strong>each fact is stored in exactly one place</strong>. Each normal form is a progressively stricter rule, and each one happens to eliminate a specific anomaly from the list above as a side effect — that mapping, explicitly, is below.</p>
+
+<table>
+<tr><th>Form</th><th>Rule</th><th>What it removes</th></tr>
+<tr><td><span class="key">1NF</span></td><td>Every column holds a single atomic value; no repeating groups.</td><td>If a "products" column held a comma-separated list, that violates 1NF — split into a line-items table.</td></tr>
+<tr><td><span class="key">2NF</span></td><td>1NF, and every non-key attribute depends on the <em>whole</em> composite key, not part of it.</td><td>Only matters with composite PKs. Here, <code>product_price</code> depends only on <code>product_name</code>, not on <code>order_id</code> — a partial dependency. Move product data to its own table.</td></tr>
+<tr><td><span class="key">3NF</span></td><td>2NF, and no <em>transitive</em> dependency (non-key attribute depending on another non-key attribute).</td><td><code>supplier_country</code> depends on <code>supplier_name</code>, not on the order or the product directly. Split suppliers out.</td></tr>
+<tr><td><span class="key">BCNF</span></td><td>For every functional dependency X → Y, X must be a superkey.</td><td>Catches edge cases 3NF misses when a table has multiple overlapping candidate keys (classic example below).</td></tr>
+<tr><td><span class="key">4NF</span></td><td>No multi-valued dependencies independent of each other in the same table.</td><td>e.g. a table of (employee, skill, language) where skills and languages are independent — split into two tables, not one cross-product.</td></tr>
+</table>
+
+<p><strong>Now the mapping interviewers actually want you to say out loud</strong> — which step fixes which anomaly from 4a, and why:</p>
+
+<table>
+<tr><th>Anomaly (from 4a)</th><th>Fixed by</th><th>Mechanism</th></tr>
+<tr><td>Insert anomaly — can't add a product without an order</td><td>2NF split</td><td>Product becomes its own table with its own PK (<code>product_id</code>). It can now be inserted independent of whether any order references it yet.</td></tr>
+<tr><td>Update anomaly — price duplicated across every order row</td><td>2NF split (removing the partial dependency of <code>price</code> on <code>product_name</code> alone, not the whole order key)</td><td>Price is stored exactly once, in the <code>product</code> row. Every order references it by <code>product_id</code>; changing the price is a single-row UPDATE.</td></tr>
+<tr><td>Delete anomaly — deleting the only order erases the product/supplier facts</td><td>2NF (product table) + 3NF (supplier table)</td><td>Product and supplier rows exist independently of any order row, so deleting an order (or even all orders for that product) leaves catalog and supplier data intact.</td></tr>
+<tr><td>Repeating/non-atomic groups (e.g. a comma-separated <code>tags</code> column)</td><td>1NF</td><td>Split into a child table with one tag per row — this is a prerequisite fix, enabling the rest of the pipeline; it doesn't by itself remove update/delete anomalies.</td></tr>
+</table>
+
+<p>Applying 1NF→3NF to the orders table above gives:</p>
+<pre><code>customer(customer_id PK, name, email)
+product(product_id PK, name, price, supplier_id FK)
+supplier(supplier_id PK, name, country)
+order_header(order_id PK, customer_id FK, order_date)
+order_line(order_id FK, product_id FK, qty, PRIMARY KEY(order_id, product_id))</code></pre>
+
+<p><strong>3NF vs BCNF — the answer that's actually being tested.</strong> The textbook counter-example: a table <code>(student, course, instructor)</code> where each course can have several instructors, but each instructor teaches only one course, and a student can take a course from multiple instructors. Functional dependency: <code>(student, course) → instructor</code> and also <code>instructor → course</code>. This is in 3NF (every non-key attribute is on a candidate key), but violates BCNF, because <code>instructor</code> is not a superkey yet determines <code>course</code>. The fix is splitting into <code>(instructor, course)</code> and <code>(student, instructor)</code>.</p>
+
+<div class="callout"><strong>The one-sentence answer that satisfies most interviewers:</strong> "3NF allows a non-prime attribute to determine another non-prime attribute as long as the determinant is part of a candidate key; BCNF is stricter — every determinant must be a candidate key on its own. BCNF can occasionally sacrifice a dependency that 3NF preserved, which is why 3NF is the pragmatic industry default and BCNF is mostly an academic ceiling."</div>
+</section>
+
+<hr>
+
+<section id="m5">
+<h2>5 · Denormalization: when product companies break the rules on purpose</h2>
+
+<p>Normalization optimizes for write integrity and storage. It does <em>not</em> optimize for read latency — a fully 3NF schema for a social feed might need 6 joins to render one screen. Product companies denormalize deliberately, and being able to argue the tradeoff is exactly what separates a bookish answer from an SDE2 answer.</p>
+
+<table>
+<tr><th>Signal favoring normalization</th><th>Signal favoring denormalization</th></tr>
+<tr><td>Write-heavy, correctness-critical (ledgers, inventory, billing)</td><td>Read-heavy, latency-sensitive (feeds, product pages, dashboards)</td></tr>
+<tr><td>Data changes often and must stay consistent everywhere</td><td>Data is written once, read millions of times (comment_count, order snapshot)</td></tr>
+<tr><td>Storage cost matters more than CPU-at-query-time</td><td>You can tolerate slightly stale derived data</td></tr>
+</table>
+
+<p>Common, interview-safe denormalization patterns:</p>
+<ul>
+<li><strong>Precomputed counters</strong> — storing <code>like_count</code> directly on a <code>post</code> row instead of running <code>COUNT(*)</code> over a likes table on every read, updated via trigger or async job.</li>
+<li><strong>Snapshotting</strong> — an <code>order_line</code> storing the product's <code>price_at_purchase</code> and <code>product_name</code> at time of sale, even though that duplicates the <code>product</code> table — because a later price change must never retroactively alter historical invoices. This is not sloppiness; normalizing this away would be a bug.</li>
+<li><strong>Materialized views</strong> (see Part E) — get the query performance of a denormalized table while keeping the source tables normalized; the tradeoff shifts from "duplicated, always in sync" to "duplicated, refreshed on a schedule."</li>
+</ul>
+
+<div class="callout tip"><strong>Interview line worth memorizing:</strong> "I normalize by default for correctness, then denormalize surgically at proven hot paths — usually by adding a derived column or a materialized view rather than restructuring the source-of-truth tables. I try to keep exactly one normalized source of truth and treat every denormalized copy as a cache with an explicit invalidation or refresh strategy."</div>
+</section>
+
+<hr>
+
+<section id="faq">
+<h2>Popular interview questions — Normalization</h2>
+
+<details class="qa"><summary>Name the three anomalies in an unnormalized table, with a one-line example each.</summary>
+<p><strong>Insert:</strong> can't add a product to the catalog without an order to attach it to. <strong>Update:</strong> a price change must be applied to every row that repeats it, or the data goes inconsistent. <strong>Delete:</strong> removing the only order for a product wipes out that product's catalog data entirely.</p></details>
+
+<details class="qa"><summary>Difference between 3NF and BCNF, precisely?</summary>
+<p>3NF forbids a non-key attribute from determining another non-key attribute, but allows a determinant that's only <em>part</em> of a candidate key if it's still "prime." BCNF is stricter: every determinant in any functional dependency must be a candidate key on its own, full stop. The classic separating example is a (student, course, instructor) table where instructor → course but instructor alone isn't a candidate key — 3NF-compliant, BCNF-violating.</p></details>
+
+<details class="qa"><summary>Can a table be in BCNF but not 4NF?</summary>
+<p>Yes. BCNF only concerns single-valued functional dependencies. A table like (employee, skill, language) — where an employee's skills and languages are independent lists — can satisfy BCNF (no non-trivial FDs beyond the whole key) while still needing to be split for 4NF, because it has two independent multi-valued dependencies forced into one cross-product table.</p></details>
+
+<details class="qa"><summary>Is normalization always good? When would you deliberately break it?</summary>
+<p>No — normalization optimizes for write integrity and storage, not read latency. Product companies denormalize deliberately for read-heavy, latency-sensitive paths (precomputed counters, materialized views) or for correctness-preserving snapshots (storing the price at time of purchase on an order line, so a later catalog price change doesn't rewrite history).</p></details>
+
+<details class="qa"><summary>What does 1NF actually fix, versus what does it merely enable?</summary>
+<p>1NF removes repeating groups / non-atomic values (a comma-separated column becomes its own child table). By itself it doesn't remove update or delete anomalies — it's a prerequisite that makes the table row-per-fact enough for 2NF/3NF to do that work.</p></details>
+
+<details class="qa"><summary>What's a transitive dependency, in one sentence?</summary>
+<p>A non-key attribute depends on another non-key attribute rather than directly on the primary key — e.g. <code>supplier_country</code> depends on <code>supplier_name</code>, which depends on the key, rather than depending on the key itself; 3NF removes this by moving supplier facts to their own table.</p></details>
+
+<details class="qa"><summary>Give a real product-company example of intentional denormalization and justify it.</summary>
+<p>Storing <code>comment_count</code> directly on a <code>post</code> row instead of computing <code>COUNT(*)</code> from a comments table on every page render. Justification: the read path (viewing a post) vastly outnumbers the write path (adding a comment), and a small, well-defined staleness window (updated via trigger or async job) is an acceptable tradeoff for avoiding a full table scan/aggregate on every view.</p></details>
+
+</section>
+
+</article>
+</div>
+</main>
+
+<footer>DBMS &amp; SQL Interview Bible · Part B: Normalization &amp; Schema Design · continued in Part C: SQL Mastery</footer>
+
+<script>
+function __currentIsDark(){
+  var t = document.documentElement.getAttribute("data-theme");
+  if(t) return t === "dark";
+  try{ return window.matchMedia("(prefers-color-scheme: dark)").matches; }catch(e){ return false; }
+}
+function __updateToggleIcon(){
+  var btn = document.getElementById("themeToggle");
+  if(!btn) return;
+  btn.textContent = __currentIsDark() ? "☀" : "☽";
+}
+function __toggleBibleTheme(){
+  try{
+    var next = __currentIsDark() ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    localStorage.setItem("bible-theme", next);
+  }catch(e){}
+  __updateToggleIcon();
+}
+document.addEventListener("DOMContentLoaded", __updateToggleIcon);
+</script>
+</body>
+</html>

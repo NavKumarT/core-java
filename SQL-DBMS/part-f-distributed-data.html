@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Part F · Distributed Data — DBMS &amp; SQL Interview Bible</title>
+<script>try{var t=localStorage.getItem("bible-theme");if(t==="light"||t==="dark"){document.documentElement.setAttribute("data-theme",t);}}catch(e){}</script>
+<style>
+:root{
+  --paper:#FAFAFA; --paper-2:#F1F1F3; --ink:#1B1B1F; --ink-soft:#6B6B72;
+  --accent:#3E63DD; --accent-2:#B3261E; --rule:#E4E4E8;
+  --code-bg:#F4F4F6; --code-text:#1B1B1F;
+  --good:#1E7A4C; --bad:#B3261E; color-scheme:light dark;
+}
+:root:not([data-theme="light"]){ @media (prefers-color-scheme: dark){
+  --paper:#121214; --paper-2:#1C1C1F; --ink:#EDEDEF; --ink-soft:#9A9AA2;
+  --accent:#8FABFF; --accent-2:#FF8983; --rule:#2B2B2F; --code-bg:#1A1A1D; --code-text:#EDEDEF;
+  --good:#4ADE80; --bad:#FF6B6B;
+}}
+:root[data-theme="dark"]{
+  --paper:#121214; --paper-2:#1C1C1F; --ink:#EDEDEF; --ink-soft:#9A9AA2;
+  --accent:#8FABFF; --accent-2:#FF8983; --rule:#2B2B2F; --code-bg:#1A1A1D; --code-text:#EDEDEF;
+  --good:#4ADE80; --bad:#FF6B6B;
+}
+*{box-sizing:border-box;}
+html{scroll-padding-top:1rem;}
+body{margin:0; background:var(--paper); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-size:17px; line-height:1.65;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);}
+h1,h2,h3,h4{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700; color:var(--ink); font-weight:600; line-height:1.2; letter-spacing:-0.01em;}
+a{color:var(--accent);}
+code,pre,kbd{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;}
+pre{background:var(--code-bg); color:var(--code-text); padding:1rem 1.1rem; border-radius:6px; overflow-x:auto; font-size:0.86rem; line-height:1.55;}
+code{background:var(--paper-2); padding:0.12em 0.4em; border-radius:4px; font-size:0.88em;}
+pre code{background:none; padding:0;}
+table{border-collapse:collapse; width:100%; font-size:0.94rem; margin:1rem 0;}
+th,td{border:1px solid var(--rule); padding:0.5rem 0.7rem; text-align:left; vertical-align:top;}
+th{background:var(--paper-2); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700;}
+blockquote{margin:1.2rem 0; padding:0.2rem 1.2rem; border-left:3px solid var(--accent-2); color:var(--ink-soft); font-style:italic;}
+hr{border:none; border-top:1px solid var(--rule); margin:2.5rem 0;}
+.key{color:var(--accent-2); font-weight:600;}
+.callout{background:var(--paper-2); border-radius:8px; padding:1rem 1.3rem; margin:1.3rem 0;}
+.callout.warn{border-left:3px solid var(--bad);}
+.callout.tip{border-left:3px solid var(--good);}
+.wrap{max-width:1100px; margin:0 auto; padding:0 1.4rem;}
+.layout{display:grid; grid-template-columns:210px minmax(0,720px); gap:3rem; align-items:start;}
+@media (max-width:880px){.layout{grid-template-columns:1fr;} .rail{position:static !important; order:2;}}
+.rail{position:sticky; top:1.2rem; font-size:0.85rem;}
+.rail h4{margin:0 0 0.6rem; font-size:0.75rem; letter-spacing:0.04em; color:var(--ink-soft); text-transform:uppercase; font-family:inherit; font-weight:600;}
+.rail a{display:block; color:var(--ink-soft); text-decoration:none; padding:0.28rem 0; border-left:2px solid transparent;}
+.rail a:hover{color:var(--accent); border-left-color:var(--accent); padding-left:0.5rem;}
+header.top{border-bottom:1px solid var(--rule); padding:2.6rem 0 1.6rem;}
+.eyebrow{color:var(--ink-soft); font-size:0.85rem; margin-bottom:0.4rem;}
+h1.title{font-size:2.5rem; margin:0 0 0.5rem;}
+.dek{color:var(--ink-soft); font-size:1.05rem; max-width:60ch; margin:0;}
+main.wrap{padding-top:2.4rem; padding-bottom:5rem;}
+article{max-width:720px;}
+footer{border-top:1px solid var(--rule); padding:2rem 0; text-align:center; color:var(--ink-soft); font-size:0.85rem;}
+footer a{color:var(--ink-soft);}
+details.qa{border:1px solid var(--rule); border-radius:8px; padding:0.9rem 1.2rem; margin:0.7rem 0; background:var(--paper-2);}
+details.qa summary{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700; cursor:pointer; list-style:none;}
+details.qa summary::-webkit-details-marker{display:none;}
+details.qa summary::before{content:"Q ·  "; color:var(--accent-2);}
+details.qa[open] summary{margin-bottom:0.6rem;}
+details.qa p{margin:0.3rem 0 0;}
+details.prob{border:1px solid var(--rule); border-radius:8px; padding:1rem 1.3rem; margin:1rem 0; background:var(--paper-2);}
+details.prob summary{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif; font-weight:700; cursor:pointer; list-style:none; font-size:1.03rem;}
+details.prob summary::-webkit-details-marker{display:none;}
+details.prob summary::before{content:"▸ "; color:var(--accent);}
+details.prob[open] summary::before{content:"▾ "; }
+
+.theme-toggle{position:fixed; top:1rem; right:1.2rem; z-index:80; width:2.3rem; height:2.3rem; border-radius:50%;
+  border:1px solid var(--rule); background:var(--paper-2); color:var(--ink); display:flex; align-items:center;
+  justify-content:center; cursor:pointer; font-size:1.05rem; line-height:1; padding:0;
+  box-shadow:0 1px 3px rgba(0,0,0,0.08); transition:border-color .15s, transform .1s;
+  top:calc(1rem + env(safe-area-inset-top,0px));}
+.theme-toggle:hover{border-color:var(--accent); transform:translateY(-1px);}
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" onclick="__toggleBibleTheme()">◑</button>
+<header class="top"><div class="wrap">
+  <div class="eyebrow">DBMS &amp; SQL Interview Bible · Part F of 8</div>
+  <h1 class="title">Distributed Data</h1>
+  <p class="dek">Where DBMS knowledge crosses into system design: replication, CAP in practice, sharding, the SQL-vs-NoSQL decision — and worked schema case studies for the "design X" prompts that always fold a database sub-round in.</p>
+</div></header>
+
+<main class="wrap">
+<div class="layout">
+<nav class="rail">
+  <h4>In this part</h4>
+  <a href="#m21">21. Replication &amp; CAP in practice</a>
+  <a href="#m22">22. Sharding &amp; partitioning</a>
+  <a href="#m23">23. SQL vs NoSQL decision framework</a>
+  <a href="#m24">24. Worked schema-design case studies</a>
+  <a href="#faq">Popular interview Q&amp;A</a>
+  <h4 style="margin-top:1.6rem;">Whole bible</h4>
+  <a href="part-a-foundations.html">A · Foundations</a>
+  <a href="part-b-normalization.html">B · Normalization</a>
+  <a href="part-c-sql-mastery.html">C · SQL Mastery</a>
+  <a href="part-d-transactions.html">D · Transactions</a>
+  <a href="part-e-indexing-performance.html">E · Indexing &amp; Perf</a>
+  <a href="part-g-security-ops.html">G · Security &amp; Ops (next)</a>
+  <a href="part-h-interview-sim.html">H · Interview Sim</a>
+  <a href="part-i-top20-sql.html">I · Top 20 SQL Qs</a>
+</nav>
+
+<article>
+
+<section id="m21">
+<h2>21 · Replication &amp; CAP in practice</h2>
+
+<p><strong>Leader-follower (primary-replica) replication</strong> is the default pattern: all writes go to one leader, which streams changes to one or more followers. Followers serve reads, spreading read load and providing failover targets.</p>
+
+<table>
+<tr><th>Mode</th><th>Behavior</th><th>Tradeoff</th></tr>
+<tr><td><span class="key">Synchronous</span></td><td>Leader waits for at least one follower to confirm the write before acknowledging the client.</td><td>Zero data loss on failover, but higher write latency, and the leader can stall if a follower is slow/down.</td></tr>
+<tr><td><span class="key">Asynchronous</span></td><td>Leader acknowledges the write immediately; followers catch up afterward.</td><td>Lower latency, but a leader crash before replication completes loses the unreplicated writes — this is <strong>replication lag</strong>, and it's the direct cause of "I just wrote something and immediately can't see it" bugs when a read hits a lagging follower.</td></tr>
+</table>
+
+<p><strong>Multi-leader / leaderless</strong> replication (accepting writes on multiple nodes) trades simplicity for availability and geographic write locality, at the cost of needing conflict resolution (last-write-wins, vector clocks, CRDTs) when the same key is written on two nodes concurrently.</p>
+
+<p><strong>CAP theorem, applied</strong> — revisit Part A's definition with an actual replicated system: during a network partition between the leader and a follower's data center, you must choose: serve reads/writes from the isolated follower anyway (Availability, but it may be stale or diverge — AP) or refuse to serve from that side until the partition heals (Consistency, but reduced availability — CP). Postgres streaming replication in synchronous mode leans CP; most default async setups lean AP for reads from followers.</p>
+
+<div class="callout tip"><strong>Interview-safe line:</strong> "I think of CAP less as 'pick two forever' and more as a per-request policy — a payment write might need strict consistency (CP), while a 'likes' counter read on the same system can tolerate a stale replica (AP). Modern systems often mix both within one architecture rather than picking one label for the whole system."</div>
+</section>
+
+<hr>
+
+<section id="m22">
+<h2>22 · Sharding &amp; partitioning</h2>
+
+<p><strong>Partitioning</strong> splits one logical table into smaller physical pieces, typically still on one node (e.g. Postgres native partitioning by range or list) — mainly a manageability/query-pruning win. <strong>Sharding</strong> specifically means splitting data across multiple <em>nodes</em>, so it also solves the "the data doesn't fit on one machine" problem.</p>
+
+<table>
+<tr><th>Strategy</th><th>How it works</th><th>Tradeoff</th></tr>
+<tr><td><span class="key">Range-based</span></td><td>Shard by a value range (user_id 1–1M on shard A, 1M–2M on shard B)</td><td>Great for range queries, but prone to hotspots if data/traffic isn't uniform across ranges (e.g. newest users all landing on the last shard).</td></tr>
+<tr><td><span class="key">Hash-based</span></td><td>Shard = hash(key) mod N</td><td>Even distribution, kills hotspots, but range queries now have to fan out to every shard.</td></tr>
+<tr><td><span class="key">Directory-based</span></td><td>A lookup service maps each key (or key range) to its shard explicitly</td><td>Most flexible (arbitrary rebalancing), but the directory service itself becomes a critical dependency.</td></tr>
+<tr><td><span class="key">Consistent hashing</span></td><td>Hash both keys and nodes onto a ring; a key belongs to the next node clockwise</td><td>Adding/removing a node only reshuffles a small fraction of keys, instead of nearly all of them as with plain hash-mod-N — the standard answer to "how do you reshard without moving everything."</td></tr>
+</table>
+
+<p><strong>Resharding pain points</strong> to name proactively: cross-shard joins and transactions become expensive or impossible without a coordination layer (see 2PC/Sagas, Part D); auto-incrementing IDs no longer work globally (switch to UUIDs or a coordinated ID-generation service like Snowflake IDs); and a single "celebrity" key (a viral post, a huge customer) can overload one shard no matter how good the strategy is — often handled with an explicit hot-key split as a special case.</p>
+</section>
+
+<hr>
+
+<section id="m23">
+<h2>23 · SQL vs NoSQL decision framework</h2>
+
+<table>
+<tr><th>Question to ask</th><th>Leans SQL</th><th>Leans NoSQL</th></tr>
+<tr><td>Do multiple entities need to stay consistent together?</td><td>Yes — multi-row/table transactions matter (orders + inventory + payment)</td><td>No — each document/item mostly stands alone</td></tr>
+<tr><td>How stable is the schema?</td><td>Well-understood, slowly evolving</td><td>Rapidly evolving, heterogeneous records</td></tr>
+<tr><td>Access pattern?</td><td>Ad-hoc queries, joins, reporting</td><td>Simple key-based lookups at very high scale</td></tr>
+<tr><td>Write volume?</td><td>Moderate, correctness-critical</td><td>Extremely high (telemetry, logs, event streams)</td></tr>
+<tr><td>Example</td><td>Orders, ledgers, user accounts, inventory</td><td>Session store, activity feed, product catalog with variable attributes, time-series metrics</td></tr>
+</table>
+
+<p><strong>Polyglot persistence</strong> — most real product systems at scale use several stores simultaneously, each for what it's good at: Postgres for the transactional core, Redis for hot caches/sessions, Elasticsearch for full-text/faceted search, a wide-column store (Cassandra/DynamoDB) for massive write-heavy time-series or feeds, S3/blob storage for large binary objects. Naming this explicitly in a system-design round signals you're not treating "pick one database" as the only lever.</p>
+</section>
+
+<hr>
+
+<section id="m24">
+<h2>24 · Worked schema-design case studies</h2>
+<p>The DB sub-section of a "Design X" round, done the way a strong SDE2 answer actually flows: entities → cardinality → key schema decisions → index choices → consistency tradeoffs.</p>
+
+<details class="prob"><summary>Design the database for a ride-sharing app (Uber-style)</summary>
+<pre><code>rider(rider_id PK, name, ...)
+driver(driver_id PK, name, vehicle_info, current_status)
+ride(ride_id PK, rider_id FK, driver_id FK, status, requested_at,
+     pickup_geo, dropoff_geo, fare, started_at, completed_at)
+driver_location(driver_id FK, geo_point, updated_at)   -- extremely hot, high write rate</code></pre>
+<ul>
+<li><strong>Key decision:</strong> <code>driver_location</code> is write-heavy and latency-critical (location pings every few seconds per active driver) — this table does <em>not</em> belong in the same durability/consistency tier as <code>ride</code>. Route it to an in-memory geo-indexed store (Redis with geospatial commands, or a dedicated location service) rather than the transactional Postgres core; only the ride's final route/fare needs strong durability.</li>
+<li><strong>Indexing:</strong> a geospatial index (GiST in Postgres, or a specialized geo-index) on driver location for "nearest N drivers" queries — a plain B-tree can't do proximity search.</li>
+<li><strong>Consistency:</strong> matching a rider to a driver is the one step that needs a strong consistency guarantee (never double-assign the same driver) — a good place to mention row-level locking or a compare-and-swap on <code>driver.current_status</code> inside a short transaction.</li>
+</ul></details>
+
+<details class="prob"><summary>Design the database for a photo-sharing app (Instagram-style)</summary>
+<pre><code>user(user_id PK, username, ...)
+post(post_id PK, user_id FK, image_url, caption, created_at)
+follow(follower_id FK, followee_id FK, PRIMARY KEY(follower_id, followee_id))
+like(user_id FK, post_id FK, created_at, PRIMARY KEY(user_id, post_id))
+comment(comment_id PK, post_id FK, user_id FK, text, created_at)</code></pre>
+<ul>
+<li><strong>Key decision — the feed itself is the hard part, not the schema above.</strong> A normalized "join follow to posts of everyone I follow, ORDER BY created_at" query is fine at small scale but collapses for a celebrity account with millions of followers (fan-out-on-read gets expensive; fan-out-on-write — pushing a new post into every follower's precomputed feed — gets expensive the other direction). Real systems use a hybrid: fan-out-on-write for normal accounts, fan-out-on-read for celebrity accounts, exactly the kind of nuance that separates a strong answer.</li>
+<li><strong>Denormalization:</strong> <code>like_count</code> and <code>comment_count</code> precomputed on <code>post</code>, updated async — see Part B, Module 5.</li>
+<li><strong>Indexing:</strong> composite index on <code>(user_id, created_at DESC)</code> for a profile grid; the <code>follow</code> and <code>like</code> tables use composite PKs directly as their access-pattern index.</li>
+</ul></details>
+
+<details class="prob"><summary>Design the database for an event-ticketing system (high-contention checkout)</summary>
+<pre><code>event(event_id PK, name, venue_id FK, starts_at)
+seat(seat_id PK, event_id FK, section, row, seat_number, status)  -- status: available/held/sold
+reservation(reservation_id PK, seat_id FK, user_id FK, expires_at, status)</code></pre>
+<ul>
+<li><strong>Key decision — this is fundamentally a concurrency-control problem, not a schema problem.</strong> Two users must never both successfully book the same seat. Use a short transaction with <code>SELECT ... FOR UPDATE</code> on the seat row (pessimistic lock) or an atomic conditional update (<code>UPDATE seat SET status='held' WHERE seat_id=? AND status='available'</code>, checking rows-affected) — directly exercises Part D's locking module.</li>
+<li><strong>Reservation TTL:</strong> a held seat that isn't paid within N minutes must revert to available — either an expiring lock, a scheduled job scanning for expired holds, or a TTL-capable store (Redis) fronting the hold state before it's finalized in Postgres.</li>
+<li><strong>Why not just rely on a UNIQUE constraint?</strong> A unique constraint on <code>(seat_id)</code> in a "sold seats" table does prevent double-selling at the database level as a last line of defense — worth mentioning alongside the application-level lock, not instead of it.</li>
+</ul></details>
+</section>
+
+<hr>
+
+<section id="faq">
+<h2>Popular interview questions — Distributed Data</h2>
+
+<details class="qa"><summary>What causes "read your own write" bugs in a replicated system?</summary>
+<p>Asynchronous replication lag — the write lands on the leader and is acknowledged immediately, but a subsequent read gets routed to a follower that hasn't caught up yet. Fixes: read-your-writes consistency (route a user's reads to the leader for a short window after their own write), or synchronous replication for that path.</p></details>
+
+<details class="qa"><summary>Why is consistent hashing preferred over plain hash-mod-N for sharding?</summary>
+<p>With hash-mod-N, adding or removing a single node changes the modulus, remapping nearly every key — a massive, disruptive data migration. Consistent hashing places nodes and keys on a ring so only the keys between the changed node and its neighbor need to move, making scaling in/out far cheaper.</p></details>
+
+<details class="qa"><summary>What breaks when you shard a previously single-node relational database?</summary>
+<p>Cross-shard joins and transactions become expensive or need a coordination layer (2PC/Sagas); auto-increment primary keys stop being globally unique (move to UUIDs or a distributed ID generator); and any single very hot key can overload one shard regardless of the sharding strategy.</p></details>
+
+<details class="qa"><summary>How would you design a social feed for both normal users and a celebrity with 50M followers?</summary>
+<p>Fan-out-on-write (push new posts into each follower's precomputed feed at write time) works well for normal accounts but is prohibitively expensive for a celebrity's massive follower count. A hybrid is standard: fan-out-on-write for most accounts, fan-out-on-read (merge celebrity posts into the feed at read time) for accounts above a follower threshold.</p></details>
+
+<details class="qa"><summary>In the ticket-checkout problem, why use SELECT ... FOR UPDATE instead of just a UNIQUE constraint?</summary>
+<p>A UNIQUE constraint only rejects the second conflicting write after the fact — it's a correct last line of defense but doesn't prevent two requests from both doing wasted work (charging a card, say) before one fails. Locking the seat row (or an atomic conditional UPDATE) at the start of the critical section prevents the conflict from happening at all, and the constraint remains as a safety net underneath it.</p></details>
+
+</section>
+
+</article>
+</div>
+</main>
+
+<footer>DBMS &amp; SQL Interview Bible · Part F: Distributed Data · continued in Part G: Security &amp; Ops</footer>
+
+<script>
+function __currentIsDark(){
+  var t = document.documentElement.getAttribute("data-theme");
+  if(t) return t === "dark";
+  try{ return window.matchMedia("(prefers-color-scheme: dark)").matches; }catch(e){ return false; }
+}
+function __updateToggleIcon(){
+  var btn = document.getElementById("themeToggle");
+  if(!btn) return;
+  btn.textContent = __currentIsDark() ? "☀" : "☽";
+}
+function __toggleBibleTheme(){
+  try{
+    var next = __currentIsDark() ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    localStorage.setItem("bible-theme", next);
+  }catch(e){}
+  __updateToggleIcon();
+}
+document.addEventListener("DOMContentLoaded", __updateToggleIcon);
+</script>
+</body>
+</html>
