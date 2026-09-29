@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kafka Bible · Part 6 · Transactions, Actuator, Packaging</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1c1c1e;--mut:#6b6b70;--line:#e4e4e2;--acc:#3b4cca;--code:#f1f1ef;--hot:#fff4d6;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141416;--fg:#e8e8ea;--mut:#9a9aa2;--line:#2a2a2e;--acc:#8b98ff;--code:#1e1e22;--hot:#2c2718}}
+:root[data-theme="dark"]{--bg:#141416;--fg:#e8e8ea;--mut:#9a9aa2;--line:#2a2a2e;--acc:#8b98ff;--code:#1e1e22;--hot:#2c2718}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 Georgia,"Times New Roman",serif}
+main{max-width:760px;margin:0 auto;padding:32px 20px 80px}
+h1{font:700 30px/1.2 system-ui,sans-serif;margin:0 0 6px}
+h2{font:650 21px/1.3 system-ui,sans-serif;margin:52px 0 4px;padding-top:20px;border-top:1px solid var(--line)}
+h3{font:600 15px/1.4 system-ui,sans-serif;margin:24px 0 6px}
+.sub{color:var(--mut);font:14px system-ui,sans-serif;margin:0 0 4px}
+.vid{color:var(--mut);font:13px system-ui,sans-serif;margin:0 0 12px}
+p,li{margin:6px 0}ul{padding-left:20px}
+code{font:13px ui-monospace,Menlo,Consolas,monospace;background:var(--code);padding:1px 5px;border-radius:3px}
+pre{background:var(--code);padding:12px 14px;border-radius:6px;overflow-x:auto;margin:10px 0;max-width:100%}
+pre code{padding:0;background:none;font-size:12.5px;line-height:1.55}
+table{border-collapse:collapse;width:100%;font:14px system-ui,sans-serif;display:block;overflow-x:auto}
+td,th{border-bottom:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}th{color:var(--mut);font-weight:600}
+nav{font:14px system-ui,sans-serif;margin:18px 0 0;display:flex;flex-wrap:wrap;gap:6px 16px}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+button{font:13px system-ui,sans-serif;background:none;color:var(--mut);border:1px solid var(--line);border-radius:5px;padding:4px 10px;cursor:pointer;float:right}
+.note{background:var(--hot);border-left:3px solid var(--acc);padding:8px 12px;margin:12px 0;font-size:15px}
+details{border-bottom:1px solid var(--line);padding:9px 0}
+summary{cursor:pointer;font:600 15px/1.5 system-ui,sans-serif;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";color:var(--acc);display:inline-block;width:18px}
+details[open] summary::before{content:"–"}
+details>div{padding:6px 0 4px 18px}
+.star{color:var(--acc);font-weight:700}
+</style>
+<style>
+:root{--k:#c2255c;--s:#0a7f4f;--c:#8a8a90;--n:#b35900;--t:#3b4cca;--a:#9c36b5}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--k:#ff8fa3;--s:#7ee0a8;--c:#7c7c86;--n:#ffb066;--t:#8b98ff;--a:#d6a3ff}}
+:root[data-theme="dark"]{--k:#ff8fa3;--s:#7ee0a8;--c:#7c7c86;--n:#ffb066;--t:#8b98ff;--a:#d6a3ff}
+.hljs-keyword,.hljs-literal,.hljs-built_in,.hljs-selector-tag{color:var(--k)}
+.hljs-string,.hljs-regexp{color:var(--s)}
+.hljs-comment{color:var(--c);font-style:italic}
+.hljs-number,.hljs-bullet{color:var(--n)}
+.hljs-title,.hljs-type,.hljs-class .hljs-title,.hljs-attr,.hljs-attribute,.hljs-variable,.hljs-property{color:var(--t)}
+.hljs-meta,.hljs-meta .hljs-keyword,.hljs-doctag,.hljs-symbol{color:var(--a)}
+</style></head><body><main>
+<button onclick="var r=document.documentElement;r.dataset.theme=(r.dataset.theme==='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches))?'light':'dark'">Theme</button>
+<h1>Kafka Bible · Part 6</h1>
+<p class="sub">Transactions and exactly-once, Actuator health checks, executable jars · course videos 107–119</p>
+<p class="sub"><span class="star">★</span> marks questions that are common in Walmart / JPMC style rounds. Assumes Spring Boot 3.x, Spring Kafka 3.x.</p>
+<nav><a href="#eos">Transactions &amp; EOS</a><a href="#tx">@Transactional</a><a href="#eit">executeInTransaction</a><a href="#ctx">Consumer tx</a><a href="#txt">Tests</a><a href="#act">Actuator</a><a href="#hk">Kafka health</a><a href="#jar">Jar &amp; env vars</a><a href="#q">Q&amp;A</a></nav>
+
+<h2 id="eos">1. Kafka transactions and exactly-once semantics</h2>
+<p class="vid">Video 107</p>
+<table>
+<tr><th>Semantics</th><th>How</th></tr>
+<tr><td>At-most-once</td><td>Commit before processing; may lose</td></tr>
+<tr><td>At-least-once</td><td>Commit after processing; may duplicate</td></tr>
+<tr><td>Exactly-once (Kafka)</td><td>Idempotent producer + transactions + <code>read_committed</code> consumers</td></tr>
+</table>
+<ul>
+<li>A <b>transaction</b> makes writes to <b>multiple partitions/topics</b> (and consumed-offset commits) atomic: all become visible or none do.</li>
+<li>Mechanics: the producer has a <code>transactional.id</code>; a <b>transaction coordinator</b> broker tracks state in the internal <code>__transaction_state</code> topic; on commit/abort it writes <b>commit/abort markers</b> into the partitions. A new producer with the same id bumps the <b>epoch</b> and <b>fences zombie</b> producers.</li>
+<li>Consumers choose <code>isolation.level</code>: <code>read_uncommitted</code> (default, sees aborted data) or <code>read_committed</code> (only committed data, reads up to the <b>last stable offset</b>, so an open transaction delays visibility of later records).</li>
+<li>Requirements: <code>acks=all</code>, idempotence on, and a healthy <code>__transaction_state</code> (RF and <code>transaction.state.log.min.isr</code> ≥ 2 in prod). <code>transaction.timeout.ms</code> (default 60 s) aborts stuck transactions.</li>
+<li><b>Scope:</b> exactly-once holds inside Kafka (Kafka → process → Kafka). A DB or REST call is not part of the Kafka transaction.</li>
+</ul>
+
+<h2 id="tx">2. Approach 1: declarative with @Transactional</h2>
+<p class="vid">Videos 108–109</p>
+<pre><code class="language-yaml">spring:
+  kafka:
+    producer:
+      transaction-id-prefix: tx-library-       # enables transactions; Boot creates KafkaTransactionManager
+      acks: all
+    consumer:
+      properties:
+        isolation.level: read_committed</code></pre>
+<pre><code class="language-java">@Service
+public class LibraryEventPublisher {
+  @Transactional("kafkaTransactionManager")               // needed if another TM (JPA) exists
+  public void publishAll(List&lt;LibraryEvent&gt; events) {
+    for (var e : events) {
+      kafkaTemplate.send("library-events", e.libraryEventId(), toJson(e));
+    }
+    // returning normally commits; a RuntimeException aborts all sends
+  }
+}</code></pre>
+<ul>
+<li>With a transactional producer factory, calling <code>send()</code> <b>outside</b> a transaction throws <code>IllegalStateException</code> (no transaction in progress) unless <code>allowNonTransactional</code> is set.</li>
+<li><b>Rollback rules:</b> Spring rolls back on <code>RuntimeException</code>/<code>Error</code> only. A checked exception commits unless you add <code>rollbackFor = Exception.class</code>.</li>
+<li>Self-invocation trap: calling a <code>@Transactional</code> method from the same class bypasses the proxy, so no transaction starts.</li>
+<li>Publishing multiple messages as one transaction (video 109): a partial failure mid-loop must leave <b>zero</b> visible messages when read with <code>read_committed</code>.</li>
+<li><b>DB + Kafka:</b> with JPA as primary TM the Kafka transaction is synchronized on a best-effort basis (commit order, not two-phase commit). It is not atomic; use the <b>outbox pattern</b> or idempotent consumers for correctness.</li>
+</ul>
+
+<h2 id="eit">3. Approach 2: programmatic executeInTransaction</h2>
+<p class="vid">Video 110</p>
+<pre><code class="language-java">kafkaTemplate.executeInTransaction(ops -&gt; {
+  ops.send("library-events", 1, jsonA);
+  ops.send("library-events", 2, jsonB);
+  return true;                       // commit on return, abort if an exception escapes
+});</code></pre>
+<table>
+<tr><th></th><th>@Transactional</th><th>executeInTransaction</th></tr>
+<tr><td>Style</td><td>Declarative, AOP proxy</td><td>Explicit, local to the callback</td></tr>
+<tr><td>Spans other resources</td><td>Can synchronize with a DB transaction</td><td>Kafka only</td></tr>
+<tr><td>Pitfalls</td><td>Proxy and rollback rules</td><td>Keep the callback short; do not do DB or remote calls inside</td></tr>
+</table>
+
+<h2 id="ctx">4. Transactions in the consumer (read-process-write)</h2>
+<p class="vid">Video 112</p>
+<ul>
+<li>When the producer factory has a <code>transaction-id-prefix</code>, Boot wires the <code>KafkaTransactionManager</code> into the listener container. The container <b>begins a transaction per record (or batch)</b>, runs your listener, then calls <code>sendOffsetsToTransaction</code> and commits, so <b>produced records and consumed offsets commit atomically</b>.</li>
+<li>If the listener throws, the transaction aborts: output records are discarded, offsets are not committed, and the record is redelivered (subject to the error handler). Downstream consumers must use <code>read_committed</code>.</li>
+</ul>
+<pre><code class="language-java">@KafkaListener(topics = "library-events", groupId = "enricher")
+public void process(ConsumerRecord&lt;Integer,String&gt; r) {         // already inside a Kafka transaction
+  kafkaTemplate.send("library-events-enriched", r.key(), enrich(r.value()));
+}</code></pre>
+<div class="note"><b>Caveat:</b> if your listener writes to a database, the DB commit is outside the Kafka transaction. A crash between the two still causes redelivery, so keep the DB write <b>idempotent</b>. True exactly-once to an external store needs idempotency or storing offsets with the data.</div>
+
+<h2 id="txt">5. Testing transactions</h2>
+<p class="vid">Video 111</p>
+<pre><code class="language-java">@EmbeddedKafka(topics = "library-events", partitions = 3,
+    bootstrapServersProperty = "spring.kafka.bootstrap-servers",
+    brokerProperties = {"transaction.state.log.replication.factor=1", "transaction.state.log.min.isr=1"})
+class TransactionalPublishTest {
+  // test consumer: props.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
+
+  @Test void failure_midway_leavesNoRecords() {
+    assertThrows(RuntimeException.class, () -&gt; publisher.publishAll(List.of(good, badThatThrows)));
+    var records = KafkaTestUtils.getRecords(consumer, Duration.ofSeconds(3));
+    assertEquals(0, records.count());                       // aborted transaction is invisible
+  }
+  @Test void success_publishesAll() { publisher.publishAll(List.of(a, b)); assertEquals(2, KafkaTestUtils.getRecords(consumer).count()); }
+}</code></pre>
+<ul>
+<li>Embedded brokers need the transaction-log properties above (single broker), or the transaction coordinator never becomes available.</li>
+<li>The test consumer must be <code>read_committed</code>; with the default level you would still see aborted records and the test would mislead you.</li>
+</ul>
+
+<h2 id="act">6. Spring Boot Actuator</h2>
+<p class="vid">Videos 113–114</p>
+<ul>
+<li><code>spring-boot-starter-actuator</code> adds production endpoints: <code>/actuator/health</code>, <code>info</code>, <code>metrics</code>, <code>loggers</code>, <code>env</code>, <code>prometheus</code> (with Micrometer registry).</li>
+<li>Only <code>health</code> is exposed over HTTP by default; expose more explicitly and <b>secure them</b> (Spring Security, separate management port, never expose <code>env</code>/<code>heapdump</code> publicly).</li>
+<li>Health aggregates <b>HealthIndicators</b> (db, diskSpace, ping, custom). Overall status is the worst of all components.</li>
+<li><b>Probes:</b> <code>management.endpoint.health.probes.enabled=true</code> gives <code>/actuator/health/liveness</code> and <code>/readiness</code> for Kubernetes.</li>
+</ul>
+<pre><code class="language-yaml">management:
+  endpoints.web.exposure.include: health,info,metrics,prometheus
+  endpoint.health:
+    show-details: when-authorized
+    probes.enabled: true
+    group:
+      readiness.include: readinessState,db,kafka      # dependencies gate traffic
+      liveness.include: livenessState                 # keep dependencies OUT of liveness</code></pre>
+<div class="note"><b>Liveness vs readiness:</b> liveness = "is the process broken? restart it". Readiness = "can it serve traffic now? route around it". If liveness includes Kafka or the DB, a broker outage makes Kubernetes restart every pod in a loop and makes things worse.</div>
+
+<h2 id="hk">7. Kafka readiness health indicator</h2>
+<p class="vid">Videos 115–116</p>
+<p>Boot has no built-in Kafka health indicator, so write one that asks the cluster for its nodes with a short timeout.</p>
+<pre><code class="language-java">@Component("kafka")
+public class KafkaHealthIndicator implements HealthIndicator {
+  private final AdminClient admin;                                   // one shared client, not one per call
+  public KafkaHealthIndicator(KafkaAdmin kafkaAdmin) { this.admin = AdminClient.create(kafkaAdmin.getConfigurationProperties()); }
+
+  @Override public Health health() {
+    try {
+      var cluster = admin.describeCluster(new DescribeClusterOptions().timeoutMs(2000));
+      int brokers = cluster.nodes().get(2, TimeUnit.SECONDS).size();
+      return Health.up().withDetail("brokers", brokers).withDetail("clusterId", cluster.clusterId().get()).build();
+    } catch (Exception e) { return Health.down(e).build(); }
+  }
+  @PreDestroy void close() { admin.close(Duration.ofSeconds(2)); }
+}</code></pre>
+<ul>
+<li><b>Producer:</b> readiness = can reach Kafka. <b>Consumer:</b> readiness = Kafka reachable <i>and</i> listener containers running (<code>registry.getListenerContainers().stream().allMatch(MessageListenerContainer::isRunning)</code>) and DB healthy.</li>
+<li>Keep checks fast and cheap with tight timeouts; health endpoints are hit every few seconds by every pod.</li>
+<li>Also useful: Micrometer Kafka metrics (consumer <code>records-lag-max</code>, producer <code>record-error-rate</code>) exposed at <code>/actuator/prometheus</code> for alerting.</li>
+</ul>
+
+<h2 id="jar">8. Executable jars and environment variables</h2>
+<p class="vid">Videos 117–119</p>
+<pre><code class="language-bash"># build (spring-boot-maven-plugin repackages into a runnable "fat" jar)
+./mvnw clean package -DskipTests
+
+# run producer
+SPRING_PROFILES_ACTIVE=prod \
+SPRING_KAFKA_BOOTSTRAP_SERVERS=broker1:9092,broker2:9092 \
+SERVER_PORT=8080 \
+java -jar target/library-events-producer.jar
+
+# run consumer (different port), override via arguments
+java -jar target/library-events-consumer.jar --server.port=8081 --spring.profiles.active=prod \
+     --spring.datasource.url=jdbc:postgresql://db:5432/library
+
+# yaml placeholders with defaults
+#   bootstrap-servers: ${KAFKA_BROKERS:localhost:9092}
+#   password: ${DB_PASSWORD}          # no default for secrets</code></pre>
+<ul>
+<li><b>Executable jar:</b> the Boot loader runs nested jars from <code>BOOT-INF/lib</code> and your classes from <code>BOOT-INF/classes</code>, so <code>java -jar</code> needs no app server or classpath setup.</li>
+<li><b>Relaxed binding:</b> <code>spring.kafka.bootstrap-servers</code> ↔ env var <code>SPRING_KAFKA_BOOTSTRAP_SERVERS</code> (uppercase, dots and dashes become underscores).</li>
+<li><b>Precedence (high → low):</b> command-line args, JVM <code>-D</code> properties, OS environment variables, profile-specific files (<code>application-prod.yml</code>), <code>application.yml</code>, defaults in code.</li>
+<li>Secrets come from env vars or a secrets manager, never from the repo. Twelve-factor: same artifact everywhere, config differs by environment.</li>
+<li>In containers set memory explicitly (<code>-XX:MaxRAMPercentage=75</code>) and prefer layered images or <code>spring-boot:build-image</code>.</li>
+</ul>
+
+<h2 id="q">Interview Q&amp;A</h2>
+<p class="sub">Tap a question to expand.</p>
+
+<h3>Transactions and exactly-once</h3>
+<details><summary><span class="star">★</span> What does "exactly-once" mean in Kafka? What does it not cover?</summary><div>Idempotent producer + transactions + <code>read_committed</code> consumers give exactly-once for consume-process-produce within Kafka. It does not cover side effects in databases or external APIs; those need idempotent operations.</div></details>
+<details><summary><span class="star">★</span> How do Kafka transactions work internally?</summary><div>A <code>transactional.id</code> maps to a producer id and epoch. The transaction coordinator records state in <code>__transaction_state</code>; on commit/abort it writes markers to every partition involved. Consumers using <code>read_committed</code> skip aborted records and stop at the last stable offset.</div></details>
+<details><summary><span class="star">★</span> What is zombie fencing?</summary><div>When an instance restarts or a rebalance hands its work to another, the new producer with the same <code>transactional.id</code> gets a higher epoch; the broker rejects writes from the old (zombie) producer.</div></details>
+<details><summary><span class="star">★</span> Idempotent producer vs transaction: when do you need which?</summary><div>Idempotence removes duplicates from retries on one partition in one session. Transactions are needed for atomic multi-partition/topic writes and to commit consumed offsets together with produced output.</div></details>
+<details><summary>What is <code>isolation.level</code> and what is the last stable offset?</summary><div><code>read_committed</code> hides uncommitted and aborted records. The LSO is the offset before the first still-open transaction, so a long-running transaction delays consumers reading beyond it.</div></details>
+<details><summary>Downsides of transactions?</summary><div>Higher latency (commit round-trips and markers), more broker load, transactional consumers wait for commits, need proper RF/ISR on the transaction log, and stuck transactions block visibility until timeout.</div></details>
+<details><summary><span class="star">★</span> <code>@Transactional</code> on a method that sends to Kafka and saves to a DB: is it atomic?</summary><div>No. Two independent systems, no two-phase commit. Commit order is best effort, so a crash between them leaves inconsistency. Use the outbox pattern (write event to a table in the same DB transaction, relay to Kafka) or make consumers idempotent.</div></details>
+<details><summary>Why did my <code>@Transactional</code> method not roll back the Kafka sends?</summary><div>Common causes: a checked exception (add <code>rollbackFor</code>), self-invocation bypassing the proxy, wrong transaction manager chosen when both JPA and Kafka exist, or catching the exception inside the method.</div></details>
+<details><summary>How do transactions work with a Spring Kafka listener?</summary><div>The container starts a Kafka transaction per record/batch, sends consumed offsets to the transaction and commits with any records you produced. On exception it aborts, offsets stay uncommitted, and the record is redelivered.</div></details>
+<details><summary>Situational: you must publish three related events atomically. How?</summary><div>Enable <code>transaction-id-prefix</code>, wrap the three sends in <code>@Transactional("kafkaTransactionManager")</code> (or <code>executeInTransaction</code>), and ensure downstream consumers use <code>read_committed</code>. Test that a failure on the third leaves none visible.</div></details>
+<details><summary>Situational: duplicates still appear downstream even with transactions. Why?</summary><div>Consumers still on <code>read_uncommitted</code>, side effects outside Kafka (DB/API) replayed after redelivery, or producers without a stable <code>transactional.id</code> across restarts. Fix isolation level and make sinks idempotent.</div></details>
+
+<h3>Actuator and operations</h3>
+<details><summary><span class="star">★</span> Liveness vs readiness probes? What goes in each?</summary><div>Liveness detects a broken process (restart); readiness gates traffic. Put dependencies (DB, Kafka) in readiness, not liveness, so an outage removes pods from rotation instead of triggering restart storms.</div></details>
+<details><summary><span class="star">★</span> How do you monitor a Kafka consumer in production?</summary><div>Health/readiness endpoints, Micrometer metrics to Prometheus/Grafana (consumer lag, poll rate, error rate, rebalances), lag alerts from <code>kafka-consumer-groups</code> or Burrow/exporters, DLT depth alerts, and structured logs with topic/partition/offset.</div></details>
+<details><summary>How do you write a custom HealthIndicator? What to watch out for?</summary><div>Implement <code>HealthIndicator</code>, return <code>Health.up()/down()</code> with details. Keep it fast with timeouts, reuse clients, avoid heavy calls, and do not leak sensitive details publicly.</div></details>
+<details><summary>How do you secure Actuator endpoints?</summary><div>Expose only what you need, put them on a separate management port or behind Spring Security roles, restrict <code>show-details</code>, and never expose <code>env</code>, <code>heapdump</code> or <code>loggers</code> (write) to the internet.</div></details>
+<details><summary>Situational: health says UP but Kafka is down. Why?</summary><div>No Kafka indicator exists by default, so nothing checks it. Add a custom indicator (AdminClient <code>describeCluster</code> with timeout) and include it in the readiness group.</div></details>
+<details><summary>Situational: after a Kafka outage all pods restart repeatedly. Cause?</summary><div>Kafka health is wired into liveness. Move it to readiness only.</div></details>
+
+<h3>Packaging and configuration</h3>
+<details><summary><span class="star">★</span> How does a Spring Boot executable jar work?</summary><div>The Maven/Gradle plugin repackages the app with a launcher; nested dependency jars live in <code>BOOT-INF/lib</code> and the Boot loader builds the classpath at start, so <code>java -jar</code> works with an embedded server.</div></details>
+<details><summary><span class="star">★</span> Configuration precedence in Spring Boot?</summary><div>Command-line args, then system properties, then OS env vars, then profile-specific files, then <code>application.yml</code>, then defaults. Higher sources override lower ones.</div></details>
+<details><summary>How do you pass Kafka brokers and secrets to the app in prod?</summary><div>Environment variables or arguments (<code>SPRING_KAFKA_BOOTSTRAP_SERVERS</code>), secrets from a manager (Vault, AWS Secrets Manager, Kubernetes Secrets), profile files only for non-secret differences.</div></details>
+<details><summary>How do you run the producer and consumer on one machine?</summary><div>Different ports (<code>server.port</code>), same Kafka, distinct application names; for multiple consumers use the same <code>group-id</code> to share partitions.</div></details>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>try{hljs.highlightAll()}catch(e){}</script>
+</body></html>

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kafka Bible · Part 5 · Reliability, Retry &amp; Recovery</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1c1c1e;--mut:#6b6b70;--line:#e4e4e2;--acc:#3b4cca;--code:#f1f1ef;--hot:#fff4d6;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141416;--fg:#e8e8ea;--mut:#9a9aa2;--line:#2a2a2e;--acc:#8b98ff;--code:#1e1e22;--hot:#2c2718}}
+:root[data-theme="dark"]{--bg:#141416;--fg:#e8e8ea;--mut:#9a9aa2;--line:#2a2a2e;--acc:#8b98ff;--code:#1e1e22;--hot:#2c2718}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 Georgia,"Times New Roman",serif}
+main{max-width:760px;margin:0 auto;padding:32px 20px 80px}
+h1{font:700 30px/1.2 system-ui,sans-serif;margin:0 0 6px}
+h2{font:650 21px/1.3 system-ui,sans-serif;margin:52px 0 4px;padding-top:20px;border-top:1px solid var(--line)}
+h3{font:600 15px/1.4 system-ui,sans-serif;margin:24px 0 6px}
+.sub{color:var(--mut);font:14px system-ui,sans-serif;margin:0 0 4px}
+.vid{color:var(--mut);font:13px system-ui,sans-serif;margin:0 0 12px}
+p,li{margin:6px 0}ul{padding-left:20px}
+code{font:13px ui-monospace,Menlo,Consolas,monospace;background:var(--code);padding:1px 5px;border-radius:3px}
+pre{background:var(--code);padding:12px 14px;border-radius:6px;overflow-x:auto;margin:10px 0;max-width:100%}
+pre code{padding:0;background:none;font-size:12.5px;line-height:1.55}
+table{border-collapse:collapse;width:100%;font:14px system-ui,sans-serif;display:block;overflow-x:auto}
+td,th{border-bottom:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}th{color:var(--mut);font-weight:600}
+nav{font:14px system-ui,sans-serif;margin:18px 0 0;display:flex;flex-wrap:wrap;gap:6px 16px}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+button{font:13px system-ui,sans-serif;background:none;color:var(--mut);border:1px solid var(--line);border-radius:5px;padding:4px 10px;cursor:pointer;float:right}
+.note{background:var(--hot);border-left:3px solid var(--acc);padding:8px 12px;margin:12px 0;font-size:15px}
+details{border-bottom:1px solid var(--line);padding:9px 0}
+summary{cursor:pointer;font:600 15px/1.5 system-ui,sans-serif;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";color:var(--acc);display:inline-block;width:18px}
+details[open] summary::before{content:"–"}
+details>div{padding:6px 0 4px 18px}
+.star{color:var(--acc);font-weight:700}
+</style>
+<style>
+:root{--k:#c2255c;--s:#0a7f4f;--c:#8a8a90;--n:#b35900;--t:#3b4cca;--a:#9c36b5}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--k:#ff8fa3;--s:#7ee0a8;--c:#7c7c86;--n:#ffb066;--t:#8b98ff;--a:#d6a3ff}}
+:root[data-theme="dark"]{--k:#ff8fa3;--s:#7ee0a8;--c:#7c7c86;--n:#ffb066;--t:#8b98ff;--a:#d6a3ff}
+.hljs-keyword,.hljs-literal,.hljs-built_in,.hljs-selector-tag{color:var(--k)}
+.hljs-string,.hljs-regexp{color:var(--s)}
+.hljs-comment{color:var(--c);font-style:italic}
+.hljs-number,.hljs-bullet{color:var(--n)}
+.hljs-title,.hljs-type,.hljs-class .hljs-title,.hljs-attr,.hljs-attribute,.hljs-variable,.hljs-property{color:var(--t)}
+.hljs-meta,.hljs-meta .hljs-keyword,.hljs-doctag,.hljs-symbol{color:var(--a)}
+</style></head><body><main>
+<button onclick="var r=document.documentElement;r.dataset.theme=(r.dataset.theme==='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches))?'light':'dark'">Theme</button>
+<h1>Kafka Bible · Part 5</h1>
+<p class="sub">Reliability, retry and recovery, consumer time configs · course videos 85–106</p>
+<p class="sub"><span class="star">★</span> marks questions that are common in Walmart / JPMC style rounds. This is the highest-yield part for senior interviews. Defaults shown are for Kafka 3.x/4.x clients.</p>
+<nav><a href="#pr">Producer reliability</a><a href="#to">Producer timeouts</a><a href="#ce">Consumer errors</a><a href="#rec">Recovery</a><a href="#cfg">Full config</a><a href="#it">Testing</a><a href="#ct">Consumer timings</a><a href="#q">Q&amp;A</a></nav>
+
+<h2 id="pr">1. Producer reliability: acks, retries, idempotence, in-flight</h2>
+<p class="vid">Videos 85–88</p>
+<h3>acks and min.insync.replicas</h3>
+<table>
+<tr><th>Setting</th><th>Meaning</th><th>Risk</th></tr>
+<tr><td><code>acks=0</code></td><td>No ack</td><td>Silent loss</td></tr>
+<tr><td><code>acks=1</code></td><td>Leader wrote it</td><td>Lost if leader dies before followers copy</td></tr>
+<tr><td><code>acks=all</code></td><td>All <b>in-sync</b> replicas wrote it</td><td>Safe, if ISR is large enough</td></tr>
+</table>
+<ul>
+<li><code>acks=all</code> alone is not enough: if the ISR shrinks to just the leader, "all" means one. <code>min.insync.replicas</code> (topic or broker) sets the minimum ISR for a write to succeed; otherwise the producer gets <code>NotEnoughReplicasException</code> (retriable).</li>
+<li><b>Rule:</b> RF=3, <code>min.insync.replicas=2</code>, <code>acks=all</code> survives 1 broker failure with no loss and keeps accepting writes. Writes tolerate <code>RF − minISR</code> failures; data survives <code>minISR − 1</code>.</li>
+<li>Higher durability costs latency, and a smaller ISR costs availability (CAP-style trade-off).</li>
+</ul>
+<h3>Retries and backoff</h3>
+<ul>
+<li><code>retries</code> defaults to a huge number; the real bound is <code>delivery.timeout.ms</code> (120 s). Tune the deadline, not the count. <code>retry.backoff.ms</code> (100 ms) with exponential growth up to <code>retry.backoff.max.ms</code> (1 s).</li>
+<li>Retriable: <code>NotEnoughReplicas</code>, <code>NotLeaderOrFollower</code>, network/timeouts. Non-retriable: <code>RecordTooLarge</code>, <code>SerializationException</code>, auth errors.</li>
+<li><b>Danger:</b> retries without idempotence can <b>duplicate</b> (ack lost, resend) and <b>reorder</b> (batch 2 succeeds while batch 1 retries).</li>
+</ul>
+<h3>Idempotent producer and max.in.flight</h3>
+<ul>
+<li><code>enable.idempotence=true</code> (default since Kafka 3.0): broker assigns a <b>producer id (PID) + epoch</b>; each batch carries a per-partition <b>sequence number</b>; the broker drops duplicates and rejects gaps. Requires <code>acks=all</code>, retries &gt; 0, <code>max.in.flight ≤ 5</code>.</li>
+<li>Limits: dedup holds within one producer session and partition. A restarted app gets a new PID, and app-level resends are not detected. For atomic multi-partition or read-process-write use <b>transactions</b> (<code>transactional.id</code>).</li>
+<li><code>max.in.flight.requests.per.connection</code>: unacked requests per broker connection. Without idempotence, &gt;1 risks reordering on retry (use 1 for strict order). With idempotence, up to 5 keeps order because the broker uses sequence numbers, and gives better throughput.</li>
+</ul>
+
+<h2 id="to">2. Producer timeouts</h2>
+<p class="vid">Video 89</p>
+<table>
+<tr><th>Config</th><th>Default</th><th>Bounds</th></tr>
+<tr><td><code>max.block.ms</code></td><td>60 s</td><td><code>send()</code> blocking on metadata or a full buffer</td></tr>
+<tr><td><code>linger.ms</code></td><td>0 (5 in Kafka 4)</td><td>Time a record waits to fill a batch</td></tr>
+<tr><td><code>request.timeout.ms</code></td><td>30 s</td><td>One request attempt (waiting for the broker response)</td></tr>
+<tr><td><code>retry.backoff.ms</code></td><td>100 ms</td><td>Wait between attempts</td></tr>
+<tr><td><code>delivery.timeout.ms</code></td><td>120 s</td><td>Total time from <code>send()</code> returning to success/failure, including retries. Must be ≥ <code>linger.ms + request.timeout.ms</code></td></tr>
+</table>
+
+<h2 id="ce">3. Consumer error handling: behavior and internals</h2>
+<p class="vid">Videos 92–97</p>
+<ul>
+<li><b>Current default (video 93):</b> when the listener throws, <code>DefaultErrorHandler</code> retries the same record up to 9 more times with <b>no delay</b> (<code>FixedBackOff(0, 9)</code>), then <b>logs and skips it</b>, and the offset is committed. That is silent data loss for a business-critical event, so you must configure recovery.</li>
+<li><b>Under the hood (video 94):</b> on exception the container does not poll past the failed record: <code>DefaultErrorHandler</code> <b>seeks</b> the partition back to the failed offset, sleeps for the back-off in the consumer thread, and redelivers. When the back-off is exhausted it calls the <code>ConsumerRecordRecoverer</code>, then commits and continues. This is a <b>blocking retry</b>: the partition is stalled during retries.</li>
+<li>The total back-off time must stay well below <code>max.poll.interval.ms</code>, or the consumer is evicted mid-retry and a rebalance follows.</li>
+<li>Spring Boot auto-registers a <code>CommonErrorHandler</code> bean on the listener container factory.</li>
+</ul>
+<pre><code class="language-java">@Bean
+DefaultErrorHandler errorHandler(ConsumerRecordRecoverer recoverer) {
+  var backOff = new ExponentialBackOffWithMaxRetries(3);        // 3 retries after the first attempt
+  backOff.setInitialInterval(1_000L);
+  backOff.setMultiplier(2.0);                                   // 1s, 2s, 4s
+  backOff.setMaxInterval(10_000L);
+
+  var handler = new DefaultErrorHandler(recoverer, backOff);
+  handler.addNotRetryableExceptions(IllegalArgumentException.class, JsonProcessingException.class);
+  handler.addRetryableExceptions(RecoverableDataAccessException.class);
+  handler.setRetryListeners(new RetryListener() {               // video 96
+    public void failedDelivery(ConsumerRecord&lt;?,?&gt; r, Exception ex, int attempt) {
+      log.warn("attempt {} failed for key={} offset={}: {}", attempt, r.key(), r.offset(), ex.getMessage());
+    }
+    public void recovered(ConsumerRecord&lt;?,?&gt; r, Exception ex) { log.error("recovered (gave up) key={}", r.key()); }
+  });
+  return handler;
+}</code></pre>
+<ul>
+<li><b>Retryable vs non-retryable (video 97):</b> by default these skip retries and go straight to the recoverer: <code>DeserializationException</code>, <code>MessageConversionException</code>, <code>ConversionException</code>, <code>MethodArgumentResolutionException</code>, <code>NoSuchMethodException</code>, <code>ClassCastException</code>. Retry only transient failures (DB down, timeout, downstream 503). Do not retry validation or business-rule violations: they will fail every time.</li>
+</ul>
+
+<h2 id="rec">4. Recovery strategies</h2>
+<p class="vid">Videos 98–102</p>
+<table>
+<tr><th>Strategy</th><th>How</th><th>Trade-off</th></tr>
+<tr><td>Log and skip</td><td>Default recoverer</td><td>Simplest; data is lost, only a log line remains</td></tr>
+<tr><td>Dead-letter topic</td><td><code>DeadLetterPublishingRecoverer</code></td><td>Preserves the record and exception headers; needs a DLT consumer or replay process</td></tr>
+<tr><td>Save to DB</td><td>Custom recoverer writes a failure record</td><td>Queryable, easy to build retry jobs and dashboards; DB becomes a dependency</td></tr>
+<tr><td>Hybrid</td><td>Retryable failures → DB (status RETRY) for a scheduler; non-retryable → DLT (status DEAD)</td><td>Most flexible; most moving parts</td></tr>
+</table>
+<pre><code class="language-java">@Bean
+DeadLetterPublishingRecoverer dltRecoverer(KafkaTemplate&lt;Object,Object&gt; template) {
+  return new DeadLetterPublishingRecoverer(template,
+      (record, ex) -&gt; new TopicPartition(record.topic() + ".DLT", record.partition()));
+}
+
+// DB variant
+@Bean
+ConsumerRecordRecoverer dbRecoverer(FailureRecordService svc) {
+  return (rec, ex) -&gt; svc.save(new FailureRecord(rec.topic(), rec.partition(), rec.offset(),
+                                                   (Integer) rec.key(), (String) rec.value(),
+                                                   ex.getMessage(), "RETRY"));
+}
+
+// Hybrid
+@Bean
+ConsumerRecordRecoverer hybrid(DeadLetterPublishingRecoverer dlt, FailureRecordService svc) {
+  return (rec, ex) -&gt; {
+    Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+    if (cause instanceof RecoverableDataAccessException) svc.save(rec, ex, "RETRY");   // scheduler retries later
+    else { dlt.accept(rec, ex); svc.save(rec, ex, "DEAD"); }
+  };
+}</code></pre>
+<ul>
+<li>The DLT default destination is <code>&lt;topic&gt;.DLT</code> on the <b>same partition number</b>, so the DLT needs at least as many partitions (or return <code>-1</code> to let Kafka choose). Headers carry original topic, partition, offset, exception class, message and stack trace.</li>
+<li>Undeserializable payloads arrive as <code>byte[]</code>: the DLT template needs a byte-array serializer (use the recoverer's map-of-templates constructor).</li>
+<li>Unwrap the exception (<code>ex.getCause()</code>): listener exceptions are wrapped in <code>ListenerExecutionFailedException</code>.</li>
+<li>A DB recoverer that itself fails causes the record to be retried again, so keep it simple and monitor it.</li>
+<li>DLT is not the end: monitor and alert on DLT depth, and build a replay path (a job or admin endpoint that republishes to the main topic once fixed).</li>
+</ul>
+<div class="note"><b>Non-blocking alternative:</b> <code>@RetryableTopic</code> retries via separate retry topics (<code>-retry-0</code>, <code>-retry-1</code>, <code>-dlt</code>) so the main partition keeps moving. Trade-off: ordering for that key is no longer guaranteed. Use blocking retries when order matters, retry topics when throughput matters.</div>
+<pre><code class="language-java">@RetryableTopic(attempts = "4", backoff = @Backoff(delay = 1000, multiplier = 2.0),
+                dltStrategy = DltStrategy.FAIL_ON_ERROR,
+                exclude = {IllegalArgumentException.class})
+@KafkaListener(topics = "library-events") void onMessage(ConsumerRecord&lt;Integer,String&gt; r) { ... }
+@DltHandler void dlt(ConsumerRecord&lt;Integer,String&gt; r) { /* alert, persist */ }</code></pre>
+
+<h2 id="cfg">5. Recommended reliable configuration (recap)</h2>
+<p class="vid">Videos 90–91, 102</p>
+<pre><code class="language-yaml">spring:
+  kafka:
+    producer:
+      acks: all
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+        delivery.timeout.ms: 120000
+        request.timeout.ms: 30000
+        retry.backoff.ms: 100
+        compression.type: lz4
+    consumer:
+      enable-auto-commit: false
+      auto-offset-reset: earliest
+    listener:
+      ack-mode: batch
+# topic: replication.factor=3, min.insync.replicas=2, unclean.leader.election.enable=false</code></pre>
+<ul>
+<li><b>Producer app logic (video 91):</b> async: handle the callback (log, persist failure, alert). Sync: <code>get(timeout)</code>, unwrap <code>ExecutionException</code>, return 5xx if unsafe to continue. Never ignore the future.</li>
+<li><b>Consumer recap:</b> <code>ErrorHandlingDeserializer</code> + <code>DefaultErrorHandler</code> with exponential back-off + not-retryable list + recoverer (DLT and/or DB) + idempotent processing + alerts on DLT.</li>
+</ul>
+
+<h2 id="it">6. Integration tests with retry and recovery</h2>
+<p class="vid">Video 103</p>
+<pre><code class="language-java">@MockitoSpyBean LibraryEventsConsumer consumerSpy;
+@MockitoSpyBean LibraryEventService serviceSpy;
+
+@Test void nonRetryable_goesToDltWithoutRetry() throws Exception {
+  doThrow(new IllegalArgumentException("bad")).when(serviceSpy).processLibraryEvent(any());
+  kafkaTemplate.send("library-events", 1, json);
+
+  verify(serviceSpy, timeout(5000).times(1)).processLibraryEvent(any());          // no retries
+  ConsumerRecord&lt;Integer,String&gt; dlt = KafkaTestUtils.getSingleRecord(dltConsumer, "library-events.DLT");
+  assertEquals(json, dlt.value());
+}
+
+@Test void retryable_isRetriedThenRecovered() throws Exception {
+  doThrow(new RecoverableDataAccessException("db down")).when(serviceSpy).processLibraryEvent(any());
+  kafkaTemplate.send("library-events", 1, json);
+  verify(serviceSpy, timeout(10000).times(4)).processLibraryEvent(any());          // 1 + 3 retries
+}</code></pre>
+<ul>
+<li>Use a tiny back-off in test properties so tests stay fast. Cover: retried N times, non-retryable not retried, record lands in DLT/DB, and a subsequent good message is still processed.</li>
+</ul>
+
+<h2 id="ct">7. Consumer time configurations</h2>
+<p class="vid">Videos 104–106</p>
+<table>
+<tr><th>Group</th><th>Config (default)</th><th>Effect</th></tr>
+<tr><td rowspan="4">Broker-side liveness</td><td><code>session.timeout.ms</code> (45 s)</td><td>No heartbeat for this long → consumer removed, rebalance</td></tr>
+<tr><td><code>heartbeat.interval.ms</code> (3 s)</td><td>Heartbeat frequency; keep ≤ ⅓ of session timeout</td></tr>
+<tr><td><code>max.poll.interval.ms</code> (5 min)</td><td>Max gap between <code>poll()</code> calls; exceeded → evicted (also the rebalance timeout)</td></tr>
+<tr><td><code>group.initial.rebalance.delay.ms</code> (broker, 3 s)</td><td>Delay first rebalance so several consumers can join together</td></tr>
+<tr><td rowspan="5">Fetch</td><td><code>fetch.min.bytes</code> (1)</td><td>Broker waits for at least this much data</td></tr>
+<tr><td><code>fetch.max.wait.ms</code> (500)</td><td>…but no longer than this</td></tr>
+<tr><td><code>max.partition.fetch.bytes</code> (1 MB) / <code>fetch.max.bytes</code> (50 MB)</td><td>Per-partition and total fetch size</td></tr>
+<tr><td><code>max.poll.records</code> (500)</td><td>Records returned per <code>poll()</code>; lower it for slow processing</td></tr>
+<tr><td>Spring <code>listener.poll-timeout</code> (5 s)</td><td>How long each <code>poll()</code> blocks</td></tr>
+<tr><td rowspan="4">Connection</td><td><code>request.timeout.ms</code> (30 s)</td><td>Wait for a broker response</td></tr>
+<tr><td><code>socket.connection.setup.timeout.ms</code> (10 s, max 30 s)</td><td>TCP connect budget</td></tr>
+<tr><td><code>reconnect.backoff.ms</code> (50 ms) / <code>.max.ms</code> (1 s)</td><td>Backoff when reconnecting to a broker</td></tr>
+<tr><td><code>default.api.timeout.ms</code> (60 s), <code>connections.max.idle.ms</code> (9 min)</td><td>Blocking client calls (commit, metadata); idle connection cleanup</td></tr>
+</table>
+<ul>
+<li><b>Latency vs throughput:</b> larger <code>fetch.min.bytes</code> and wait = fewer, bigger fetches (throughput) but higher latency. Defaults favor low latency.</li>
+<li><b>Rebalance storm checklist:</b> processing per poll must be &lt; <code>max.poll.interval.ms</code>; session timeout must tolerate GC pauses and network blips; use static membership and cooperative rebalancing.</li>
+</ul>
+
+<h2 id="q">Interview Q&amp;A</h2>
+<p class="sub">Tap a question to expand.</p>
+
+<h3>Producer reliability</h3>
+<details><summary><span class="star">★</span> Configure Kafka so no message is lost. Explain each piece.</summary><div>Producer: <code>acks=all</code>, idempotence on, handle failures from the future. Topic: RF 3, <code>min.insync.replicas=2</code>, unclean election off. Consumer: manual or after-processing commit, retries with recovery to DLT so failures are not skipped silently. Add monitoring for ISR shrink, under-replicated partitions, and DLT depth.</div></details>
+<details><summary><span class="star">★</span> Why is <code>acks=all</code> not enough without <code>min.insync.replicas</code>?</summary><div>If followers fall out of the ISR, "all in-sync replicas" can be just the leader, so a leader crash loses data. <code>min.insync.replicas=2</code> forces writes to fail when redundancy is gone.</div></details>
+<details><summary><span class="star">★</span> With RF=3 and min ISR=2, what if two brokers fail?</summary><div>ISR drops below 2: <code>acks=all</code> writes fail with <code>NotEnoughReplicasException</code>, but reads of committed data continue. That is by design: it prefers consistency over availability.</div></details>
+<details><summary><span class="star">★</span> How does the idempotent producer work? What are its limits?</summary><div>PID + epoch + per-partition sequence numbers; the broker rejects duplicates and out-of-order sequences. Limits: single producer session, single partition scope; not protection against app-level double-sends or across restarts. Use transactions or idempotent consumers for those.</div></details>
+<details><summary><span class="star">★</span> How is ordering preserved when retries are enabled?</summary><div>Idempotence with <code>max.in.flight ≤ 5</code> (broker resequences by sequence number), or <code>max.in.flight=1</code> without idempotence. Otherwise a retried batch can land after a later batch.</div></details>
+<details><summary>Relationship between <code>delivery.timeout.ms</code>, <code>request.timeout.ms</code>, <code>linger.ms</code>?</summary><div><code>delivery.timeout.ms ≥ linger.ms + request.timeout.ms</code>. Delivery timeout is the overall deadline including retries, while request timeout is one attempt. Prefer tuning the deadline over a retry count.</div></details>
+<details><summary>Idempotent producer vs transactions?</summary><div>Idempotence: exactly-once per partition per session. Transactions add atomic writes across partitions/topics and consumed-offset commits (<code>sendOffsetsToTransaction</code>), so consumers with <code>read_committed</code> see all or nothing.</div></details>
+
+<h3>Consumer retry and recovery</h3>
+<details><summary><span class="star">★</span> What does Spring Kafka do by default when a listener throws?</summary><div><code>DefaultErrorHandler</code> retries up to 9 more times immediately, then logs and skips the record and commits the offset. Data is lost silently unless you add a recoverer.</div></details>
+<details><summary><span class="star">★</span> How would you design retry and failure handling for a payments consumer?</summary><div>Classify errors. Transient: bounded exponential back-off. Permanent: no retry, straight to DLT with exception headers. Persist failure metadata to a table, alert on DLT growth, provide replay tooling, keep the consumer idempotent, and keep total back-off below <code>max.poll.interval.ms</code>.</div></details>
+<details><summary><span class="star">★</span> Blocking retries vs retry topics (<code>@RetryableTopic</code>)?</summary><div>Blocking: preserves order, stalls the partition (throughput and lag hit), simple. Retry topics: partition keeps flowing, delayed retries via tiers, but breaks per-key ordering and adds topics and operational complexity.</div></details>
+<details><summary><span class="star">★</span> Downstream DB is down for 30 minutes. What happens with your setup?</summary><div>In-memory back-off exhausts in seconds, and records go to the recoverer (DLT/DB) in bulk. Better: pause the container on a circuit breaker, use longer back-off within poll limits, or route to retry topics with longer delays, then replay the failures after recovery.</div></details>
+<details><summary>What happens to a record that fails in the DLT publisher itself?</summary><div>The recovery fails, the error handler treats it as an error again and the record is redelivered (with back-off). Use a reliable DLT setup, monitor <code>recoveryFailed</code>, and fall back to logging or DB.</div></details>
+<details><summary>How do you replay messages from the DLT?</summary><div>A controlled job or endpoint reads the DLT (or DB failure table), fixes or validates the payload, republishes to the original topic (keeping the key), and marks the failure record resolved. Avoid automatic infinite loops.</div></details>
+<details><summary>What is in the DLT record headers?</summary><div>Original topic, partition, offset, timestamp, plus exception class, message and stack trace (<code>kafka_dlt-*</code> headers), useful for triage.</div></details>
+<details><summary>Which exceptions are non-retryable by default and why?</summary><div>Deserialization, conversion, and method-resolution errors, since retrying cannot change the outcome. Add your business exceptions with <code>addNotRetryableExceptions</code>.</div></details>
+
+<h3>Timings and situational</h3>
+<details><summary><span class="star">★</span> <code>session.timeout.ms</code> vs <code>heartbeat.interval.ms</code> vs <code>max.poll.interval.ms</code>?</summary><div>Session: how long without heartbeats before eviction. Heartbeat: how often the background thread signals liveness (≤ ⅓ of session). Max poll interval: max time between polls, which protects against a stuck processing loop.</div></details>
+<details><summary><span class="star">★</span> A consumer is repeatedly kicked out and rebalances. Diagnose.</summary><div>Look for "poll interval exceeded" (slow processing or long back-off: reduce <code>max.poll.records</code>, raise interval), missed heartbeats (GC pauses, network: raise session timeout), frequent deployments (use static membership and cooperative assignor), or bad pods restarting.</div></details>
+<details><summary>How do <code>fetch.min.bytes</code> and <code>fetch.max.wait.ms</code> trade latency for throughput?</summary><div>The broker holds the fetch until it has <code>fetch.min.bytes</code> or the wait expires. Higher values batch more per request (throughput, lower broker load), lower values respond faster.</div></details>
+<details><summary>What is <code>max.poll.records</code> for?</summary><div>Caps records per poll so processing per batch fits within <code>max.poll.interval.ms</code>; smaller values also shrink the replay window after failure.</div></details>
+<details><summary>Kafka consumer commit throws timeout errors. What do you check?</summary><div>Broker or coordinator health, network latency, <code>default.api.timeout.ms</code>, group coordinator moves, and whether the consumer was already evicted (<code>CommitFailedException</code>).</div></details>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>try{hljs.highlightAll()}catch(e){}</script>
+</body></html>

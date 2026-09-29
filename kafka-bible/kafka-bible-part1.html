@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kafka Bible · Part 1 · Core Concepts &amp; Cluster</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1c1c1e;--mut:#6b6b70;--line:#e4e4e2;--acc:#3b4cca;--code:#f1f1ef;--hot:#fff4d6;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141416;--fg:#e8e8ea;--mut:#9a9aa2;--line:#2a2a2e;--acc:#8b98ff;--code:#1e1e22;--hot:#2c2718}}
+:root[data-theme="dark"]{--bg:#141416;--fg:#e8e8ea;--mut:#9a9aa2;--line:#2a2a2e;--acc:#8b98ff;--code:#1e1e22;--hot:#2c2718}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 Georgia,"Times New Roman",serif}
+main{max-width:760px;margin:0 auto;padding:32px 20px 80px}
+h1{font:700 30px/1.2 system-ui,sans-serif;margin:0 0 6px}
+h2{font:650 21px/1.3 system-ui,sans-serif;margin:52px 0 4px;padding-top:20px;border-top:1px solid var(--line)}
+h3{font:600 15px/1.4 system-ui,sans-serif;margin:24px 0 6px}
+.sub{color:var(--mut);font:14px system-ui,sans-serif;margin:0 0 4px}
+.vid{color:var(--mut);font:13px system-ui,sans-serif;margin:0 0 12px}
+p,li{margin:6px 0}ul{padding-left:20px}
+code{font:13px ui-monospace,Menlo,Consolas,monospace;background:var(--code);padding:1px 5px;border-radius:3px}
+pre{background:var(--code);padding:12px 14px;border-radius:6px;overflow-x:auto;margin:10px 0;max-width:100%}
+pre code{padding:0;background:none;font-size:12.5px;line-height:1.55}
+table{border-collapse:collapse;width:100%;font:14px system-ui,sans-serif;display:block;overflow-x:auto}
+td,th{border-bottom:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}th{color:var(--mut);font-weight:600}
+nav{font:14px system-ui,sans-serif;margin:18px 0 0;display:flex;flex-wrap:wrap;gap:6px 16px}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+button{font:13px system-ui,sans-serif;background:none;color:var(--mut);border:1px solid var(--line);border-radius:5px;padding:4px 10px;cursor:pointer;float:right}
+.note{background:var(--hot);border-left:3px solid var(--acc);padding:8px 12px;margin:12px 0;font-size:15px}
+details{border-bottom:1px solid var(--line);padding:9px 0}
+summary{cursor:pointer;font:600 15px/1.5 system-ui,sans-serif;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";color:var(--acc);display:inline-block;width:18px}
+details[open] summary::before{content:"–"}
+details>div{padding:6px 0 4px 18px}
+.star{color:var(--acc);font-weight:700}
+</style><style>
+:root{--k:#c2255c;--s:#0a7f4f;--c:#8a8a90;--n:#b35900;--t:#3b4cca;--a:#9c36b5}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--k:#ff8fa3;--s:#7ee0a8;--c:#7c7c86;--n:#ffb066;--t:#8b98ff;--a:#d6a3ff}}
+:root[data-theme="dark"]{--k:#ff8fa3;--s:#7ee0a8;--c:#7c7c86;--n:#ffb066;--t:#8b98ff;--a:#d6a3ff}
+.hljs-keyword,.hljs-literal,.hljs-built_in,.hljs-selector-tag{color:var(--k)}
+.hljs-string,.hljs-regexp{color:var(--s)}
+.hljs-comment{color:var(--c);font-style:italic}
+.hljs-number,.hljs-bullet{color:var(--n)}
+.hljs-title,.hljs-type,.hljs-class .hljs-title,.hljs-attr,.hljs-attribute,.hljs-variable,.hljs-property{color:var(--t)}
+.hljs-meta,.hljs-meta .hljs-keyword,.hljs-doctag,.hljs-symbol{color:var(--a)}
+</style>
+</head><body><main>
+<button onclick="var r=document.documentElement;r.dataset.theme=(r.dataset.theme==='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches))?'light':'dark'">Theme</button>
+<h1>Kafka Bible · Part 1</h1>
+<p class="sub">Core concepts, internals, and the cluster · course videos 9–23</p>
+<p class="sub"><span class="star">★</span> marks questions that are common in Walmart / JPMC style rounds.</p>
+<nav><a href="#t">Topics</a><a href="#k">KRaft</a><a href="#cli">CLI</a><a href="#p">Producer</a><a href="#o">Offsets</a><a href="#g">Groups</a><a href="#l">Log</a><a href="#c">Cluster</a><a href="#q">Interview Q&amp;A</a></nav>
+
+<h2 id="t">1. Topics and partitions</h2>
+<p class="vid">Video 9</p>
+<ul>
+<li><b>Topic:</b> a named, logical stream of records. <b>Partition:</b> an ordered, immutable, append-only log that makes up a topic.</li>
+<li><b>Offset:</b> a record's sequence number within one partition. Offsets are unique per partition, not per topic.</li>
+<li><b>Ordering</b> is guaranteed only inside a partition, never across partitions.</li>
+<li><b>Partitions are the unit of parallelism</b> (max active consumers in a group = partition count) and of storage distribution.</li>
+<li>You can increase partitions but never decrease them. Increasing changes <code>hash(key) % N</code>, so the same key may land on a different partition afterwards.</li>
+<li>Records are not deleted on consumption; they are removed by the retention policy.</li>
+</ul>
+
+<h2 id="k">2. Local broker with KRaft</h2>
+<p class="vid">Video 10</p>
+<ul>
+<li><b>KRaft</b> replaces ZooKeeper (removed entirely in Kafka 4.0). Cluster metadata lives in an internal Raft-replicated log, <code>__cluster_metadata</code>.</li>
+<li>A node can be a <b>broker</b>, a <b>controller</b>, or both (<code>process.roles=broker,controller</code>, fine for local use).</li>
+<li>Controllers form a quorum and elect one <b>active controller</b> via the Raft consensus protocol. It handles leader election, topic creation and metadata changes.</li>
+<li>Benefits: no second system to run, faster controller failover, and metadata scales to more partitions.</li>
+</ul>
+<pre><code class="language-bash">KAFKA_CLUSTER_ID=$(bin/kafka-storage.sh random-uuid)
+bin/kafka-storage.sh format -t $KAFKA_CLUSTER_ID -c config/server.properties   # config path varies by version
+bin/kafka-server-start.sh config/server.properties
+
+# key server.properties
+process.roles=broker,controller
+node.id=1
+controller.quorum.voters=1@localhost:9093
+listeners=PLAINTEXT://:9092,CONTROLLER://:9093
+controller.listener.names=CONTROLLER</code></pre>
+
+<h2 id="cli">3. CLI: create, produce, consume, keys</h2>
+<p class="vid">Videos 11–12</p>
+<pre><code class="language-bash">bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic orders --partitions 3 --replication-factor 1
+bin/kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic orders
+
+bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --topic orders
+bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic orders --from-beginning
+
+# with keys
+bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --topic orders \
+  --property parse.key=true --property key.separator=:
+bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic orders \
+  --property print.key=true --property print.partition=true</code></pre>
+<ul>
+<li><b>Same key → same partition</b> (murmur2 hash of key bytes mod partition count), so per-key ordering holds.</li>
+<li><b>Null key:</b> the default partitioner is <i>sticky</i>. It fills a batch for one partition, then switches, for better batching than pure round robin.</li>
+<li>Pick keys with high cardinality and even distribution (orderId, userId). A skewed key (e.g. country) creates a <b>hot partition</b>.</li>
+</ul>
+
+<h2 id="p">4. Producer internals</h2>
+<p class="vid">Video 13</p>
+<p><code>send()</code> → serializer → partitioner → <b>RecordAccumulator</b> (per-partition batches in memory) → background <b>Sender</b> thread → leader broker → ack.</p>
+<table>
+<tr><th>Config</th><th>What it does</th></tr>
+<tr><td><code>acks</code></td><td><code>0</code> fire and forget; <code>1</code> leader wrote it; <code>all</code> every in-sync replica wrote it (safest)</td></tr>
+<tr><td><code>batch.size</code> / <code>linger.ms</code></td><td>Batch up to this many bytes, or wait this long, whichever comes first. Higher values give throughput, lower give latency</td></tr>
+<tr><td><code>compression.type</code></td><td>Compresses whole batches (snappy, lz4, zstd, gzip)</td></tr>
+<tr><td><code>buffer.memory</code>, <code>max.block.ms</code></td><td>Accumulator size; how long <code>send()</code> blocks when it is full</td></tr>
+<tr><td><code>retries</code>, <code>delivery.timeout.ms</code></td><td>Retry transient errors within the overall delivery deadline (default 2 min)</td></tr>
+<tr><td><code>enable.idempotence</code></td><td>Broker dedupes retries using producer id + sequence number. On by default since 3.0; needs <code>acks=all</code></td></tr>
+<tr><td><code>max.in.flight.requests.per.connection</code></td><td>Up to 5 keeps ordering with idempotence. Without idempotence, retries can reorder batches</td></tr>
+</table>
+<p><code>send()</code> is asynchronous. Use the returned <code>Future</code> or a callback to detect failures.</p>
+
+<h2 id="o">5. Consumer offsets</h2>
+<p class="vid">Video 14</p>
+<ul>
+<li>A committed offset is the <b>next offset to read</b>, stored per (group, topic, partition) in the internal topic <code>__consumer_offsets</code>.</li>
+<li><code>auto.offset.reset</code> applies only when the group has no committed offset (or it is out of range): <code>earliest</code>, <code>latest</code> (default), <code>none</code> (throws).</li>
+<li><code>enable.auto.commit=true</code> commits every <code>auto.commit.interval.ms</code> (5s) inside <code>poll()</code>. It can lose or duplicate work on a crash.</li>
+</ul>
+<table>
+<tr><th>Commit strategy</th><th>Result</th></tr>
+<tr><td>Commit before processing</td><td>At-most-once (a crash loses messages)</td></tr>
+<tr><td>Commit after processing</td><td>At-least-once (a crash causes duplicates; make consumers idempotent)</td></tr>
+<tr><td>Transactions / read_committed, or offsets stored with the result in one DB transaction</td><td>Exactly-once effect</td></tr>
+</table>
+
+<h2 id="g">6. Consumer groups and consumer internals</h2>
+<p class="vid">Videos 15–16</p>
+<ul>
+<li>Within a group, <b>each partition goes to exactly one consumer</b>. Different groups each get every message independently (pub-sub across groups, queue inside a group).</li>
+<li>More consumers than partitions means the extras sit idle.</li>
+<li>A broker acts as <b>group coordinator</b>; one consumer is the group leader and computes the assignment.</li>
+<li><b>Rebalance triggers:</b> consumer joins or leaves, missed heartbeats (<code>session.timeout.ms</code>), slow processing (<code>max.poll.interval.ms</code> exceeded), or partition count change.</li>
+<li><b>Assignors:</b> Range, RoundRobin, Sticky, CooperativeSticky (incremental, avoids stop-the-world). Static membership (<code>group.instance.id</code>) avoids rebalances on quick restarts. Kafka 4.0 adds the new server-side protocol (KIP-848).</li>
+</ul>
+<p><b>Poll loop:</b> <code>poll()</code> fetches batches (tuned by <code>fetch.min.bytes</code>, <code>fetch.max.wait.ms</code>, <code>max.poll.records</code>), deserializes, and returns. A separate heartbeat thread keeps the session alive. The consumer must call <code>poll()</code> again within <code>max.poll.interval.ms</code> or it is kicked out of the group.</p>
+
+<h2 id="l">7. Commit log and retention</h2>
+<p class="vid">Video 17</p>
+<ul>
+<li>Each partition is a directory of <b>segments</b> (<code>.log</code>, <code>.index</code>, <code>.timeindex</code>). Writes go to the active segment only. Segment rolls at <code>segment.bytes</code> (1 GB) or <code>segment.ms</code>.</li>
+<li><b>Retention</b> deletes whole old segments: <code>retention.ms</code> (default 7 days) and/or <code>retention.bytes</code>. Deletion is per segment, not per record.</li>
+<li><code>cleanup.policy=compact</code> keeps the latest value per key (changelog and state use cases; a null value is a tombstone).</li>
+<li><b>Why it is fast:</b> sequential disk writes, OS page cache, batching, and zero-copy (<code>sendfile</code>) from disk to network.</li>
+</ul>
+
+<h2 id="c">8. Distributed cluster, replication, leader election, ISR</h2>
+<p class="vid">Videos 18–23</p>
+<ul>
+<li><b>Distributed system:</b> independent nodes that cooperate and appear as one. Kafka scales by partitioning and survives failures by replicating.</li>
+<li><b>Replication factor (RF):</b> copies per partition, spread across brokers. One replica is the <b>leader</b> (handles all produce and, by default, fetch); the rest are <b>followers</b> that pull from the leader.</li>
+<li><b>ISR (in-sync replicas):</b> the leader plus followers that are caught up (within <code>replica.lag.time.max.ms</code>, 30s). Slow followers are dropped from the ISR and re-added when caught up.</li>
+<li><b>High watermark:</b> the offset replicated to all ISR members. Consumers only see records below it.</li>
+<li><b>Leader election:</b> when a leader dies, the controller picks a new leader <i>from the ISR</i>. <code>unclean.leader.election.enable=false</code> (default) prefers unavailability over data loss. Leader epochs prevent stale leaders from truncating wrongly.</li>
+<li><b>Preferred leader:</b> the first replica in the assignment; auto leader rebalance moves leadership back after recovery.</li>
+<li><b>Partition distribution:</b> replicas are spread across brokers round-robin (rack-aware if <code>broker.rack</code> is set), so leaders and load are balanced.</li>
+</ul>
+<div class="note"><b>Zero-loss recipe:</b> <code>replication.factor=3</code>, <code>min.insync.replicas=2</code>, producer <code>acks=all</code> + idempotence, unclean election off, and commit consumer offsets after processing. Tolerates one broker down while still accepting writes. If ISR &lt; 2, producers get <code>NotEnoughReplicasException</code> instead of silently losing data.</div>
+<pre><code class="language-bash">bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic pay --partitions 3 --replication-factor 3 \
+  --config min.insync.replicas=2
+bin/kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic pay
+# Topic: pay  Partition: 0  Leader: 2  Replicas: 2,3,1  Isr: 2,3,1
+# Stop broker 2 -> new leader elected from Isr; Isr shrinks to 3,1</code></pre>
+<p><b>Demo scenarios from the videos:</b> kill the leader broker and watch a follower become leader; stop two of three brokers with <code>acks=all</code> and <code>min.insync.replicas=2</code> and watch produce fail while consume still works.</p>
+
+<h2 id="q">Interview Q&amp;A</h2>
+<p class="sub">Tap a question to expand.</p>
+
+<h3>Fundamentals</h3>
+<details><summary><span class="star">★</span> What is Kafka and why is it fast?</summary><div>A distributed, durable, partitioned commit-log platform for streaming and messaging. Speed comes from sequential I/O, page cache, batching and compression, zero-copy transfer, and parallelism through partitions.</div></details>
+<details><summary><span class="star">★</span> Topic vs partition vs offset?</summary><div>Topic is the logical stream; partitions are its ordered logs (parallelism and distribution); offset is a record's position within one partition.</div></details>
+<details><summary><span class="star">★</span> How is ordering guaranteed?</summary><div>Only per partition. Give related events the same key so they hit the same partition; keep idempotence on and <code>max.in.flight ≤ 5</code> so retries do not reorder. Global ordering needs a single partition, which limits throughput.</div></details>
+<details><summary>Kafka vs RabbitMQ?</summary><div>Kafka: retained log, consumers pull and can replay, very high throughput, partition-ordered. RabbitMQ: smart broker with push routing, messages removed after ack, richer routing (exchanges), lower throughput. Use Kafka for event streaming and replay, RabbitMQ for task queues and complex routing.</div></details>
+<details><summary>Why did Kafka drop ZooKeeper (KRaft)?</summary><div>Two systems to operate, slow controller failover (metadata reloaded from ZK), and a scaling ceiling on partitions. KRaft stores metadata in a Raft log inside Kafka, so failover is fast and the operational surface is smaller.</div></details>
+
+<h3>Producer</h3>
+<details><summary><span class="star">★</span> Explain <code>acks</code> 0 / 1 / all.</summary><div><code>0</code>: no wait, can lose data. <code>1</code>: leader ack; data can be lost if the leader dies before replication. <code>all</code>: waits for all ISR, and with <code>min.insync.replicas</code> gives the strongest durability.</div></details>
+<details><summary><span class="star">★</span> How does the idempotent producer prevent duplicates?</summary><div>The broker assigns a producer id; each batch carries a per-partition sequence number. The broker rejects sequence numbers it has already written, so retries do not duplicate. Scope: one producer session and one partition.</div></details>
+<details><summary>What do <code>linger.ms</code> and <code>batch.size</code> do? How would you tune for throughput?</summary><div>Raise <code>linger.ms</code> (e.g. 10–20 ms), raise <code>batch.size</code> (e.g. 64–128 KB), and enable compression (lz4/zstd). Trade-off: added latency.</div></details>
+<details><summary>How does the partitioner choose a partition?</summary><div>Explicit partition if given; else murmur2(key) mod partitions; else sticky batching for null keys. A custom <code>Partitioner</code> can be plugged in.</div></details>
+
+<h3>Consumer and groups</h3>
+<details><summary><span class="star">★</span> What triggers a rebalance and how do you minimise it?</summary><div>Members joining or leaving, heartbeat or poll timeouts, and partition changes. Minimise with CooperativeSticky, static membership, sensible <code>session.timeout.ms</code>, smaller <code>max.poll.records</code> or a larger <code>max.poll.interval.ms</code> so processing fits in the poll window, and graceful shutdown.</div></details>
+<details><summary><span class="star">★</span> Difference between <code>session.timeout.ms</code> and <code>max.poll.interval.ms</code>?</summary><div>Session timeout: heartbeat liveness (background thread). Max poll interval: the maximum gap between <code>poll()</code> calls, detecting a stuck processing loop. Either breach removes the consumer and triggers a rebalance.</div></details>
+<details><summary>What happens if consumers outnumber partitions?</summary><div>The extra consumers are idle (standbys). Parallelism is capped by partition count.</div></details>
+<details><summary><span class="star">★</span> At-most-once, at-least-once, exactly-once: how do you achieve each?</summary><div>See the commit table: commit before processing, commit after processing, and for exactly-once use idempotent producer + transactions with <code>isolation.level=read_committed</code> (Kafka to Kafka), or an idempotent sink / offsets committed in the same DB transaction.</div></details>
+<details><summary>What is <code>auto.offset.reset</code>?</summary><div>Where a group starts when it has no valid committed offset: <code>earliest</code> from the beginning, <code>latest</code> only new records, <code>none</code> throws an exception.</div></details>
+
+<h3>Storage and cluster</h3>
+<details><summary><span class="star">★</span> What is ISR and what is <code>min.insync.replicas</code>?</summary><div>ISR is the set of replicas caught up with the leader. <code>min.insync.replicas</code> is the minimum ISR size required for an <code>acks=all</code> write to succeed; below it, the producer gets an exception. RF=3, min ISR=2 tolerates one failure.</div></details>
+<details><summary><span class="star">★</span> How does leader election work when a broker dies?</summary><div>The active controller detects the failure, chooses a new leader from the partition's ISR, and publishes the metadata change. Clients refresh metadata and reconnect. Unclean election (out-of-sync replica) is off by default to avoid data loss.</div></details>
+<details><summary>What is the high watermark?</summary><div>The highest offset replicated to all ISR members; consumers can read only up to it, so they never see data that could be lost on a leader failover.</div></details>
+<details><summary>How does retention work? Delete vs compact?</summary><div>Delete removes whole segments older than <code>retention.ms</code> or beyond <code>retention.bytes</code>. Compact keeps the latest record per key (tombstones delete keys). Both can be combined.</div></details>
+<details><summary>How are partitions and replicas distributed across brokers?</summary><div>Round-robin from a random start broker, followers offset from the leader, and rack-aware when <code>broker.rack</code> is set so replicas land in different racks or AZs.</div></details>
+<details><summary>How many partitions should a topic have?</summary><div>Target throughput / per-partition throughput, at least the peak consumer count you want, with headroom (cannot shrink; increasing breaks key mapping). Too many partitions cost memory, file handles and longer failovers.</div></details>
+
+<h3>Situational and performance</h3>
+<details><summary><span class="star">★</span> Consumer lag keeps growing. How do you diagnose and fix it?</summary><div>Check lag per partition (<code>kafka-consumer-groups.sh --describe</code>). If all partitions lag: consumers are too slow. Profile processing (DB or API calls), batch or parallelise inside the consumer, tune <code>max.poll.records</code> and fetch sizes, and add consumers up to the partition count; add partitions if you are at the cap. If one partition lags: hot key or stuck message; fix key distribution or skip a poison message via DLT.</div></details>
+<details><summary><span class="star">★</span> Downstream is receiving duplicate messages. Why, and how do you fix it?</summary><div>Causes: producer retries without idempotence, consumer crash after processing but before commit, rebalances mid-batch. Fixes: idempotent producer, idempotent consumers (dedupe by unique event id or upsert), commit after processing, transactions where applicable.</div></details>
+<details><summary><span class="star">★</span> How do you guarantee no message loss end to end?</summary><div>Producer: <code>acks=all</code>, idempotence, handle send failures. Broker: RF ≥ 3, <code>min.insync.replicas=2</code>, unclean election off. Consumer: manual commit after successful processing, plus a DLT for failures.</div></details>
+<details><summary>One partition is getting most of the traffic. What do you do?</summary><div>Hot key. Choose a better key, add a salt or suffix to spread heavy keys (accepting weaker per-key ordering), or use a custom partitioner.</div></details>
+<details><summary>Frequent rebalance storms in production. Steps?</summary><div>Check logs for poll-interval or session timeout breaches, reduce per-poll work, raise <code>max.poll.interval.ms</code>, switch to CooperativeSticky, enable static membership for rolling deploys, and avoid long GC pauses.</div></details>
+<details><summary>A broker went down in a 3-broker cluster (RF=3, min ISR=2). What happens to producers and consumers?</summary><div>Leaders on that broker fail over to followers in the ISR; producers with <code>acks=all</code> keep working because ISR is still 2. If a second broker goes down, produces fail with NotEnoughReplicas while consumers can keep reading committed data.</div></details>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>try{hljs.highlightAll()}catch(e){}</script>
+</body></html>

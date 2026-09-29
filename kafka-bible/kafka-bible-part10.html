@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kafka Bible · Part 10 · Production Scenarios &amp; Final Revision</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1c1c1e;--mut:#6b6b70;--line:#e4e4e2;--acc:#3b4cca;--code:#f1f1ef;--hot:#fff4d6;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141416;--fg:#e8e8ea;--mut:#9a9aa2;--line:#2a2a2e;--acc:#8b98ff;--code:#1e1e22;--hot:#2c2718}}
+:root[data-theme="dark"]{--bg:#141416;--fg:#e8e8ea;--mut:#9a9aa2;--line:#2a2a2e;--acc:#8b98ff;--code:#1e1e22;--hot:#2c2718}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 Georgia,"Times New Roman",serif}
+main{max-width:760px;margin:0 auto;padding:32px 20px 80px}
+h1{font:700 30px/1.2 system-ui,sans-serif;margin:0 0 6px}
+h2{font:650 21px/1.3 system-ui,sans-serif;margin:52px 0 4px;padding-top:20px;border-top:1px solid var(--line)}
+h3{font:600 15px/1.4 system-ui,sans-serif;margin:24px 0 6px}
+.sub{color:var(--mut);font:14px system-ui,sans-serif;margin:0 0 4px}
+p,li{margin:6px 0}ul{padding-left:20px}
+code{font:13px ui-monospace,Menlo,Consolas,monospace;background:var(--code);padding:1px 5px;border-radius:3px}
+nav{font:14px system-ui,sans-serif;margin:18px 0 0;display:flex;flex-wrap:wrap;gap:6px 16px}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+button{font:13px system-ui,sans-serif;background:none;color:var(--mut);border:1px solid var(--line);border-radius:5px;padding:4px 10px;cursor:pointer;float:right}
+.note{background:var(--hot);border-left:3px solid var(--acc);padding:8px 12px;margin:12px 0;font-size:15px}
+details{border-bottom:1px solid var(--line);padding:9px 0}
+summary{cursor:pointer;font:600 15px/1.5 system-ui,sans-serif;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";color:var(--acc);display:inline-block;width:18px}
+details[open] summary::before{content:"–"}
+details>div{padding:6px 0 4px 18px}
+details>div p{margin:5px 0}
+.star{color:var(--acc);font-weight:700}
+b.l{font:600 12px system-ui,sans-serif;color:var(--acc);text-transform:uppercase;letter-spacing:.04em;margin-right:6px}
+</style></head><body><main>
+<button onclick="var r=document.documentElement;r.dataset.theme=(r.dataset.theme==='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches))?'light':'dark'">Theme</button>
+<h1>Kafka Bible · Part 10</h1>
+<p class="sub">Production scenario playbook, design prompts, hiring-manager prep, rapid-fire revision</p>
+<p class="sub">Reported interview loops (Walmart, JPMC) lean on "how would you handle this in production?" and on real incidents. Each scenario: <b>Symptom → Diagnose → Fix → Prevent</b>. Answer in that order out loud.</p>
+<div class="note"><b>Universal answer frame:</b> (1) state the symptom and impact, (2) confirm with metrics/CLI before guessing, (3) mitigate first (stop the bleeding), (4) fix root cause, (5) prevent recurrence (alerts, config, tests). Interviewers reward this order more than a single clever fix.</div>
+<nav><a href="#cons">Consumer</a><a href="#prod">Producer</a><a href="#brk">Broker &amp; cluster</a><a href="#des">Design prompts</a><a href="#hm">HM round</a><a href="#flash">Rapid-fire</a></nav>
+
+<h2 id="cons">A. Consumer-side incidents</h2>
+
+<details><summary><span class="star">★</span> 1. Lag is growing steadily on every partition</summary><div>
+<p><b class="l">Diagnose</b>Compare records-consumed-rate vs produce rate; check per-partition lag, processing time per record, downstream (DB/API) latency, GC, CPU, thread dumps; check recent deploys or traffic spikes.</p>
+<p><b class="l">Fix</b>Remove the slow step (batch DB writes, add indexes, cache, async where safe), tune <code>max.poll.records</code>/fetch, scale consumers up to partition count, add partitions if capped (mind key remap).</p>
+<p><b class="l">Prevent</b>Alert on time lag, load test at 2× peak, partition headroom, autoscale on lag (KEDA).</p></div></details>
+
+<details><summary><span class="star">★</span> 2. Lag is high on only one partition</summary><div>
+<p><b class="l">Diagnose</b>Does it follow the partition or the consumer instance across rebalances? Partition: hot key or poison record retrying. Instance: bad node, GC, noisy neighbor.</p>
+<p><b class="l">Fix</b>Hot key: salt or change key, custom partitioner. Poison: DLT and skip. Instance: replace the pod.</p>
+<p><b class="l">Prevent</b>High-cardinality keys, per-partition lag alerts, key-skew dashboards.</p></div></details>
+
+<details><summary><span class="star">★</span> 3. Constant rebalancing; throughput collapses</summary><div>
+<p><b class="l">Diagnose</b>Logs for "max.poll.interval exceeded" (slow processing/long retry back-off), heartbeat timeouts (GC, network), pods restarting (liveness misconfigured, OOMKilled, frequent deploys), autoscaler flapping.</p>
+<p><b class="l">Fix</b>Reduce <code>max.poll.records</code> or raise <code>max.poll.interval.ms</code>; shorten retry back-off; CooperativeSticky assignor; static membership (<code>group.instance.id</code>) with a longer session timeout; fix probes; stabilize autoscaling.</p>
+<p><b class="l">Prevent</b>Alert on rebalance rate; graceful shutdown; rolling-deploy surge limits.</p></div></details>
+
+<details><summary><span class="star">★</span> 4. Duplicate processing after a deployment</summary><div>
+<p><b class="l">Diagnose</b>Offsets committed after processing plus rebalance/crash mid-batch means redelivery is expected; check for producer retries without idempotence.</p>
+<p><b class="l">Fix</b>Idempotent consumer (processed-event table / upsert / version), idempotent producer, graceful shutdown so in-flight batches finish and commit.</p>
+<p><b class="l">Prevent</b>Design for at-least-once from day one; chaos test with kills mid-batch.</p></div></details>
+
+<details><summary><span class="star">★</span> 5. Events processed out of order</summary><div>
+<p><b class="l">Diagnose</b>Different partitions for related events, retries without idempotence, thread-pool handoff in the listener, retry topics/DLT reprocessing, partition count changed.</p>
+<p><b class="l">Fix</b>Key by entity id, idempotence on, sequential per-partition processing, version check to drop stale events.</p></div></details>
+
+<details><summary><span class="star">★</span> 6. One bad message blocks the whole partition (poison pill)</summary><div>
+<p><b class="l">Diagnose</b>Same offset failing repeatedly in logs; lag flat on one partition; deserialization exception inside poll.</p>
+<p><b class="l">Fix</b>Mitigate: DLT it or seek past it. Root cause: <code>ErrorHandlingDeserializer</code>, non-retryable classification, DLT recoverer, alert on DLT.</p>
+<p><b class="l">Prevent</b>Schema Registry compatibility checks and producer-side validation.</p></div></details>
+
+<details><summary><span class="star">★</span> 7. After a long outage the service reprocessed everything (or skipped everything)</summary><div>
+<p><b class="l">Diagnose</b>Group had no members longer than <code>offsets.retention.minutes</code> (7 days), so committed offsets expired and <code>auto.offset.reset</code> applied.</p>
+<p><b class="l">Fix</b>Reset offsets deliberately to a timestamp (<code>--reset-offsets --to-datetime</code>) with consumers stopped; ensure idempotent handlers.</p>
+<p><b class="l">Prevent</b>Raise offset retention for critical groups; alert if a group has no members; explicit reset policy.</p></div></details>
+
+<details><summary><span class="star">★</span> 8. Downstream DB was down 20 minutes; thousands of messages ended up in the DLT</summary><div>
+<p><b class="l">Diagnose</b>Short in-memory back-off exhausted, all records reached the recoverer.</p>
+<p><b class="l">Fix</b>Replay the DLT after the DB recovers (controlled job, idempotent). Longer-term: circuit breaker that <b>pauses the container</b> during outages, retry topics with longer delays, separate transient from permanent errors.</p>
+<p><b class="l">Prevent</b>Health-gated consumption, DLT depth alert, replay tooling tested in advance.</p></div></details>
+
+<details><summary>9. A bad deploy produced wrong events and downstream data is corrupted</summary><div>
+<p><b class="l">Fix</b>Stop the bad producer; fix and redeploy. For consumers: stop the group, fix logic, reset offsets to before the bad window (<code>--to-datetime</code>) and reprocess with idempotent, overwrite-safe handlers; for compacted topics publish corrected values with the same key.</p>
+<p><b class="l">Prevent</b>Canary releases, schema validation, contract tests, retention long enough to allow replay.</p></div></details>
+
+<details><summary>10. Consumer slower than producer; retention might delete unread data</summary><div>
+<p><b class="l">Diagnose</b>Compare lag growth against remaining retention window.</p>
+<p><b class="l">Mitigate</b>Temporarily raise retention (<code>kafka-configs.sh --alter ... retention.ms</code>), scale consumers/partitions, shed non-critical work. If data is already gone, offset-out-of-range triggers the reset policy: reconcile from the source of truth.</p></div></details>
+
+<details><summary>11. Consumer OOM</summary><div>
+<p><b class="l">Diagnose</b>Heap dump; large <code>max.poll.records</code> × big messages; unbounded internal queue; batch listener accumulating.</p>
+<p><b class="l">Fix</b>Lower <code>max.poll.records</code> and fetch sizes, bound queues, stream processing, correct container memory/heap ratio.</p></div></details>
+
+<details><summary>12. CommitFailedException / "consumer is not part of the group"</summary><div>
+<p><b class="l">Cause</b>The consumer was evicted (poll interval or session timeout) and a rebalance happened before it committed.</p>
+<p><b class="l">Fix</b>Shorten work per poll, raise the interval, ensure the heartbeat thread is not starved; make processing idempotent because the batch will be redelivered.</p></div></details>
+
+<h2 id="prod">B. Producer-side incidents</h2>
+
+<details><summary><span class="star">★</span> 13. Producers throw NotEnoughReplicasException after a broker went down</summary><div>
+<p><b class="l">Diagnose</b><code>--describe</code> the topic: ISR size below <code>min.insync.replicas</code> (e.g. RF 3, min ISR 2, two brokers gone or a follower lagging).</p>
+<p><b class="l">Fix</b>Bring brokers back or fix the slow follower. Do <b>not</b> lower min ISR or enable unclean election as a quick fix for critical data. If availability must win, that is a deliberate trade-off (per topic).</p>
+<p><b class="l">Prevent</b>RF 3 across racks, alerts on under-min-ISR, capacity for N−1.</p></div></details>
+
+<details><summary><span class="star">★</span> 14. "TimeoutException: Expiring N records" / delivery timeout</summary><div>
+<p><b class="l">Diagnose</b>Broker unavailable or slow, leader election in progress, network, batches sitting in the accumulator longer than <code>delivery.timeout.ms</code> (large <code>linger.ms</code>, saturated sender, buffer contention).</p>
+<p><b class="l">Fix</b>Fix broker/network; verify <code>delivery.timeout.ms ≥ linger + request.timeout</code>; handle the failed future (retry, persist for replay); reduce batch stalls.</p></div></details>
+
+<details><summary>15. RecordTooLargeException / MESSAGE_TOO_LARGE</summary><div>
+<p><b class="l">Fix</b>Claim check (payload in object storage). Otherwise raise the entire chain: producer <code>max.request.size</code>, broker/topic <code>max.message.bytes</code>, <code>replica.fetch.max.bytes</code>, consumer fetch limits. Compress first.</p></div></details>
+
+<details><summary><span class="star">★</span> 16. Produce latency spiked</summary><div>
+<p><b class="l">Diagnose</b>Producer metrics (request-latency, batch-size, buffer available); broker request time breakdown, disk latency, ISR shrink (acks=all waits on slow follower), GC, network saturation, leader imbalance, TLS CPU.</p>
+<p><b class="l">Fix</b>Address the slow replica/disk, rebalance leaders, tune batching/compression, spread load.</p></div></details>
+
+<details><summary><span class="star">★</span> 17. Duplicate events published (client retries, double click, retry after timeout)</summary><div>
+<p><b class="l">Fix</b>Idempotent producer covers broker-level retries only. Add an API idempotency key, unique event id, and consumer-side dedupe. Timeout after send does not mean failure: the write may have succeeded, so retries must be safe.</p></div></details>
+
+<details><summary><span class="star">★</span> 18. "We think messages are being lost"</summary><div>
+<p><b class="l">Diagnose</b>Reproduce by counting: producer success callbacks vs topic end offsets vs consumer processed count; audit ids per stage. Check <code>acks</code>, unhandled failed futures, unclean elections, retention deleting early, consumer committing before processing, DLT skipping, wrong group id or offset reset.</p>
+<p><b class="l">Fix</b>Zero-loss recipe (<code>acks=all</code>, idempotence, RF 3, min ISR 2, unclean off, commit after processing, DLT not skip). Add reconciliation counters.</p></div></details>
+
+<details><summary>19. send() blocks under load / buffer exhausted</summary><div>
+<p><b class="l">Cause</b>Producer outruns the brokers; <code>buffer.memory</code> full; blocks up to <code>max.block.ms</code>, then throws.</p>
+<p><b class="l">Fix</b>Batching + compression, more partitions/brokers, bounded intake with 429 back-pressure at the API, handle the exception. Do not just raise buffer size.</p></div></details>
+
+<details><summary>20. One partition receives most of the traffic</summary><div>
+<p><b class="l">Fix</b>Rebalance the key space (compound key, salting with reduced ordering scope), custom partitioner for known heavy keys, or split hot entities into sub-keys.</p></div></details>
+
+<h2 id="brk">C. Broker and cluster incidents</h2>
+
+<details><summary><span class="star">★</span> 21. A broker's disk is full</summary><div>
+<p><b class="l">Mitigate</b>Free space safely: lower retention on the biggest topics or delete old segments via config (not by hand-deleting files), add disk/volume, move partitions off the broker (throttled reassignment).</p>
+<p><b class="l">Prevent</b>Alert at 70/80%, right-size retention, tiered storage, capacity planning per topic.</p></div></details>
+
+<details><summary><span class="star">★</span> 22. Under-replicated partitions and ISR flapping</summary><div>
+<p><b class="l">Diagnose</b>Which broker is the common member? Check disk latency, GC pauses, network, CPU, oversized fetches, reassignment in progress, <code>replica.lag.time.max.ms</code> too tight.</p>
+<p><b class="l">Fix</b>Fix the slow node; throttle heavy jobs; tune fetch/replica threads only after finding the cause.</p></div></details>
+
+<details><summary>23. Leaders keep moving; cluster unstable</summary><div>
+<p><b class="l">Impact</b>Clients must refresh metadata and retry, so latency rises and throughput drops.</p>
+<p><b class="l">Diagnose</b>Broker restarts/crashes, controller flapping, session timeouts to the controller, GC, auto leader rebalance thrashing. <b class="l">Fix</b>Stabilize the broker; run preferred-leader election once things settle.</p></div></details>
+
+<details><summary>24. Lag spikes right after a partition reassignment</summary><div>
+<p><b class="l">Cause</b>Reassignment copies log segments between brokers, competing for disk and network with client traffic.</p>
+<p><b class="l">Fix</b>Use replication throttles, run off-peak, move in small batches, use Cruise Control.</p></div></details>
+
+<details><summary>25. Added brokers but the old topics did not speed up</summary><div>
+<p><b class="l">Why</b>Existing partitions stay where they are. Run a reassignment (or Cruise Control) to move partitions onto new brokers; new topics distribute automatically.</p></div></details>
+
+<details><summary>26. Controller quorum lost / cluster metadata unavailable (KRaft)</summary><div>
+<p><b class="l">Diagnose</b>Majority of controllers down or partitioned; existing partition leaders may continue serving while metadata changes (topic creation, elections) fail.</p>
+<p><b class="l">Fix</b>Restore a controller majority (odd count: 3 or 5), check disks and network. <b class="l">Prevent</b>Dedicated controller nodes in production across AZs.</p></div></details>
+
+<details><summary>27. We need fewer partitions (or a different key)</summary><div>
+<p>Partitions cannot be reduced. Create a new topic with the right settings, dual-publish or mirror, migrate consumers, then retire the old topic (checking ordering and offsets during cutover).</p></div></details>
+
+<details><summary>28. <code>__consumer_offsets</code> huge or group coordinator slow</summary><div>
+<p><b class="l">Diagnose</b>Very many commits (commit per record with tiny intervals), stale groups, huge number of groups on one coordinator broker.</p>
+<p><b class="l">Fix</b>Commit less often (batch/time), clean up dead groups, verify compaction of the offsets topic, balance coordinators across brokers.</p></div></details>
+
+<h2 id="des">D. System design prompts (outline answers)</h2>
+
+<details><summary><span class="star">★</span> Payments pipeline: no loss, no double charge</summary><div>
+<p>Idempotency key at the API; outbox to <code>payments</code> topic keyed by account id (per-account ordering); <code>acks=all</code>, RF 3, min ISR 2; idempotent consumers with processed-event table; idempotent call to the payment provider; retries with back-off, DLT, reconciliation job for unknown outcomes; audit topic (compacted or long retention); encryption and ACLs; lag and DLT alerts.</p></div></details>
+
+<details><summary><span class="star">★</span> Order processing across services (saga)</summary><div>
+<p>Order service emits <code>OrderPlaced</code> via outbox; inventory reserves and emits result; payment charges; orchestrator or choreography with correlation id; compensations (release stock, refund); timeouts and DLT; idempotency everywhere; order status read model built from events.</p></div></details>
+
+<details><summary><span class="star">★</span> Real-time inventory across thousands of stores</summary><div>
+<p>Events keyed by <code>storeId:sku</code>; compacted topic for latest stock levels plus an event topic for history; consumers upsert with version check; partition count from SKU throughput; hot SKUs handled by sub-keys; Streams or a materialized store for read APIs; cache with TTL; monitor lag per store group.</p></div></details>
+
+<details><summary>Notification service with retries and priorities</summary><div>
+<p>Separate topics per priority (avoid head-of-line blocking), consumers with more capacity on high priority; retry topics with increasing delays; DLT and manual review; dedupe id per notification; provider rate limiting via pause/resume; user preference checks in the consumer.</p></div></details>
+
+<details><summary>CDC pipeline to search index and data lake</summary><div>
+<p>Debezium reads the DB log → topics per table (Avro + Schema Registry) → Connect sinks to Elasticsearch and S3; use tombstones for deletes; handle snapshot, schema changes and ordering per key; monitor connector lag and tasks; idempotent sinks.</p></div></details>
+
+<details><summary>High-volume telemetry from a streaming service (loss-tolerant)</summary><div>
+<p>Favor throughput: <code>acks=1</code> or all with large batches, lz4/zstd, many partitions keyed by device or session, short retention, sampling, consumers batch to a lake. State the trade-off: some loss acceptable here, unlike payments.</p></div></details>
+
+<details><summary>Multi-tenant Kafka for many teams</summary><div>
+<p>Topic naming and ownership, ACLs per team, quotas, schema governance, self-service provisioning with defaults (RF 3, min ISR 2), cost and usage dashboards, separate clusters for regulated or noisy workloads.</p></div></details>
+
+<h2 id="hm">E. Hiring-manager round: project and depth questions</h2>
+<p>Expect "why" after every answer, line-by-line resume probing, and monolith vs microservices, plus performance testing.</p>
+<details><summary><span class="star">★</span> Questions to prepare with real numbers from your own project</summary><div>
+<ul>
+<li>Why Kafka and not REST, RabbitMQ or SQS here? What did you give up?</li>
+<li>How many topics, partitions, replicas? How did you choose them? Peak messages/sec and message size?</li>
+<li>What are your delivery guarantees, and where can duplicates or loss still occur?</li>
+<li>How do you handle failures: retries, DLT, replay? Show an incident you debugged (use Symptom → Diagnose → Fix → Prevent).</li>
+<li>How do you monitor it and what do you alert on? What is your lag SLA?</li>
+<li>How do you performance test (tools, environment, targets, bottleneck found), and what other tests before go-live (integration, contract, failure/chaos, soak)?</li>
+<li>Monolith vs microservices: when each fits, and how would you migrate (strangler pattern, events as the seam, data ownership first)?</li>
+<li>What would you change if traffic grew 10×?</li>
+</ul></div></details>
+
+<h2 id="flash">F. Rapid-fire revision (one-liners)</h2>
+<details><summary>Open the flash list</summary><div>
+<ul>
+<li>Ordering only per partition; same key → same partition (murmur2 % N).</li>
+<li>Partitions: parallelism ceiling = consumers in group; add ok, remove never; adding remaps keys.</li>
+<li>Durability: <code>acks=all</code> + RF 3 + <code>min.insync.replicas=2</code> + unclean election off.</li>
+<li>Idempotent producer: PID + epoch + per-partition sequence; default on since 3.0; needs acks=all, in-flight ≤ 5.</li>
+<li>Transactions: atomic multi-partition writes + offsets; <code>read_committed</code> reads to LSO; Kafka-only scope.</li>
+<li>Commit after processing = at-least-once; make consumers idempotent.</li>
+<li>Spring default error handler: ~10 quick attempts, then skip. Configure back-off + recoverer (DLT/DB).</li>
+<li>Deserialization errors: <code>ErrorHandlingDeserializer</code>; non-retryable exceptions go straight to recovery.</li>
+<li>Rebalance triggers: join/leave, heartbeat (session) timeout, poll interval exceeded, partition change. Mitigate with cooperative + static membership.</li>
+<li><code>max.poll.interval.ms</code> (5 min) = max gap between polls; <code>session.timeout.ms</code> (45 s) = heartbeat liveness.</li>
+<li>HW = min LEO of ISR; consumers read below HW; leader epoch fixes truncation.</li>
+<li>Offsets of empty groups expire after 7 days; reset only with consumers stopped.</li>
+<li>Retention deletes closed segments only; compaction keeps latest per key, tombstone deletes.</li>
+<li>TLS disables zero-copy; durability is replication, not fsync.</li>
+<li>Outbox fixes dual write (at-least-once); saga fixes cross-service transactions with compensations.</li>
+<li>Liveness ≠ readiness: keep Kafka/DB out of liveness.</li>
+<li>Replicas × concurrency ≤ partitions; scale consumers on lag.</li>
+<li>Schema: Avro + Registry, BACKWARD compatible by default, add optional fields only.</li>
+<li>Large payloads: claim check; raise limits across the whole chain if forced.</li>
+<li>KRaft replaced ZooKeeper (removed in 4.0); new group protocol KIP-848 in 4.0.</li>
+</ul></div></details>
+</main>
+</body></html>

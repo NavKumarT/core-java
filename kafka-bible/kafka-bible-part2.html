@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kafka Bible · Part 2 · Spring Kafka Producer</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1c1c1e;--mut:#6b6b70;--line:#e4e4e2;--acc:#3b4cca;--code:#f1f1ef;--hot:#fff4d6;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141416;--fg:#e8e8ea;--mut:#9a9aa2;--line:#2a2a2e;--acc:#8b98ff;--code:#1e1e22;--hot:#2c2718}}
+:root[data-theme="dark"]{--bg:#141416;--fg:#e8e8ea;--mut:#9a9aa2;--line:#2a2a2e;--acc:#8b98ff;--code:#1e1e22;--hot:#2c2718}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 Georgia,"Times New Roman",serif}
+main{max-width:760px;margin:0 auto;padding:32px 20px 80px}
+h1{font:700 30px/1.2 system-ui,sans-serif;margin:0 0 6px}
+h2{font:650 21px/1.3 system-ui,sans-serif;margin:52px 0 4px;padding-top:20px;border-top:1px solid var(--line)}
+h3{font:600 15px/1.4 system-ui,sans-serif;margin:24px 0 6px}
+.sub{color:var(--mut);font:14px system-ui,sans-serif;margin:0 0 4px}
+.vid{color:var(--mut);font:13px system-ui,sans-serif;margin:0 0 12px}
+p,li{margin:6px 0}ul{padding-left:20px}
+code{font:13px ui-monospace,Menlo,Consolas,monospace;background:var(--code);padding:1px 5px;border-radius:3px}
+pre{background:var(--code);padding:12px 14px;border-radius:6px;overflow-x:auto;margin:10px 0;max-width:100%}
+pre code{padding:0;background:none;font-size:12.5px;line-height:1.55}
+table{border-collapse:collapse;width:100%;font:14px system-ui,sans-serif;display:block;overflow-x:auto}
+td,th{border-bottom:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}th{color:var(--mut);font-weight:600}
+nav{font:14px system-ui,sans-serif;margin:18px 0 0;display:flex;flex-wrap:wrap;gap:6px 16px}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+button{font:13px system-ui,sans-serif;background:none;color:var(--mut);border:1px solid var(--line);border-radius:5px;padding:4px 10px;cursor:pointer;float:right}
+.note{background:var(--hot);border-left:3px solid var(--acc);padding:8px 12px;margin:12px 0;font-size:15px}
+details{border-bottom:1px solid var(--line);padding:9px 0}
+summary{cursor:pointer;font:600 15px/1.5 system-ui,sans-serif;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";color:var(--acc);display:inline-block;width:18px}
+details[open] summary::before{content:"–"}
+details>div{padding:6px 0 4px 18px}
+.star{color:var(--acc);font-weight:700}
+</style><style>
+:root{--k:#c2255c;--s:#0a7f4f;--c:#8a8a90;--n:#b35900;--t:#3b4cca;--a:#9c36b5}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--k:#ff8fa3;--s:#7ee0a8;--c:#7c7c86;--n:#ffb066;--t:#8b98ff;--a:#d6a3ff}}
+:root[data-theme="dark"]{--k:#ff8fa3;--s:#7ee0a8;--c:#7c7c86;--n:#ffb066;--t:#8b98ff;--a:#d6a3ff}
+.hljs-keyword,.hljs-literal,.hljs-built_in,.hljs-selector-tag{color:var(--k)}
+.hljs-string,.hljs-regexp{color:var(--s)}
+.hljs-comment{color:var(--c);font-style:italic}
+.hljs-number,.hljs-bullet{color:var(--n)}
+.hljs-title,.hljs-type,.hljs-class .hljs-title,.hljs-attr,.hljs-attribute,.hljs-variable,.hljs-property{color:var(--t)}
+.hljs-meta,.hljs-meta .hljs-keyword,.hljs-doctag,.hljs-symbol{color:var(--a)}
+</style>
+</head><body><main>
+<button onclick="var r=document.documentElement;r.dataset.theme=(r.dataset.theme==='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches))?'light':'dark'">Theme</button>
+<h1>Kafka Bible · Part 2</h1>
+<p class="sub">Library Events producer with Spring Kafka · course videos 28–48</p>
+<p class="sub"><span class="star">★</span> marks questions that are common in Walmart / JPMC style rounds. Assumes Spring Boot 3.x, Spring Kafka 3.x, Java 17+.</p>
+<nav><a href="#s">Setup &amp; spec</a><a href="#d">Domain &amp; POST</a><a href="#kt">KafkaTemplate</a><a href="#dc">Docker Compose</a><a href="#u">Internals</a><a href="#b">Batching</a><a href="#a">Autoconfig</a><a href="#ser">Serializers</a><a href="#e">Errors</a><a href="#sy">Sync send</a><a href="#put">PUT + key</a><a href="#pr">Profiles</a><a href="#q">Q&amp;A</a></nav>
+
+<h2 id="s">1. Project setup, AI assistant, spec-driven development</h2>
+<p class="vid">Videos 28–32</p>
+<ul>
+<li><b>Starter dependencies:</b> <code>spring-boot-starter-web</code>, <code>spring-kafka</code>, <code>spring-boot-starter-validation</code>, <code>spring-boot-docker-compose</code> (dev), <code>spring-kafka-test</code> (test).</li>
+<li><b>Spec-driven development:</b> write the PRD (goals, endpoints, payloads, non-functional needs) first, derive an implementation plan from it, then let the AI assistant (Copilot) build step by step against that spec. The spec, not the chat, is the source of truth.</li>
+<li>You stay responsible for reviewing generated code: check serializer choice, error handling, thread safety and configuration defaults.</li>
+</ul>
+<div class="note"><b>Interview angle:</b> "How do you use AI tools?" Good answer: spec first, small steps, review every diff, tests as the safety net, never paste secrets.</div>
+
+<h2 id="d">2. Domain and POST endpoint</h2>
+<p class="vid">Videos 33–35</p>
+<pre><code class="language-java">public record Book(@NotNull Integer bookId, @NotBlank String bookName, @NotBlank String bookAuthor) {}
+public enum LibraryEventType { NEW, UPDATE }
+public record LibraryEvent(Integer libraryEventId, @NotNull LibraryEventType type, @NotNull @Valid Book book) {}
+
+@RestController @RequestMapping("/libraryevents")
+public class LibraryEventsController {
+  private final LibraryEventProducer producer;
+  public LibraryEventsController(LibraryEventProducer p){ this.producer = p; }
+
+  @PostMapping
+  public ResponseEntity&lt;LibraryEvent&gt; post(@RequestBody @Valid LibraryEvent event) throws JsonProcessingException {
+    producer.sendLibraryEvent(event);                       // async
+    return ResponseEntity.status(HttpStatus.CREATED).body(event);
+  }
+}</code></pre>
+<ul>
+<li>Controller only validates and delegates. Producer logic lives in its own <code>@Component</code>.</li>
+<li>Async send means <code>201</code> confirms the request was accepted, not that Kafka acknowledged it. <code>202 Accepted</code> is arguably more accurate; know this trade-off.</li>
+</ul>
+
+<h2 id="kt">3. KafkaTemplate: introduction and usage</h2>
+<p class="vid">Videos 36–37</p>
+<p><code>KafkaTemplate&lt;K,V&gt;</code> is Spring's high-level wrapper over the Kafka <code>Producer</code>: it handles creation, send, callbacks, and shutdown.</p>
+<pre><code class="language-java">@Component @Slf4j
+public class LibraryEventProducer {
+  private final KafkaTemplate&lt;Integer,String&gt; kafkaTemplate;
+  private final ObjectMapper objectMapper;
+  @Value("${spring.kafka.template.default-topic}") private String topic;
+
+  public CompletableFuture&lt;SendResult&lt;Integer,String&gt;&gt; sendLibraryEvent(LibraryEvent e) throws JsonProcessingException {
+    Integer key = e.libraryEventId();
+    String value = objectMapper.writeValueAsString(e);
+    return kafkaTemplate.send(topic, key, value)                       // returns immediately
+        .whenComplete((result, ex) -&gt; {
+          if (ex != null) log.error("send failed key={} : {}", key, ex.getMessage());
+          else log.info("sent key={} partition={} offset={}", key,
+                        result.getRecordMetadata().partition(), result.getRecordMetadata().offset());
+        });
+  }
+}</code></pre>
+<table>
+<tr><th>Method</th><th>Use</th></tr>
+<tr><td><code>send(topic, value)</code> / <code>send(topic, key, value)</code></td><td>Simple sends</td></tr>
+<tr><td><code>send(topic, partition, key, value)</code></td><td>Force a partition</td></tr>
+<tr><td><code>send(ProducerRecord)</code></td><td>Full control: headers, timestamp (e.g. trace id, event type)</td></tr>
+<tr><td><code>sendDefault(...)</code></td><td>Uses <code>spring.kafka.template.default-topic</code></td></tr>
+</table>
+<ul>
+<li>In Spring Kafka 3.x <code>send</code> returns <code>CompletableFuture&lt;SendResult&gt;</code> (it was <code>ListenableFuture</code> in 2.x). <code>SendResult</code> holds the <code>ProducerRecord</code> and <code>RecordMetadata</code> (topic, partition, offset, timestamp).</li>
+</ul>
+
+<h2 id="dc">4. Spring Docker Compose for local Kafka</h2>
+<p class="vid">Video 38</p>
+<pre><code class="language-yaml"># compose.yaml (project root)
+services:
+  kafka:
+    image: apache/kafka:latest
+    ports: ["9092:9092"]
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      # ...listeners, quorum voters...</code></pre>
+<ul>
+<li>With <code>spring-boot-docker-compose</code> on the classpath, <code>./mvnw spring-boot:run</code> starts the compose services automatically, reads their ports, and injects connection details (bootstrap servers) into the app, so no manual setup.</li>
+<li>Control it with <code>spring.docker.compose.lifecycle-management</code> (<code>start-only</code>, <code>start-and-stop</code>, <code>none</code>). Intended for local dev, not production.</li>
+</ul>
+
+<h2 id="u">5. KafkaTemplate under the hood and threading model</h2>
+<p class="vid">Videos 39, 45</p>
+<ul>
+<li><code>KafkaTemplate</code> → <code>ProducerFactory</code> (<code>DefaultKafkaProducerFactory</code>) → a <b>single, shared, thread-safe</b> <code>KafkaProducer</code> instance, created lazily on first send and reused by all request threads.</li>
+<li><code>send()</code> (on the caller's thread): serialize key and value, fetch metadata if needed (blocks up to <code>max.block.ms</code>), choose partition, append to the <b>RecordAccumulator</b>, return the future.</li>
+<li>A dedicated <b>Sender (I/O) thread</b> drains batches, sends them to leader brokers, handles retries and acks, and completes the future. Callbacks run on the producer's I/O thread, so keep them fast and non-blocking.</li>
+<li>Sharing one producer is faster than one per request because it maximizes batching and reuses connections. (Transactional producers are the exception: the factory keeps a pool keyed by transaction id prefix.)</li>
+<li>First send is slower: it includes metadata fetch and connection setup. Warm up on startup if latency matters.</li>
+</ul>
+
+<h2 id="b">6. Batching and buffering deep dive</h2>
+<p class="vid">Video 40</p>
+<ul>
+<li>Records are grouped <b>per partition</b> into batches in the accumulator. A batch is sent when it reaches <code>batch.size</code> (bytes, default 16 KB) <i>or</i> <code>linger.ms</code> expires (default 0, meaning send immediately, though records arriving together still batch).</li>
+<li><code>buffer.memory</code> (default 32 MB) caps unsent data. When full, <code>send()</code> blocks up to <code>max.block.ms</code> (60s), then throws <code>TimeoutException</code>. This is the back-pressure mechanism.</li>
+<li>Compression is applied per batch, so larger batches compress better.</li>
+<li><code>delivery.timeout.ms</code> (2 min) bounds the total time from send to ack, including retries; <code>request.timeout.ms</code> bounds each attempt.</li>
+</ul>
+<table>
+<tr><th>Goal</th><th>Tune</th></tr>
+<tr><td>Throughput</td><td>higher <code>linger.ms</code> (5–20), larger <code>batch.size</code> (32–128 KB), <code>compression.type=lz4|zstd</code></td></tr>
+<tr><td>Low latency</td><td><code>linger.ms=0</code>, smaller batches</td></tr>
+<tr><td>Durability</td><td><code>acks=all</code>, idempotence on, RF 3 + <code>min.insync.replicas=2</code></td></tr>
+</table>
+
+<h2 id="a">7. How KafkaTemplate autoconfiguration works</h2>
+<p class="vid">Video 41</p>
+<ul>
+<li><code>KafkaAutoConfiguration</code> (activated when <code>KafkaTemplate</code> is on the classpath) binds <code>spring.kafka.*</code> to <code>KafkaProperties</code>.</li>
+<li>It registers <code>ProducerFactory</code>, <code>KafkaTemplate</code>, <code>ConsumerFactory</code>, listener container factory, <code>KafkaAdmin</code> and more, each <code>@ConditionalOnMissingBean</code>. Define your own bean and Boot backs off.</li>
+<li><code>spring.kafka.producer.*</code> maps to producer configs; anything else goes under <code>spring.kafka.producer.properties.*</code>. <code>spring.kafka.template.default-topic</code> feeds <code>sendDefault</code>.</li>
+<li>A <code>KafkaAdmin</code> bean creates topics declared as <code>NewTopic</code> beans on startup (<code>TopicBuilder.name("library-events").partitions(3).replicas(1).build()</code>). Fine for dev; in prod, topics are usually provisioned by platform tooling.</li>
+</ul>
+<pre><code class="language-yaml">spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    template:
+      default-topic: library-events
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 10
+      properties:
+        enable.idempotence: true
+        linger.ms: 5
+        batch.size: 32768
+        delivery.timeout.ms: 30000</code></pre>
+
+<h2 id="ser">8. StringSerializer vs JsonSerializer</h2>
+<p class="vid">Video 42</p>
+<table>
+<tr><th></th><th>StringSerializer + own ObjectMapper</th><th>JsonSerializer (Spring Kafka)</th></tr>
+<tr><td>Control</td><td>Full: you control the JSON and errors</td><td>Convenient: serializes the object directly</td></tr>
+<tr><td>Type info</td><td>None in headers</td><td>Adds <code>__TypeId__</code> header (class name) by default; set <code>spring.json.add.type.headers=false</code> for non-Spring consumers</td></tr>
+<tr><td>Coupling</td><td>Loose, consumer parses itself</td><td>Consumer needs <code>JsonDeserializer</code> + trusted packages</td></tr>
+</table>
+<ul>
+<li>Serialization failure surfaces as <code>SerializationException</code> inside <code>send()</code>, before anything reaches the broker.</li>
+<li>For production with several teams and schema evolution, prefer <b>Avro/Protobuf + Schema Registry</b> (compatibility rules, compact payloads) over free-form JSON.</li>
+<li>Key serializer must match the key type (<code>IntegerSerializer</code> for an Integer id). Mismatch throws <code>ClassCastException</code>.</li>
+</ul>
+
+<h2 id="e">9. RestControllerAdvice and exception handling</h2>
+<p class="vid">Videos 43, 47</p>
+<pre><code class="language-java">@RestControllerAdvice @Slf4j
+public class GlobalExceptionHandler {
+
+  @ExceptionHandler(MethodArgumentNotValidException.class)          // @Valid failures
+  public ResponseEntity&lt;Map&lt;String,String&gt;&gt; validation(MethodArgumentNotValidException ex) {
+    Map&lt;String,String&gt; errors = new TreeMap&lt;&gt;();
+    ex.getBindingResult().getFieldErrors().forEach(f -&gt; errors.put(f.getField(), f.getDefaultMessage()));
+    return ResponseEntity.badRequest().body(errors);                 // 400
+  }
+
+  @ExceptionHandler(JsonProcessingException.class)
+  public ResponseEntity&lt;String&gt; json(JsonProcessingException ex) { return ResponseEntity.unprocessableEntity().body(ex.getOriginalMessage()); }
+
+  @ExceptionHandler(Exception.class)                                 // catch-all
+  public ResponseEntity&lt;String&gt; any(Exception ex) {
+    log.error("unhandled", ex);
+    return ResponseEntity.internalServerError().body("Something went wrong");   // never leak internals
+  }
+}</code></pre>
+<ul>
+<li>Most specific handler wins. Keep the catch-all last in spirit and always log the stack trace.</li>
+<li>Async send failures do <b>not</b> reach the advice, because the request thread has already returned. They arrive in the <code>whenComplete</code> callback, where you log, retry, or persist the event for reprocessing.</li>
+</ul>
+
+<h2 id="sy">10. Synchronous sending</h2>
+<p class="vid">Video 44</p>
+<pre><code class="language-java">try {
+  SendResult&lt;Integer,String&gt; r = kafkaTemplate.send(topic, key, value).get(3, TimeUnit.SECONDS);
+} catch (ExecutionException e) { /* real cause: e.getCause() (e.g. RecordTooLargeException) */ }
+  catch (TimeoutException e)   { /* no ack in time */ }
+  catch (InterruptedException e) { Thread.currentThread().interrupt(); }</code></pre>
+<ul>
+<li>Blocks the request thread until the broker acks, so it is much lower throughput but the API can return a truthful result.</li>
+<li>Use it when the caller must know the write succeeded (critical or low-volume events); use async plus callback for high volume.</li>
+<li>Always use a timeout on <code>get()</code>. Unwrap <code>ExecutionException</code> to find the actual Kafka error.</li>
+</ul>
+
+<h2 id="put">11. PUT endpoint and keys</h2>
+<p class="vid">Video 46</p>
+<pre><code class="language-java">@PutMapping
+public ResponseEntity&lt;?&gt; put(@RequestBody @Valid LibraryEvent event) throws JsonProcessingException {
+  if (event.libraryEventId() == null)
+    return ResponseEntity.badRequest().body("libraryEventId is required for UPDATE");
+  if (event.type() != LibraryEventType.UPDATE)
+    return ResponseEntity.badRequest().body("Only UPDATE events are supported");
+  producer.sendLibraryEvent(event);                    // key = libraryEventId
+  return ResponseEntity.ok(event);
+}</code></pre>
+<ul>
+<li><b>Key = entity id</b> so all events for one book go to the same partition and are consumed in order (NEW then UPDATE never swap).</li>
+<li>Validate business rules at the edge (missing id, wrong type) and return 4xx before touching Kafka.</li>
+<li>POST creates (server-generated or supplied id), PUT updates an existing id and is idempotent by intent.</li>
+</ul>
+
+<h2 id="pr">12. Spring profiles: producer config per environment</h2>
+<p class="vid">Video 48</p>
+<pre><code class="language-yaml"># application.yml           -&gt; shared defaults
+# application-local.yml     -&gt; localhost:9092, PLAINTEXT, acks=1, RF 1
+# application-prod.yml
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BROKERS}
+    security.protocol: SASL_SSL
+    producer:
+      acks: all
+      properties:
+        sasl.mechanism: PLAIN
+        sasl.jaas.config: ${KAFKA_JAAS}      # from secrets manager / env, never in git
+
+# activate:  --spring.profiles.active=prod   or   SPRING_PROFILES_ACTIVE=prod</code></pre>
+<ul>
+<li>Profile files override the base file. <code>@Profile("local")</code> can switch beans (e.g. a topic-creating bean only locally).</li>
+<li>Typical differences: brokers, security (SASL_SSL/mTLS), acks, retries, topic partitions/replicas, timeouts, compression.</li>
+<li>Externalize secrets (env vars, Vault, AWS Secrets Manager); config in code repos should never contain credentials.</li>
+</ul>
+
+<h2 id="q">Interview Q&amp;A</h2>
+<p class="sub">Tap a question to expand.</p>
+
+<h3>KafkaTemplate and sending</h3>
+<details><summary><span class="star">★</span> What is KafkaTemplate and what does <code>send()</code> return?</summary><div>Spring's thread-safe abstraction over <code>KafkaProducer</code>. <code>send()</code> is asynchronous and returns a <code>CompletableFuture&lt;SendResult&gt;</code> (topic, partition, offset, timestamp on success).</div></details>
+<details><summary><span class="star">★</span> Is KafkaTemplate thread-safe? Should each request get its own producer?</summary><div>Yes, thread-safe. One shared producer per factory is recommended: it batches records from many threads and reuses connections. Creating producers per request is slow and wasteful.</div></details>
+<details><summary><span class="star">★</span> Sync vs async send: when do you use each?</summary><div>Async plus callback for throughput; sync (<code>get(timeout)</code>) when the caller needs certainty before responding. Sync blocks a thread per request, lowering throughput.</div></details>
+<details><summary><span class="star">★</span> What happens if the broker is down when you call <code>send()</code>?</summary><div>If metadata cannot be fetched, <code>send()</code> blocks up to <code>max.block.ms</code>, then throws <code>TimeoutException</code>. If the send is accepted but the broker later fails, the future completes exceptionally after retries within <code>delivery.timeout.ms</code>. Handle both: catch at the call site and in the callback.</div></details>
+<details><summary>How do you add headers such as a trace id or event type?</summary><div>Build a <code>ProducerRecord</code> with <code>RecordHeaders</code> (or use <code>MessageBuilder</code> with <code>KafkaHeaders</code>) and call <code>send(record)</code>.</div></details>
+<details><summary>How do you know which partition and offset a message landed on?</summary><div>From <code>SendResult.getRecordMetadata()</code> in the callback or <code>get()</code>.</div></details>
+<details><summary>What is <code>sendDefault</code>?</summary><div>Sends to <code>spring.kafka.template.default-topic</code> (or <code>template.setDefaultTopic</code>).</div></details>
+
+<h3>Under the hood and config</h3>
+<details><summary><span class="star">★</span> Walk me through what happens between <code>send()</code> and the broker ack.</summary><div>Serialize → resolve metadata (partition leader) → partitioner → append to per-partition batch in the RecordAccumulator → Sender thread groups batches by broker and sends → leader appends, replicates per <code>acks</code> → response → future completes and the callback runs.</div></details>
+<details><summary><span class="star">★</span> What are <code>linger.ms</code>, <code>batch.size</code>, <code>buffer.memory</code>? What if the buffer fills?</summary><div>See section 6. When the buffer is full, <code>send()</code> blocks up to <code>max.block.ms</code> and then throws, which is the producer's back-pressure. Fix by raising throughput (batching, compression), scaling out, or slowing the source.</div></details>
+<details><summary>How does Spring Boot autoconfigure Kafka? How do you override it?</summary><div><code>KafkaAutoConfiguration</code> binds <code>spring.kafka.*</code> and creates beans with <code>@ConditionalOnMissingBean</code>. Override with properties, or define your own <code>ProducerFactory</code>/<code>KafkaTemplate</code> beans.</div></details>
+<details><summary>How do you create a second KafkaTemplate with a different serializer (e.g. JSON for one topic)?</summary><div>Define another <code>ProducerFactory</code> with its own config map and a second <code>KafkaTemplate</code> bean, then inject by qualifier. Or use a <code>RoutingKafkaTemplate</code>.</div></details>
+<details><summary><span class="star">★</span> StringSerializer vs JsonSerializer vs Avro?</summary><div>String plus ObjectMapper gives full control and no type headers. JsonSerializer is convenient but adds type headers and couples consumers. Avro/Protobuf with Schema Registry gives compact, versioned, compatibility-checked contracts, best for multi-team production.</div></details>
+
+<h3>Reliability and design</h3>
+<details><summary><span class="star">★</span> How do you configure the Spring Kafka producer for no data loss and no duplicates?</summary><div><code>acks=all</code>, <code>enable.idempotence=true</code>, sensible <code>retries</code> and <code>delivery.timeout.ms</code>, with topic RF 3 and <code>min.insync.replicas=2</code>. Handle failed futures (log, retry, or park the event).</div></details>
+<details><summary><span class="star">★</span> The REST call succeeded but the Kafka send failed. What do you do?</summary><div>Do not return success blindly. Options: sync send and return 5xx on failure; async with callback that persists failures for retry or DLQ; or the <b>transactional outbox</b> pattern (below).</div></details>
+<details><summary><span class="star">★</span> Dual-write problem: save to DB and publish to Kafka atomically?</summary><div>A DB transaction and a Kafka send cannot be one atomic operation. Use the <b>outbox pattern</b>: write the event to an outbox table in the same DB transaction; a relay (poller or CDC such as Debezium) publishes it to Kafka. Consumers must be idempotent (at-least-once).</div></details>
+<details><summary>Kafka transactions with Spring?</summary><div>Set <code>spring.kafka.producer.transaction-id-prefix</code>; use <code>@Transactional</code> or <code>kafkaTemplate.executeInTransaction</code>. Sends become atomic across topics/partitions; consumers use <code>isolation.level=read_committed</code>. It covers Kafka-to-Kafka only, not your DB.</div></details>
+<details><summary>How do you preserve ordering of updates for one entity?</summary><div>Use the entity id as the key so they share a partition; keep idempotence on with <code>max.in.flight ≤ 5</code>; avoid multiple producers racing for the same key without coordination.</div></details>
+<details><summary>Why validate before sending to Kafka?</summary><div>Kafka topics are shared contracts; bad data poisons every consumer and cannot be edited (log is immutable). Reject at the edge with 400.</div></details>
+
+<h3>Situational</h3>
+<details><summary><span class="star">★</span> Your producer service's latency spiked. Where do you look?</summary><div>Metadata fetch or blocked <code>send()</code> (buffer full, broker unavailable), <code>acks=all</code> with a slow follower (ISR shrink), tiny batches (<code>linger.ms=0</code>), no compression on large payloads, sync <code>get()</code> on the request thread, or GC pauses. Check producer metrics: <code>record-send-rate</code>, <code>request-latency-avg</code>, <code>buffer-available-bytes</code>, <code>batch-size-avg</code>.</div></details>
+<details><summary><span class="star">★</span> You must support 10× traffic. What do you change in the producer?</summary><div>Async sends, larger batches with <code>linger.ms</code> 5–20, compression, enough partitions, scale service instances, tune buffer size, and check broker capacity and network.</div></details>
+<details><summary>Message larger than 1 MB fails. What now?</summary><div><code>RecordTooLargeException</code>. Prefer storing the payload in object storage and sending a reference (claim check). Otherwise raise <code>max.request.size</code> (producer), <code>message.max.bytes</code>/<code>max.message.bytes</code> (broker/topic), and consumer <code>max.partition.fetch.bytes</code>.</div></details>
+<details><summary>How do you test the producer?</summary><div>Unit: mock <code>KafkaTemplate</code>. Integration: <code>@EmbeddedKafka</code> or Testcontainers Kafka with a test consumer asserting topic, key, value and headers. Also test the <code>@RestControllerAdvice</code> with <code>MockMvc</code> for 400/500 cases.</div></details>
+<details><summary>How do you manage different Kafka settings across dev, QA and prod?</summary><div>Spring profiles with per-profile YAML, secrets injected from environment or a secrets manager, and topic provisioning via infrastructure tooling rather than autoconfigured creation in prod.</div></details>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>try{hljs.highlightAll()}catch(e){}</script>
+</body></html>

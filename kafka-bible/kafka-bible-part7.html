@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kafka Bible · Part 7 · Docker &amp; Kubernetes</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1c1c1e;--mut:#6b6b70;--line:#e4e4e2;--acc:#3b4cca;--code:#f1f1ef;--hot:#fff4d6;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141416;--fg:#e8e8ea;--mut:#9a9aa2;--line:#2a2a2e;--acc:#8b98ff;--code:#1e1e22;--hot:#2c2718}}
+:root[data-theme="dark"]{--bg:#141416;--fg:#e8e8ea;--mut:#9a9aa2;--line:#2a2a2e;--acc:#8b98ff;--code:#1e1e22;--hot:#2c2718}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 Georgia,"Times New Roman",serif}
+main{max-width:760px;margin:0 auto;padding:32px 20px 80px}
+h1{font:700 30px/1.2 system-ui,sans-serif;margin:0 0 6px}
+h2{font:650 21px/1.3 system-ui,sans-serif;margin:52px 0 4px;padding-top:20px;border-top:1px solid var(--line)}
+h3{font:600 15px/1.4 system-ui,sans-serif;margin:24px 0 6px}
+.sub{color:var(--mut);font:14px system-ui,sans-serif;margin:0 0 4px}
+.vid{color:var(--mut);font:13px system-ui,sans-serif;margin:0 0 12px}
+p,li{margin:6px 0}ul{padding-left:20px}
+code{font:13px ui-monospace,Menlo,Consolas,monospace;background:var(--code);padding:1px 5px;border-radius:3px}
+pre{background:var(--code);padding:12px 14px;border-radius:6px;overflow-x:auto;margin:10px 0;max-width:100%}
+pre code{padding:0;background:none;font-size:12.5px;line-height:1.55}
+table{border-collapse:collapse;width:100%;font:14px system-ui,sans-serif;display:block;overflow-x:auto}
+td,th{border-bottom:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}th{color:var(--mut);font-weight:600}
+nav{font:14px system-ui,sans-serif;margin:18px 0 0;display:flex;flex-wrap:wrap;gap:6px 16px}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+button{font:13px system-ui,sans-serif;background:none;color:var(--mut);border:1px solid var(--line);border-radius:5px;padding:4px 10px;cursor:pointer;float:right}
+.note{background:var(--hot);border-left:3px solid var(--acc);padding:8px 12px;margin:12px 0;font-size:15px}
+details{border-bottom:1px solid var(--line);padding:9px 0}
+summary{cursor:pointer;font:600 15px/1.5 system-ui,sans-serif;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";color:var(--acc);display:inline-block;width:18px}
+details[open] summary::before{content:"–"}
+details>div{padding:6px 0 4px 18px}
+.star{color:var(--acc);font-weight:700}
+</style>
+<style>
+:root{--k:#c2255c;--s:#0a7f4f;--c:#8a8a90;--n:#b35900;--t:#3b4cca;--a:#9c36b5}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--k:#ff8fa3;--s:#7ee0a8;--c:#7c7c86;--n:#ffb066;--t:#8b98ff;--a:#d6a3ff}}
+:root[data-theme="dark"]{--k:#ff8fa3;--s:#7ee0a8;--c:#7c7c86;--n:#ffb066;--t:#8b98ff;--a:#d6a3ff}
+.hljs-keyword,.hljs-literal,.hljs-built_in,.hljs-selector-tag{color:var(--k)}
+.hljs-string,.hljs-regexp{color:var(--s)}
+.hljs-comment{color:var(--c);font-style:italic}
+.hljs-number,.hljs-bullet{color:var(--n)}
+.hljs-title,.hljs-type,.hljs-class .hljs-title,.hljs-attr,.hljs-attribute,.hljs-variable,.hljs-property{color:var(--t)}
+.hljs-meta,.hljs-meta .hljs-keyword,.hljs-doctag,.hljs-symbol{color:var(--a)}
+</style></head><body><main>
+<button onclick="var r=document.documentElement;r.dataset.theme=(r.dataset.theme==='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches))?'light':'dark'">Theme</button>
+<h1>Kafka Bible · Part 7</h1>
+<p class="sub">Docker and Kubernetes for the Library Events apps · course videos 120–141</p>
+<p class="sub"><span class="star">★</span> marks questions that are common in Walmart / JPMC style rounds. Image and app names are examples.</p>
+<nav><a href="#c">Containers</a><a href="#d">Docker</a><a href="#img">Images</a><a href="#hub">Registry</a><a href="#k8s">Kubernetes</a><a href="#dep">Deployment</a><a href="#exp">Expose</a><a href="#scale">Scaling</a><a href="#cfg">ConfigMap</a><a href="#pb">Probes</a><a href="#sec">Secrets</a><a href="#q">Q&amp;A</a></nav>
+
+<h2 id="c">1. Containers: why and what</h2>
+<p class="vid">Video 120</p>
+<ul>
+<li><b>Problem:</b> "works on my machine". Apps depend on OS libraries, runtime versions and config. A container packages the app with everything it needs and runs the same everywhere.</li>
+<li>A container is an <b>isolated process</b> on the host kernel: <b>namespaces</b> isolate what it sees (processes, network, mounts) and <b>cgroups</b> limit what it can use (CPU, memory).</li>
+</ul>
+<table>
+<tr><th></th><th>Virtual machine</th><th>Container</th></tr>
+<tr><td>Isolation</td><td>Own guest OS on a hypervisor</td><td>Shared host kernel, process-level isolation</td></tr>
+<tr><td>Size / start</td><td>GBs, minutes</td><td>MBs, seconds</td></tr>
+<tr><td>Density</td><td>Low</td><td>High</td></tr>
+<tr><td>Isolation strength</td><td>Stronger</td><td>Weaker (shared kernel)</td></tr>
+</table>
+
+<h2 id="d">2. Docker basics</h2>
+<p class="vid">Video 121</p>
+<ul>
+<li><b>Image:</b> immutable, layered, read-only template. <b>Container:</b> a running instance of an image. <b>Registry:</b> stores images (Docker Hub, ECR, private Artifactory).</li>
+<li><b>Architecture:</b> <code>docker</code> CLI → Docker daemon → containerd → runc. Layers are cached; unchanged layers are reused on rebuild, so order Dockerfile steps from least to most frequently changing.</li>
+</ul>
+<pre><code class="language-bash">docker build -t dilip/library-events-producer:1.0 .
+docker run -d --name producer -p 8080:8080 -e SPRING_PROFILES_ACTIVE=local dilip/library-events-producer:1.0
+docker ps            # running containers        docker ps -a   # all
+docker logs -f producer
+docker exec -it producer sh
+docker stop producer &amp;&amp; docker rm producer
+docker images        docker rmi IMAGE
+docker volume ls     docker network ls</code></pre>
+<ul>
+<li><code>-p host:container</code> publishes a port. Data inside a container is lost on removal; use <b>volumes</b> for persistence. Containers on the same user-defined network reach each other by container name.</li>
+</ul>
+
+<h2 id="img">3. Dockerfile for the producer, and running per environment</h2>
+<p class="vid">Videos 122–124, 126</p>
+<pre><code class="language-bash"># Dockerfile (multi-stage)
+FROM maven:3.9-eclipse-temurin-21 AS build
+WORKDIR /src
+COPY pom.xml .
+RUN mvn -q dependency:go-offline            # cached until pom.xml changes
+COPY src ./src
+RUN mvn -q clean package -DskipTests
+
+FROM eclipse-temurin:21-jre
+RUN useradd -r -u 1001 app
+WORKDIR /app
+COPY --from=build /src/target/*.jar app.jar
+USER app
+EXPOSE 8080
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=75"
+ENTRYPOINT ["sh","-c","java $JAVA_OPTS -jar app.jar"]</code></pre>
+<ul>
+<li><b>Best practices:</b> multi-stage (small runtime image, no build tools), JRE base, non-root user, <code>.dockerignore</code>, pinned base tags, one process per container, container-aware JVM flags (<code>MaxRAMPercentage</code>).</li>
+<li><b>Same image, different environments (video 124):</b> build once; vary behavior by env vars or profiles only.</li>
+</ul>
+<pre><code class="language-bash">docker run -p 8080:8080 -e SPRING_PROFILES_ACTIVE=dev  -e SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka-dev:9092  IMAGE
+docker run -p 8080:8080 -e SPRING_PROFILES_ACTIVE=prod -e SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka-prod:9092 IMAGE</code></pre>
+<div class="note"><b>Networking gotcha:</b> inside a container, <code>localhost</code> is the container itself, not your laptop or the Kafka container. Use a shared Docker network and the service name (<code>kafka:9092</code>) or <code>host.docker.internal</code>. Kafka's <code>advertised.listeners</code> must return an address the client can actually reach, otherwise the client connects to the bootstrap address and then fails on the advertised one. Use separate internal and external listeners.</div>
+<ul>
+<li><b>Consumer (video 126):</b> same build. It also needs Postgres and Kafka: run them on one Docker network (or Docker Compose) and pass <code>SPRING_DATASOURCE_URL</code>, <code>SPRING_KAFKA_BOOTSTRAP_SERVERS</code> and the DB credentials as env vars.</li>
+</ul>
+
+<h2 id="hub">4. Publishing the image</h2>
+<p class="vid">Video 125</p>
+<pre><code class="language-bash">docker login
+docker tag library-events-producer:1.0 dilip/library-events-producer:1.0
+docker push dilip/library-events-producer:1.0</code></pre>
+<ul>
+<li>Tag with immutable versions (semver or git SHA). Avoid <code>latest</code> in deployments: it is mutable and makes rollbacks and audits unreliable.</li>
+<li>Enterprises use private registries (ECR, ACR, Artifactory) with image scanning and signing; Kubernetes pulls via <code>imagePullSecrets</code>.</li>
+</ul>
+
+<h2 id="k8s">5. Why Kubernetes, and its architecture</h2>
+<p class="vid">Videos 127–131</p>
+<ul>
+<li><b>Docker alone cannot:</b> spread containers across many machines, restart failed ones automatically, scale on demand, do rolling updates with zero downtime, load balance and discover services, or manage config and secrets centrally.</li>
+<li><b>Kubernetes</b> is a declarative orchestrator: you describe the <b>desired state</b> (3 replicas of this image) and controllers continuously reconcile actual state toward it.</li>
+</ul>
+<table>
+<tr><th>Component</th><th>Role</th></tr>
+<tr><td><b>kube-apiserver</b></td><td>Front door; every request and component talks through it</td></tr>
+<tr><td><b>etcd</b></td><td>Consistent key-value store holding all cluster state</td></tr>
+<tr><td><b>scheduler</b></td><td>Chooses a node for each new Pod (resources, affinity, taints)</td></tr>
+<tr><td><b>controller-manager</b></td><td>Runs reconcile loops (Deployment, ReplicaSet, Node controllers)</td></tr>
+<tr><td><b>kubelet</b> (each node)</td><td>Runs and monitors the Pods assigned to its node</td></tr>
+<tr><td><b>kube-proxy</b> (each node)</td><td>Implements Service networking rules</td></tr>
+<tr><td>Container runtime</td><td>containerd / CRI-O actually runs containers</td></tr>
+</table>
+<p><b>Flow of <code>kubectl apply</code>:</b> API server validates and stores in etcd → Deployment controller creates a ReplicaSet → it creates Pods → scheduler assigns nodes → kubelets pull the image and start containers → status flows back to the API server.</p>
+<pre><code class="language-bash">minikube start --driver=docker         # local single-node cluster
+kubectl get nodes                      kubectl config get-contexts
+kubectl apply -f deployment.yaml       kubectl get pods -o wide
+kubectl describe pod POD               kubectl logs -f POD [--previous]
+kubectl exec -it POD -- sh             kubectl delete -f deployment.yaml
+kubectl rollout status|history|undo deployment/NAME
+kubectl scale deployment NAME --replicas=3</code></pre>
+
+<h2 id="dep">6. Deployment and Pods</h2>
+<p class="vid">Video 132</p>
+<ul>
+<li><b>Pod:</b> smallest deployable unit; one or more containers sharing network (one IP) and volumes. Pods are ephemeral; never rely on a Pod's IP.</li>
+<li><b>Deployment</b> → manages a <b>ReplicaSet</b> → keeps N Pods running; provides self-healing, rolling updates, and rollback.</li>
+</ul>
+<pre><code class="language-yaml">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: library-events-producer
+spec:
+  replicas: 2
+  strategy: { type: RollingUpdate, rollingUpdate: { maxSurge: 1, maxUnavailable: 0 } }
+  selector:
+    matchLabels: { app: library-events-producer }
+  template:
+    metadata:
+      labels: { app: library-events-producer }
+    spec:
+      containers:
+        - name: producer
+          image: dilip/library-events-producer:1.0
+          ports: [ { containerPort: 8080 } ]
+          resources:
+            requests: { cpu: 250m, memory: 512Mi }
+            limits:   { memory: 768Mi }</code></pre>
+<ul>
+<li><b>requests</b> = what the scheduler reserves; <b>limits</b> = hard cap. Exceeding the memory limit gets the container <b>OOMKilled</b>; CPU over the limit is throttled. Size the JVM heap below the memory limit.</li>
+<li>Rolling update replaces Pods gradually; <code>maxUnavailable: 0</code> keeps full capacity during a deploy.</li>
+</ul>
+
+<h2 id="exp">7. Exposing the app: Service, port-forward, Ingress</h2>
+<p class="vid">Videos 133–135</p>
+<pre><code class="language-yaml">apiVersion: v1
+kind: Service
+metadata: { name: library-events-producer }
+spec:
+  type: ClusterIP
+  selector: { app: library-events-producer }      # matches Pod labels
+  ports: [ { port: 80, targetPort: 8080 } ]
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: { name: library-events }
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: library.local
+      http:
+        paths:
+          - { path: /libraryevents, pathType: Prefix,
+              backend: { service: { name: library-events-producer, port: { number: 80 } } } }</code></pre>
+<table>
+<tr><th>Option</th><th>Use</th></tr>
+<tr><td>Service <code>ClusterIP</code> (default)</td><td>Stable virtual IP and DNS name inside the cluster (<code>name.namespace.svc.cluster.local</code>); load balances across matching Pods</td></tr>
+<tr><td><code>NodePort</code> / <code>LoadBalancer</code></td><td>Expose on a node port / provision a cloud load balancer</td></tr>
+<tr><td><code>kubectl port-forward svc/NAME 8080:80</code></td><td>Temporary tunnel from your machine, for debugging only</td></tr>
+<tr><td>Ingress</td><td>HTTP/S routing by host and path to many Services through one entry point (needs an Ingress controller such as NGINX; <code>minikube addons enable ingress</code>); also TLS termination</td></tr>
+</table>
+
+<h2 id="scale">8. Scaling to multiple replicas</h2>
+<p class="vid">Video 136</p>
+<pre><code class="language-bash">kubectl scale deployment library-events-producer --replicas=3
+kubectl autoscale deployment library-events-producer --min=2 --max=10 --cpu-percent=70    # HPA</code></pre>
+<ul>
+<li>Replicas give throughput and availability; the Service spreads traffic across ready Pods. The <b>producer is stateless</b>, so it scales freely.</li>
+<li><b>Consumer + Kafka rule:</b> total consumer threads = <code>replicas × listener concurrency</code> must be ≤ topic partitions, or extra Pods sit idle. Scaling or restarting Pods triggers <b>rebalances</b>.</li>
+<li>CPU-based HPA is a poor fit for consumers; scale on <b>consumer lag</b> (e.g. KEDA Kafka scaler), capped at the partition count.</li>
+</ul>
+
+<h2 id="cfg">9. Externalizing config with ConfigMap</h2>
+<p class="vid">Video 137</p>
+<pre><code class="language-yaml">apiVersion: v1
+kind: ConfigMap
+metadata: { name: producer-config }
+data:
+  SPRING_PROFILES_ACTIVE: "prod"
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+---
+# in the container spec
+          envFrom:
+            - configMapRef: { name: producer-config }</code></pre>
+<ul>
+<li>Config lives outside the image: same image in dev/QA/prod, different ConfigMaps. Use it for non-sensitive settings only.</li>
+<li>Env vars are read at container start, so changing a ConfigMap needs a Pod restart (<code>kubectl rollout restart deployment/NAME</code>). ConfigMaps mounted as files update eventually, but Spring will not reload them unless you build for it.</li>
+</ul>
+
+<h2 id="pb">10. Liveness and readiness in Kubernetes</h2>
+<p class="vid">Video 138</p>
+<pre><code class="language-yaml">          startupProbe:                     # protects slow JVM starts
+            httpGet: { path: /actuator/health/liveness, port: 8080 }
+            failureThreshold: 30
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /actuator/health/liveness, port: 8080 }
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet: { path: /actuator/health/readiness, port: 8080 }
+            periodSeconds: 5</code></pre>
+<ul>
+<li><b>Liveness</b> failure → kubelet <b>restarts the container</b>. <b>Readiness</b> failure → Pod is <b>removed from Service endpoints</b> (no traffic, no restart). <b>Startup</b> probe delays the other two until the app has booted.</li>
+<li>Actuator probe endpoints come from Part 6. Keep Kafka and DB in <b>readiness only</b>, not liveness.</li>
+<li>Graceful shutdown: Kubernetes sends SIGTERM, then SIGKILL after <code>terminationGracePeriodSeconds</code> (30 s). Set <code>server.shutdown=graceful</code> so in-flight requests finish and consumers stop polling and commit cleanly.</li>
+</ul>
+
+<h2 id="cons">11. Consumer on Kubernetes</h2>
+<p class="vid">Video 139</p>
+<ul>
+<li>Same pattern as the producer: Deployment + ConfigMap + probes, plus a Service if it exposes REST (Book CRUD, GET events).</li>
+<li>Kafka and Postgres addresses come from config (<code>SPRING_KAFKA_BOOTSTRAP_SERVERS</code>, <code>SPRING_DATASOURCE_URL</code>). Inside the cluster use Service DNS names (e.g. <code>postgres:5432</code>), never <code>localhost</code>.</li>
+<li>Stateful systems (Postgres, Kafka brokers) need <b>StatefulSets</b> with persistent volumes; in production use managed services or operators (e.g. Strimzi for Kafka). Flyway runs at app start, so several replicas must tolerate a concurrent migration (Flyway locks the schema history table).</li>
+</ul>
+
+<h2 id="sec">12. Secrets: env vars and volume mounts</h2>
+<p class="vid">Videos 140–141</p>
+<pre><code class="language-yaml">apiVersion: v1
+kind: Secret
+metadata: { name: db-secret }
+type: Opaque
+stringData:
+  DB_USER: library
+  DB_PASSWORD: change-me
+---
+# option 1: environment variable
+          env:
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom: { secretKeyRef: { name: db-secret, key: DB_PASSWORD } }
+# option 2: volume mount (each key becomes a file)
+          volumeMounts:
+            - { name: db-secret, mountPath: /etc/secrets, readOnly: true }
+      volumes:
+        - name: db-secret
+          secret: { secretName: db-secret }</code></pre>
+<pre><code class="language-yaml"># Spring Boot reads mounted files as properties
+spring:
+  config:
+    import: "optional:configtree:/etc/secrets/"</code></pre>
+<ul>
+<li><b>Secrets are base64-encoded, not encrypted.</b> Protect them with RBAC, enable etcd encryption at rest, and keep them out of Git.</li>
+<li><b>Volume mount vs env var:</b> files can be updated in a running Pod, are not visible in <code>kubectl describe</code>, and are less likely to leak through logs, crash dumps or child processes. Env vars are simpler but static until restart.</li>
+<li>For stronger control use an external manager (Vault, AWS Secrets Manager, Azure Key Vault) synced by External Secrets Operator or the CSI Secrets Store driver.</li>
+</ul>
+
+<h2 id="q">Interview Q&amp;A</h2>
+<p class="sub">Tap a question to expand.</p>
+
+<h3>Docker</h3>
+<details><summary><span class="star">★</span> Container vs VM? Image vs container?</summary><div>Containers share the host kernel and isolate with namespaces and cgroups, so they are light and fast; VMs bring a full guest OS. An image is the immutable layered template, a container is a running instance with a writable layer on top.</div></details>
+<details><summary><span class="star">★</span> How does Docker layer caching work, and how do you use it?</summary><div>Each instruction creates a layer; unchanged layers up to the first change are reused. Copy <code>pom.xml</code> and resolve dependencies before copying source so dependency layers stay cached.</div></details>
+<details><summary>CMD vs ENTRYPOINT? COPY vs ADD?</summary><div>ENTRYPOINT is the fixed executable; CMD supplies default arguments that <code>docker run</code> can override. COPY just copies files; ADD also extracts archives and fetches URLs, so prefer COPY.</div></details>
+<details><summary><span class="star">★</span> Why multi-stage builds and non-root users?</summary><div>Multi-stage keeps compilers and source out of the runtime image (smaller, fewer vulnerabilities). Non-root limits damage if the process is compromised.</div></details>
+<details><summary><span class="star">★</span> My containerized app cannot connect to Kafka on localhost:9092. Why?</summary><div><code>localhost</code> is the container itself. Put both on one Docker network and use the broker's service name; configure Kafka's <code>advertised.listeners</code> with separate internal (container-to-container) and external (host) listeners.</div></details>
+<details><summary>How do you run the same image in dev and prod?</summary><div>Build once, inject environment-specific config at runtime (env vars, profiles, ConfigMaps, secrets). No rebuild per environment.</div></details>
+<details><summary>How do you reduce image size and build time?</summary><div>Slim/JRE base, multi-stage, <code>.dockerignore</code>, ordered layers, layered Spring Boot jars, and build cache reuse in CI.</div></details>
+
+<h3>Kubernetes core</h3>
+<details><summary><span class="star">★</span> Explain Kubernetes architecture and what happens on <code>kubectl apply</code>.</summary><div>API server stores desired state in etcd; controllers create ReplicaSet and Pods; the scheduler assigns nodes; each node's kubelet pulls images and starts containers via the runtime; kube-proxy wires Service networking. Everything talks through the API server.</div></details>
+<details><summary><span class="star">★</span> Pod vs Deployment vs ReplicaSet?</summary><div>Pod runs containers. ReplicaSet keeps N identical Pods. Deployment manages ReplicaSets to give rolling updates and rollbacks. You almost always create Deployments.</div></details>
+<details><summary><span class="star">★</span> Service types and Service vs Ingress?</summary><div>ClusterIP (internal), NodePort, LoadBalancer (cloud LB), plus headless for direct Pod DNS (StatefulSets). A Service is L4 load balancing to Pods; Ingress is L7 host/path routing and TLS for many Services via an Ingress controller.</div></details>
+<details><summary>How does a Service know which Pods to route to?</summary><div>Label selector → matching Pods that are Ready become its endpoints. Failing readiness removes a Pod from the endpoints.</div></details>
+<details><summary><span class="star">★</span> How does a rolling update work? How do you roll back?</summary><div>New ReplicaSet scales up while the old scales down, controlled by <code>maxSurge</code>/<code>maxUnavailable</code>, gated by readiness. Roll back with <code>kubectl rollout undo</code>.</div></details>
+<details><summary><span class="star">★</span> Liveness vs readiness vs startup probes?</summary><div>Liveness restarts a stuck container; readiness controls whether it receives traffic; startup gives slow apps time to boot before liveness starts. Do not put external dependencies in liveness.</div></details>
+<details><summary><span class="star">★</span> Resource requests vs limits? Why was my Java pod OOMKilled?</summary><div>Requests drive scheduling; limits are caps. The container exceeded the memory limit (heap plus metaspace, threads, direct buffers). Set heap via <code>MaxRAMPercentage</code> well below the limit and check with <code>kubectl describe pod</code> (reason OOMKilled).</div></details>
+<details><summary><span class="star">★</span> ConfigMap vs Secret? Are Secrets secure?</summary><div>ConfigMap for plain config, Secret for sensitive values. Secrets are only base64-encoded by default; secure them with RBAC, etcd encryption, and optionally an external secret manager.</div></details>
+<details><summary>Env var vs volume-mounted secret?</summary><div>Env vars are simple but static and easier to leak; mounted files are refreshable, hidden from <code>describe</code>, and can be read via Spring's <code>configtree</code>.</div></details>
+
+<h3>Kafka on Kubernetes and operations</h3>
+<details><summary><span class="star">★</span> How do you scale a Kafka consumer deployment?</summary><div>Replicas × concurrency ≤ partitions. Scale on consumer lag (KEDA) rather than CPU, expect rebalances, and use cooperative rebalancing and static membership to soften them during rollouts.</div></details>
+<details><summary><span class="star">★</span> Pods keep restarting during a Kafka outage. Why, and how do you fix it?</summary><div>Kafka health is in the liveness probe, so failures cause restarts. Move dependency checks to readiness and keep liveness about the process only.</div></details>
+<details><summary><span class="star">★</span> How do you gracefully shut down a consumer during a deployment?</summary><div>Handle SIGTERM: stop polling, finish or abandon the current batch, commit offsets, leave the group (<code>server.shutdown=graceful</code>, adequate <code>terminationGracePeriodSeconds</code>). Otherwise the group waits for the session timeout before rebalancing.</div></details>
+<details><summary>How do you debug <code>CrashLoopBackOff</code> and <code>ImagePullBackOff</code>?</summary><div>CrashLoopBackOff: <code>kubectl logs --previous</code>, <code>describe pod</code> (exit code, OOM, bad config, failing probe). ImagePullBackOff: wrong image/tag, missing registry credentials (<code>imagePullSecrets</code>), or network to the registry.</div></details>
+<details><summary>Should you run Kafka itself on Kubernetes?</summary><div>Possible with StatefulSets, persistent volumes and an operator (Strimzi), but operationally demanding. Many teams use managed Kafka (MSK, Confluent Cloud) and run only apps on Kubernetes.</div></details>
+<details><summary>Where does the Library Events consumer reach Postgres from inside the cluster?</summary><div>Through a Service DNS name (e.g. <code>postgres.default.svc.cluster.local</code>) provided via config, never <code>localhost</code>, with credentials from a Secret.</div></details>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>try{hljs.highlightAll()}catch(e){}</script>
+</body></html>

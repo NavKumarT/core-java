@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kafka Bible · Part 9 · Patterns, Ecosystem &amp; Operations</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1c1c1e;--mut:#6b6b70;--line:#e4e4e2;--acc:#3b4cca;--code:#f1f1ef;--hot:#fff4d6;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141416;--fg:#e8e8ea;--mut:#9a9aa2;--line:#2a2a2e;--acc:#8b98ff;--code:#1e1e22;--hot:#2c2718}}
+:root[data-theme="dark"]{--bg:#141416;--fg:#e8e8ea;--mut:#9a9aa2;--line:#2a2a2e;--acc:#8b98ff;--code:#1e1e22;--hot:#2c2718}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 Georgia,"Times New Roman",serif}
+main{max-width:760px;margin:0 auto;padding:32px 20px 80px}
+h1{font:700 30px/1.2 system-ui,sans-serif;margin:0 0 6px}
+h2{font:650 21px/1.3 system-ui,sans-serif;margin:52px 0 4px;padding-top:20px;border-top:1px solid var(--line)}
+h3{font:600 15px/1.4 system-ui,sans-serif;margin:24px 0 6px}
+.sub{color:var(--mut);font:14px system-ui,sans-serif;margin:0 0 4px}
+p,li{margin:6px 0}ul{padding-left:20px}
+code{font:13px ui-monospace,Menlo,Consolas,monospace;background:var(--code);padding:1px 5px;border-radius:3px}
+pre{background:var(--code);padding:12px 14px;border-radius:6px;overflow-x:auto;margin:10px 0;max-width:100%}
+pre code{padding:0;background:none;font-size:12.5px;line-height:1.55}
+table{border-collapse:collapse;width:100%;font:14px system-ui,sans-serif;display:block;overflow-x:auto}
+td,th{border-bottom:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}th{color:var(--mut);font-weight:600}
+nav{font:14px system-ui,sans-serif;margin:18px 0 0;display:flex;flex-wrap:wrap;gap:6px 16px}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+button{font:13px system-ui,sans-serif;background:none;color:var(--mut);border:1px solid var(--line);border-radius:5px;padding:4px 10px;cursor:pointer;float:right}
+.note{background:var(--hot);border-left:3px solid var(--acc);padding:8px 12px;margin:12px 0;font-size:15px}
+details{border-bottom:1px solid var(--line);padding:9px 0}
+summary{cursor:pointer;font:600 15px/1.5 system-ui,sans-serif;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";color:var(--acc);display:inline-block;width:18px}
+details[open] summary::before{content:"–"}
+details>div{padding:6px 0 4px 18px}
+.star{color:var(--acc);font-weight:700}
+</style>
+<style>
+:root{--k:#c2255c;--s:#0a7f4f;--c:#8a8a90;--n:#b35900;--t:#3b4cca;--a:#9c36b5}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--k:#ff8fa3;--s:#7ee0a8;--c:#7c7c86;--n:#ffb066;--t:#8b98ff;--a:#d6a3ff}}
+:root[data-theme="dark"]{--k:#ff8fa3;--s:#7ee0a8;--c:#7c7c86;--n:#ffb066;--t:#8b98ff;--a:#d6a3ff}
+.hljs-keyword,.hljs-literal,.hljs-built_in,.hljs-selector-tag{color:var(--k)}
+.hljs-string,.hljs-regexp{color:var(--s)}
+.hljs-comment{color:var(--c);font-style:italic}
+.hljs-number,.hljs-bullet{color:var(--n)}
+.hljs-title,.hljs-type,.hljs-class .hljs-title,.hljs-attr,.hljs-attribute,.hljs-variable,.hljs-property{color:var(--t)}
+.hljs-meta,.hljs-meta .hljs-keyword,.hljs-doctag,.hljs-symbol{color:var(--a)}
+</style></head><body><main>
+<button onclick="var r=document.documentElement;r.dataset.theme=(r.dataset.theme==='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches))?'light':'dark'">Theme</button>
+<h1>Kafka Bible · Part 9</h1>
+<p class="sub">Patterns, ecosystem, and operations: what a senior engineer is expected to know beyond the course</p>
+<p class="sub"><span class="star">★</span> = frequently asked. Payment-style designs with idempotency and Kafka are a reported JPMC system-design theme.</p>
+<nav><a href="#ob">Outbox</a><a href="#ic">Idempotent consumer</a><a href="#sg">Saga</a><a href="#es">CQRS &amp; ES</a><a href="#bp">Backpressure</a><a href="#par">Parallelism</a><a href="#kc">Connect</a><a href="#ks">Streams</a><a href="#dr">DR</a><a href="#obs">Observability</a><a href="#cli">CLI cookbook</a><a href="#cap">Capacity</a><a href="#q">Q&amp;A</a></nav>
+
+<h2 id="ob">1. Transactional outbox (fixing the dual write)</h2>
+<p><b>Problem:</b> "save to DB and publish to Kafka" cannot be atomic. Crash between the two and you either lose the event or publish one for data that was rolled back.</p>
+<pre><code class="language-java">@Transactional                                   // one DB transaction
+public void placeOrder(OrderDto dto) {
+  Order order = orderRepo.save(Order.from(dto));
+  outboxRepo.save(new OutboxEvent(UUID.randomUUID(), "order", order.getId().toString(),   // aggregate key
+                                  "OrderPlaced", toJson(order), Instant.now()));
+}
+
+@Scheduled(fixedDelay = 500)                     // relay (or use Debezium CDC instead of polling)
+public void publish() {
+  for (OutboxEvent e : outboxRepo.findTop100ByPublishedFalseOrderById()) {
+    kafkaTemplate.send("orders", e.getAggregateId(), e.getPayload()).get(5, TimeUnit.SECONDS);
+    e.markPublished();                           // crash before this line → re-publish → duplicates
+    outboxRepo.save(e);
+  }
+}</code></pre>
+<ul>
+<li>Delivery is <b>at-least-once</b>: consumers must be idempotent, and the event id doubles as the dedupe key.</li>
+<li>Key by aggregate id to keep per-entity ordering. Run one relay per shard or use <code>SELECT ... FOR UPDATE SKIP LOCKED</code> to avoid double-sending across instances.</li>
+<li><b>Polling vs CDC:</b> polling is simple but adds DB load and latency; Debezium tails the DB log (near real-time, no polling), often with the outbox event router SMT. Clean up published rows on a schedule.</li>
+</ul>
+
+<h2 id="ic">2. Idempotent consumer implementations</h2>
+<p>With at-least-once delivery, processing the same record twice must have the same effect as once.</p>
+<pre><code class="language-java">@Transactional
+public void handle(PaymentEvent e) {
+  try {
+    processedRepo.saveAndFlush(new ProcessedEvent(e.eventId()));   // PK/unique on event_id
+  } catch (DataIntegrityViolationException dup) {
+    return;                                                         // already processed → ack and skip
+  }
+  ledgerService.apply(e);                                           // business write in the same transaction
+}</code></pre>
+<table>
+<tr><th>Technique</th><th>Notes</th></tr>
+<tr><td>Processed-events table, same DB transaction</td><td>Strongest for DB sinks; needs cleanup (TTL) and an event id from the producer</td></tr>
+<tr><td>Upsert / natural idempotency</td><td><code>INSERT ... ON CONFLICT DO UPDATE</code>, "set status = X"; no extra table</td></tr>
+<tr><td>Version check</td><td>Apply only if <code>event.version &gt; stored.version</code>; also drops stale out-of-order events</td></tr>
+<tr><td>Cache-based dedupe (Redis <code>SETNX</code> + TTL)</td><td>Fast, but not atomic with the DB write; a crash between them still needs a safe retry</td></tr>
+<tr><td>Downstream idempotency key</td><td>Pass the event id to the external API (payments) so the remote side dedupes</td></tr>
+</table>
+<div class="note"><b>Payments angle:</b> the client sends an <b>idempotency key</b> on the REST call; the service stores key → result; the event carries a unique id; every consumer dedupes on it. Duplicates from retries, rebalances and DLT replays then become harmless.</div>
+
+<h2 id="sg">3. Saga for distributed transactions</h2>
+<ul>
+<li>No 2PC across microservices. A <b>saga</b> is a sequence of local transactions with <b>compensating actions</b> on failure (e.g. order → reserve stock → charge payment; if payment fails, release stock, cancel order).</li>
+<li><b>Choreography:</b> services react to each other's events. Simple, decoupled, but the flow is implicit and hard to trace as it grows.</li>
+<li><b>Orchestration:</b> a coordinator (state machine) sends commands and tracks state. Explicit flow, easier to monitor and reason about, one more component.</li>
+<li>Requirements: a <b>correlation id</b> on every event, idempotent handlers and compensations, timeouts for missing replies, persisted saga state, and compensations that cannot fail permanently (retry, then alert).</li>
+<li>Combine with the outbox so each step's state change and event are atomic.</li>
+</ul>
+
+<h2 id="es">4. CQRS, event sourcing, event-carried state</h2>
+<ul>
+<li><b>CQRS:</b> separate write model and read model; Kafka carries changes to build read-optimized views (search index, cache). Read side is eventually consistent.</li>
+<li><b>Event sourcing:</b> store the sequence of events as the source of truth and derive state by replay. Powerful audit and time travel; costs: schema evolution, snapshots, harder queries.</li>
+<li><b>Event-carried state transfer:</b> events include enough data that consumers need not call back the producer, at the cost of larger events and duplicated data.</li>
+</ul>
+
+<h2 id="bp">5. Backpressure, pause/resume, slow downstream</h2>
+<p>Kafka is pull-based, so a slow consumer simply polls less and data waits in the log (until retention). The danger is exceeding <code>max.poll.interval.ms</code> or overloading a fragile downstream.</p>
+<pre><code class="language-java">@Autowired KafkaListenerEndpointRegistry registry;
+
+// circuit breaker opened → stop polling but stay in the group (heartbeats continue)
+registry.getListenerContainer("libraryListener").pause();
+// ... downstream recovered
+registry.getListenerContainer("libraryListener").resume();
+
+@KafkaListener(id = "libraryListener", topics = "library-events")
+public void onMessage(ConsumerRecord&lt;Integer,String&gt; r) { ... }</code></pre>
+<ul>
+<li><code>pause()</code> keeps the consumer in the group without triggering a rebalance (unlike stopping it). Pair with Resilience4j circuit breaker events, rate limiters and bulkheads on downstream calls.</li>
+<li>Lower <code>max.poll.records</code>, batch DB writes, use bounded queues and timeouts. Unbounded in-memory queues turn backpressure into OOM.</li>
+</ul>
+
+<h2 id="par">6. Parallelism without breaking order</h2>
+<ul>
+<li>One partition = one thread by default. To go faster: more partitions and consumers; batch processing; or <b>key-sharded executors</b> (hash key → one of N single-thread executors) so per-key order holds while different keys run in parallel. Commit offsets only up to the lowest completed offset per partition.</li>
+<li>Libraries such as Confluent's Parallel Consumer implement this. Simpler alternative: raise partitions and replicas × concurrency.</li>
+</ul>
+
+<h2 id="kc">7. Kafka Connect and Debezium</h2>
+<ul>
+<li><b>Connect</b> is the integration framework: <b>source</b> connectors pull from systems into topics, <b>sink</b> connectors push topics to systems (JDBC, S3, Elasticsearch). Runs as a scalable cluster of workers with <b>tasks</b>; config via REST; offsets and configs stored in internal Kafka topics. <b>Converters</b> (Avro/JSON) and <b>SMTs</b> transform records.</li>
+<li><b>Debezium</b> = CDC source connector: reads the database transaction log (Postgres WAL, MySQL binlog) and emits change events (before/after, op type). No dual write, near real-time; use for the outbox, cache/search sync, and data lake feeds.</li>
+<li>Error handling: <code>errors.tolerance=all</code> with <code>errors.deadletterqueue.topic.name</code> (sink connectors) routes bad records aside. Watch for schema changes and initial-snapshot load.</li>
+<li>Prefer Connect over hand-written consumers for standard data movement: fewer bugs, built-in scaling and offset handling.</li>
+</ul>
+
+<h2 id="ks">8. Kafka Streams basics</h2>
+<pre><code class="language-java">StreamsBuilder b = new StreamsBuilder();
+b.stream("orders", Consumed.with(Serdes.String(), orderSerde))
+ .filter((k, o) -&gt; o.amount() &gt; 0)
+ .groupByKey()
+ .windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofMinutes(5)))
+ .count(Materialized.as("orders-per-5min"))
+ .toStream().to("order-counts");</code></pre>
+<ul>
+<li>A client library (no separate cluster): the app is the stream processor. <b>KStream</b> = record stream, <b>KTable</b> = latest value per key (changelog), <b>GlobalKTable</b> = full copy on each instance.</li>
+<li><b>State</b> lives in local RocksDB stores backed by <b>changelog topics</b>, so state is rebuilt after a failure; <code>num.standby.replicas</code> speeds failover.</li>
+<li>Scaling = partitions (tasks) spread over instances. <b>Joins require co-partitioned topics</b> (same key, same partition count).</li>
+<li>Exactly-once: <code>processing.guarantee=exactly_once_v2</code>. Windowing, grace periods and late events are the usual tricky part.</li>
+<li>Streams vs plain consumer vs Flink: Streams for Kafka-to-Kafka stateful processing in JVM services; plain consumers for simple side effects; Flink for large, complex, multi-source streaming jobs.</li>
+</ul>
+
+<h2 id="dr">9. Multi-cluster and disaster recovery</h2>
+<ul>
+<li><b>MirrorMaker 2</b> (Connect-based) replicates topics, configs and consumer-group offsets between clusters; remote topics are prefixed with the source cluster alias. Replication is <b>asynchronous</b>, so RPO &gt; 0.</li>
+<li><b>Active-passive:</b> simplest; fail over consumers to the DR cluster using translated offsets; expect some duplicates, so idempotency again.</li>
+<li><b>Active-active:</b> each region writes its own topics; consumers read both; watch for loops and conflicts.</li>
+<li><b>Stretch cluster</b> across 3 AZs/regions (rack-aware, RF 3, <code>min.insync.replicas=2</code>): RPO near zero but needs low inter-site latency; a 2-site stretch cannot survive site loss with quorum.</li>
+<li>Define RPO/RTO first, rehearse failover, and test consumer offset translation.</li>
+</ul>
+
+<h2 id="obs">10. Observability</h2>
+<table>
+<tr><th>Where</th><th>Metrics to alert on</th></tr>
+<tr><td>Broker</td><td><code>UnderReplicatedPartitions</code>, <code>UnderMinIsrPartitionCount</code>, <code>OfflinePartitionsCount</code>, <code>ActiveControllerCount</code> (exactly 1), ISR shrink/expand rate, request handler and network idle %, produce/fetch total time, disk usage, bytes in/out</td></tr>
+<tr><td>Producer</td><td><code>record-error-rate</code>, <code>record-retry-rate</code>, <code>request-latency-avg</code>, <code>batch-size-avg</code>, <code>buffer-available-bytes</code></td></tr>
+<tr><td>Consumer</td><td><code>records-lag-max</code>, <code>fetch-rate</code>, <code>commit-latency-avg</code>, <code>rebalance-rate</code>, <code>last-rebalance-seconds-ago</code>, <code>poll-idle-ratio</code></td></tr>
+<tr><td>Application</td><td>DLT depth, failure-table growth, end-to-end (event time → processed time) latency, processing error rate</td></tr>
+</table>
+<ul>
+<li>Tools: JMX → Prometheus/Grafana, Burrow or kafka-lag-exporter for lag, Cruise Control for balancing.</li>
+<li><b>Tracing:</b> propagate a correlation/trace id in record headers (Spring Boot 3.x: <code>spring.kafka.template.observation-enabled=true</code> and <code>spring.kafka.listener.observation-enabled=true</code> with Micrometer Tracing). Log topic, partition, offset, key and correlation id (MDC) on every consumed record.</li>
+<li>Alert on <b>symptoms tied to SLAs</b> (time lag, DLT growth) as well as on cause metrics (ISR, disk).</li>
+</ul>
+
+<h2 id="cli">11. Operations cookbook</h2>
+<table>
+<tr><th>Task</th><th>Command</th></tr>
+<tr><td>Describe / list under-replicated</td><td><code>kafka-topics.sh --bootstrap-server b:9092 --describe --under-replicated-partitions</code></td></tr>
+<tr><td>Change topic config</td><td><code>kafka-configs.sh --bootstrap-server b:9092 --alter --entity-type topics --entity-name t --add-config retention.ms=86400000</code></td></tr>
+<tr><td>Add partitions</td><td><code>kafka-topics.sh --bootstrap-server b:9092 --alter --topic t --partitions 12</code> (keys remap)</td></tr>
+<tr><td>Consumer group lag / reset</td><td><code>kafka-consumer-groups.sh --describe|--reset-offsets ...</code> (Part 8)</td></tr>
+<tr><td>Move partitions</td><td><code>kafka-reassign-partitions.sh --generate|--execute|--verify --throttle 50000000</code></td></tr>
+<tr><td>Preferred leader election</td><td><code>kafka-leader-election.sh --election-type PREFERRED --all-topic-partitions</code></td></tr>
+<tr><td>Inspect a segment</td><td><code>kafka-dump-log.sh --files 00000000000000000000.log --print-data-log</code></td></tr>
+<tr><td>Delete records before an offset</td><td><code>kafka-delete-records.sh --offset-json-file f.json</code></td></tr>
+<tr><td>Read a topic</td><td><code>kafka-console-consumer.sh --topic t --partition 2 --offset 100 --max-messages 10 --property print.headers=true</code></td></tr>
+<tr><td>Quotas / ACLs</td><td><code>kafka-configs.sh --alter --entity-type clients ...</code>, <code>kafka-acls.sh</code></td></tr>
+</table>
+<ul>
+<li><b>Rolling restart:</b> one broker at a time, wait until under-replicated partitions return to 0 before the next; controlled shutdown moves leaders first.</li>
+<li>Always <b>throttle</b> reassignments and run them off-peak; they compete with client traffic.</li>
+</ul>
+
+<h2 id="cap">12. Capacity planning quick rules</h2>
+<ul>
+<li><b>Disk</b> ≈ ingest rate × retention × replication factor × (1 + ~20–30% overhead/headroom). Keep disks below roughly 60–70% used.</li>
+<li><b>Network:</b> broker egress = consumers × ingest + replication traffic ((RF−1) × ingest). Check NIC capacity, especially with many consumer groups.</li>
+<li><b>Memory:</b> modest JVM heap (~6 GB), the rest for page cache. <b>CPU</b> matters for TLS and compression.</li>
+<li>Broker count: enough for RF, throughput and partition limits, plus capacity to lose one broker (N−1) without breaching limits. Use SSD/NVMe or well-provisioned JBOD; XFS or ext4.</li>
+</ul>
+
+<h2 id="q">Interview Q&amp;A</h2>
+<p class="sub">Tap a question to expand.</p>
+<details><summary><span class="star">★</span> Explain the dual-write problem and the outbox pattern.</summary><div>DB and Kafka writes are not atomic. Outbox: write business data and an outbox row in one DB transaction, and a relay (poller or Debezium CDC) publishes to Kafka. Delivery becomes at-least-once, so consumers dedupe by event id.</div></details>
+<details><summary><span class="star">★</span> How do you implement an idempotent consumer?</summary><div>Unique event id stored in a processed-events table inside the same DB transaction as the business write (or natural idempotency by upsert/version check). On duplicate key, skip and acknowledge.</div></details>
+<details><summary><span class="star">★</span> Design payment processing with Kafka so nothing is lost or double-charged.</summary><div>Client idempotency key → API stores key/result → outbox → topic keyed by account/payment id → idempotent consumers with processed-event table → idempotent call to the payment provider with the same key → retries with backoff, DLT and reconciliation job for unknowns. Producer: <code>acks=all</code>, idempotence, RF 3, min ISR 2.</div></details>
+<details><summary><span class="star">★</span> Saga: choreography or orchestration?</summary><div>Choreography for few steps and loose coupling; orchestration when the flow is long, needs timeouts, visibility and compensation logic in one place. Both need correlation ids, idempotent handlers and compensations.</div></details>
+<details><summary>How do you pause a consumer without a rebalance?</summary><div><code>container.pause()</code> (or <code>consumer.pause(partitions)</code>) stops fetching while polling continues and the member stays in the group. Stopping the container leaves the group and triggers a rebalance.</div></details>
+<details><summary>Can you process records in parallel and still keep per-key order?</summary><div>Yes: shard by key hash onto single-threaded executors and commit only contiguous completed offsets. Or scale partitions and consumers instead.</div></details>
+<details><summary><span class="star">★</span> Kafka Connect vs writing your own consumer?</summary><div>Connect for standard source/sink movement (scaling, offsets, retries, DLQ built in). Custom consumer for business logic and side effects.</div></details>
+<details><summary>What is CDC and why Debezium over polling?</summary><div>CDC streams committed DB changes from the transaction log: low latency, no load from polling queries, captures deletes and ordering per row; needs log access and careful snapshot and schema handling.</div></details>
+<details><summary>KStream vs KTable? Why must join topics be co-partitioned?</summary><div>KStream is an event stream, KTable is latest-state per key. A join needs matching keys in the same partition number so a task can hold both sides locally.</div></details>
+<details><summary><span class="star">★</span> How would you do disaster recovery across regions?</summary><div>Define RPO/RTO. MirrorMaker 2 active-passive (async, offset translation, expect duplicates) or a stretch cluster across 3 sites for near-zero RPO with low latency. Automate and rehearse failover; keep consumers idempotent.</div></details>
+<details><summary><span class="star">★</span> Which metrics do you alert on?</summary><div>Broker: under-replicated/under-min-ISR/offline partitions, controller count, disk. Producer: error/retry rate, latency. Consumer: lag (offset and time), rebalance rate. App: DLT depth and end-to-end latency.</div></details>
+<details><summary>How do you do a zero-downtime rolling upgrade of brokers?</summary><div>One broker at a time with controlled shutdown, wait for URP = 0, follow the documented version/metadata upgrade order, and test client compatibility first.</div></details>
+<details><summary>How do you size disk for a topic?</summary><div>Ingest rate × retention × RF, plus headroom (say 30%), and keep utilization under ~70%. Check replication and consumer egress against the network too.</div></details>
+<details><summary>Event sourcing pitfalls?</summary><div>Schema evolution of stored events, replay time (need snapshots), eventual consistency of read models, and harder ad-hoc queries.</div></details>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>try{hljs.highlightAll()}catch(e){}</script>
+</body></html>

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kafka Bible · Part 3 · Testing, OpenAPI, Agent Skills</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1c1c1e;--mut:#6b6b70;--line:#e4e4e2;--acc:#3b4cca;--code:#f1f1ef;--hot:#fff4d6;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141416;--fg:#e8e8ea;--mut:#9a9aa2;--line:#2a2a2e;--acc:#8b98ff;--code:#1e1e22;--hot:#2c2718}}
+:root[data-theme="dark"]{--bg:#141416;--fg:#e8e8ea;--mut:#9a9aa2;--line:#2a2a2e;--acc:#8b98ff;--code:#1e1e22;--hot:#2c2718}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 Georgia,"Times New Roman",serif}
+main{max-width:760px;margin:0 auto;padding:32px 20px 80px}
+h1{font:700 30px/1.2 system-ui,sans-serif;margin:0 0 6px}
+h2{font:650 21px/1.3 system-ui,sans-serif;margin:52px 0 4px;padding-top:20px;border-top:1px solid var(--line)}
+h3{font:600 15px/1.4 system-ui,sans-serif;margin:24px 0 6px}
+.sub{color:var(--mut);font:14px system-ui,sans-serif;margin:0 0 4px}
+.vid{color:var(--mut);font:13px system-ui,sans-serif;margin:0 0 12px}
+p,li{margin:6px 0}ul{padding-left:20px}
+code{font:13px ui-monospace,Menlo,Consolas,monospace;background:var(--code);padding:1px 5px;border-radius:3px}
+pre{background:var(--code);padding:12px 14px;border-radius:6px;overflow-x:auto;margin:10px 0;max-width:100%}
+pre code{padding:0;background:none;font-size:12.5px;line-height:1.55}
+table{border-collapse:collapse;width:100%;font:14px system-ui,sans-serif;display:block;overflow-x:auto}
+td,th{border-bottom:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}th{color:var(--mut);font-weight:600}
+nav{font:14px system-ui,sans-serif;margin:18px 0 0;display:flex;flex-wrap:wrap;gap:6px 16px}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+button{font:13px system-ui,sans-serif;background:none;color:var(--mut);border:1px solid var(--line);border-radius:5px;padding:4px 10px;cursor:pointer;float:right}
+.note{background:var(--hot);border-left:3px solid var(--acc);padding:8px 12px;margin:12px 0;font-size:15px}
+details{border-bottom:1px solid var(--line);padding:9px 0}
+summary{cursor:pointer;font:600 15px/1.5 system-ui,sans-serif;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";color:var(--acc);display:inline-block;width:18px}
+details[open] summary::before{content:"–"}
+details>div{padding:6px 0 4px 18px}
+.star{color:var(--acc);font-weight:700}
+</style>
+<style>
+:root{--k:#c2255c;--s:#0a7f4f;--c:#8a8a90;--n:#b35900;--t:#3b4cca;--a:#9c36b5}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--k:#ff8fa3;--s:#7ee0a8;--c:#7c7c86;--n:#ffb066;--t:#8b98ff;--a:#d6a3ff}}
+:root[data-theme="dark"]{--k:#ff8fa3;--s:#7ee0a8;--c:#7c7c86;--n:#ffb066;--t:#8b98ff;--a:#d6a3ff}
+.hljs-keyword,.hljs-literal,.hljs-built_in,.hljs-selector-tag{color:var(--k)}
+.hljs-string,.hljs-regexp{color:var(--s)}
+.hljs-comment{color:var(--c);font-style:italic}
+.hljs-number,.hljs-bullet{color:var(--n)}
+.hljs-title,.hljs-type,.hljs-class .hljs-title,.hljs-attr,.hljs-attribute,.hljs-variable,.hljs-property{color:var(--t)}
+.hljs-meta,.hljs-meta .hljs-keyword,.hljs-doctag,.hljs-symbol{color:var(--a)}
+</style></head><body><main>
+<button onclick="var r=document.documentElement;r.dataset.theme=(r.dataset.theme==='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches))?'light':'dark'">Theme</button>
+<h1>Kafka Bible · Part 3</h1>
+<p class="sub">Testing the producer, OpenAPI, and AI agent skills · course videos 49–60</p>
+<p class="sub"><span class="star">★</span> marks questions that are common in Walmart / JPMC style rounds. Assumes Spring Boot 3.x, JUnit 5, Mockito.</p>
+<nav><a href="#t">Testing basics</a><a href="#mm">MockMvc</a><a href="#it">Integration</a><a href="#pu">Producer unit test</a><a href="#oa">OpenAPI</a><a href="#ag">AGENTS.md</a><a href="#sk">Skills</a><a href="#q">Q&amp;A</a></nav>
+
+<h2 id="t">1. Unit vs integration testing</h2>
+<p class="vid">Video 49</p>
+<table>
+<tr><th></th><th>Unit test</th><th>Integration test</th></tr>
+<tr><td>Scope</td><td>One class or slice; collaborators mocked</td><td>Real Spring context; real (embedded or containerized) Kafka</td></tr>
+<tr><td>Tools</td><td><code>@WebMvcTest</code>, <code>MockMvc</code>, Mockito</td><td><code>@SpringBootTest</code>, <code>@EmbeddedKafka</code> or Testcontainers, <code>TestRestTemplate</code></td></tr>
+<tr><td>Speed</td><td>Milliseconds to seconds</td><td>Seconds; needs a broker</td></tr>
+<tr><td>Proves</td><td>Logic, validation, status codes</td><td>Wiring, config, serialization, and that a record really reaches a topic</td></tr>
+</table>
+<ul>
+<li>Testing pyramid: many unit tests, fewer integration tests, very few end-to-end tests.</li>
+<li>Structure each test as <b>given / when / then</b>; one behavior per test; name tests by behavior (<code>postLibraryEvent_invalidBook_returns400</code>).</li>
+</ul>
+
+<h2 id="mm">2. Unit testing POST and PUT with MockMvc</h2>
+<p class="vid">Videos 50–51</p>
+<p><code>@WebMvcTest</code> loads only the web layer (controllers, advice, Jackson). No Kafka, no full context. Mock the producer.</p>
+<pre><code class="language-java">@WebMvcTest(LibraryEventsController.class)
+class LibraryEventsControllerUnitTest {
+  @Autowired MockMvc mockMvc;
+  @Autowired ObjectMapper objectMapper;
+  @MockitoBean LibraryEventProducer producer;     // @MockBean before Spring Boot 3.4
+
+  static LibraryEvent event(Integer id, LibraryEventType type, Book book) { return new LibraryEvent(id, type, book); }
+  static final Book BOOK = new Book(123, "Kafka Guide", "Dilip");
+
+  @Test
+  void post_valid_returns201() throws Exception {
+    when(producer.sendLibraryEvent(any())).thenReturn(CompletableFuture.completedFuture(null));
+
+    mockMvc.perform(post("/libraryevents")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(event(null, LibraryEventType.NEW, BOOK))))
+        .andExpect(status().isCreated());
+    verify(producer, times(1)).sendLibraryEvent(any());
+  }
+
+  @Test
+  void post_invalidBook_returns400() throws Exception {
+    var bad = event(null, LibraryEventType.NEW, new Book(null, "", ""));
+    mockMvc.perform(post("/libraryevents").contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(bad)))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$['book.bookId']").exists());     // from RestControllerAdvice
+    verifyNoInteractions(producer);
+  }
+
+  @Test
+  void put_missingId_returns400() throws Exception {
+    mockMvc.perform(put("/libraryevents").contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(event(null, LibraryEventType.UPDATE, BOOK))))
+        .andExpect(status().isBadRequest());
+  }
+}</code></pre>
+<ul>
+<li>Test the negative paths: missing fields, wrong type, missing id on PUT. Assert the producer is <b>never called</b> on invalid input.</li>
+<li>Use <code>@Import(GlobalExceptionHandler.class)</code> if the advice is not picked up in your slice.</li>
+</ul>
+
+<h2 id="it">3. Integration testing POST and PUT</h2>
+<p class="vid">Videos 52–53</p>
+<pre><code class="language-java">@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@EmbeddedKafka(topics = "library-events", partitions = 3,
+                bootstrapServersProperty = "spring.kafka.bootstrap-servers")   // overrides app config
+class LibraryEventsControllerIntegrationTest {
+  @Autowired TestRestTemplate restTemplate;
+  @Autowired EmbeddedKafkaBroker embeddedKafka;
+  @Autowired ObjectMapper objectMapper;
+  Consumer&lt;Integer,String&gt; consumer;
+
+  @BeforeEach void setUp() {
+    var props = new HashMap&lt;&gt;(KafkaTestUtils.consumerProps("test-group", "true", embeddedKafka));
+    props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+    consumer = new DefaultKafkaConsumerFactory&lt;&gt;(props, new IntegerDeserializer(), new StringDeserializer()).createConsumer();
+    embeddedKafka.consumeFromAllEmbeddedTopics(consumer);
+  }
+  @AfterEach void tearDown() { consumer.close(); }
+
+  @Test
+  void post_publishesToKafka() throws Exception {
+    var event = new LibraryEvent(null, LibraryEventType.NEW, new Book(123, "Kafka Guide", "Dilip"));
+    var res = restTemplate.exchange("/libraryevents", HttpMethod.POST, new HttpEntity&lt;&gt;(event), LibraryEvent.class);
+
+    assertEquals(HttpStatus.CREATED, res.getStatusCode());
+    ConsumerRecord&lt;Integer,String&gt; rec = KafkaTestUtils.getSingleRecord(consumer, "library-events");
+    assertEquals(objectMapper.writeValueAsString(event), rec.value());
+  }
+
+  @Test
+  void put_sendsKeyedEvent() {
+    var event = new LibraryEvent(999, LibraryEventType.UPDATE, new Book(123, "Kafka Guide 2", "Dilip"));
+    restTemplate.exchange("/libraryevents", HttpMethod.PUT, new HttpEntity&lt;&gt;(event), LibraryEvent.class);
+    var rec = KafkaTestUtils.getSingleRecord(consumer, "library-events");
+    assertEquals(999, rec.key());
+  }
+}</code></pre>
+<ul>
+<li>The real flow runs: HTTP → controller → <code>KafkaTemplate</code> → embedded broker → a test consumer reads it back and asserts key and value.</li>
+<li><b>Embedded Kafka</b>: in-JVM, fast to start, not identical to a real broker. <b>Testcontainers</b> (<code>KafkaContainer</code> + <code>@ServiceConnection</code>, Boot 3.1+) uses a real Kafka image, closest to production but needs Docker.</li>
+<li>Avoid flakiness: unique consumer group per test, close consumers, use <code>earliest</code>, prefer Awaitility over <code>Thread.sleep</code>, keep a timeout on reads.</li>
+</ul>
+
+<h2 id="pu">4. Unit testing the producer (KafkaTemplate mocked)</h2>
+<p class="vid">Video 54</p>
+<pre><code class="language-java">@ExtendWith(MockitoExtension.class)
+class LibraryEventProducerUnitTest {
+  @Mock KafkaTemplate&lt;Integer,String&gt; kafkaTemplate;
+  @Spy ObjectMapper objectMapper = new ObjectMapper();
+  @InjectMocks LibraryEventProducer producer;
+
+  LibraryEvent event = new LibraryEvent(1, LibraryEventType.NEW, new Book(1, "Book", "Author"));
+
+  @BeforeEach void init() { ReflectionTestUtils.setField(producer, "topic", "library-events"); }
+
+  @Test
+  void send_success() throws Exception {
+    var record = new ProducerRecord&lt;Integer,String&gt;("library-events", 1, "json");
+    var meta = new RecordMetadata(new TopicPartition("library-events", 1), 1, 0, System.currentTimeMillis(), 1, 2);
+    when(kafkaTemplate.send(eq("library-events"), eq(1), anyString()))
+        .thenReturn(CompletableFuture.completedFuture(new SendResult&lt;&gt;(record, meta)));
+
+    var result = producer.sendLibraryEvent(event).get();
+    assertEquals(1, result.getRecordMetadata().partition());
+  }
+
+  @Test
+  void send_failure() {
+    when(kafkaTemplate.send(anyString(), any(), anyString()))
+        .thenReturn(CompletableFuture.failedFuture(new RuntimeException("Kafka unavailable")));
+
+    assertThrows(ExecutionException.class, () -&gt; producer.sendLibraryEvent(event).get());
+  }
+}</code></pre>
+<ul>
+<li>Stub <code>send()</code> with <code>completedFuture</code> for success and <code>failedFuture</code> for the failure path, so the callback logic is exercised without a broker.</li>
+<li>Field injection with <code>@Value</code> is awkward to unit test (needs <code>ReflectionTestUtils</code>). Constructor-injecting the topic makes tests simpler.</li>
+</ul>
+
+<h2 id="oa">5. OpenAPI and Swagger</h2>
+<p class="vid">Videos 55–56</p>
+<ul>
+<li><b>OpenAPI</b> is the vendor-neutral spec (YAML/JSON) that describes a REST API: paths, methods, schemas, status codes, auth. <b>Swagger UI</b> is a tool that renders it.</li>
+<li><b>Why it matters:</b> one contract for consumers and producers, always-current docs, client and server code generation, contract testing, API gateway and governance integration, and easier onboarding.</li>
+<li>Spring Boot 3: add <code>org.springdoc:springdoc-openapi-starter-webmvc-ui</code>. Spec at <code>/v3/api-docs</code>, UI at <code>/swagger-ui.html</code>.</li>
+<li><b>Code-first</b> (generate spec from annotated controllers, what springdoc does) vs <b>contract-first</b> (write spec, generate stubs; better for cross-team APIs).</li>
+</ul>
+<pre><code class="language-java">@Bean OpenAPI api() {
+  return new OpenAPI().info(new Info().title("Library Events Producer").version("v1")
+      .description("Publishes library events to Kafka"));
+}
+
+@Tag(name = "Library Events")
+@Operation(summary = "Publish a NEW library event")
+@ApiResponses({
+  @ApiResponse(responseCode = "201", description = "Accepted and sent"),
+  @ApiResponse(responseCode = "400", description = "Validation failed")})
+@PostMapping
+public ResponseEntity&lt;LibraryEvent&gt; post(@RequestBody @Valid LibraryEvent e) { ... }</code></pre>
+<div class="note"><b>Production note:</b> disable or protect Swagger UI in prod (<code>springdoc.swagger-ui.enabled=false</code> under the prod profile), since it exposes your API surface.</div>
+
+<h2 id="ag">6. AGENTS.md</h2>
+<p class="vid">Video 57</p>
+<ul>
+<li>A markdown file in the repo root that gives AI coding agents standing instructions about the project (a README for agents). Tools read it automatically; some use their own name (e.g. <code>CLAUDE.md</code>, Copilot instructions file).</li>
+<li>Put in it: what the project is, tech stack and versions, exact build/test commands, package layout, coding conventions, testing rules, and explicit do/don't lists (e.g. "never commit secrets", "always add a unit test").</li>
+<li>Keep it short, concrete, and versioned in git. Nested files in subfolders can specialize instructions. It is loaded into context every time, so bloat costs tokens.</li>
+</ul>
+<pre><code class="language-markdown"># Library Events Producer
+Spring Boot 3.3, Java 21, Spring Kafka, Maven.
+
+## Commands
+- Build: `./mvnw clean verify`
+- Test:  `./mvnw test`
+
+## Rules
+- Controllers are thin: validate with `@Valid`, delegate to a service/producer.
+- Errors go through `GlobalExceptionHandler`; never return stack traces.
+- Every new endpoint needs a MockMvc test and an integration test.
+- Kafka key is always `libraryEventId`.</code></pre>
+
+<h2 id="sk">7. Skills for coding agents</h2>
+<p class="vid">Videos 58–60</p>
+<ul>
+<li>A <b>skill</b> is a packaged, reusable set of instructions (a folder with a <code>SKILL.md</code> containing a name and description, plus optional scripts and templates) that an agent loads <b>only when the task matches</b>.</li>
+<li><b>AGENTS.md vs skill:</b> AGENTS.md is always in context (project-wide rules); a skill is loaded on demand (task-specific playbook), which keeps context small. Skills are reusable across projects and shareable with a team.</li>
+<li>The description is what the agent uses to decide when to load it, so write it as "use when the user asks to write tests for X".</li>
+</ul>
+<pre><code class="language-markdown">---
+name: testing-skill
+description: Use when writing or reviewing unit and integration tests for this Spring Boot Kafka service.
+---
+# Testing skill
+1. Controllers: `@WebMvcTest` + `MockMvc`, mock the producer with `@MockitoBean`.
+2. Producer: mock `KafkaTemplate`; cover `completedFuture` and `failedFuture`.
+3. Integration: `@SpringBootTest` + `@EmbeddedKafka`; read back with `KafkaTestUtils`.
+4. Always test the invalid-input path and assert no Kafka call happens.
+5. Name tests `method_condition_expectedResult`; use given/when/then.</code></pre>
+<ul>
+<li><b>Controller skill</b> (video 60) encodes controller conventions: thin controllers, <code>@Valid</code> on bodies, correct status codes, OpenAPI annotations, errors via the advice, and delegating to the producer.</li>
+<li>Good skills are specific, include examples, and are reviewed like code. Treat generated output as a draft: run the tests.</li>
+</ul>
+
+<h2 id="q">Interview Q&amp;A</h2>
+<p class="sub">Tap a question to expand.</p>
+
+<h3>Testing</h3>
+<details><summary><span class="star">★</span> <code>@WebMvcTest</code> vs <code>@SpringBootTest</code>?</summary><div><code>@WebMvcTest</code> loads only the web slice (controllers, advice, converters), fast, needs mocks for services. <code>@SpringBootTest</code> loads the full context, use it for integration tests with real wiring and Kafka.</div></details>
+<details><summary><span class="star">★</span> <code>@Mock</code> vs <code>@MockBean</code>/<code>@MockitoBean</code>?</summary><div><code>@Mock</code> (Mockito) creates a plain mock, no Spring involved. <code>@MockBean</code> (now <code>@MockitoBean</code> from Boot 3.4) replaces a bean in the Spring context with a mock.</div></details>
+<details><summary><span class="star">★</span> How do you test code that publishes to Kafka?</summary><div>Unit: mock <code>KafkaTemplate</code> and stub the future (success and failure). Integration: <code>@EmbeddedKafka</code> or Testcontainers, call the endpoint, read the record back with a test consumer, assert topic, key, value, headers.</div></details>
+<details><summary><span class="star">★</span> Embedded Kafka vs Testcontainers?</summary><div>Embedded: no Docker, fast, in-JVM, but not the real broker distribution. Testcontainers: real Kafka in Docker, more faithful (also for KRaft/security configs), slower and requires Docker in CI. Reuse a container across tests for speed.</div></details>
+<details><summary>How do you assert that a message went to the right partition with the right key?</summary><div>Read the <code>ConsumerRecord</code> in the test and assert <code>key()</code>, <code>partition()</code> (same key must always yield the same partition), and <code>headers()</code>.</div></details>
+<details><summary>How do you test failure handling when Kafka is unavailable?</summary><div>Unit: stub <code>failedFuture</code>. Integration: point at a bad bootstrap server with small <code>max.block.ms</code>/<code>delivery.timeout.ms</code> and assert the error response or persisted-failure behavior.</div></details>
+<details><summary>What should you not mock?</summary><div>The thing under test, value objects, and simple data holders. Prefer real objects unless slow, non-deterministic or external. Over-mocking makes tests pass while production breaks.</div></details>
+<details><summary>What is contract testing and why use it for Kafka?</summary><div>Verifies that producer and consumer agree on message shape without running both (Pact, Spring Cloud Contract, or schema compatibility checks in a Schema Registry). It catches breaking payload changes early.</div></details>
+
+<h3>Situational</h3>
+<details><summary><span class="star">★</span> Your integration tests are flaky. What do you check?</summary><div>Shared consumer groups or topics between tests, missing <code>earliest</code> offset reset, fixed sleeps instead of Awaitility, unclosed consumers, port clashes, ordering assumptions across partitions, and test-time metadata delay on the first send.</div></details>
+<details><summary>The test suite takes 15 minutes. How do you speed it up?</summary><div>Push logic into unit and slice tests, share one Spring context and one Kafka container across classes, avoid <code>@DirtiesContext</code>, run tests in parallel where safe, and keep the integration tests to the critical paths.</div></details>
+<details><summary>How do you keep test data and topics isolated?</summary><div>Unique group ids and topic names per test class, delete or recreate topics in <code>@AfterEach</code> when needed, or seek to the end before each test.</div></details>
+
+<h3>OpenAPI and AI tooling</h3>
+<details><summary><span class="star">★</span> Why use OpenAPI? Code-first or contract-first?</summary><div>It gives a machine-readable contract for docs, client generation, validation and governance. Code-first is quick for one team; contract-first is better when several teams agree on the API before implementation.</div></details>
+<details><summary>How do you document errors and security in OpenAPI?</summary><div><code>@ApiResponse</code> per status with schemas, a shared error model, and a <code>SecurityScheme</code> (bearer/OAuth2) applied globally or per operation.</div></details>
+<details><summary>How do you version an API?</summary><div>URI (<code>/v1/...</code>), header or media type. Keep changes backward compatible, deprecate with notice, publish a separate OpenAPI doc per version.</div></details>
+<details><summary><span class="star">★</span> How do you use AI coding assistants responsibly?</summary><div>Spec first, small tasks, standing rules in <code>AGENTS.md</code>, task playbooks as skills, review every diff, rely on tests and CI as the gate, and never share secrets or proprietary data with unapproved tools.</div></details>
+<details><summary>AGENTS.md vs a skill: what goes where?</summary><div>Project-wide facts and rules that always apply go in AGENTS.md. Focused, occasionally needed procedures (how to write tests, how to add an endpoint) go in skills so they load only when relevant.</div></details>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>try{hljs.highlightAll()}catch(e){}</script>
+</body></html>

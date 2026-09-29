@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kafka Bible · Part 4 · Spring Kafka Consumer</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1c1c1e;--mut:#6b6b70;--line:#e4e4e2;--acc:#3b4cca;--code:#f1f1ef;--hot:#fff4d6;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141416;--fg:#e8e8ea;--mut:#9a9aa2;--line:#2a2a2e;--acc:#8b98ff;--code:#1e1e22;--hot:#2c2718}}
+:root[data-theme="dark"]{--bg:#141416;--fg:#e8e8ea;--mut:#9a9aa2;--line:#2a2a2e;--acc:#8b98ff;--code:#1e1e22;--hot:#2c2718}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 Georgia,"Times New Roman",serif}
+main{max-width:760px;margin:0 auto;padding:32px 20px 80px}
+h1{font:700 30px/1.2 system-ui,sans-serif;margin:0 0 6px}
+h2{font:650 21px/1.3 system-ui,sans-serif;margin:52px 0 4px;padding-top:20px;border-top:1px solid var(--line)}
+h3{font:600 15px/1.4 system-ui,sans-serif;margin:24px 0 6px}
+.sub{color:var(--mut);font:14px system-ui,sans-serif;margin:0 0 4px}
+.vid{color:var(--mut);font:13px system-ui,sans-serif;margin:0 0 12px}
+p,li{margin:6px 0}ul{padding-left:20px}
+code{font:13px ui-monospace,Menlo,Consolas,monospace;background:var(--code);padding:1px 5px;border-radius:3px}
+pre{background:var(--code);padding:12px 14px;border-radius:6px;overflow-x:auto;margin:10px 0;max-width:100%}
+pre code{padding:0;background:none;font-size:12.5px;line-height:1.55}
+table{border-collapse:collapse;width:100%;font:14px system-ui,sans-serif;display:block;overflow-x:auto}
+td,th{border-bottom:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}th{color:var(--mut);font-weight:600}
+nav{font:14px system-ui,sans-serif;margin:18px 0 0;display:flex;flex-wrap:wrap;gap:6px 16px}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+button{font:13px system-ui,sans-serif;background:none;color:var(--mut);border:1px solid var(--line);border-radius:5px;padding:4px 10px;cursor:pointer;float:right}
+.note{background:var(--hot);border-left:3px solid var(--acc);padding:8px 12px;margin:12px 0;font-size:15px}
+details{border-bottom:1px solid var(--line);padding:9px 0}
+summary{cursor:pointer;font:600 15px/1.5 system-ui,sans-serif;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";color:var(--acc);display:inline-block;width:18px}
+details[open] summary::before{content:"–"}
+details>div{padding:6px 0 4px 18px}
+.star{color:var(--acc);font-weight:700}
+</style>
+<style>
+:root{--k:#c2255c;--s:#0a7f4f;--c:#8a8a90;--n:#b35900;--t:#3b4cca;--a:#9c36b5}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--k:#ff8fa3;--s:#7ee0a8;--c:#7c7c86;--n:#ffb066;--t:#8b98ff;--a:#d6a3ff}}
+:root[data-theme="dark"]{--k:#ff8fa3;--s:#7ee0a8;--c:#7c7c86;--n:#ffb066;--t:#8b98ff;--a:#d6a3ff}
+.hljs-keyword,.hljs-literal,.hljs-built_in,.hljs-selector-tag{color:var(--k)}
+.hljs-string,.hljs-regexp{color:var(--s)}
+.hljs-comment{color:var(--c);font-style:italic}
+.hljs-number,.hljs-bullet{color:var(--n)}
+.hljs-title,.hljs-type,.hljs-class .hljs-title,.hljs-attr,.hljs-attribute,.hljs-variable,.hljs-property{color:var(--t)}
+.hljs-meta,.hljs-meta .hljs-keyword,.hljs-doctag,.hljs-symbol{color:var(--a)}
+</style></head><body><main>
+<button onclick="var r=document.documentElement;r.dataset.theme=(r.dataset.theme==='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches))?'light':'dark'">Theme</button>
+<h1>Kafka Bible · Part 4</h1>
+<p class="sub">Library Events consumer: listener, offsets, concurrency, Postgres, Flyway, JPA · course videos 61–84</p>
+<p class="sub"><span class="star">★</span> marks questions that are common in Walmart / JPMC style rounds. Assumes Spring Boot 3.x, Spring Kafka 3.x.</p>
+<nav><a href="#a">Architecture</a><a href="#l">@KafkaListener</a><a href="#de">Deserializers</a><a href="#u">Under the hood</a><a href="#g">Groups</a><a href="#o">Offsets</a><a href="#c">Concurrency</a><a href="#db">Postgres &amp; Flyway</a><a href="#jpa">JPA &amp; service</a><a href="#t">Testing</a><a href="#api">REST APIs</a><a href="#q">Q&amp;A</a></nav>
+
+<h2 id="a">1. Architecture, PRD, project setup</h2>
+<p class="vid">Videos 61–63</p>
+<ul>
+<li><b>Flow:</b> client → <i>Producer service</i> (REST) → Kafka topic <code>library-events</code> → <i>Consumer service</i> (<code>@KafkaListener</code>) → Postgres. Producer and consumer are decoupled and scale independently.</li>
+<li>Consumer PRD: consume events, deserialize, apply <b>NEW</b> (insert) and <b>UPDATE</b> (validate exists, then update) rules, persist, expose read and CRUD APIs, migrations via Flyway.</li>
+<li>Dependencies: <code>spring-kafka</code>, <code>spring-boot-starter-data-jpa</code>, <code>postgresql</code>, <code>flyway-core</code> (+ <code>flyway-database-postgresql</code> on Flyway 10+), <code>spring-boot-starter-web</code>, <code>validation</code>, <code>springdoc</code>, <code>spring-kafka-test</code>, Testcontainers.</li>
+</ul>
+
+<h2 id="l">2. Building the consumer with @KafkaListener</h2>
+<p class="vid">Videos 64–66</p>
+<pre><code class="language-java">@Component @Slf4j
+public class LibraryEventsConsumer {
+  private final ObjectMapper objectMapper;
+  private final LibraryEventService service;
+  // constructor omitted
+
+  @KafkaListener(topics = "${app.topic:library-events}", groupId = "library-events-group")
+  public void onMessage(ConsumerRecord&lt;Integer,String&gt; record) throws JsonProcessingException {
+    log.info("key={} partition={} offset={}", record.key(), record.partition(), record.offset());
+    LibraryEventDto dto = objectMapper.readValue(record.value(), LibraryEventDto.class);
+    service.processLibraryEvent(dto);
+  }
+}</code></pre>
+<pre><code class="language-yaml">spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: library-events-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.IntegerDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      ack-mode: batch          # default
+      concurrency: 1</code></pre>
+<ul>
+<li>Listener signatures can take the payload, <code>ConsumerRecord</code>, <code>@Header</code> values, <code>Acknowledgment</code>, or <code>Consumer</code>. Use <code>ConsumerRecord</code> when you need key, partition, offset and headers.</li>
+<li>Test manually: run the producer, POST an event, watch the consumer log the record (video 65).</li>
+</ul>
+
+<h2 id="de">3. StringDeserializer vs JsonDeserializer</h2>
+<table>
+<tr><th></th><th>String + ObjectMapper</th><th>JsonDeserializer</th></tr>
+<tr><td>Parsing</td><td>You parse in the listener; failures are visible in your code</td><td>Framework converts to the target type</td></tr>
+<tr><td>Config</td><td>Simple</td><td><code>spring.json.trusted.packages</code>, <code>spring.json.value.default.type</code>, <code>spring.json.use.type.headers=false</code> when producer and consumer classes differ</td></tr>
+<tr><td>Risk</td><td>Bad JSON throws inside listener (handled by the error handler)</td><td>Bad JSON fails <b>inside the consumer's poll</b>, so the same record is retried forever unless wrapped</td></tr>
+</table>
+<div class="note"><b>Poison pill:</b> wrap the real deserializer with <code>ErrorHandlingDeserializer</code> (<code>value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer</code>, <code>spring.deserializer.value.delegate.class: ...JsonDeserializer</code>). The failure becomes a handled exception (retry/DLT) instead of an endless poll loop.</div>
+<ul>
+<li>Use a separate <code>LibraryEventDto</code> for the wire contract; the DB entity stays internal so the two can evolve independently.</li>
+</ul>
+
+<h2 id="u">4. How the Spring Kafka consumer works, and autoconfiguration</h2>
+<p class="vid">Videos 68–69</p>
+<ul>
+<li><code>KafkaListenerAnnotationBeanPostProcessor</code> finds <code>@KafkaListener</code> methods and registers them in the <code>KafkaListenerEndpointRegistry</code>.</li>
+<li>The <code>ConcurrentKafkaListenerContainerFactory</code> builds a <code>ConcurrentMessageListenerContainer</code>, which spawns N <code>KafkaMessageListenerContainer</code>s. <b>Each has its own <code>KafkaConsumer</code> and its own thread</b> running the poll loop.</li>
+<li><b>Loop:</b> <code>poll()</code> → batch of records → call your listener one record at a time → commit offsets per ack mode → poll again. A single consumer thread processes sequentially, and <code>KafkaConsumer</code> itself is not thread-safe.</li>
+<li>Autoconfig (<code>KafkaAutoConfiguration</code> + <code>KafkaAnnotationDrivenConfiguration</code>): creates <code>ConsumerFactory</code>, the container factory and <code>@EnableKafka</code> behavior from <code>spring.kafka.consumer.*</code> and <code>spring.kafka.listener.*</code>. Boot sets <code>enable.auto.commit=false</code>, so the container manages commits. Define your own factory bean to customize (error handler, batch mode, per-listener settings).</li>
+<li>Default error handling: <code>DefaultErrorHandler</code> retries a failing record (default 10 attempts total, no delay), then logs and moves on. Configure back-off and a dead-letter recoverer for real systems.</li>
+</ul>
+
+<h2 id="g">5. Consumer groups and rebalance (hands-on)</h2>
+<p class="vid">Video 70</p>
+<ul>
+<li>Run two instances (<code>--server.port=8081/8082</code>) with the same <code>group-id</code>: the 3 partitions split between them. Stop one: its partitions are <b>revoked and reassigned</b> (visible in logs as "partitions revoked / assigned").</li>
+<li>A different <code>group-id</code> receives all messages independently (fan-out). Same group load-balances (competing consumers).</li>
+<li>Inspect: <code>kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group library-events-group</code> shows partition assignment, current offset, log-end offset, and <b>lag</b>.</li>
+<li>Hook rebalance events with <code>ConsumerAwareRebalanceListener</code> or <code>ConsumerRebalanceListener</code> (e.g. flush state before partitions are revoked).</li>
+</ul>
+
+<h2 id="o">6. Offset management: default and manual</h2>
+<p class="vid">Videos 71–72</p>
+<table>
+<tr><th>AckMode</th><th>Commit happens</th></tr>
+<tr><td><code>BATCH</code> (default)</td><td>After all records from one <code>poll()</code> were processed</td></tr>
+<tr><td><code>RECORD</code></td><td>After each record's listener returns</td></tr>
+<tr><td><code>TIME</code> / <code>COUNT</code> / <code>COUNT_TIME</code></td><td>After a period / number of records</td></tr>
+<tr><td><code>MANUAL</code></td><td>Queued on <code>ack.acknowledge()</code>, committed with the batch</td></tr>
+<tr><td><code>MANUAL_IMMEDIATE</code></td><td>Committed immediately on <code>acknowledge()</code></td></tr>
+</table>
+<pre><code class="language-java">// spring.kafka.listener.ack-mode: manual_immediate
+@KafkaListener(topics = "library-events")
+public void onMessage(ConsumerRecord&lt;Integer,String&gt; record, Acknowledgment ack) throws Exception {
+  service.processLibraryEvent(objectMapper.readValue(record.value(), LibraryEventDto.class));
+  ack.acknowledge();      // only after the DB commit succeeded
+}</code></pre>
+<ul>
+<li>If the listener throws, the offset is <b>not</b> committed for that record; the error handler decides retry vs. skip vs. DLT.</li>
+<li>Commit after successful processing gives <b>at-least-once</b>: a crash between DB commit and offset commit causes redelivery, so the consumer must be idempotent.</li>
+</ul>
+
+<h2 id="c">7. Concurrent consumers</h2>
+<p class="vid">Video 73</p>
+<pre><code class="language-java">@KafkaListener(topics = "library-events", concurrency = "3")     // or spring.kafka.listener.concurrency: 3</code></pre>
+<ul>
+<li>Creates 3 consumer threads in one JVM, each with its own consumer in the same group. Partitions are spread across them.</li>
+<li><b>Ceiling:</b> total active consumers (all threads on all instances) ≤ partition count. Extra threads sit idle.</li>
+<li>Ordering is still per partition, because each partition is handled by exactly one thread.</li>
+<li>Threads share the JVM: listener code and services must be thread-safe. Scale by threads for CPU or DB-bound work per JVM; scale by instances for resilience and capacity.</li>
+</ul>
+
+<h2 id="db">8. Postgres and Flyway</h2>
+<p class="vid">Videos 74–75</p>
+<pre><code class="language-yaml">spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/library
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate.ddl-auto: validate        # Flyway owns the schema; Hibernate only checks it
+    open-in-view: false
+  flyway:
+    enabled: true</code></pre>
+<pre><code class="language-sql">-- src/main/resources/db/migration/V1__create_library_tables.sql
+CREATE TABLE library_event (
+  library_event_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  event_type       VARCHAR(20) NOT NULL
+);
+CREATE TABLE book (
+  book_id          INT PRIMARY KEY,
+  book_name        VARCHAR(255) NOT NULL,
+  book_author      VARCHAR(255) NOT NULL,
+  library_event_id INT REFERENCES library_event(library_event_id)
+);</code></pre>
+<ul>
+<li>Flyway applies versioned scripts <code>V{n}__description.sql</code> in order and records them with checksums in <code>flyway_schema_history</code>. <b>Never edit an applied migration</b> (checksum mismatch fails startup); add <code>V2__...</code> instead. <code>R__</code> scripts are repeatable (views, procs).</li>
+<li>Why Flyway over <code>ddl-auto=update</code>: repeatable, reviewed, versioned, safe across environments; <code>update</code> is unpredictable and never drops or renames correctly.</li>
+</ul>
+
+<h2 id="jpa">9. Entities, repository, service</h2>
+<p class="vid">Videos 76–78</p>
+<pre><code class="language-java">@Entity @Getter @Setter @NoArgsConstructor
+public class LibraryEvent {
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Integer libraryEventId;
+  @Enumerated(EnumType.STRING) private LibraryEventType eventType;
+  @OneToOne(mappedBy = "libraryEvent", cascade = CascadeType.ALL) private Book book;
+}
+@Entity @Getter @Setter @NoArgsConstructor
+public class Book {
+  @Id private Integer bookId; private String bookName; private String bookAuthor;
+  @OneToOne @JoinColumn(name = "library_event_id") private LibraryEvent libraryEvent;
+}
+public interface LibraryEventRepository extends JpaRepository&lt;LibraryEvent, Integer&gt; {}
+
+@Service @Transactional
+public class LibraryEventService {
+  private final LibraryEventRepository repo;
+  public void processLibraryEvent(LibraryEventDto dto) {
+    switch (dto.type()) {
+      case NEW    -&gt; save(dto);
+      case UPDATE -&gt; { validate(dto); save(dto); }
+    }
+  }
+  private void validate(LibraryEventDto dto) {
+    if (dto.libraryEventId() == null) throw new IllegalArgumentException("libraryEventId required for UPDATE");
+    repo.findById(dto.libraryEventId()).orElseThrow(() -&gt; new IllegalArgumentException("Unknown library event"));
+  }
+  private void save(LibraryEventDto dto) { /* map DTO to entity, set book.libraryEvent, repo.save(entity) */ }
+}</code></pre>
+<ul>
+<li>Business rules live in the service, not the listener. The listener only deserializes and delegates.</li>
+<li>Set the back-reference (<code>book.setLibraryEvent(event)</code>) before saving, or the FK stays null.</li>
+<li><b>Idempotency:</b> UPDATE is naturally idempotent. NEW is not: redelivery creates a duplicate unless you enforce a unique business key (e.g. unique <code>book_id</code>) or a processed-event table.</li>
+</ul>
+
+<h2 id="t">10. End-to-end and integration testing</h2>
+<p class="vid">Videos 79–81</p>
+<ul>
+<li><b>Manual E2E:</b> POST to producer → check consumer log → query Postgres → check group lag. UPDATE with an unknown id should fail the business rule.</li>
+<li><b>AGENTS.md</b> for the consumer: tech stack, build/test commands, "listener stays thin, logic in service", "schema changes only via new Flyway migration", "consumer must be idempotent".</li>
+</ul>
+<pre><code class="language-java">@SpringBootTest
+@EmbeddedKafka(topics = "library-events", partitions = 3, bootstrapServersProperty = "spring.kafka.bootstrap-servers")
+@Testcontainers
+class LibraryEventsConsumerIntegrationTest {
+  @Container @ServiceConnection static PostgreSQLContainer&lt;?&gt; pg = new PostgreSQLContainer&lt;&gt;("postgres:16");
+
+  @Autowired KafkaTemplate&lt;Integer,String&gt; kafkaTemplate;
+  @Autowired KafkaListenerEndpointRegistry registry;
+  @Autowired EmbeddedKafkaBroker broker;
+  @Autowired LibraryEventRepository repo;
+
+  @BeforeEach void waitForAssignment() {
+    registry.getListenerContainers().forEach(c -&gt; ContainerTestUtils.waitForAssignment(c, broker.getPartitionsPerTopic()));
+  }
+
+  @Test
+  void newEvent_isPersisted() {
+    String json = "{\"libraryEventId\":null,\"type\":\"NEW\",\"book\":{\"bookId\":1,\"bookName\":\"Kafka\",\"bookAuthor\":\"Dilip\"}}";
+    kafkaTemplate.send("library-events", 1, json);
+    await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -&gt; assertEquals(1, repo.count()));
+  }
+}</code></pre>
+<ul>
+<li>Wait for partition assignment first, or the message may be sent before the consumer joins. Use Awaitility (or <code>verify(service, timeout(5000))</code> on a spy) instead of <code>sleep</code>. Test the failure path too (invalid UPDATE ends up in retry/DLT).</li>
+</ul>
+
+<h2 id="api">11. REST endpoints: Book CRUD, Swagger, GET library events</h2>
+<p class="vid">Videos 82–84</p>
+<pre><code class="language-java">@RestController @RequestMapping("/books")
+class BookController {
+  @GetMapping("/{id}")  ResponseEntity&lt;BookDto&gt; get(@PathVariable Integer id)        { /* 200 or 404 */ }
+  @PostMapping          ResponseEntity&lt;BookDto&gt; create(@RequestBody @Valid BookDto b) { /* 201 + Location */ }
+  @PutMapping("/{id}")  ResponseEntity&lt;BookDto&gt; update(@PathVariable Integer id, @RequestBody @Valid BookDto b) { /* 200 or 404 */ }
+  @DeleteMapping("/{id}") ResponseEntity&lt;Void&gt; delete(@PathVariable Integer id)      { /* 204 */ }
+}
+
+@GetMapping("/libraryevents")                                   // GET /libraryevents?page=0&amp;size=10&amp;sort=libraryEventId,desc
+public Page&lt;LibraryEventDto&gt; list(Pageable pageable) { return repo.findAll(pageable).map(mapper::toDto); }</code></pre>
+<ul>
+<li>Return <b>DTOs, not entities</b> (no lazy-loading surprises, no schema leakage). Map "not found" to 404 in a <code>@RestControllerAdvice</code>.</li>
+<li>Paginate collection endpoints. Avoid N+1 with <code>@EntityGraph</code> or fetch joins; keep <code>open-in-view=false</code>.</li>
+<li>Swagger: add <code>springdoc-openapi-starter-webmvc-ui</code>, annotate with <code>@Tag</code>/<code>@Operation</code>, UI at <code>/swagger-ui.html</code>. Disable in prod.</li>
+</ul>
+
+<h2 id="q">Interview Q&amp;A</h2>
+<p class="sub">Tap a question to expand.</p>
+
+<h3>Consumer fundamentals</h3>
+<details><summary><span class="star">★</span> How does <code>@KafkaListener</code> work internally?</summary><div>A bean post-processor registers each listener with the endpoint registry; the container factory creates a concurrent container that starts N message-listener containers, each running a <code>KafkaConsumer</code> poll loop on its own thread and calling your method for each record, then committing offsets per ack mode.</div></details>
+<details><summary><span class="star">★</span> When are offsets committed by default in Spring Kafka?</summary><div><code>enable.auto.commit</code> is false; the container commits with <code>AckMode.BATCH</code>, after all records from the last poll were processed successfully.</div></details>
+<details><summary><span class="star">★</span> AckMode RECORD vs BATCH vs MANUAL: trade-offs?</summary><div>RECORD: more commits, less reprocessing after failure. BATCH: fewer commits, larger replay window. MANUAL/MANUAL_IMMEDIATE: you control exactly when (e.g. after DB commit or async work completes) at the cost of complexity.</div></details>
+<details><summary><span class="star">★</span> A consumer crashes after saving to DB but before committing the offset. What happens?</summary><div>The record is redelivered and processed again (at-least-once). Make the handler idempotent: upsert, unique constraint, or a processed-event-id table checked in the same DB transaction.</div></details>
+<details><summary>How do you get exactly-once effect end to end?</summary><div>Kafka-to-Kafka: idempotent producer + transactions + <code>read_committed</code>. Kafka-to-DB: at-least-once delivery + idempotent write (or store the offset in the same DB transaction and seek on startup).</div></details>
+<details><summary><span class="star">★</span> What is concurrency in <code>@KafkaListener</code>? What limits it?</summary><div>Number of consumer threads per container. Total active consumers across the group cannot exceed partitions; each partition still has one owner, so per-partition ordering holds.</div></details>
+<details><summary>Can one consumer instance handle multiple topics or partitions?</summary><div>Yes. <code>topics = {"a","b"}</code> or a pattern; a consumer gets one or more partitions and processes them in a single thread, interleaving partitions.</div></details>
+<details><summary>What is a batch listener?</summary><div><code>spring.kafka.listener.type=batch</code> hands the listener a <code>List</code> of records per poll, useful for bulk DB inserts. Failure handling is more complex (<code>BatchListenerFailedException</code> to mark the failing index).</div></details>
+
+<h3>Deserialization and errors</h3>
+<details><summary><span class="star">★</span> What is a poison pill and how do you handle it?</summary><div>A record that always fails (e.g. undeserializable). With <code>JsonDeserializer</code> directly, the poll loop keeps failing on that offset. Use <code>ErrorHandlingDeserializer</code> plus <code>DefaultErrorHandler</code> with a <code>DeadLetterPublishingRecoverer</code> to send it to a DLT and move on.</div></details>
+<details><summary>Why did JsonDeserializer throw "class not in trusted packages"?</summary><div>It only instantiates trusted types. Set <code>spring.json.trusted.packages</code> (or the specific package), or use a default type and disable type headers when producer and consumer DTO classes differ.</div></details>
+<details><summary>Which exceptions should be retried vs sent straight to the DLT?</summary><div>Retry transient ones (DB down, timeouts) with back-off. Do not retry non-retryable ones (deserialization, validation, <code>IllegalArgumentException</code>); classify them with <code>addNotRetryableExceptions</code>.</div></details>
+
+<h3>Groups, rebalance, scaling</h3>
+<details><summary><span class="star">★</span> Two instances with the same group id and 3 partitions. What happens when one dies?</summary><div>The coordinator detects missed heartbeats or session timeout, triggers a rebalance, and the survivor gets the orphaned partitions. Uncommitted records are re-read from the last committed offset.</div></details>
+<details><summary><span class="star">★</span> Consumer lag is growing. What do you do?</summary><div>Check lag per partition. Find the bottleneck (usually the DB or downstream call), batch writes, raise concurrency up to partitions, add instances, add partitions if capped, check for a stuck or poison record on one partition, and check rebalance storms.</div></details>
+<details><summary>Processing sometimes takes 10 minutes and the consumer keeps getting kicked out. Fix?</summary><div>It exceeds <code>max.poll.interval.ms</code>. Reduce <code>max.poll.records</code>, raise the interval, or hand long work to an executor and pause/resume the partition; better, make the work shorter or asynchronous.</div></details>
+<details><summary>How do you preserve ordering with concurrency?</summary><div>Key by entity id so its events share a partition; one partition is handled by one thread. Do not hand records to a free thread pool inside the listener unless you partition the work by key yourself.</div></details>
+
+<h3>Data layer and APIs</h3>
+<details><summary><span class="star">★</span> Why Flyway (or Liquibase) instead of <code>ddl-auto=update</code>?</summary><div>Versioned, reviewable, repeatable migrations with history and checksums across all environments. <code>ddl-auto</code> is nondeterministic and unsafe in production; use <code>validate</code> to catch drift.</div></details>
+<details><summary>What happens if you edit an already-applied Flyway migration?</summary><div>Checksum validation fails on startup. Fix by adding a new migration, or <code>flyway repair</code> only when you understand the impact.</div></details>
+<details><summary>Entity vs DTO: why not expose entities?</summary><div>Entities are persistence models: lazy relations, internal fields, and schema coupling. DTOs give a stable API contract and avoid serialization problems and N+1 surprises.</div></details>
+<details><summary>What is the N+1 problem and how do you fix it?</summary><div>One query for the parent list plus one per child. Fix with fetch joins, <code>@EntityGraph</code>, batch fetching, or projections.</div></details>
+<details><summary>Why <code>@Transactional</code> on the service and not the listener?</summary><div>Keeps the transaction boundary around business logic and DB work, and lets you commit the offset only after the transaction completes. Note that a DB transaction and Kafka offset commit are not atomic, hence idempotency.</div></details>
+<details><summary>How would you test the consumer end to end?</summary><div>Embedded Kafka or Testcontainers Kafka + Testcontainers Postgres, wait for partition assignment, publish a record, assert DB state with Awaitility, and separately test failure and DLT behavior.</div></details>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>try{hljs.highlightAll()}catch(e){}</script>
+</body></html>

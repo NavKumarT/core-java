@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kafka Bible · Part 8 · Depth &amp; Gaps: Internals, Sizing, Security, Schemas</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1c1c1e;--mut:#6b6b70;--line:#e4e4e2;--acc:#3b4cca;--code:#f1f1ef;--hot:#fff4d6;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141416;--fg:#e8e8ea;--mut:#9a9aa2;--line:#2a2a2e;--acc:#8b98ff;--code:#1e1e22;--hot:#2c2718}}
+:root[data-theme="dark"]{--bg:#141416;--fg:#e8e8ea;--mut:#9a9aa2;--line:#2a2a2e;--acc:#8b98ff;--code:#1e1e22;--hot:#2c2718}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 Georgia,"Times New Roman",serif}
+main{max-width:760px;margin:0 auto;padding:32px 20px 80px}
+h1{font:700 30px/1.2 system-ui,sans-serif;margin:0 0 6px}
+h2{font:650 21px/1.3 system-ui,sans-serif;margin:52px 0 4px;padding-top:20px;border-top:1px solid var(--line)}
+h3{font:600 15px/1.4 system-ui,sans-serif;margin:24px 0 6px}
+.sub{color:var(--mut);font:14px system-ui,sans-serif;margin:0 0 4px}
+p,li{margin:6px 0}ul{padding-left:20px}
+code{font:13px ui-monospace,Menlo,Consolas,monospace;background:var(--code);padding:1px 5px;border-radius:3px}
+pre{background:var(--code);padding:12px 14px;border-radius:6px;overflow-x:auto;margin:10px 0;max-width:100%}
+pre code{padding:0;background:none;font-size:12.5px;line-height:1.55}
+table{border-collapse:collapse;width:100%;font:14px system-ui,sans-serif;display:block;overflow-x:auto}
+td,th{border-bottom:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}th{color:var(--mut);font-weight:600}
+nav{font:14px system-ui,sans-serif;margin:18px 0 0;display:flex;flex-wrap:wrap;gap:6px 16px}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+button{font:13px system-ui,sans-serif;background:none;color:var(--mut);border:1px solid var(--line);border-radius:5px;padding:4px 10px;cursor:pointer;float:right}
+.note{background:var(--hot);border-left:3px solid var(--acc);padding:8px 12px;margin:12px 0;font-size:15px}
+details{border-bottom:1px solid var(--line);padding:9px 0}
+summary{cursor:pointer;font:600 15px/1.5 system-ui,sans-serif;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";color:var(--acc);display:inline-block;width:18px}
+details[open] summary::before{content:"–"}
+details>div{padding:6px 0 4px 18px}
+.star{color:var(--acc);font-weight:700}
+</style>
+<style>
+:root{--k:#c2255c;--s:#0a7f4f;--c:#8a8a90;--n:#b35900;--t:#3b4cca;--a:#9c36b5}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--k:#ff8fa3;--s:#7ee0a8;--c:#7c7c86;--n:#ffb066;--t:#8b98ff;--a:#d6a3ff}}
+:root[data-theme="dark"]{--k:#ff8fa3;--s:#7ee0a8;--c:#7c7c86;--n:#ffb066;--t:#8b98ff;--a:#d6a3ff}
+.hljs-keyword,.hljs-literal,.hljs-built_in,.hljs-selector-tag{color:var(--k)}
+.hljs-string,.hljs-regexp{color:var(--s)}
+.hljs-comment{color:var(--c);font-style:italic}
+.hljs-number,.hljs-bullet{color:var(--n)}
+.hljs-title,.hljs-type,.hljs-class .hljs-title,.hljs-attr,.hljs-attribute,.hljs-variable,.hljs-property{color:var(--t)}
+.hljs-meta,.hljs-meta .hljs-keyword,.hljs-doctag,.hljs-symbol{color:var(--a)}
+</style></head><body><main>
+<button onclick="var r=document.documentElement;r.dataset.theme=(r.dataset.theme==='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches))?'light':'dark'">Theme</button>
+<h1>Kafka Bible · Part 8</h1>
+<p class="sub">Depth and gap-fill: what the course skims but senior interviews probe</p>
+<p class="sub"><span class="star">★</span> = frequently asked. Reported Walmart hiring-manager rounds ask why partitions exist, what limits throughput, and how consumers and partitions interact. This part answers those in depth.</p>
+<nav><a href="#thr">Throughput &amp; sizing</a><a href="#brk">Broker internals</a><a href="#grp">Group protocol &amp; offsets</a><a href="#ord">Ordering</a><a href="#cmp">Compaction &amp; retention</a><a href="#vs">Kafka vs others</a><a href="#sec">Security</a><a href="#sch">Schemas</a><a href="#big">Large messages</a><a href="#q">Q&amp;A</a></nav>
+
+<h2 id="thr">1. Why partitions exist, throughput factors, and sizing</h2>
+<p><b>Why partitions:</b> (1) parallel writes and reads across brokers and consumers, (2) horizontal storage scaling beyond one machine, (3) a defined scope for ordering. One log on one machine would cap throughput and size.</p>
+<h3>What limits throughput</h3>
+<table>
+<tr><th>Layer</th><th>Levers</th></tr>
+<tr><td>Producer</td><td>Batching (<code>linger.ms</code>, <code>batch.size</code>), compression, <code>acks</code>, async vs sync sends, message size, serialization cost, partition count, network</td></tr>
+<tr><td>Broker</td><td>Disk (sequential write speed), page cache size, network bandwidth, replication factor (each write is copied RF times), number of partitions per broker, <code>num.network.threads</code> / <code>num.io.threads</code>, TLS overhead</td></tr>
+<tr><td>Consumer</td><td>Partitions ≥ consumers, per-record processing time (usually the real bottleneck: DB or API calls), <code>max.poll.records</code>, fetch sizes, batch writes downstream</td></tr>
+</table>
+<div class="note"><b>Partition sizing rule:</b> <code>partitions ≥ max(T / Tp, T / Tc)</code> where T is target throughput, Tp what one partition sustains on the producer side, Tc what one consumer sustains. Example (illustrative): target 100 MB/s, producer measured at 10 MB/s per partition, consumer at 5 MB/s per partition → at least 20 partitions. Add headroom (1.5–2×) because partitions can be added but never removed, and adding them remaps keys.</div>
+<ul>
+<li><b>Consumers vs partitions:</b> throughput scales with consumers only up to the partition count. Beyond that extra consumers are idle. More partitions do not help if the bottleneck is a slow downstream.</li>
+<li><b>Too many partitions cost:</b> file handles and memory per partition, slower controller work and leader election after failures, more replication traffic and end-to-end latency, longer recovery. Traditional guidance was a few thousand partitions per broker; KRaft raises the cluster ceiling, but per-broker cost remains.</li>
+<li><b>Measure, do not guess:</b> <code>kafka-producer-perf-test.sh</code> and <code>kafka-consumer-perf-test.sh</code> against a production-like cluster, then size from real numbers.</li>
+</ul>
+
+<h2 id="brk">2. Broker internals</h2>
+<ul>
+<li><b>Request path (produce):</b> network thread reads the request → request queue → I/O thread appends to the partition log (into the OS page cache) → for <code>acks=all</code> the request waits in <b>purgatory</b> until followers catch up → response. Fetches work similarly.</li>
+<li><b>Storage:</b> each partition = segments (<code>.log</code>, sparse <code>.index</code>, <code>.timeindex</code>). Lookup: find the segment by base offset, binary-search the sparse index, scan forward. Reads and writes are sequential.</li>
+<li><b>Page cache, not fsync:</b> Kafka writes to the OS cache and lets the OS flush. Durability comes from <b>replication</b>, not per-message fsync. Keep the JVM heap modest (around 6 GB) and leave RAM for the page cache; consumers reading recent data are served from memory.</li>
+<li><b>Zero-copy:</b> <code>sendfile</code> moves bytes page cache → socket without copying through user space. <b>With TLS the broker must encrypt in user space, so zero-copy is lost</b> and CPU and latency rise.</li>
+<li><b>Replication:</b> followers <b>fetch</b> from the leader like consumers. The leader tracks each follower's log end offset (LEO). <b>High watermark (HW)</b> = the smallest LEO across the ISR; consumers only read below it. Followers learn the HW from fetch responses.</li>
+<li><b>Leader epoch:</b> a counter incremented at every leader change. After a crash, a follower asks the new leader for the end offset of its last epoch and truncates to that, avoiding the old HW-based truncation bug that could cause divergent or lost data.</li>
+<li><b>ISR dynamics:</b> a follower lagging longer than <code>replica.lag.time.max.ms</code> leaves the ISR and rejoins when caught up. Flapping ISR usually means slow disks, network or GC.</li>
+<li><b>Controller (KRaft):</b> one active controller from the quorum manages broker registration, leader election and metadata, writing everything to <code>__cluster_metadata</code>. Brokers replicate that log. Clients learn changes via metadata requests, and a <code>NotLeaderOrFollower</code> error triggers a refresh.</li>
+<li><b>Rack awareness and follower fetching:</b> <code>broker.rack</code> spreads replicas across racks/AZs; with <code>replica.selector.class</code> consumers can fetch from the closest replica (KIP-392) to cut cross-AZ traffic.</li>
+<li><b>Tiered storage</b> (KIP-405, production-ready since 3.9): older segments move to object storage, so local disks hold only hot data.</li>
+</ul>
+
+<h2 id="grp">3. Group protocol, offsets, lag</h2>
+<ul>
+<li><b>Coordinator:</b> for each group, the leader of partition <code>hash(group.id) % 50</code> of <code>__consumer_offsets</code> is the group coordinator.</li>
+<li><b>Classic protocol:</b> members send <b>JoinGroup</b>; the coordinator picks a group leader (a consumer) which computes assignments and returns them via <b>SyncGroup</b>. Each rebalance bumps the <b>generation id</b>; commits from an old generation fail with <code>CommitFailedException</code>. Eager assignors stop everyone; cooperative ones revoke only moved partitions.</li>
+<li><b>New protocol (KIP-848, GA in Kafka 4.0):</b> assignment moves to the broker-side coordinator, members reconcile incrementally, no global stop-the-world barrier.</li>
+<li><b>Offset expiry gotcha:</b> committed offsets of a group with <b>no active members</b> are deleted after <code>offsets.retention.minutes</code> (default 7 days). A service that was down for longer restarts and falls back to <code>auto.offset.reset</code>: <code>earliest</code> reprocesses everything, <code>latest</code> silently skips backlog.</li>
+<li><b>Lag</b> = log-end offset − committed offset, per partition. Track offset lag and, for SLAs, time lag (age of the oldest unprocessed record).</li>
+</ul>
+<pre><code class="language-bash">kafka-consumer-groups.sh --bootstrap-server b:9092 --describe --group library-events-group
+# group must be inactive to reset (stop consumers first). Preview with --dry-run, then --execute
+kafka-consumer-groups.sh --bootstrap-server b:9092 --group g --topic t --reset-offsets --to-datetime 2026-09-01T00:00:00.000 --dry-run
+kafka-consumer-groups.sh --bootstrap-server b:9092 --group g --topic t --reset-offsets --shift-by -1000 --execute</code></pre>
+
+<h2 id="ord">4. Ordering: what guarantees it and what breaks it</h2>
+<table>
+<tr><th>Breaks ordering</th><th>Fix</th></tr>
+<tr><td>Related events on different partitions</td><td>Same key → same partition</td></tr>
+<tr><td>Producer retries with <code>max.in.flight &gt; 1</code>, no idempotence</td><td>Idempotence on (in-flight ≤ 5) or in-flight = 1</td></tr>
+<tr><td>Consumer hands records to a thread pool</td><td>Process sequentially per partition, or shard work by key to a fixed executor</td></tr>
+<tr><td>Retry topics or DLT reprocessing</td><td>Blocking retries for ordered flows; version or timestamp checks in the consumer</td></tr>
+<tr><td>Partition count increased</td><td>Plan capacity up front; migrate to a new topic when needed</td></tr>
+<tr><td>Multiple producers for one key without coordination</td><td>Single writer per entity, or include a version/sequence in the event</td></tr>
+</table>
+
+<h2 id="cmp">5. Log compaction and retention details</h2>
+<ul>
+<li><b>Compaction</b> (<code>cleanup.policy=compact</code>): a cleaner thread keeps the latest value per key in the closed segments. The active segment is never compacted. Offsets are preserved (gaps appear). A <b>tombstone</b> (key with null value) deletes the key and is itself removed after <code>delete.retention.ms</code> (24 h). Trigger tuned by <code>min.cleanable.dirty.ratio</code> (0.5). Consumers near the head still see every update.</li>
+<li>Use for: latest-state topics (inventory per SKU, customer profile), changelogs, <code>__consumer_offsets</code>. Not for event history you must keep whole.</li>
+<li><b>Retention gotcha:</b> deletion works on <b>closed segments</b> only. A low-traffic topic with a 1 GB segment may keep data far longer than <code>retention.ms</code> because the segment never rolls. Set <code>segment.ms</code> (and check <code>log.retention.check.interval.ms</code>).</li>
+<li>Retention by time or bytes applies per partition. Slow consumers whose lag exceeds retention lose data permanently (offset out of range → reset policy applies).</li>
+</ul>
+
+<h2 id="vs">6. Kafka vs RabbitMQ vs SQS vs Pulsar vs a database</h2>
+<table>
+<tr><th></th><th>Kafka</th><th>RabbitMQ</th><th>SQS</th></tr>
+<tr><td>Model</td><td>Partitioned retained log, consumers pull, replay</td><td>Broker routes via exchanges, push, message removed after ack</td><td>Managed queue, visibility timeout</td></tr>
+<tr><td>Ordering</td><td>Per partition</td><td>Per queue (weakens with competing consumers)</td><td>FIFO queues only</td></tr>
+<tr><td>Replay</td><td>Yes (offset seek)</td><td>No (unless streams plugin)</td><td>No</td></tr>
+<tr><td>Throughput</td><td>Very high</td><td>Moderate</td><td>High, managed</td></tr>
+<tr><td>Best for</td><td>Event streaming, CDC, audit, fan-out to many consumers</td><td>Task queues, complex routing, request/response</td><td>Simple decoupling, no ops</td></tr>
+</table>
+<ul>
+<li><b>Pulsar:</b> separates serving (brokers) from storage (BookKeeper), native multi-tenancy and geo-replication, both queue and stream semantics; smaller ecosystem.</li>
+<li><b>Do not use Kafka when:</b> you need per-message TTL, priority queues, complex routing, request/response, or tiny volume where operating a cluster outweighs the benefit. Kafka is also not a general database; it is a log.</li>
+</ul>
+
+<h2 id="sec">7. Security (essential for fintech interviews)</h2>
+<ul>
+<li><b>In transit:</b> TLS on client and inter-broker listeners. <b>Authentication:</b> mTLS, SASL/SCRAM-SHA-512, SASL/OAUTHBEARER, SASL/GSSAPI (Kerberos), SASL/PLAIN (only over TLS). <b>Authorization:</b> ACLs per principal on topics, groups and cluster.</li>
+<li><b>At rest:</b> Kafka does not encrypt log files; use disk or volume encryption. For sensitive fields (PII, card data) encrypt or tokenize <b>before publishing</b>, and treat topics as long-lived copies of data (retention, right-to-erasure, compaction with tombstones).</li>
+<li><b>Multi-tenancy:</b> topic naming conventions, ACLs, and <b>quotas</b> (<code>producer_byte_rate</code>, <code>consumer_byte_rate</code>, <code>request_percentage</code>) so one noisy client cannot starve others.</li>
+</ul>
+<pre><code class="language-yaml">spring:
+  kafka:
+    security.protocol: SASL_SSL
+    ssl:
+      trust-store-location: file:/etc/ssl/truststore.jks
+      trust-store-password: ${TRUSTSTORE_PASSWORD}
+    properties:
+      sasl.mechanism: SCRAM-SHA-512
+      sasl.jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="${KAFKA_USER}" password="${KAFKA_PASSWORD}";</code></pre>
+<pre><code class="language-bash">kafka-acls.sh --bootstrap-server b:9092 --add --allow-principal User:library-producer --operation Write --operation Describe --topic library-events
+kafka-acls.sh --bootstrap-server b:9092 --add --allow-principal User:library-consumer --operation Read --topic library-events --group library-events-group</code></pre>
+
+<h2 id="sch">8. Schemas, Avro and Schema Registry</h2>
+<ul>
+<li>JSON is easy but untyped and verbose. <b>Avro/Protobuf</b> give compact binary, explicit schemas and enforced evolution.</li>
+<li><b>Schema Registry</b> stores versioned schemas per <b>subject</b> (default <code>&lt;topic&gt;-value</code>). Each message carries a magic byte plus a 4-byte schema id; the deserializer fetches and caches the schema.</li>
+<li><b>Compatibility modes:</b> <code>BACKWARD</code> (default; new schema can read old data: add fields with defaults, remove fields; upgrade consumers first), <code>FORWARD</code> (old readers can read new data; upgrade producers first), <code>FULL</code> (both), <code>NONE</code>; the <code>_TRANSITIVE</code> variants check against all versions, not just the last.</li>
+<li>Safe changes: add optional field with default. Breaking: rename or retype a field, add required field with no default. For a truly breaking change, publish a <b>new topic/version</b> and migrate consumers.</li>
+<li>Spring config: <code>value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer</code>, <code>properties: schema.registry.url</code>, and <code>specific.avro.reader=true</code> on the consumer.</li>
+</ul>
+
+<h2 id="big">9. Large messages</h2>
+<ul>
+<li>Preferred: <b>claim check</b>: store the payload in object storage or a DB, send the reference plus metadata. Also compress; avoid chunking unless unavoidable.</li>
+<li>If you must raise limits, change the whole chain or it fails somewhere: producer <code>max.request.size</code>, broker <code>message.max.bytes</code> (or topic <code>max.message.bytes</code>), <code>replica.fetch.max.bytes</code>, consumer <code>max.partition.fetch.bytes</code> and <code>fetch.max.bytes</code>. Large records also hurt batching, memory and rebalances.</li>
+</ul>
+
+<h2 id="q">Interview Q&amp;A</h2>
+<p class="sub">Tap a question to expand.</p>
+<details><summary><span class="star">★</span> Why do partitions exist? What happens if you use one big partition?</summary><div>Partitions give parallelism, scale-out storage and an ordering scope. One partition caps throughput at one broker's disk and one consumer, and you lose the ability to scale consumers.</div></details>
+<details><summary><span class="star">★</span> What factors affect Kafka throughput? How do consumers and partitions play in?</summary><div>Producer batching/compression/acks, broker disk, network, replication factor and partition count, and consumer processing speed. Consumer parallelism is capped by the partition count; adding consumers past that does nothing, and adding partitions does not help if the downstream call is the bottleneck.</div></details>
+<details><summary><span class="star">★</span> How would you decide the number of partitions for a new topic?</summary><div>Measure per-partition producer and consumer throughput, compute <code>max(T/Tp, T/Tc)</code>, add headroom, consider key cardinality, ordering needs and per-broker partition limits, then load test.</div></details>
+<details><summary><span class="star">★</span> How does Kafka provide durability without fsyncing every message?</summary><div>Replication. A write is acknowledged after the ISR has it in memory/page cache; with RF ≥ 3 and <code>min.insync.replicas=2</code> a single node crash cannot lose it. Simultaneous loss of all replicas before flush is the residual risk.</div></details>
+<details><summary><span class="star">★</span> Why is Kafka fast, and why does TLS slow it down?</summary><div>Sequential I/O, page cache, batching, compression, zero-copy. TLS forces user-space encryption, so <code>sendfile</code> zero-copy no longer applies and CPU cost increases.</div></details>
+<details><summary><span class="star">★</span> High watermark vs log end offset vs last stable offset?</summary><div>LEO: next offset to be written on a replica. HW: highest offset replicated to all ISR; consumers read below it. LSO: with transactions, the offset before the first open transaction; <code>read_committed</code> consumers read up to it.</div></details>
+<details><summary>What problem do leader epochs solve?</summary><div>Safe truncation after leader changes. Followers truncate to the end offset of the last epoch they share with the new leader, preventing log divergence and data loss seen with HW-only truncation.</div></details>
+<details><summary><span class="star">★</span> Our service was down for 10 days, restarted, and reprocessed the entire topic. Why?</summary><div>Committed offsets of an empty group expire after 7 days (<code>offsets.retention.minutes</code>), so <code>auto.offset.reset=earliest</code> kicked in. Fix: raise offset retention for critical groups, keep consumers running or use static membership, choose the reset policy deliberately, and make consumers idempotent.</div></details>
+<details><summary>How does the group coordinator get chosen and what does it do?</summary><div>Leader of the <code>__consumer_offsets</code> partition for the hashed group id. It manages membership, heartbeats, rebalances and offset commits for that group.</div></details>
+<details><summary><span class="star">★</span> Kafka vs RabbitMQ: which and why?</summary><div>Kafka for high-throughput event streaming, replay, multiple independent consumers and audit. RabbitMQ for task queues, flexible routing, priorities, TTL and request/response. Kafka consumers pull and messages persist; RabbitMQ pushes and removes on ack.</div></details>
+<details><summary><span class="star">★</span> When is compaction appropriate, and what are its traps?</summary><div>For latest-state per key. Traps: it is not immediate, the active segment is not compacted, consumers can still see older values near the head, tombstones linger for <code>delete.retention.ms</code>, and keys must be non-null.</div></details>
+<details><summary>Data is older than retention.ms but still on disk. Why?</summary><div>Only closed segments are deleted. On a quiet topic the active segment may not have rolled; set <code>segment.ms</code>.</div></details>
+<details><summary><span class="star">★</span> How do you evolve an event schema without breaking consumers?</summary><div>Schema Registry with BACKWARD (or FULL) compatibility; add optional fields with defaults; never rename or retype; for breaking changes create a new versioned topic and migrate.</div></details>
+<details><summary><span class="star">★</span> How do you secure a Kafka platform for a bank?</summary><div>TLS everywhere, SASL/mTLS authentication, least-privilege ACLs, quotas, disk encryption, field-level encryption or tokenization for PII, secrets from a vault, audit logging, network isolation, and retention/erasure policy for regulated data.</div></details>
+<details><summary>How do you send a 20 MB payload through Kafka?</summary><div>Do not; use claim check (object store reference). If unavoidable, raise limits end to end (producer, broker/topic, replica fetch, consumer) and accept the batching and memory cost.</div></details>
+<details><summary>Can consumers read from a follower? Why?</summary><div>Yes, with rack-aware follower fetching (KIP-392). It cuts cross-AZ network cost and latency at the price of slightly higher end-to-end lag.</div></details>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>try{hljs.highlightAll()}catch(e){}</script>
+</body></html>
