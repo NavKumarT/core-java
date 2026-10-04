@@ -369,21 +369,71 @@
       box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.15);
     }
 
-    .card.completed {
-      background: var(--surface);
+    /* Three-state card styles */
+    .card.state-revision {
+      border-color: rgba(251, 191, 36, 0.45);
+    }
+
+    .card.state-revision::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 4px; height: 100%;
+      background: #FBBF24;
+      border-top-left-radius: 14px;
+      border-bottom-left-radius: 14px;
+    }
+
+    .card.state-confident {
       border-color: var(--success-border);
     }
 
-    .card.completed::before {
+    .card.state-confident::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 4px;
-      height: 100%;
+      top: 0; left: 0;
+      width: 4px; height: 100%;
       background: var(--success);
       border-top-left-radius: 14px;
       border-bottom-left-radius: 14px;
+    }
+
+    /* Status cycling button */
+    .status-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: var(--surface-hover);
+      cursor: pointer;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      user-select: none;
+      z-index: 2;
+      position: relative;
+      letter-spacing: 0.03em;
+    }
+
+    .status-btn:hover {
+      border-color: var(--text-muted);
+      color: var(--text-secondary);
+    }
+
+    .status-btn.btn-revision {
+      border-color: rgba(251, 191, 36, 0.6);
+      background: rgba(251, 191, 36, 0.1);
+      color: #FBBF24;
+    }
+
+    .status-btn.btn-confident {
+      border-color: var(--success-border);
+      background: var(--success-bg);
+      color: var(--success);
     }
 
     .card-top {
@@ -419,59 +469,7 @@
     .cat-tag.dbms { background: var(--cat-dbms-bg); color: var(--cat-dbms); }
     .cat-tag.agent { background: var(--cat-agent-bg); color: var(--cat-agent); }
 
-    /* Custom Checkbox */
-    .checkbox-wrapper {
-      position: relative;
-      display: flex;
-      align-items: center;
-      cursor: pointer;
-      user-select: none;
-      z-index: 2;
-    }
 
-    .checkbox-wrapper input {
-      position: absolute;
-      opacity: 0;
-      cursor: pointer;
-      height: 0;
-      width: 0;
-    }
-
-    .checkmark {
-      height: 22px;
-      width: 22px;
-      background-color: var(--surface-hover);
-      border: 2px solid var(--border);
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
-    }
-
-    .checkbox-wrapper:hover input ~ .checkmark {
-      border-color: var(--accent);
-    }
-
-    .checkbox-wrapper input:checked ~ .checkmark {
-      background-color: var(--success);
-      border-color: var(--success);
-    }
-
-    .checkmark::after {
-      content: "";
-      display: none;
-      width: 5px;
-      height: 10px;
-      border: solid white;
-      border-width: 0 2px 2px 0;
-      transform: rotate(45deg);
-      margin-bottom: 2px;
-    }
-
-    .checkbox-wrapper input:checked ~ .checkmark::after {
-      display: block;
-    }
 
     .card-title {
       font-size: 1.05rem;
@@ -542,6 +540,36 @@
       border: 1px dashed var(--border);
       border-radius: 14px;
     }
+    /* Dashboard stat pills */
+    .stat-pills {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    .stat-pill {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      color: var(--text-muted);
+      background: var(--surface-hover);
+      font-family: var(--font-mono);
+    }
+
+    .stat-pill.pill-revision {
+      border-color: rgba(251, 191, 36, 0.5);
+      background: rgba(251, 191, 36, 0.08);
+      color: #FBBF24;
+    }
+
+    .stat-pill.pill-confident {
+      border-color: var(--success-border);
+      background: var(--success-bg);
+      color: var(--success);
+    }
   </style>
   <link rel="stylesheet" href="style-guide.css">
 </head>
@@ -568,13 +596,20 @@
     <!-- Progress Dashboard -->
     <div class="dashboard-card">
       <div class="dashboard-header">
-        <div class="progress-info">
-          <div class="progress-number" id="progress-text">0 / 73</div>
-          <div class="progress-label" id="progress-percent">(0% Completed)</div>
+        <div>
+          <div class="progress-info">
+            <div class="progress-number" id="progress-text">0 / 73</div>
+            <div class="progress-label" id="progress-percent">(0% Confident)</div>
+          </div>
+          <div class="stat-pills">
+            <span class="stat-pill pill-revision" id="stat-revision">🟡 0 Needs Revision</span>
+            <span class="stat-pill pill-confident" id="stat-confident">🟢 0 Confident</span>
+            <span class="stat-pill" id="stat-untouched">⬜ 73 Not Started</span>
+          </div>
         </div>
         <div class="dashboard-actions">
           <button class="btn-action" id="btn-reset">Reset Progress</button>
-          <button class="btn-action" id="btn-select-all">Mark All Complete</button>
+          <button class="btn-action" id="btn-select-all">Mark All Confident</button>
         </div>
       </div>
       <div class="progress-bar-bg">
@@ -596,8 +631,9 @@
         <button class="tab-btn" data-filter="microservices">Microservices (8)</button>
         <button class="tab-btn" data-filter="dbms">DBMS &amp; SQL (10)</button>
         <button class="tab-btn" data-filter="agent">Agentic AI (19)</button>
-        <button class="tab-btn" data-filter="completed">Completed</button>
-        <button class="tab-btn" data-filter="incomplete">Incomplete</button>
+        <button class="tab-btn" data-filter="revision">🟡 Needs Revision</button>
+        <button class="tab-btn" data-filter="confident">🟢 Confident</button>
+        <button class="tab-btn" data-filter="untouched">⬜ Not Started</button>
       </div>
     </div>
 
@@ -1357,10 +1393,29 @@
       }
     ];
 
-    // State
-    let completedSet = new Set(JSON.parse(localStorage.getItem('completed_notes') || '[]'));
+    // ── Three-state progress: null | 'revision' | 'confident' ────────────────
+    const STATES = [null, 'revision', 'confident'];
+    const STATE_LABEL = { null: '⬜ Not Started', revision: '🟡 Needs Revision', confident: '🟢 Confident' };
+    const STATE_BTN_CLASS = { null: '', revision: 'btn-revision', confident: 'btn-confident' };
+
     const validTopicIds = new Set(topics.map(t => t.id));
-    completedSet = new Set([...completedSet].filter(id => validTopicIds.has(id)));
+
+    // Migrate legacy binary data → treat old 'completed_notes' as 'confident'
+    function loadStatusMap() {
+      const saved = localStorage.getItem('topic_status');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Filter out stale ids
+        return new Map(Object.entries(parsed).filter(([id]) => validTopicIds.has(id)));
+      }
+      // First-time migration: treat old completedSet as 'confident'
+      const legacy = new Set(JSON.parse(localStorage.getItem('completed_notes') || '[]'));
+      const map = new Map();
+      legacy.forEach(id => { if (validTopicIds.has(id)) map.set(id, 'confident'); });
+      return map;
+    }
+
+    let statusMap = loadStatusMap();
     let activeFilter = 'all';
     let searchQuery = '';
 
@@ -1373,37 +1428,62 @@
     const progressBar = document.getElementById('progress-bar');
     const btnReset = document.getElementById('btn-reset');
     const btnSelectAll = document.getElementById('btn-select-all');
+    const statRevision = document.getElementById('stat-revision');
+    const statConfident = document.getElementById('stat-confident');
+    const statUntouched = document.getElementById('stat-untouched');
+
+    function saveState() {
+      const obj = {};
+      statusMap.forEach((v, k) => { obj[k] = v; });
+      localStorage.setItem('topic_status', JSON.stringify(obj));
+    }
+
+    function cycleState(id) {
+      const current = statusMap.get(id) || null;
+      const idx = STATES.indexOf(current);
+      const next = STATES[(idx + 1) % STATES.length];
+      if (next === null) {
+        statusMap.delete(id);
+      } else {
+        statusMap.set(id, next);
+      }
+      saveState();
+      render();
+    }
 
     // Render Cards
     function render() {
+      // Counts
+      const total = topics.length;
+      const revisionCount = [...statusMap.values()].filter(v => v === 'revision').length;
+      const confidentCount = [...statusMap.values()].filter(v => v === 'confident').length;
+      const untouchedCount = total - statusMap.size;
+      const pct = Math.round((confidentCount / total) * 100);
+
+      progressText.textContent = `${confidentCount} / ${total}`;
+      progressPercent.textContent = `(${pct}% Confident)`;
+      progressBar.style.width = `${pct}%`;
+      statRevision.textContent = `🟡 ${revisionCount} Needs Revision`;
+      statConfident.textContent = `🟢 ${confidentCount} Confident`;
+      statUntouched.textContent = `⬜ ${untouchedCount} Not Started`;
+
       // Filter logic
       const filtered = topics.filter(t => {
-        const isCompleted = completedSet.has(t.id);
-        
-        // Category / Status Filter
+        const status = statusMap.get(t.id) || null;
+
         if (['java', 'springboot', 'microservices', 'dbms', 'agent'].includes(activeFilter) && t.category !== activeFilter) return false;
-        if (activeFilter === 'completed' && !isCompleted) return false;
-        if (activeFilter === 'incomplete' && isCompleted) return false;
+        if (activeFilter === 'revision' && status !== 'revision') return false;
+        if (activeFilter === 'confident' && status !== 'confident') return false;
+        if (activeFilter === 'untouched' && status !== null) return false;
 
         // Search Query Filter
         if (searchQuery.trim() !== '') {
           const q = searchQuery.toLowerCase();
-          const matchesTitle = t.title.toLowerCase().includes(q);
-          const matchesDesc = t.desc.toLowerCase().includes(q);
-          const matchesTags = t.tags.some(tag => tag.toLowerCase().includes(q));
-          return matchesTitle || matchesDesc || matchesTags;
+          return t.title.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q) || t.tags.some(tag => tag.toLowerCase().includes(q));
         }
 
         return true;
       });
-
-      // Update Progress Stats
-      const total = topics.length;
-      const count = completedSet.size;
-      const pct = Math.round((count / total) * 100);
-      progressText.textContent = `${count} / ${total}`;
-      progressPercent.textContent = `(${pct}% Completed)`;
-      progressBar.style.width = `${pct}%`;
 
       if (filtered.length === 0) {
         container.innerHTML = `
@@ -1453,24 +1533,24 @@
     }
 
     function createCardHtml(t) {
-      const isCompleted = completedSet.has(t.id);
+      const status = statusMap.get(t.id) || null;
+      const cardClass = status ? `state-${status}` : '';
+      const btnClass = STATE_BTN_CLASS[status] || '';
+      const btnLabel = STATE_LABEL[status] || STATE_LABEL['null'];
       return `
-        <div class="card ${isCompleted ? 'completed' : ''}" data-id="${t.id}">
+        <div class="card ${cardClass}" data-id="${t.id}">
           <div class="card-top">
             <div class="card-meta">
               <span class="card-icon">${t.icon}</span>
               <span class="cat-tag ${t.category}">${t.categoryName}</span>
             </div>
-            <label class="checkbox-wrapper" title="Mark as completed">
-              <input type="checkbox" class="topic-checkbox" data-id="${t.id}" ${isCompleted ? 'checked' : ''} />
-              <span class="checkmark"></span>
-            </label>
+            <button class="status-btn ${btnClass}" data-id="${t.id}" title="Click to cycle: Not Started → Needs Revision → Confident">${btnLabel}</button>
           </div>
 
           <a href="${t.url}" style="text-decoration:none; color:inherit; display:flex; flex-direction:column; flex-grow:1;">
             <div class="card-title">${t.title}</div>
             <div class="card-desc">${t.desc}</div>
-            
+
             <div class="card-footer">
               <div class="tags-list">
                 ${t.tags.map(tag => `<span class="tag-item">${tag}</span>`).join('')}
@@ -1483,24 +1563,13 @@
     }
 
     function attachEvents() {
-      // Checkbox event listeners
-      document.querySelectorAll('.topic-checkbox').forEach(chk => {
-        chk.addEventListener('change', (e) => {
+      document.querySelectorAll('.status-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
           e.stopPropagation();
-          const id = e.target.getAttribute('data-id');
-          if (e.target.checked) {
-            completedSet.add(id);
-          } else {
-            completedSet.delete(id);
-          }
-          saveState();
-          render();
+          cycleState(btn.getAttribute('data-id'));
         });
       });
-    }
-
-    function saveState() {
-      localStorage.setItem('completed_notes', JSON.stringify(Array.from(completedSet)));
     }
 
     // Filter tab buttons
@@ -1521,16 +1590,16 @@
 
     // Reset progress
     btnReset.addEventListener('click', () => {
-      if (confirm('Are you sure you want to reset all completion progress?')) {
-        completedSet.clear();
+      if (confirm('Are you sure you want to reset all progress?')) {
+        statusMap.clear();
         saveState();
         render();
       }
     });
 
-    // Select all
+    // Mark all confident
     btnSelectAll.addEventListener('click', () => {
-      topics.forEach(t => completedSet.add(t.id));
+      topics.forEach(t => statusMap.set(t.id, 'confident'));
       saveState();
       render();
     });
@@ -1566,3 +1635,4 @@
   </script>
 </body>
 </html>
+
