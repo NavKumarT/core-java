@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JavaScript Bible · Section 1 · Language Fundamentals</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#17212b;--mut:#5b6b7a;--line:#d9e0e6;--acc:#0b6e8a;--code:#eef2f5;--trap:#fdf1e3;--trapb:#c9701a;--k:#a12b8c;--s:#18794e;--c:#7a8794;--n:#b35c00;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0d1319;--card:#141c24;--ink:#e3eaf0;--mut:#93a3b2;--line:#27333f;--acc:#4cc2e4;--code:#0a1015;--trap:#2a1f12;--trapb:#e39a4d;--k:#e08be0;--s:#6fd3a1;--c:#7d8c9a;--n:#f0b366}}
+:root[data-theme=dark]{--bg:#0d1319;--card:#141c24;--ink:#e3eaf0;--mut:#93a3b2;--line:#27333f;--acc:#4cc2e4;--code:#0a1015;--trap:#2a1f12;--trapb:#e39a4d;--k:#e08be0;--s:#6fd3a1;--c:#7d8c9a;--n:#f0b366}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "IBM Plex Sans",system-ui,sans-serif}
+main{max-width:860px;margin:0 auto;padding:20px 16px 60px}
+header h1{font-size:clamp(1.6rem,5vw,2.3rem);line-height:1.2;margin:.2em 0}header p{color:var(--mut);margin:0}
+#th{float:right;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;padding:6px 12px;cursor:pointer;font:inherit}
+nav{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0 8px}nav a{font-size:.85rem;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:4px 10px;border-radius:5px;text-decoration:none}nav a:hover{border-color:var(--acc);color:var(--acc)}
+section{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:8px;padding:6px 20px 16px;margin:22px 0}
+h2{font-size:1.4rem;margin:.8em 0 .3em}h3{font-size:1rem;margin:1.2em 0 .3em;color:var(--acc)}
+ul{padding-left:1.2em;margin:.4em 0}li{margin:.2em 0}
+code{font:.88em "JetBrains Mono",ui-monospace,monospace;background:var(--code);padding:1px 5px;border-radius:4px}
+pre{background:var(--code);border:1px solid var(--line);border-radius:6px;padding:12px;overflow-x:auto;margin:.7em 0;max-width:100%}pre code{background:none;padding:0;font-size:.84rem;line-height:1.5}
+.k{color:var(--k)}.s{color:var(--s)}.c{color:var(--c);font-style:italic}.n{color:var(--n)}
+.trap{background:var(--trap);border-left:4px solid var(--trapb);padding:8px 14px;border-radius:6px;margin:.8em 0}.trap b{color:var(--trapb)}
+details{border:1px solid var(--line);border-radius:6px;margin:.4em 0;padding:6px 12px}summary{cursor:pointer;font-weight:600}details p{margin:.5em 0 .2em}
+table{border-collapse:collapse;width:100%;font-size:.9rem}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{background:var(--code)}
+.w{overflow-x:auto}
+</style></head><body><main>
+<header><button id="th" aria-label="Toggle theme">Light / Dark</button>
+<h1>JavaScript Bible: Section 1<br>Language Fundamentals</h1>
+<p>Concepts, tricky outputs and interview Q&amp;A. Tap a question to reveal the answer; try to answer aloud first.</p></header>
+<nav>
+<a href="#s1">null vs undefined</a><a href="#s2">Scope</a><a href="#s3">ASI</a><a href="#s4">Rest &amp; Spread</a><a href="#s5">Infinity</a><a href="#s6">NaN</a><a href="#s7">Arrow fns</a><a href="#s8">Closures</a><a href="#s9">sum(5)(6)</a><a href="#s10">Iterators</a><a href="#s11">Generators</a><a href="#s12">Memory &amp; GC</a><a href="#s13">Errors</a><a href="#cheat">Cheat sheet</a></nav>
+
+<section id="s1"><h2>1. null vs undefined</h2>
+<ul><li><code>undefined</code>: the engine's "no value assigned yet". Seen on uninitialised variables, missing properties, missing arguments, functions with no <code>return</code>.</li>
+<li><code>null</code>: a value <em>you</em> assign to mean "intentionally empty".</li>
+<li>Both are primitives and falsy.</li></ul>
+<pre><code>let a; console.log(a);            // undefined
+const o = {}; console.log(o.x);   // undefined
+console.log(typeof undefined, typeof null); // "undefined" "object" (historic bug)
+console.log(null == undefined, null === undefined); // true false
+console.log(Number(null), Number(undefined));       // 0 NaN
+console.log(null + 1, undefined + 1);               // 1 NaN
+JSON.stringify({a:undefined,b:null});               // '{"b":null}'</code></pre>
+<h3>Where they behave differently</h3>
+<ul><li>Default parameters and destructuring defaults fire only for <code>undefined</code>, not <code>null</code>.</li>
+<li><code>??</code> treats both as "missing"; <code>||</code> treats every falsy value (0, "", false) as missing.</li>
+<li>Check both with <code>x == null</code> (the one accepted use of loose equality).</li></ul>
+<pre><code>function f(x = 10){ return x }
+f(undefined); // 10
+f(null);      // null
+0 ?? 5; // 0     0 || 5; // 5</code></pre>
+<div class="trap"><b>Trap:</b> an undeclared variable throws <code>ReferenceError</code>, but <code>typeof undeclared</code> returns <code>"undefined"</code> safely. Check null properly with <code>x === null</code>, never <code>typeof</code>.</div>
+<details open><summary>Why is typeof null "object"?</summary><p>A bug from the first JS version, where values were tagged by type bits and null's all-zero pointer matched the object tag. It was never fixed to avoid breaking the web.</p></details>
+<details open><summary>How do you test for both null and undefined?</summary><p><code>x == null</code>, or <code>x ?? fallback</code>, or <code>x?.prop</code> to read safely.</p></details>
+</section>
+
+<section id="s2"><h2>2. Function scope vs block scope</h2>
+<div class="w"><table><tr><th></th><th>var</th><th>let</th><th>const</th></tr>
+<tr><td>Scope</td><td>Function</td><td>Block</td><td>Block</td></tr>
+<tr><td>Hoisted</td><td>Yes, initialised to undefined</td><td>Yes, but in TDZ</td><td>Yes, but in TDZ</td></tr>
+<tr><td>Redeclare</td><td>Allowed</td><td>SyntaxError</td><td>SyntaxError</td></tr>
+<tr><td>Reassign</td><td>Yes</td><td>Yes</td><td>No (object contents still mutable)</td></tr>
+<tr><td>On window</td><td>Yes (global scope)</td><td>No</td><td>No</td></tr></table></div>
+<ul><li><strong>Hoisting</strong>: declarations are registered before code runs. Function declarations are hoisted with their body; function expressions and arrows are not (only the variable is).</li>
+<li><strong>TDZ</strong> (temporal dead zone): the time between entering a scope and the <code>let/const</code> line. Access throws <code>ReferenceError</code>, even <code>typeof</code>.</li></ul>
+<pre><code>console.log(a); var a = 1;   // undefined
+console.log(b); let b = 1;   // ReferenceError
+hi(); function hi(){}        // works
+bye(); var bye = () =&gt; {};   // TypeError: bye is not a function
+
+for (var i = 0; i &lt; 3; i++) setTimeout(() =&gt; console.log(i)); // 3 3 3
+for (let j = 0; j &lt; 3; j++) setTimeout(() =&gt; console.log(j)); // 0 1 2</code></pre>
+<div class="trap"><b>Trap:</b> <code>let</code> in a for loop creates a <em>fresh binding per iteration</em>, which is why it fixes the timer output. Old fix: wrap in an IIFE.<br>
+<code>var x = 1; function f(){ console.log(x); var x = 2 } f()</code> prints <code>undefined</code>: the local <code>x</code> is hoisted and shadows the outer one.</div>
+<details open><summary>Is let hoisted?</summary><p>Yes. The binding exists from the start of the block, but is uninitialised until the declaration runs. That is the TDZ, and it proves hoisting: otherwise the outer variable would be read instead of throwing.</p></details>
+<details open><summary>Does const make a value immutable?</summary><p>No, it prevents <em>reassignment</em> of the binding. <code>const a=[]; a.push(1)</code> works. Use <code>Object.freeze</code> for shallow immutability.</p></details>
+<details open><summary>What is lexical scope?</summary><p>Scope is decided by where code is written, not where it is called. A function looks up variables through its definition-time chain of enclosing scopes (the scope chain).</p></details>
+<h3>Going deeper</h3><ul><li>DOM APIs return <code>null</code> for "not found" (<code>getElementById</code>, <code>regex.exec</code>); plain property access returns <code>undefined</code>.</li>
+<li><code>void 0</code> always yields <code>undefined</code> (safe even if a local variable is named <code>undefined</code>). <code>Object.create(null)</code> makes a prototype-less object.</li>
+<li>Optional chaining stops at either: <code>user?.address?.city</code> gives <code>undefined</code> if any link is null/undefined.</li>
+<li><code>delete obj.a</code> removes the key; <code>obj.a = undefined</code> keeps the key (<code>"a" in obj</code> stays true).</li></ul>
+<pre><code>console.log(typeof typeof null);  // "string"
+let x = null; x?.a;               // undefined, no error
+({}).a === undefined;             // true
+"a" in {a: undefined};            // true</code></pre>
+<details open><summary>When would you return null vs undefined from your own API?</summary><p>Return <code>null</code> for "looked, found nothing / intentionally empty"; leave <code>undefined</code> for "not provided/not set". Pick one convention per codebase, since JSON keeps null but drops undefined.</p></details>
+</section>
+
+<section id="s3"><h2>3. Automatic Semicolon Insertion (ASI)</h2>
+<p>The parser inserts <code>;</code> when it hits a token that is illegal and (a) a newline precedes it, (b) it is <code>}</code>, or (c) the input ends. It also inserts after a "restricted production" line break.</p>
+<ul><li>Restricted: <code>return</code>, <code>break</code>, <code>continue</code>, <code>throw</code>, <code>yield</code>, and postfix <code>++ --</code>. A newline right after them ends the statement.</li>
+<li>No insertion when the next line can continue the expression. Lines starting with <code>(</code>, <code>[</code>, a backtick, <code>+</code>, <code>-</code> or <code>/</code> are the danger.</li></ul>
+<pre><code>function f(){
+  return
+  { ok: true }
+}
+f(); // undefined, not the object
+
+const a = 1
+const b = a
+(function(){ console.log("hi") })()  // TypeError: 1 is not a function
+// parsed as: const b = a(function(){...})()
+
+let x = 1, y = 2
+;[x, y] = [y, x]   // leading semicolon protects the line</code></pre>
+<div class="trap"><b>Trap:</b> ASI does not insert inside a <code>for(;;)</code> header, and does not "fix" a line starting with <code>(</code> or <code>[</code>. Write <code>return {</code> on the same line.</div>
+<details open><summary>Should you use semicolons?</summary><p>Either style works if you know the rules. Most teams use semicolons plus Prettier or ESLint (<code>semi</code> rule) to avoid the edge cases above.</p></details>
+
+<h3>More ASI cases</h3><ul><li>No line break is allowed before <code>=&gt;</code> and none after <code>return</code>/<code>throw</code>.</li>
+<li><code>a</code> newline <code>++b</code> is parsed as <code>a; ++b</code> (postfix <code>++</code> cannot start a line).</li>
+<li>A line starting with a template literal continues the previous expression (tagged template).</li></ul>
+<pre><code>const a = 1
+[1, 2].forEach(n =&gt; n)   // TypeError: parsed as 1[1, 2].forEach(...)
+
+const t = 'x'
+`y`.length               // TypeError: 'x' is called as a tag function
+
+function g(){ return (
+  1 + 2
+) }                       // 3: parenthesis on the same line keeps it safe</code></pre>
+<details open><summary>Which tokens at the start of a line are dangerous?</summary><p><code>(</code>, <code>[</code>, <code>`</code>, <code>+</code>, <code>-</code>, <code>/</code>. If you skip semicolons, prefix these lines with <code>;</code>.</p></details>
+</section><section id="s4"><h2>4. Rest vs Spread (<code>...</code>)</h2>
+<ul><li><strong>Rest</strong> <em>collects</em> many into one. Used in parameters and destructuring; must be the last element; gives a real array.</li>
+<li><strong>Spread</strong> <em>expands</em> one into many. Used in calls, array literals and object literals.</li></ul>
+<pre><code>const sum = (...nums) =&gt; nums.reduce((a, b) =&gt; a + b, 0); // rest
+sum(1, 2, 3);                  // 6
+Math.max(...[4, 9, 2]);        // 9  (spread into call)
+const [first, ...others] = [1, 2, 3];   // rest in destructuring
+const { a, ...remaining } = { a: 1, b: 2, c: 3 }; // remaining = {b:2,c:3}
+const merged = { ...{x:1,y:2}, ...{y:9} };  // {x:1, y:9} later wins
+[..."hey"];                    // ["h","e","y"]</code></pre>
+<ul><li>Spread makes a <strong>shallow</strong> copy. Nested objects are still shared; use <code>structuredClone</code> for deep copies.</li>
+<li>Array spread needs an iterable; object spread works on any object (and ignores <code>null/undefined</code>).</li>
+<li>Rest beats <code>arguments</code>: real array, works in arrows, can follow named params.</li></ul>
+<div class="trap"><b>Trap:</b> <code>[...{a:1}]</code> throws (not iterable) but <code>({...[1,2]})</code> gives <code>{0:1,1:2}</code>. <code>{...null}</code> is <code>{}</code>.<br>
+<code>const b = {...a}; b.nested.x = 1</code> also changes <code>a.nested.x</code>.</div>
+<details open><summary>Difference between rest and spread in one line?</summary><p>Same syntax, opposite direction: rest gathers values into an array/object on the left side of an assignment or parameter list, spread unpacks on the right side or in call arguments.</p></details>
+
+<h3>More depth</h3><ul><li><code>fn.length</code> counts params before the first default or rest.</li>
+<li>Spread of a Map/Set works (<code>[...map]</code> gives entries); spreading huge arrays into a call (<code>Math.max(...big)</code>) can hit the argument limit and throw RangeError. Use <code>reduce</code> there.</li>
+<li><code>{...obj}</code> copies own enumerable props and <em>defines</em> them; <code>Object.assign</code> <em>sets</em> them (triggers setters). Neither copies prototypes or non-enumerable props.</li></ul>
+<pre><code>const [a, , b, ...c] = [1, 2, 3, 4, 5];  // a=1 b=3 c=[4,5]
+const f = (x, y = 2, ...z) =&gt; 0;  f.length;  // 1
+const { p: { q }, ...rest } = { p: { q: 1 }, r: 2, s: 3 }; // q=1 rest={r:2,s:3}
+const arr2 = [...arr, 4];   // immutable add (used constantly in React state)
+const upd = { ...state, count: state.count + 1 };</code></pre>
+<details open><summary>Spread vs slice/concat/Object.assign?</summary><p>Spread is the concise, readable equivalent for shallow copies; it also works with any iterable and inside literals. All are shallow.</p></details>
+</section><section id="s5"><h2>5. When do you get Infinity / -Infinity?</h2>
+<ul><li>Division of a non-zero number by zero: <code>1/0</code> is <code>Infinity</code>, <code>-1/0</code> is <code>-Infinity</code>. Note <code>1/-0</code> is <code>-Infinity</code> too.</li>
+<li>Overflow beyond <code>Number.MAX_VALUE</code> (about 1.79e308): <code>2**1024</code>, <code>Number.MAX_VALUE*2</code>.</li>
+<li><code>Math.log(0)</code> is <code>-Infinity</code>. <code>Math.max()</code> (no args) is <code>-Infinity</code>; <code>Math.min()</code> is <code>Infinity</code>.</li>
+<li><code>Number("Infinity")</code>, <code>parseFloat("Infinity")</code>, <code>-Number.MAX_VALUE*2</code>.</li></ul>
+<pre><code>Infinity - Infinity;   // NaN
+Infinity * 0;          // NaN
+5 / Infinity;          // 0
+Number.isFinite(1/0);  // false
+Number.isFinite("5");  // false (no coercion) vs isFinite("5") true
+1n / 0n;               // RangeError: BigInt never gives Infinity</code></pre>
+<details open><summary>Why doesn't JS throw on divide by zero?</summary><p>JS Numbers follow IEEE 754 doubles, which define Infinity and NaN as valid results. Only BigInt division by zero throws.</p></details>
+<details open><summary>Why does Math.max() return -Infinity?</summary><p>It is the identity element for max (every number is larger), the same logic as an empty sum being 0.</p></details>
+
+<h3>More depth</h3><ul><li><code>Number.MAX_SAFE_INTEGER</code> is 9007199254740991 (2<sup>53</sup>-1); beyond it integers lose precision (<code>MAX_SAFE_INTEGER + 2</code> is wrong). Use BigInt.</li>
+<li><code>Number.MIN_VALUE</code> (5e-324) is the smallest <em>positive</em> number, not the most negative. <code>MIN_VALUE / 2</code> underflows to <code>0</code>. Most negative is <code>-Number.MAX_VALUE</code>.</li>
+<li>JS has <code>-0</code>: <code>Object.is(0, -0)</code> is false, <code>0 === -0</code> is true, and <code>1/-0</code> is <code>-Infinity</code>.</li>
+<li><code>JSON.stringify(Infinity)</code> gives <code>"null"</code>. <code>isFinite(null)</code> is true (null becomes 0).</li></ul>
+<pre><code>Infinity === Infinity;        // true
+typeof Infinity;              // "number"
+parseInt("Infinity");         // NaN (parseInt reads digits only)
+10 ** 309;                    // Infinity
+Number.POSITIVE_INFINITY === Infinity; // true
+Infinity &gt; Number.MAX_VALUE;  // true</code></pre>
+<details open><summary>Practical use of Infinity?</summary><p>As a neutral starting value: <code>let min = Infinity</code> for a minimum search, <code>-Infinity</code> for a maximum, and as an unbounded limit in algorithms (Dijkstra distances).</p></details>
+</section><section id="s6"><h2>6. When do you get NaN?</h2>
+<p>NaN means "invalid numeric result". It is of type <code>number</code>.</p>
+<ul><li>Failed conversion: <code>Number("abc")</code>, <code>parseInt("abc")</code>, <code>Number(undefined)</code>, <code>+{}</code>.</li>
+<li>Impossible maths: <code>0/0</code>, <code>Math.sqrt(-1)</code>, <code>Infinity - Infinity</code>, <code>Infinity * 0</code>.</li>
+<li>Arithmetic with <code>undefined</code> or non-numeric strings: <code>undefined + 1</code>, <code>"a" * 2</code>.</li></ul>
+<pre><code>NaN === NaN;               // false (only value not equal to itself)
+typeof NaN;                // "number"
+isNaN("hello");           // true  (coerces first: misleading)
+Number.isNaN("hello");    // false (no coercion: correct)
+Object.is(NaN, NaN);      // true
+[NaN].includes(NaN);      // true
+[NaN].indexOf(NaN);       // -1 (uses ===)
+NaN ** 0;                 // 1   (special case)
+"5" - 2; "5" + 2;         // 3  "52"</code></pre>
+<div class="trap"><b>Trap:</b> <code>null + 1</code> is 1 (null becomes 0) but <code>undefined + 1</code> is NaN. <code>[] + {}</code> is <code>"[object Object]"</code>, and <code>parseInt(null)</code> is NaN because it parses the string <code>"null"</code>.</div>
+<details open><summary>How do you reliably check for NaN?</summary><p><code>Number.isNaN(x)</code>, or <code>Object.is(x, NaN)</code>, or the old trick <code>x !== x</code>.</p></details>
+<details open><summary>Why is 0.1 + 0.2 !== 0.3?</summary><p>Binary floating point cannot represent 0.1 exactly; the sum is 0.30000000000000004. Compare with a tolerance (<code>Math.abs(a-b) &lt; Number.EPSILON</code>) or use integer cents/BigInt/decimal libraries.</p></details>
+
+<h3>Conversion table (interview favourite)</h3>
+<div class="w"><table><tr><th>Number(...)</th><th>Result</th><th>Number(...)</th><th>Result</th></tr>
+<tr><td><code>""</code> / <code>" "</code></td><td>0</td><td><code>"12px"</code></td><td>NaN</td></tr>
+<tr><td><code>[]</code></td><td>0</td><td><code>[5]</code></td><td>5</td></tr>
+<tr><td><code>[1,2]</code></td><td>NaN</td><td><code>{}</code></td><td>NaN</td></tr>
+<tr><td><code>true</code> / <code>false</code></td><td>1 / 0</td><td><code>" 12 "</code></td><td>12</td></tr></table></div>
+<pre><code>parseInt("12px");        // 12 (stops at first bad char)
+parseInt("0x1f");        // 31
+parseInt(0.0000005);     // 5 (number becomes "5e-7")
+["1","2","3"].map(parseInt); // [1, NaN, NaN] (index passed as radix)
+["1","2","3"].map(Number);   // [1, 2, 3]
+new Date("oops").getTime();  // NaN
+JSON.stringify({a: NaN});    // '{"a":null}'
+if (NaN) {} // falsy: never runs</code></pre>
+<div class="trap"><b>Trap:</b> NaN spreads: any arithmetic with NaN is NaN, so a single bad input silently poisons a whole total. Validate inputs early with <code>Number.isNaN</code>.</div>
+<details open><summary>Why does ["1","2","3"].map(parseInt) fail?</summary><p><code>map</code> calls <code>parseInt(value, index)</code>. Radix 0 is treated as 10, radix 1 is invalid (NaN), radix 2 cannot parse "3" (NaN).</p></details>
+</section><section id="s7"><h2>7. Arrow functions: must-know points</h2>
+<ul><li><strong>No own <code>this</code></strong>: captures <code>this</code> lexically from the enclosing scope. <code>call/apply/bind</code> cannot change it.</li>
+<li><strong>No <code>arguments</code></strong> object (use rest). No own <code>super</code>/<code>new.target</code>.</li>
+<li><strong>Not constructors</strong>: <code>new</code> throws <code>TypeError</code>; no <code>prototype</code>.</li>
+<li>Cannot be generators. Duplicate parameter names are not allowed.</li>
+<li>Implicit return for expression bodies; wrap object literals in parentheses.</li></ul>
+<pre><code>const sq = x =&gt; x * x;
+const mk = () =&gt; ({ id: 1 });      // () needed for object
+const bad = () =&gt; { id: 1 };       // undefined: braces are a block, id: is a label
+
+const user = {
+  name: "Asha",
+  regular() { return this.name },        // "Asha"
+  arrow: () =&gt; this.name,                // undefined (this = outer/global)
+  later() { setTimeout(() =&gt; console.log(this.name)) } // "Asha" via lexical this
+};
+const Foo = () =&gt; {}; new Foo();      // TypeError</code></pre>
+<h3>When not to use</h3>
+<ul><li>Object methods and prototype methods that need their own <code>this</code>.</li>
+<li>Constructors, and callbacks where the library sets <code>this</code> (e.g. jQuery handlers, DOM <code>this</code> as element).</li></ul>
+<div class="trap"><b>Trap:</b> class field arrows (<code>handle = () =&gt; {...}</code>) bind <code>this</code> per instance. Handy for callbacks, but each instance gets its own copy instead of sharing one prototype method.</div>
+<details open><summary>Output: const o = { v: 1, f: () =&gt; this.v }; o.f()</summary><p>The arrow uses the <em>outer</em> <code>this</code>, not <code>o</code>. In a classic browser script that is <code>window</code>, so you get <code>undefined</code>. In Node CommonJS it is <code>module.exports</code> (<code>{}</code>), also <code>undefined</code>. In an ES module top-level <code>this</code> is <code>undefined</code>, so it throws a TypeError. Rule: arrow = outer this.</p></details>
+<details open><summary>Can you bind an arrow function?</summary><p><code>bind</code> works without error but cannot change <code>this</code>; it only pre-fills arguments.</p></details>
+
+</section><section id="s8"><h2>8. Closures</h2>
+<p><strong>Definition:</strong> a closure is a function bundled with references to the variables of the scope where it was created (its lexical environment). The function keeps those variables alive even after the outer function has returned.</p>
+<pre><code>function counter(){
+  let n = 0;                    // private, survives after counter() returns
+  return { inc: () =&gt; ++n, get: () =&gt; n };
+}
+const c = counter(); c.inc(); c.inc(); c.get(); // 2
+
+const once = fn =&gt; { let done = false, r; return (...a) =&gt; done ? r : (done = true, r = fn(...a)) };
+
+function debounce(fn, ms){ let t; return (...a) =&gt; { clearTimeout(t); t = setTimeout(() =&gt; fn(...a), ms) } }</code></pre>
+<h3>Uses</h3>
+<ul><li>Data privacy / module pattern, factories, memoization, <code>once</code>, debounce/throttle, partial application and currying, event handlers with state, React hooks (state lives in a closure).</li></ul>
+<h3>Pitfalls</h3>
+<ul><li>Closures capture <em>variables</em>, not values: with <code>var</code> in a loop, all callbacks see the final value.</li>
+<li>Can retain large objects and cause memory leaks if the closure is long-lived. Stale closures in React: a callback captures old state.</li></ul>
+<div class="trap"><b>Trap:</b> <code>for(var i=0;i&lt;3;i++){ fns.push(()=&gt;i) } fns.map(f=&gt;f())</code> gives <code>[3,3,3]</code>; with <code>let</code> it gives <code>[0,1,2]</code>.</div>
+<details open><summary>Explain a closure in one sentence</summary><p>A function that remembers and can access variables from its birthplace scope even when executed elsewhere.</p></details>
+<details open><summary>Do closures cause memory leaks?</summary><p>Not by themselves. They keep referenced variables alive for as long as the closure is reachable; engines usually keep only variables that are actually used, but one live closure can pin a shared scope. Release by removing listeners/timers or nulling references.</p></details>
+
+</section><section id="s9"><h2>9. How can sum(5)(6) return 11? (Currying)</h2>
+<p><code>sum(5)</code> returns a function that remembers 5 (closure), and that function receives 6.</p>
+<pre><code>const sum = a =&gt; b =&gt; a + b;
+sum(5)(6); // 11
+
+// Infinite chaining, ends on empty call: sum(1)(2)(3)()
+function add(a){ return b =&gt; b === undefined ? a : add(a + b) }
+add(1)(2)(3)(); // 6
+
+// Chain ending without () using valueOf
+function s(a){ const f = b =&gt; s(a + b); f.valueOf = () =&gt; a; return f }
+s(1)(2)(3) + 0; // 6 (coerced)
+
+// Generic curry using fn.length
+const curry = fn =&gt; function c(...a){ return a.length &gt;= fn.length ? fn(...a) : (...b) =&gt; c(...a, ...b) };
+curry((a, b, c) =&gt; a + b + c)(1)(2, 3); // 6</code></pre>
+<ul><li><strong>Currying</strong>: f(a,b,c) becomes f(a)(b)(c). <strong>Partial application</strong>: fix some args now, rest later.</li>
+<li>Why useful: reusable specialised functions (<code>const add5 = sum(5)</code>), composition, configuration.</li></ul>
+<div class="trap"><b>Trap:</b> <code>fn.length</code> ignores default and rest params, so a generic <code>curry</code> breaks on them.</div>
+<details open><summary>Difference between currying and partial application?</summary><p>Currying turns an n-ary function into n unary functions chained. Partial application pre-fills any number of args and returns a function that takes the rest.</p></details>
+
+</section><section id="s10"><h2>10. Iterables and Iterators</h2>
+<ul><li><strong>Iterable</strong>: object with a <code>[Symbol.iterator]()</code> method that returns an iterator.</li>
+<li><strong>Iterator</strong>: object with <code>next()</code> returning <code>{ value, done }</code>.</li>
+<li>Built-in iterables: Array, String, Map, Set, TypedArray, arguments, NodeList, generators. <strong>Plain objects are not iterable.</strong></li>
+<li>Consumers: <code>for...of</code>, spread, array destructuring, <code>Array.from</code>, <code>new Map/Set</code>, <code>Promise.all</code>, <code>yield*</code>.</li></ul>
+<pre><code>const range = {
+  from: 1, to: 3,
+  [Symbol.iterator]() {
+    let cur = this.from, end = this.to;
+    return { next: () =&gt; cur &lt;= end ? { value: cur++, done: false } : { value: undefined, done: true } };
+  }
+};
+[...range];                 // [1,2,3]
+for (const x of range) {}   // works
+
+const it = [10, 20][Symbol.iterator]();
+it.next(); // {value:10, done:false}
+it.next(); it.next(); // {value:undefined, done:true}</code></pre>
+<ul><li><code>for...in</code> loops over enumerable <em>keys</em> (including inherited); <code>for...of</code> loops over <em>values</em> of an iterable.</li>
+<li>Iteration is lazy and pull-based. <code>break</code> in <code>for...of</code> calls the iterator's optional <code>return()</code> for cleanup.</li>
+<li>Async version: <code>Symbol.asyncIterator</code> with <code>for await...of</code> (streams, paginated APIs).</li>
+<li>Array-likes (have <code>length</code> and indexes) are not necessarily iterable; convert with <code>Array.from</code>.</li></ul>
+<div class="trap"><b>Trap:</b> <code>for (const x of {a:1})</code> throws TypeError (not iterable). An iterator that returns itself (<code>[Symbol.iterator](){return this}</code>) can only be consumed once.</div>
+<details open><summary>Is an iterator also iterable?</summary><p>Built-in iterators (array iterators, generator objects) are, because they return themselves from <code>[Symbol.iterator]</code>. A bare <code>{ next(){} }</code> object is not.</p></details>
+
+<h3>More depth</h3><ul><li>Protocol: <code>next(v)</code> required; <code>return()</code> and <code>throw()</code> optional (cleanup on early exit).</li>
+<li>Iterating objects: <code>Object.keys / values / entries</code> return arrays, which are iterable. <code>map.entries()</code>, <code>array.entries()</code>, <code>keys()</code>, <code>values()</code> return iterators.</li>
+<li>A generator makes custom iterables short: <code>*[Symbol.iterator]() { yield* this.items }</code>.</li>
+<li>Modern engines add iterator helpers (<code>.map .filter .take .toArray</code> directly on iterators), lazy like generators. Check browser support before relying on them.</li></ul>
+<pre><code>for (const [i, v] of ["a","b"].entries()) {}      // 0 "a", 1 "b"
+for (const [k, v] of Object.entries({x:1})) {}    // "x" 1
+Array.from({ length: 3 }, (_, i) =&gt; i * 2);       // [0,2,4]
+class Bag { items=[1,2]; *[Symbol.iterator](){ yield* this.items } }
+[...new Bag()];  // [1,2]</code></pre>
+<details open><summary>Array-like vs iterable?</summary><p>Array-like has <code>length</code> and index keys (<code>{0:"a",length:1}</code>); iterable has <code>Symbol.iterator</code>. Strings and arrays are both; the example object is only array-like. <code>Array.from</code> accepts either.</p></details>
+</section><section id="s11"><h2>11. Generators</h2>
+<p>A <code>function*</code> returns a generator object (an iterator) and can <strong>pause</strong> at <code>yield</code> and <strong>resume</strong> later, keeping its local state.</p>
+<pre><code>function* ids(){ let i = 1; while (true) yield i++; }  // infinite, lazy
+const g = ids(); g.next().value; g.next().value;       // 1, 2
+
+function* talk(){
+  const name = yield "Name?";       // value passed IN by next(arg)
+  const age  = yield `Hi ${name}, age?`;
+  return `${name}:${age}`;
+}
+const t = talk();
+t.next();        // {value:"Name?", done:false}  (first next(arg) is ignored)
+t.next("Ravi");  // {value:"Hi Ravi, age?", done:false}
+t.next(30);      // {value:"Ravi:30", done:true}
+
+function* all(){ yield 1; yield* [2, 3]; yield* other(); } // delegate</code></pre>
+<ul><li>Methods: <code>next(v)</code>, <code>return(v)</code> (finish early, runs <code>finally</code>), <code>throw(e)</code> (raise error at the paused <code>yield</code>).</li>
+<li>Generators are iterable, so work with spread and <code>for...of</code>. A <code>return</code> value is not included in iteration.</li>
+<li>Use cases: lazy/infinite sequences, custom iterables with less code, state machines, pagination, ID generation, redux-saga, and the idea behind <code>async/await</code> (coroutines).</li>
+<li>Cannot be arrow functions; calling a generator does not run any of its body until the first <code>next()</code>.</li></ul>
+<div class="trap"><b>Trap:</b> <code>[...gen()]</code> on an infinite generator hangs. A finished generator stays finished: <code>next()</code> returns <code>{value:undefined, done:true}</code> forever. <code>yield</code> is an expression: <code>const x = yield 1</code> gets whatever is passed to the following <code>next</code>.</div>
+<details open><summary>Generator vs normal function?</summary><p>Normal functions run to completion once. Generators can suspend and resume, return multiple values over time, and accept values back through <code>next(arg)</code>.</p></details>
+<details open><summary>How do generators relate to async/await?</summary><p><code>async/await</code> behaves like a generator driven by a runner that resumes it when each promise settles (<code>await</code> ≈ <code>yield</code>). Libraries like <code>co</code> did this before ES2017.</p></details>
+
+</section><section id="s12"><h2>12. Memory management &amp; garbage collection</h2>
+<ul><li>Lifecycle: <strong>allocate</strong> (automatic on creating values) &rarr; <strong>use</strong> &rarr; <strong>release</strong> (garbage collector).</li>
+<li>Stack holds primitives and references; heap holds objects, arrays, functions.</li>
+<li><strong>Reachability</strong>: a value is kept if it can be reached from roots (globals, current call stack, active closures). Unreachable values are collected.</li>
+<li><strong>Mark-and-sweep</strong>: mark everything reachable from roots, sweep the rest. Handles circular references. The old <em>reference counting</em> approach leaked cycles (old IE).</li>
+<li>V8 is <strong>generational</strong>: short-lived objects in the young generation (fast Scavenge), survivors promoted to the old generation (Mark-Compact, incremental/concurrent to avoid long pauses).</li></ul>
+<h3>Common leaks</h3>
+<ul><li>Accidental globals (<code>x = 5</code> without declaration).</li>
+<li>Uncleared <code>setInterval</code> / event listeners (React: no cleanup in <code>useEffect</code>).</li>
+<li>Closures holding big data; unbounded caches/Maps; detached DOM nodes still referenced.</li></ul>
+<pre><code>const cache = new WeakMap();      // keys held weakly: entry vanishes with the key object
+function meta(el){ if(!cache.has(el)) cache.set(el, { clicks: 0 }); return cache.get(el) }
+
+const id = setInterval(tick, 1000);
+clearInterval(id);                // release
+btn.removeEventListener("click", handler);</code></pre>
+<ul><li><code>WeakMap/WeakSet</code>: keys must be objects, not enumerable, no <code>size</code>. <code>WeakRef</code>/<code>FinalizationRegistry</code> exist but are unreliable for logic.</li>
+<li>Find leaks: DevTools Memory tab: heap snapshots, allocation timeline; look for ever-growing retained size.</li></ul>
+<div class="trap"><b>Trap:</b> setting <code>obj = null</code> does not free memory by itself; it only removes one reference. And you cannot force GC from code.</div>
+<details open><summary>Map vs WeakMap?</summary><p>Map holds strong references and is iterable, so keys never get collected while in the map. WeakMap holds keys weakly, so it can't leak the keys, but you cannot iterate or count it.</p></details>
+<details open><summary>How do you debug a memory leak?</summary><p>Take heap snapshots before and after repeating an action, compare, and trace the retainer path of objects that keep growing (listeners, timers, detached DOM, closures).</p></details>
+
+<h3>More depth</h3><pre><code>// Leak 1: forgotten interval keeps the closure (and bigData) alive
+function start(){ const bigData = new Array(1e6).fill(0);
+  setInterval(() =&gt; console.log(bigData.length), 1000); }
+// Leak 2: detached DOM kept in an array
+const nodes = []; nodes.push(document.getElementById("row")); row.remove(); // still referenced
+// React-style fix: always clean up
+useEffect(() =&gt; { const id = setInterval(tick, 1000); return () =&gt; clearInterval(id) }, []);
+// WeakRef: reference that does not block collection
+const ref = new WeakRef(obj); ref.deref()?.method();</code></pre>
+<ul><li>Symptoms of a leak: heap grows after every GC cycle, rising tab memory, jank, eventual crash.</li>
+<li>Stack: fixed-size, LIFO call frames (stack overflow on deep recursion). Heap: dynamic, GC-managed.</li>
+<li>GC runs automatically and non-deterministically; large heaps cause pauses, which V8 reduces with incremental, concurrent and parallel marking.</li></ul>
+<details open><summary>How does GC handle circular references?</summary><p>Mark-and-sweep only asks "is it reachable from a root?". A cycle with no path from a root is unreachable and collected, unlike reference counting.</p></details>
+</section><section id="s13"><h2>13. Error handling</h2>
+<pre><code>try {
+  JSON.parse("{bad");
+} catch (e) {                    // catch binding optional: catch { }
+  console.log(e.name, e.message); // SyntaxError ...
+} finally {
+  cleanup();                     // always runs, even after return/throw
+}
+
+class ValidationError extends Error {
+  constructor(msg, field){ super(msg); this.name = "ValidationError"; this.field = field }
+}
+throw new ValidationError("Required", "email");
+
+try { await fetch(u) } catch (e) { throw new Error("Load failed", { cause: e }) }</code></pre>
+<ul><li>Built-in types: <code>Error, TypeError, ReferenceError, SyntaxError, RangeError, URIError, EvalError, AggregateError</code>. Always throw <code>Error</code> objects (they carry a stack), not strings.</li>
+<li>Rethrow errors you can't handle; check with <code>e instanceof X</code>.</li>
+<li><strong>Async</strong>: use <code>try/catch</code> around <code>await</code>, or <code>.catch()</code> on promises. <code>Promise.allSettled</code> collects failures without rejecting.</li>
+<li>Global nets: <code>window.onerror</code>, <code>unhandledrejection</code> event (browser); <code>process.on("uncaughtException" / "unhandledRejection")</code> (Node). Send to a logging service.</li>
+<li><code>fetch</code> does not reject on HTTP 404/500; check <code>res.ok</code>.</li></ul>
+<div class="trap"><b>Trap 1:</b> <code>try { setTimeout(() =&gt; { throw 1 }) } catch{}</code> does NOT catch: the callback runs later, outside the try. Same for un-awaited promises.<br>
+<b>Trap 2:</b> <code>function f(){ try { return 1 } finally { return 2 } }</code> returns <code>2</code>; <code>finally</code> overrides.<br>
+<b>Trap 3:</b> <code>new Promise(()=&gt;{ throw 1 })</code> becomes a rejection, not a sync throw. A <code>return promise</code> inside try without <code>await</code> bypasses the catch.</div>
+<details open><summary>Difference between throw Error and throw "text"?</summary><p>Error objects have <code>name</code>, <code>message</code> and <code>stack</code>, work with <code>instanceof</code>, and show up properly in tools. Strings lose all that.</p></details>
+<details open><summary>How do you handle errors globally in a real app?</summary><p>Local try/catch for expected failures, a centralised handler/logger, global <code>unhandledrejection</code> and <code>onerror</code> listeners, user-friendly messages, and (in React) error boundaries.</p></details>
+<h3>More depth</h3><pre><code>async function load(){ throw new Error("x") }   // returns a rejected promise
+load().catch(e =&gt; console.log(e.message));
+Promise.any([Promise.reject(1)]).catch(e =&gt; e instanceof AggregateError); // true
+
+async function retry(fn, n = 3){            // retry pattern
+  for (let i = 0; i &lt; n; i++){
+    try { return await fn() } catch (e) { if (i === n - 1) throw e;
+      await new Promise(r =&gt; setTimeout(r, 2 ** i * 200)) } } }</code></pre>
+<ul><li><code>e.stack</code> shows the call trace; <code>e.cause</code> chains the original error. <code>Error</code> objects don't JSON-serialise well (no enumerable props), so log <code>message</code> and <code>stack</code> explicitly.</li>
+<li><code>try/catch</code> catches sync errors and awaited rejections only; <code>.catch()</code> handles a promise chain. <code>return fn()</code> inside try (no <code>await</code>) will not catch its rejection; <code>return await fn()</code> will.</li>
+<li>Operational vs programmer errors: handle expected failures (network, validation); let bugs (TypeError) surface and be logged.</li></ul>
+<details open><summary>Promise.all vs allSettled vs any vs race for errors?</summary><p><code>all</code> rejects on the first failure; <code>allSettled</code> never rejects and reports each outcome; <code>any</code> resolves with the first success (AggregateError if all fail); <code>race</code> settles with the first result, success or failure.</p></details>
+</section>
+
+<section id="cheat"><h2>Quick revision cheat sheet</h2>
+<div class="w"><table>
+<tr><th>Topic</th><th>Remember</th></tr>
+<tr><td>null / undefined</td><td>unassigned vs intentional empty; <code>==</code> true, <code>===</code> false; typeof null is "object"; defaults skip null</td></tr>
+<tr><td>Scope</td><td>var = function, let/const = block; TDZ; per-iteration let in loops</td></tr>
+<tr><td>ASI</td><td>return + newline = undefined; start risky lines with <code>;</code></td></tr>
+<tr><td>Rest / Spread</td><td>gather vs expand; shallow copy; rest last</td></tr>
+<tr><td>Infinity</td><td>x/0, overflow, log(0), Math.max()</td></tr>
+<tr><td>NaN</td><td>bad conversion or invalid math; never equals itself; use Number.isNaN</td></tr>
+<tr><td>Arrow</td><td>lexical this, no arguments, no new, no prototype</td></tr>
+<tr><td>Closure</td><td>function + its lexical environment; captures variables not values</td></tr>
+<tr><td>sum(5)(6)</td><td>return a function that remembers a; currying vs partial</td></tr>
+<tr><td>Iterator</td><td>Symbol.iterator &rarr; next() &rarr; {value, done}; objects not iterable</td></tr>
+<tr><td>Generator</td><td>function*, yield pauses, next(v) sends in, lazy</td></tr>
+<tr><td>Memory</td><td>mark-and-sweep by reachability; leaks: timers, listeners, globals, caches; WeakMap</td></tr>
+<tr><td>Errors</td><td>try/catch/finally; async needs await; finally overrides return; fetch needs res.ok</td></tr>
+</table></div>
+<h3>Rapid-fire "what does this print?"</h3>
+<pre><code>console.log(typeof NaN, typeof null, typeof []);   // number object object
+console.log([] == false, null == 0, null &gt;= 0);    // true false true
+console.log(1 &lt; 2 &lt; 3, 3 &gt; 2 &gt; 1);                // true false
+console.log(parseInt("08"), +"", +" ", +"1,2");    // 8 0 0 NaN
+console.log([1,2,3] + [4]);                        // "1,24"
+console.log(typeof (() =&gt; {}), typeof class{});    // function function</code></pre>
+</section></main>
+<script>
+(function(){
+var re=/(\/\/.*$)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`)|\b(const|let|var|function|return|if|else|for|while|of|in|new|class|extends|yield|try|catch|finally|throw|typeof|async|await|this|null|undefined|true|false|break|continue)\b|\b(\d+\.?\d*n?)\b/gm;
+document.querySelectorAll("pre code").forEach(function(el){
+var t=el.textContent.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+el.innerHTML=t.replace(re,function(m,c,s,k,n){return c?'<span class="c">'+c+'</span>':s?'<span class="s">'+s+'</span>':k?'<span class="k">'+k+'</span>':'<span class="n">'+n+'</span>'})});
+document.getElementById("th").onclick=function(){var r=document.documentElement,d=r.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");r.setAttribute("data-theme",d==="dark"?"light":"dark")};
+})();
+</script></body></html>

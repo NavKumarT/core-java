@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JavaScript Bible · Section 4 · DOM & Browser APIs</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#17212b;--mut:#5b6b7a;--line:#d9e0e6;--acc:#0b6e8a;--code:#eef2f5;--trap:#fdf1e3;--trapb:#c9701a;--k:#a12b8c;--s:#18794e;--c:#7a8794;--n:#b35c00;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0d1319;--card:#141c24;--ink:#e3eaf0;--mut:#93a3b2;--line:#27333f;--acc:#4cc2e4;--code:#0a1015;--trap:#2a1f12;--trapb:#e39a4d;--k:#e08be0;--s:#6fd3a1;--c:#7d8c9a;--n:#f0b366}}
+:root[data-theme=dark]{--bg:#0d1319;--card:#141c24;--ink:#e3eaf0;--mut:#93a3b2;--line:#27333f;--acc:#4cc2e4;--code:#0a1015;--trap:#2a1f12;--trapb:#e39a4d;--k:#e08be0;--s:#6fd3a1;--c:#7d8c9a;--n:#f0b366}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "IBM Plex Sans",system-ui,sans-serif}
+main{max-width:860px;margin:0 auto;padding:20px 16px 60px}
+header h1{font-size:clamp(1.6rem,5vw,2.3rem);line-height:1.2;margin:.2em 0}header p{color:var(--mut);margin:0}
+#th{float:right;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;padding:6px 12px;cursor:pointer;font:inherit}
+nav{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0 8px}nav a{font-size:.85rem;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:4px 10px;border-radius:5px;text-decoration:none}nav a:hover{border-color:var(--acc);color:var(--acc)}
+section{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:8px;padding:6px 20px 16px;margin:22px 0}
+h2{font-size:1.4rem;margin:.8em 0 .3em}h3{font-size:1rem;margin:1.2em 0 .3em;color:var(--acc)}
+ul{padding-left:1.2em;margin:.4em 0}li{margin:.2em 0}
+code{font:.88em "JetBrains Mono",ui-monospace,monospace;background:var(--code);padding:1px 5px;border-radius:4px}
+pre{background:var(--code);border:1px solid var(--line);border-radius:6px;padding:12px;overflow-x:auto;margin:.7em 0;max-width:100%}pre code{background:none;padding:0;font-size:.84rem;line-height:1.5}
+.k{color:var(--k)}.s{color:var(--s)}.c{color:var(--c);font-style:italic}.n{color:var(--n)}
+.trap{background:var(--trap);border-left:4px solid var(--trapb);padding:8px 14px;border-radius:6px;margin:.8em 0}.trap b{color:var(--trapb)}
+details{border:1px solid var(--line);border-radius:6px;margin:.4em 0;padding:6px 12px}summary{cursor:pointer;font-weight:600}details p{margin:.5em 0 .2em}
+table{border-collapse:collapse;width:100%;font-size:.9rem}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{background:var(--code)}
+.w{overflow-x:auto}
+</style></head><body><main>
+<header><button id="th" aria-label="Toggle theme">Light / Dark</button>
+<h1>JavaScript Bible: Section 4<br>DOM &amp; Browser APIs</h1>
+<p>All 66 course questions answered, plus the follow-ups and traps interviewers add. Code samples assume a browser.</p></header>
+<nav><a href="#d1">DOM &amp; BOM</a><a href="#d2">Timers</a><a href="#d3">Bubbling &amp; capturing</a><a href="#d4">Delegation</a><a href="#d5">Navigation</a><a href="#d6">Selecting</a><a href="#d7">Manipulating</a><a href="#d8">Event basics</a><a href="#d9">Mouse</a><a href="#d10">Coordinates</a><a href="#d11">Keyboard</a><a href="#d12">Input events</a><a href="#d13">Clipboard</a><a href="#d14">Extras</a><a href="#cheat">Cheat sheet</a></nav>
+
+<section id="d1"><h2>1. Understanding the DOM, BOM and window</h2>
+<ul><li><strong>DOM (Document Object Model)</strong>: the browser's in-memory, object representation of an HTML/XML document, plus the <strong>API</strong> (<code>document.getElementById</code>, <code>createElement</code>, events) that lets JavaScript read and change structure, content and style. It is a language-neutral W3C/WHATWG standard, not part of JavaScript itself.</li>
+<li><strong>DOM tree</strong>: the document is parsed into a hierarchy of <em>nodes</em>: <code>document</code> at the root, then <code>&lt;html&gt;</code>, with <code>&lt;head&gt;</code> and <code>&lt;body&gt;</code> as children, and so on. Each tag is an element node; text, comments and attributes are nodes too. Every node has a parent (except the root), and siblings.</li>
+<li><strong>DOM manipulation</strong>: using the API to create, read, update, delete or move nodes, change attributes, classes and styles, and react to events, so the page updates without reloading.</li>
+<li><strong>BOM (Browser Object Model)</strong>: objects that expose the browser itself rather than the page: <code>window</code>, <code>navigator</code>, <code>location</code>, <code>history</code>, <code>screen</code>, timers, <code>alert/confirm/prompt</code>, <code>localStorage</code>, <code>fetch</code>. It has no formal standard (parts are in HTML spec) but is consistent across browsers.</li></ul>
+<pre><code>window.document === document;            // true: document is a property of window
+window.window === window;                // true (self reference)
+globalThis === window;                   // true in browsers (globalThis works everywhere)
+var a = 1; window.a;                     // 1  (var/function declarations become window props)
+let b = 2; window.b;                     // undefined (let/const do not)
+
+// window size
+window.innerWidth, window.innerHeight;   // viewport incl. scrollbar
+document.documentElement.clientWidth;    // viewport EXCLUDING scrollbar
+window.outerWidth, window.outerHeight;   // whole browser window incl. toolbars
+screen.width, screen.height;             // whole monitor; screen.availWidth excludes taskbar
+
+// address bar / URL (location object)
+location.href;       // "https://shop.example.com:8080/a/b?x=1#top"  full URL
+location.hostname;   // "shop.example.com"      location.host includes the port
+location.port, location.protocol, location.origin;   // "8080" "https:" "https://shop.example.com:8080"
+location.pathname;   // "/a/b"      location.search // "?x=1"      location.hash // "#top"
+location.href = "/home"; location.assign("/x"); location.replace("/x") /* no history entry */; location.reload();
+new URLSearchParams(location.search).get("x");   // "1"
+navigator.userAgent, navigator.language, navigator.onLine;
+history.back(); history.pushState({}, "", "/new");</code></pre>
+<div class="w"><table><tr><th></th><th>window</th><th>document</th></tr>
+<tr><td>Represents</td><td>the browser window/tab and the global scope</td><td>the HTML page loaded in it</td></tr>
+<tr><td>Part of</td><td>BOM (global object)</td><td>DOM (a property of window)</td></tr>
+<tr><td>Hierarchy</td><td>top-level</td><td><code>window.document</code></td></tr>
+<tr><td>Has</td><td>timers, location, history, localStorage, innerWidth, alert</td><td>getElementById, querySelector, createElement, body, title, cookie</td></tr>
+<tr><td>Events</td><td>load, resize, scroll, popstate, beforeunload</td><td>DOMContentLoaded, click (bubbles up to it), visibilitychange</td></tr></table></div>
+<div class="trap"><b>Trap:</b> in a browser, <code>this</code> at top level of a classic script is <code>window</code>, but <code>var</code> in a module does not create a window property. <code>window.name</code> is a real string property, so a global <code>name</code> variable can collide. Elements with an <code>id</code> become global variables (named access), which is a source of confusing bugs.</div>
+<details open><summary>What is the DOM / DOM API? What is a DOM tree? What is DOM manipulation?</summary><p>See the bullets above: the object model of the page, its programming interface, the tree of nodes it forms, and changing that tree from JavaScript.</p></details>
+<details open><summary>Difference between window and document?</summary><p><code>window</code> is the global object representing the browser window and everything global (BOM); <code>document</code> is one of its properties and represents the loaded page content (DOM). Everything you declare globally lives on window; you reach HTML elements through document.</p></details>
+<details open><summary>Difference between DOM and BOM? Which is the global object in the browser?</summary><p>DOM manages page content (structure, styles, events); BOM talks to the browser (URL, history, screen, navigator, timers). The global object is <code>window</code> (also reachable as <code>self</code> or <code>globalThis</code>); in a worker it is <code>self</code>, in Node it is <code>globalThis</code>/<code>global</code>.</p></details>
+<details open><summary>How do you get the window width/height and the address-bar value?</summary><p><code>window.innerWidth / innerHeight</code> (viewport) and <code>location.href</code> for the full URL, <code>location.hostname</code> for the host. Typed text in the address bar before navigation is not accessible to scripts.</p></details>
+</section>
+
+<section id="d2"><h2>2. Timers: setTimeout and setInterval</h2>
+<pre><code>const t = setTimeout((name) => console.log("once", name), 1000, "Asha");   // extra args allowed
+const i = setInterval(() => console.log("every 1s"), 1000);
+clearTimeout(t); clearInterval(i);       // ids are numbers (browser) / Timeout objects (Node)
+
+// digital clock
+// &lt;div id="clock"&gt;&lt;/div&gt;
+const clock = document.getElementById("clock");
+function tick() { clock.textContent = new Date().toLocaleTimeString(); }
+tick();                                   // show immediately, don't wait 1s
+const clockId = setInterval(tick, 1000);  // clearInterval(clockId) to stop
+
+// self-correcting alternative: recursive setTimeout (no overlap, adjustable delay)
+function loop() { doWork(); setTimeout(loop, 1000); }
+
+setTimeout(f, 0);    // runs AFTER current code and microtasks (promises); browsers clamp nested timers to &gt;= 4ms
+setTimeout(() => console.log("T"), 0); Promise.resolve().then(() => console.log("P")); console.log("S");  // S P T</code></pre>
+<div class="w"><table><tr><th></th><th>setTimeout</th><th>setInterval</th></tr>
+<tr><td>Runs</td><td>once after delay</td><td>repeatedly every delay ms until cleared</td></tr>
+<tr><td>Stop with</td><td>clearTimeout(id)</td><td>clearInterval(id)</td></tr>
+<tr><td>Risk</td><td>none</td><td>keeps running forever (leak) if never cleared; callbacks can queue up/overlap if work is slower than the interval</td></tr></table></div>
+<ul><li>Delay is a <em>minimum</em>, not a guarantee: the callback waits in the task queue until the call stack is free.</li>
+<li>Both are <strong>window methods</strong> (WindowOrWorkerGlobalScope), not part of the DOM <code>document</code>. Because <code>window</code> is the global object, you can call them without a prefix: <code>setTimeout()</code> equals <code>window.setTimeout()</code>.</li>
+<li>For animation use <code>requestAnimationFrame</code>. Background tabs throttle timers (often to 1 per second or less), so don't rely on interval counting for accurate time; compute from <code>Date.now()</code>.</li>
+<li><code>this</code> inside a regular-function callback is <code>window</code>; use an arrow function or bind. Passing a string to setTimeout (eval) is bad practice.</li></ul>
+<div class="trap"><b>Trap:</b> <code>for (var i=0;i&lt;3;i++) setTimeout(()=&gt;console.log(i),0)</code> prints 3,3,3 (use let). <code>setTimeout(fn(), 1000)</code> calls fn immediately and schedules its return value. In React, always clear timers in the <code>useEffect</code> cleanup.</div>
+<details open><summary>Difference between setTimeout() and setInterval()?</summary><p>setTimeout schedules one execution after a delay; setInterval schedules repeated executions at a fixed period until cleared.</p></details>
+<details open><summary>Why can't we write document.setTimeout() or document.setInterval()?</summary><p>They are methods of <code>window</code>, not of <code>document</code>. <code>document</code> has no such property in its prototype chain, so it throws <code>TypeError: document.setTimeout is not a function</code>.</p></details>
+<details open><summary>How do you stop a timer? How do you create a digital clock?</summary><p>Keep the id returned by setTimeout/setInterval and pass it to <code>clearTimeout</code>/<code>clearInterval</code>. Clock: an interval of 1000 ms that writes <code>new Date().toLocaleTimeString()</code> into an element (code above).</p></details>
+<details open><summary>How would you implement setInterval using setTimeout?</summary><p>Recursive setTimeout: <code>const run = () =&gt; { fn(); id = setTimeout(run, ms) }</code>, which guarantees the next run starts only after the previous finishes.</p></details>
+</section>
+
+<section id="d3"><h2>3. Event bubbling and capturing (propagation)</h2>
+<p>When an event fires on an element it travels in three phases: <strong>1. Capturing</strong> (window &rarr; document &rarr; html &rarr; ... &rarr; parent of target), <strong>2. Target</strong>, <strong>3. Bubbling</strong> (target &rarr; parent &rarr; ... &rarr; document &rarr; window).</p>
+<ul><li><strong>Bubbling</strong>: the event propagates from the innermost element up to its ancestors, triggering their handlers. <strong>Capturing</strong>: the reverse, from outermost ancestor down to the target.</li>
+<li><strong>Default</strong>: listeners run in the <em>bubbling</em> phase (third argument false).</li>
+<li><strong>Change path to capturing</strong>: <code>addEventListener("click", fn, true)</code> or <code>{ capture: true }</code>. (Inline <code>onclick</code> and <code>el.onclick</code> can only bubble.)</li>
+<li><strong>Stop</strong>: <code>event.stopPropagation()</code> stops it moving to further elements; <code>stopImmediatePropagation()</code> also blocks other listeners on the same element. <code>preventDefault()</code> is different: it cancels the browser action (link navigation, form submit) but doesn't stop propagation.</li>
+<li><strong>Element that fired it</strong>: <code>event.target</code> (the deepest element actually clicked). <code>event.currentTarget</code> (or <code>this</code> in a regular function) is the element whose listener is running.</li></ul>
+<pre><code>&lt;div id="d1"&gt;&lt;div id="d2"&gt;&lt;div id="d3"&gt;Click me&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+
+const log = id => () => console.log(id);
+d1.addEventListener("click", log("d1"));
+d2.addEventListener("click", log("d2"));
+d3.addEventListener("click", log("d3"));
+// click d3: d3, d2, d1                  (bubbling: inside out)
+
+// Practical question variant: add capture to d1 only
+d1.addEventListener("click", log("d1"), true);
+// click d3: d1 (capture phase first), d3, d2     (d1's capture listener already ran)
+
+d2.addEventListener("click", e =&gt; { e.stopPropagation(); console.log("d2") });
+// click d3: d3, d2 and d1 never fires in bubbling
+
+list.addEventListener("click", function (e) {
+  console.log(e.target.id, e.currentTarget.id, this === e.currentTarget);   // clicked child vs listener owner
+});</code></pre>
+<div class="trap"><b>Trap:</b> not every event bubbles: <code>focus</code>, <code>blur</code>, <code>mouseenter</code>, <code>mouseleave</code>, <code>load</code>, <code>unload</code>, <code>scroll</code> (on elements) do not. <code>focusin/focusout</code> are the bubbling versions. Two listeners with the same function and same capture flag on one element are added only once. <code>removeEventListener</code> must receive the same function reference and capture flag. Calling <code>stopPropagation</code> in a high-level handler can break analytics or UI libraries that rely on document-level listeners.</div>
+<details open><summary>What is event bubbling and capturing? Default path?</summary><p>Events travel down from the root to the target (capturing) and then back up (bubbling). Default handlers run on the way up, i.e. bubbling.</p></details>
+<details open><summary>How do you stop propagation? How do you change the default path?</summary><p><code>event.stopPropagation()</code> (and <code>stopImmediatePropagation()</code>). Register with <code>addEventListener(type, fn, true)</code> or <code>{capture:true}</code> to listen during capturing.</p></details>
+<details open><summary>How do you get the element on which the event fired? Output of the nested-div code?</summary><p><code>event.target</code>. The output is inner to outer on bubbling (d3, d2, d1) and outer to inner for capture listeners; see the examples above.</p></details>
+<details open><summary>target vs currentTarget vs relatedTarget?</summary><p>target: origin of the event; currentTarget: element the handler is attached to (changes during propagation); relatedTarget: the other element in focus/mouseover/mouseout pairs.</p></details>
+</section>
+
+<section id="d4"><h2>4. Event delegation</h2>
+<p>Attach <strong>one</strong> listener to a common ancestor and use bubbling plus <code>event.target</code> to figure out which child triggered it, instead of attaching a listener to every child.</p>
+<pre><code>// &lt;ul id="list"&gt;&lt;li data-id="1"&gt;A &lt;button class="del"&gt;x&lt;/button&gt;&lt;/li&gt;...&lt;/ul&gt;
+list.addEventListener("click", (e) =&gt; {
+  if (e.target.tagName === "LI") console.log("li", e.target.textContent);      // tagName is UPPERCASE in HTML
+  if (e.target.nodeName === "BUTTON") {}                                       // same idea
+  const btn = e.target.closest("button.del");                                  // robust: handles clicks on child icons
+  if (btn &amp;&amp; list.contains(btn)) btn.closest("li").remove();
+  const id = e.target.closest("li")?.dataset.id;                               // data-id attribute
+  if (e.target.matches("input[type=checkbox]")) console.log(e.target.checked);
+  if (e.target.value !== undefined) console.log(e.target.value);              // value of the element that raised the event
+});
+list.append(document.createElement("li"));   // new items work automatically, no new listener</code></pre>
+<ul><li><strong>Why useful</strong>: fewer listeners (memory/performance), works for elements added later (dynamic lists, tables, menus), cleaner setup/teardown. Frameworks use it internally (React attaches handlers at the root).</li>
+<li><strong>Element type check</strong>: <code>e.target.tagName</code>/<code>nodeName</code> (uppercase for HTML), <code>e.target.matches(selector)</code>, <code>e.target.classList.contains()</code>, <code>e.target.closest()</code>.</li>
+<li><strong>Value of the element</strong>: <code>e.target.value</code> (inputs/select/textarea), <code>.checked</code>, <code>.textContent</code>, <code>.dataset.x</code>, <code>.getAttribute()</code>.</li></ul>
+<div class="trap"><b>Trap:</b> if a button contains <code>&lt;span&gt;</code> or <code>&lt;img&gt;</code>, <code>e.target</code> is the inner node, so <code>tagName === "BUTTON"</code> fails; use <code>closest()</code>. Delegation doesn't work for events that don't bubble (use <code>focusin</code> instead of <code>focus</code>, or capture). If a child calls <code>stopPropagation</code>, the delegate never sees the event.</div>
+<details open><summary>What is event delegation and how is bubbling useful practically?</summary><p>Handling child events at a parent through bubbling. It reduces listeners, supports dynamically added elements, and centralises logic for lists, menus, tables and forms.</p></details>
+<details open><summary>Which property checks the element type, and how do you get its value?</summary><p><code>event.target.tagName</code> / <code>nodeName</code> (or <code>matches</code>) for type; <code>event.target.value</code> for the value.</p></details>
+</section>
+
+<section id="d5"><h2>5. DOM navigation</h2>
+<p>Moving between nodes using relationships: parent, children, siblings. Used for traversing structures when selectors aren't enough (relative lookups, accordions, tables, tree widgets).</p>
+<div class="w"><table><tr><th>All nodes (incl. text, comments)</th><th>Elements only</th></tr>
+<tr><td><code>parentNode</code></td><td><code>parentElement</code></td></tr>
+<tr><td><code>childNodes</code> (live NodeList)</td><td><code>children</code> (live HTMLCollection)</td></tr>
+<tr><td><code>firstChild</code>, <code>lastChild</code></td><td><code>firstElementChild</code>, <code>lastElementChild</code></td></tr>
+<tr><td><code>nextSibling</code>, <code>previousSibling</code></td><td><code>nextElementSibling</code>, <code>previousElementSibling</code></td></tr>
+<tr><td><code>hasChildNodes()</code></td><td><code>childElementCount</code>, <code>children.length</code></td></tr></table></div>
+<pre><code>// &lt;ul id="u"&gt;
+//   &lt;li&gt;A&lt;/li&gt;
+//   &lt;li&gt;B&lt;/li&gt;
+// &lt;/ul&gt;
+u.childNodes.length;          // 5: text, li, text, li, text (whitespace/newlines are text nodes!)
+u.children.length;            // 2
+u.firstChild.nodeType;        // 3 (whitespace text node)
+u.firstElementChild.textContent;   // "A"
+u.firstElementChild.nextElementSibling.textContent;   // "B" (next element at the same level)
+u.lastChild.nextSibling;      // null (nothing after the last child, whatever it is)
+u.hasChildNodes();            // true (true even if only whitespace)
+u.children.length === 0;      // "has no element children"
+li.closest("ul");             // nearest ancestor matching selector (or itself)
+u.contains(li);               // true for descendants
+u.parentNode === u.parentElement;   // true except for document/documentFragment roots (document.documentElement.parentNode is document, parentElement is null)</code></pre>
+<h3>Node types (nodeType)</h3>
+<div class="w"><table><tr><th>nodeType</th><th>Constant</th><th>Example</th><th>nodeName</th></tr>
+<tr><td>1</td><td>ELEMENT_NODE</td><td><code>&lt;div&gt;</code></td><td>"DIV"</td></tr>
+<tr><td>2</td><td>ATTRIBUTE_NODE</td><td><code>class="a"</code></td><td>attribute name</td></tr>
+<tr><td>3</td><td>TEXT_NODE</td><td>text, whitespace</td><td>"#text"</td></tr>
+<tr><td>8</td><td>COMMENT_NODE</td><td><code>&lt;!-- x --&gt;</code></td><td>"#comment"</td></tr>
+<tr><td>9</td><td>DOCUMENT_NODE</td><td><code>document</code></td><td>"#document"</td></tr>
+<tr><td>10</td><td>DOCUMENT_TYPE_NODE</td><td><code>&lt;!DOCTYPE html&gt;</code></td><td>"html"</td></tr>
+<tr><td>11</td><td>DOCUMENT_FRAGMENT_NODE</td><td><code>DocumentFragment</code></td><td>"#document-fragment"</td></tr></table></div>
+<div class="trap"><b>Trap:</b> <code>element.lastChild.nextSibling</code> is always <code>null</code>. <code>firstChild</code> is often a whitespace text node, not the first tag; prefer the <code>*Element*</code> properties. <code>childNodes</code> and <code>children</code> are live, so they change as the DOM changes (HTMLCollection has no <code>forEach</code>: use <code>Array.from(...)</code> or <code>[...el.children]</code>; NodeList from <code>childNodes</code> has forEach).</div>
+<details open><summary>What is a node? Types of nodes?</summary><p>Everything in the DOM tree is a node: element, text, attribute, comment, document, doctype, fragment nodes, differentiated by <code>nodeType</code>. Elements are the subset that correspond to tags.</p></details>
+<details open><summary>How do you access the next same-level element? childNodes vs children?</summary><p><code>el.nextElementSibling</code> (or <code>nextSibling</code> including text). <code>childNodes</code> returns every child node including text and comments; <code>children</code> returns only element children.</p></details>
+<details open><summary>How do you check whether an element has child nodes? What's the purpose of navigation?</summary><p><code>el.hasChildNodes()</code> (any node) or <code>el.children.length</code>/<code>childElementCount</code> (elements only). Navigation lets you work relative to a known element without extra queries.</p></details>
+</section>
+
+<section id="d6"><h2>6. Selecting elements: getElementBy* and querySelector*</h2>
+<div class="w"><table><tr><th>Method</th><th>Returns</th><th>Live?</th><th>Called on</th></tr>
+<tr><td><code>getElementById(id)</code></td><td>element or null</td><td>n/a</td><td><strong>document only</strong></td></tr>
+<tr><td><code>getElementsByTagName(tag)</code></td><td>HTMLCollection (empty if none)</td><td>live</td><td>document or any element</td></tr>
+<tr><td><code>getElementsByClassName(cls)</code></td><td>HTMLCollection</td><td>live</td><td>document or element</td></tr>
+<tr><td><code>getElementsByName(name)</code></td><td>NodeList</td><td>live</td><td>document only</td></tr>
+<tr><td><code>querySelector(css)</code></td><td>first match or null</td><td>n/a</td><td>document or element</td></tr>
+<tr><td><code>querySelectorAll(css)</code></td><td>NodeList (maybe empty)</td><td><strong>static</strong> snapshot</td><td>document or element</td></tr></table></div>
+<pre><code>document.getElementById("main");
+document.getElementsByTagName("p")[0];          // index access; "*" returns all elements
+document.getElementsByClassName("a b");         // elements having BOTH classes
+document.getElementsByName("gender");           // matches the name attribute (form controls: radio groups, inputs)
+document.querySelector(".card &gt; h2");           // first match only
+document.querySelectorAll("input[type=checkbox]:checked");
+document.querySelectorAll("li:nth-child(odd)");  // pseudo-classes work
+document.querySelector("input:not([disabled])");
+document.querySelectorAll("a[href^='https']");   // attribute selectors
+box.querySelector("p");                          // search scoped inside an element
+document.querySelectorAll("p").forEach(p =&gt; p.classList.add("x"));   // NodeList has forEach
+Array.from(document.getElementsByTagName("p")).map(p =&gt; p.id);        // HTMLCollection needs conversion
+div.matches(".active");                          // does THIS element match a selector?
+
+// live vs static
+const live = document.getElementsByClassName("x"), snap = document.querySelectorAll(".x");
+document.body.append(Object.assign(document.createElement("i"), { className: "x" }));
+live.length;  snap.length;   // live is one more, snapshot unchanged</code></pre>
+<div class="trap"><b>Trap:</b> <code>element.getElementById</code> does not exist (TypeError); use <code>element.querySelector("#id")</code>. Live collections make loops that remove elements skip items (loop backwards or convert first). Pseudo-elements (<code>::before</code>) can't be selected; <code>:hover</code> only matches while hovering. <code>querySelector("#1abc")</code> throws for an invalid selector (escape with <code>CSS.escape</code>). Passing the class with a dot to <code>getElementsByClassName(".a")</code> returns nothing.</div>
+<details open><summary>Can you use document.getElementById() and element.getElementById()?</summary><p>Only <code>document.getElementById()</code>. The method is defined on Document, not Element, because ids are unique per document. Use <code>element.querySelector("#id")</code> to search inside an element.</p></details>
+<details open><summary>What does getElementsByTagName() return?</summary><p>A live <code>HTMLCollection</code> of matching elements (empty collection, not null, if none).</p></details>
+<details open><summary>Difference between getElementsByClassName and getElementsByName?</summary><p>ClassName matches the <code>class</code> attribute and is available on document and elements, returning an HTMLCollection. Name matches the <code>name</code> attribute (form fields) and exists only on document, returning a NodeList. Both are live.</p></details>
+<details open><summary>querySelector vs querySelectorAll? Searching with pseudo-classes?</summary><p>First matching element or <code>null</code>, versus a static NodeList of all matches (empty if none). Any CSS selector works: <code>:checked</code>, <code>:first-child</code>, <code>:nth-child()</code>, <code>:not()</code>, <code>:disabled</code>.</p></details>
+<details open><summary>Which is better: getElementBy* or querySelector*?</summary><p><code>getElementById</code> is marginally fastest and clearest for ids; <code>getElementsBy*</code> are live and fast for simple lookups; <code>querySelector*</code> are the most flexible (any CSS selector, consistent API) and usually good enough. Choose by need: flexibility vs live collection vs micro-performance.</p></details>
+</section>
+
+<section id="d7"><h2>7. DOM manipulation toolbox (commonly asked)</h2>
+<pre><code>const li = document.createElement("li");
+li.textContent = "Item";                  // safe text (no HTML parsing)
+li.classList.add("a"); li.classList.toggle("on"); li.classList.remove("a"); li.classList.contains("on");
+li.setAttribute("data-id", 5); li.dataset.id; li.getAttribute("data-id"); li.removeAttribute("data-id");
+li.style.color = "red"; li.style.backgroundColor = "#eee";    // camelCase CSS props
+getComputedStyle(li).fontSize;           // final computed value
+ul.append(li, "text"); ul.prepend(li);   // many nodes/strings; appendChild takes one node
+ul.insertBefore(li, ul.firstChild); li.before(x); li.after(y); li.replaceWith(z);
+li.remove();                             // modern (removeChild(parent) older)
+li.cloneNode(true);                      // deep clone (listeners NOT copied)
+ul.insertAdjacentHTML("beforeend", "&lt;li&gt;x&lt;/li&gt;");   // beforebegin | afterbegin | beforeend | afterend
+
+const frag = document.createDocumentFragment();           // batch inserts: one reflow
+items.forEach(t =&gt; { const e = document.createElement("li"); e.textContent = t; frag.append(e) });
+ul.append(frag);</code></pre>
+<div class="w"><table><tr><th>Property</th><th>Behaviour</th></tr>
+<tr><td><code>textContent</code></td><td>all text incl. hidden/script; fast; no parsing; safe</td></tr>
+<tr><td><code>innerText</code></td><td>rendered text only (respects CSS, hidden elements skipped), triggers layout</td></tr>
+<tr><td><code>innerHTML</code></td><td>parses a string as HTML: powerful but <strong>XSS risk</strong> with user input; re-creates child nodes (loses listeners)</td></tr>
+<tr><td><code>outerHTML</code></td><td>includes the element's own tag</td></tr></table></div>
+<ul><li><strong>Reflow</strong> (layout recalculation) and <strong>repaint</strong> are costly; batch reads/writes, use fragments, class toggles instead of many style writes, <code>requestAnimationFrame</code> for visual updates. Reading <code>offsetHeight</code> between writes forces layout ("layout thrashing").</li>
+<li>Attributes vs properties: attribute is the HTML text (<code>getAttribute("value")</code> = initial); property is the live state (<code>input.value</code>, <code>checked</code>).</li></ul>
+<details open><summary>innerHTML vs textContent vs innerText?</summary><p>innerHTML parses HTML (risk of XSS), textContent sets/reads raw text quickly, innerText is layout-aware (what the user sees). Use textContent for untrusted data.</p></details>
+<details open><summary>How do you add 1000 items efficiently?</summary><p>Build them in a DocumentFragment (or a joined string once) and append once, minimising reflows.</p></details>
+</section>
+
+<section id="d8"><h2>8. Event basics</h2>
+<h3>Ways to attach an event</h3>
+<pre><code>&lt;!-- 1. Inline HTML attribute (avoid: mixes markup and logic, global scope, CSP issues) --&gt;
+&lt;button onclick="save(event)"&gt;Save&lt;/button&gt;
+
+// 2. DOM property (only ONE handler per event; assigning again overwrites)
+btn.onclick = function (e) { };
+btn.onclick = null;                      // remove
+
+// 3. addEventListener (recommended: multiple handlers, options, capture)
+function onClick(e) { }
+btn.addEventListener("click", onClick);
+btn.removeEventListener("click", onClick);       // needs the SAME function reference
+
+// syntax: target.addEventListener(type, listener, options | useCapture)
+btn.addEventListener("click", onClick, {
+  capture: false,   // listen in capturing phase if true
+  once: true,       // auto-remove after first run
+  passive: true,    // promise not to call preventDefault (smoother scroll/touch)
+  signal: ctrl.signal   // AbortController: ctrl.abort() removes the listener
+});
+btn.addEventListener("click", { handleEvent(e) { /* object listener */ } });</code></pre>
+<h3>The event object</h3>
+<pre><code>btn.addEventListener("click", (e) =&gt; {
+  e.type;              // "click"
+  e.target;            // element that triggered it       e.currentTarget  // element with the listener
+  e.preventDefault();  // cancel default action (link, submit, contextmenu)
+  e.stopPropagation(); // stop bubbling/capturing
+  e.bubbles, e.cancelable, e.defaultPrevented, e.eventPhase;   // 1 capture, 2 target, 3 bubble
+  e.timeStamp, e.isTrusted;   // isTrusted false for synthetic events
+  e.composedPath();           // array of the propagation path
+});
+btn.dispatchEvent(new CustomEvent("saved", { detail: { id: 1 }, bubbles: true }));   // custom events
+btn.addEventListener("click", () =&gt; this);   // arrow: this is NOT the element; use e.currentTarget</code></pre>
+<div class="trap"><b>Trap:</b> <code>addEventListener("click", fn())</code> calls fn immediately. Anonymous or inline-arrow listeners can't be removed later. <code>el.onclick = a; el.onclick = b</code> keeps only b. <code>passive: true</code> makes <code>preventDefault()</code> a no-op (warning). In inline <code>onclick="foo()"</code> <code>foo</code> must be global.</div>
+<details open><summary>Various ways to configure an event with HTML elements? addEventListener syntax? What is the event object?</summary><p>Inline attribute, DOM property, and <code>addEventListener</code> (best). Syntax: <code>addEventListener(type, handler, options)</code>. The event object is passed to the handler and describes what happened (type, target, coordinates, keys) and provides control methods (<code>preventDefault</code>, <code>stopPropagation</code>).</p></details>
+<details open><summary>preventDefault vs stopPropagation vs return false?</summary><p>preventDefault cancels the browser's default action; stopPropagation stops the event travelling further; <code>return false</code> in an inline/DOM-property handler does preventDefault only (jQuery's version also stops propagation). In addEventListener, return value is ignored.</p></details>
+</section>
+
+<section id="d9"><h2>9. Mouse events</h2>
+<pre><code>// events: click, dblclick, mousedown, mouseup, mousemove, contextmenu, wheel, mouseover/out (bubble), mouseenter/leave (don't bubble)
+
+// disable right click on an element
+box.addEventListener("contextmenu", e =&gt; e.preventDefault());
+// inline: &lt;div oncontextmenu="return false"&gt;
+
+// special keys held during the event
+box.addEventListener("click", e =&gt; {
+  e.ctrlKey; e.shiftKey; e.altKey; e.metaKey;     // booleans (metaKey = Cmd on Mac, Windows key on Windows)
+});
+
+// which mouse button: event.button (the button that CAUSED the event)
+// 0 = left (main), 1 = middle (wheel), 2 = right (secondary), 3 = back, 4 = forward
+box.addEventListener("mousedown", e =&gt; console.log(e.button));
+// event.buttons: bitmask of buttons CURRENTLY held: 1 = left, 2 = right, 4 = middle (sum for combos, e.g. 3 = left+right)
+// event.which: legacy (1,2,3), avoid. NOTE: "click" fires only for the primary button; use auxclick or mousedown/mouseup for others.
+
+// Ctrl (Windows/Linux) or Cmd (Mac) check
+const isCmdOrCtrl = e =&gt; e.ctrlKey || e.metaKey;
+box.addEventListener("click", e =&gt; { if (isCmdOrCtrl(e)) console.log("multi-select") });
+const isMac = /Mac|iPhone|iPad/.test(navigator.platform);   // if you must distinguish
+const mod = isMac ? e.metaKey : e.ctrlKey;</code></pre>
+<div class="trap"><b>Trap:</b> <code>mouseover/mouseout</code> fire again when moving between child elements; <code>mouseenter/mouseleave</code> don't. Disabling right-click does not secure content (dev tools, view-source, screenshots) and hurts accessibility; use it only for custom context menus. On Mac, Ctrl+click is also a right-click (contextmenu).</div>
+<details open><summary>How do you disable right click, check special keys and the mouse button?</summary><p><code>contextmenu</code> + <code>preventDefault()</code>; <code>event.ctrlKey/shiftKey/altKey/metaKey</code>; <code>event.button</code> (0/1/2) or <code>buttons</code> bitmask.</p></details>
+<details open><summary>Condition to check Ctrl on Windows and Cmd on Mac?</summary><p><code>if (e.ctrlKey || e.metaKey)</code>. Cmd maps to <code>metaKey</code> on Mac; Ctrl maps to <code>ctrlKey</code>.</p></details>
+</section>
+
+<section id="d10"><h2>10. clientX/Y vs pageX/Y vs screenX/Y</h2>
+<div class="w"><table><tr><th>Property</th><th>Origin (0,0)</th><th>Changes on scroll?</th></tr>
+<tr><td><code>clientX / clientY</code></td><td>top-left of the <strong>viewport</strong> (visible browser area)</td><td>no, relative to what you see</td></tr>
+<tr><td><code>pageX / pageY</code></td><td>top-left of the <strong>whole document</strong> (including scrolled-out part)</td><td>yes: <code>pageY = clientY + window.scrollY</code></td></tr>
+<tr><td><code>screenX / screenY</code></td><td>top-left of the <strong>physical monitor</strong></td><td>depends on window position, not scroll</td></tr>
+<tr><td><code>offsetX / offsetY</code></td><td>top-left (padding edge) of the <strong>target element</strong></td><td>no</td></tr></table></div>
+<pre><code>document.addEventListener("click", e =&gt; {
+  console.log(e.clientX, e.clientY, e.pageX, e.pageY, e.screenX, e.screenY);
+});
+// page scrolled down 500px, click at 100px from viewport top:
+// clientY = 100, pageY = 600, screenY = browser toolbar height + 100 (+ window offset)
+
+const r = el.getBoundingClientRect();   // element position relative to viewport
+const x = e.clientX - r.left;           // click position inside an element
+// tooltip: position: fixed -> use clientX/Y; position: absolute in the page -> pageX/Y</code></pre>
+<details open><summary>clientX/Y vs pageX/Y? clientX/Y vs screenX/Y?</summary><p>client is relative to the visible viewport and ignores scrolling; page is relative to the full document so it adds the scroll offset. screen is relative to the user's monitor, useful for window positioning, while client is relative to the browser content area.</p></details>
+</section>
+
+<section id="d11"><h2>11. Keyboard events</h2>
+<ul><li>Order: <code>keydown</code> (repeats while held; <code>e.repeat</code>) &rarr; <code>keypress</code> (<strong>deprecated</strong>, only character keys) &rarr; <code>keyup</code>. Use keydown/keyup.</li>
+<li><code>event.key</code>: the <em>value produced</em>, depends on layout, Shift and CapsLock: <code>"a"</code>, <code>"A"</code>, <code>"Enter"</code>, <code>"ArrowUp"</code>, <code>" "</code>, <code>"Escape"</code>.</li>
+<li><code>event.code</code>: the <em>physical key</em>, independent of layout and modifiers: <code>"KeyA"</code>, <code>"Digit1"</code>, <code>"Enter"</code>, <code>"ShiftLeft"</code>, <code>"Space"</code>, <code>"ArrowUp"</code>, <code>"Numpad1"</code>. Good for games (WASD works on any layout).</li>
+<li><code>keyCode</code>/<code>which</code>/<code>charCode</code>: deprecated.</li></ul>
+<pre><code>document.addEventListener("keydown", (e) =&gt; {
+  if (e.ctrlKey &amp;&amp; e.key.toLowerCase() === "z") { /* undo */ }       // Ctrl+Z (Shift makes key "Z", so lowercase it)
+  if ((e.ctrlKey || e.metaKey) &amp;&amp; e.code === "KeyZ") { e.preventDefault(); } // cross-platform, layout-independent
+  if (e.ctrlKey &amp;&amp; e.shiftKey &amp;&amp; e.key === "Z") { /* redo */ }
+  if (e.key === "Escape") closeModal();
+  if (e.key === "Enter" &amp;&amp; !e.isComposing) submit();              // ignore IME composition
+});
+// Alt+Shift key: e.key can be a symbol (macOS Option changes key), so prefer e.code for shortcuts</code></pre>
+<div class="trap"><b>Trap:</b> with Shift held, <code>e.key</code> is uppercase <code>"Z"</code>, but <code>e.code</code> stays <code>"KeyZ"</code>. On AZERTY, the physical "Q" key has <code>code "KeyQ"</code> but <code>key "a"</code>. Browser shortcuts can't always be blocked. Don't use <code>keypress</code>; keydown doesn't give final input value (use <code>input</code> event).</div>
+<details open><summary>How do you check if Ctrl and Z are pressed? What does event.code return? code vs key?</summary><p><code>e.ctrlKey &amp;&amp; e.key.toLowerCase() === "z"</code> (or <code>e.code === "KeyZ"</code>). <code>event.code</code> returns the physical key identifier like <code>"KeyZ"</code>. <code>event.key</code> returns the character/meaning of the key under the current layout and modifiers; <code>code</code> ignores layout.</p></details>
+</section>
+
+<section id="d12"><h2>12. Input element events</h2>
+<div class="w"><table><tr><th>Event</th><th>Fires when</th><th>Bubbles</th></tr>
+<tr><td><code>focus</code> / <code>blur</code></td><td>element gains / loses focus (regardless of value change)</td><td>no (<code>focusin/focusout</code> do)</td></tr>
+<tr><td><code>input</code></td><td>value changes immediately: typing, paste, cut, drag-drop, autofill, speech, slider moves</td><td>yes</td></tr>
+<tr><td><code>change</code></td><td>value is <strong>committed</strong> and differs from before: text fields on blur/Enter; checkbox, radio, select, file immediately</td><td>yes</td></tr>
+<tr><td><code>keydown / keyup</code></td><td>key pressed / released (not for mouse paste)</td><td>yes</td></tr>
+<tr><td><code>keypress</code></td><td>deprecated character key press</td><td>yes</td></tr></table></div>
+<pre><code>name.addEventListener("input", e =&gt; preview.textContent = e.target.value);   // live feedback / search-as-you-type (debounce it)
+name.addEventListener("blur", validate);                                    // validate when leaving the field
+name.addEventListener("change", save);                                      // only if value changed
+
+// checkbox
+chk.addEventListener("change", e =&gt; console.log(e.target.checked));        // preferred over click (works with keyboard/label)
+// radio group: change fires only on the newly selected radio
+document.querySelectorAll("input[name=plan]").forEach(r =&gt; r.addEventListener("change", e =&gt; console.log(e.target.value)));
+document.querySelector("input[name=plan]:checked")?.value;                  // current selection
+form.addEventListener("change", e =&gt; { /* delegation on the form */ });
+
+// select (drop down): change is the event to use
+sel.addEventListener("change", () =&gt; {
+  sel.value;                                         // value attribute of selected option (or its text if no value attr)
+  sel.selectedIndex;                                 // 0-based index
+  sel.options[sel.selectedIndex].text;               // visible TEXT of the selected item
+  sel.selectedOptions[0].text;                       // same; selectedOptions supports multiple select
+  [...sel.selectedOptions].map(o =&gt; o.value);        // multiple select values
+});
+
+form.addEventListener("submit", e =&gt; { e.preventDefault(); const data = Object.fromEntries(new FormData(form)); });</code></pre>
+<div class="trap"><b>Trap:</b> a text input's <code>change</code> doesn't fire while typing, and not at all if you blur without altering. <code>keyup</code> misses paste/mouse changes and IME input; <code>input</code> is the reliable one. <code>sel.value</code> returns the option's <code>value</code>, not its label. <code>click</code> on a checkbox also fires from label clicks and keyboard Space, and fires before/after state depending on handler order, so use <code>change</code>. For disabled inputs events don't fire.</div>
+<details open><summary>onblur vs onchange?</summary><p><code>blur</code> fires every time the element loses focus; <code>change</code> fires only if its value changed since it gained focus (and is committed). Blur is for validation on exit; change for reacting to modifications.</p></details>
+<details open><summary>How do you handle checkbox and radio events?</summary><p>Use <code>change</code> and read <code>e.target.checked</code> (checkbox) or <code>e.target.value</code> (radio, firing only for the newly selected). <code>click</code> also works but is less semantically precise.</p></details>
+<details open><summary>Differentiate onkeypress, onkeyup and oninput.</summary><p><code>keypress</code>: deprecated, fires for character keys before the value updates. <code>keyup</code>: after the key is released, value already updated, but only for keyboard. <code>input</code>: fires on any value change from any source (keyboard, paste, voice, drag), so it is preferred.</p></details>
+<details open><summary>Which event with select, and how do you get the text of the selected item?</summary><p><code>change</code>. Text: <code>sel.options[sel.selectedIndex].text</code> or <code>sel.selectedOptions[0].text</code>; value: <code>sel.value</code>.</p></details>
+</section>
+
+<section id="d13"><h2>13. cut, copy and paste events</h2>
+<pre><code>// fire on the focused element (or selection) and bubble; are cancelable
+input.addEventListener("copy",  e =&gt; { e.preventDefault(); e.clipboardData.setData("text/plain", "custom text"); });
+input.addEventListener("cut",   e =&gt; e.preventDefault());       // block cut (and the change)
+input.addEventListener("paste", e =&gt; {
+  const text = e.clipboardData.getData("text");           // read what is being pasted
+  e.preventDefault();                                      // stop pasting
+  input.value += text.trim();                              // custom handling (sanitise, format)
+});
+// inline: &lt;input oncut="return false" oncopy="return false" onpaste="return false"&gt;
+// disable for a whole page: document.addEventListener("copy", e =&gt; e.preventDefault());
+
+// Async Clipboard API (secure context HTTPS, user gesture, permission)
+await navigator.clipboard.writeText("copied!");
+const t = await navigator.clipboard.readText();          // prompts for permission
+// legacy: document.execCommand("copy") deprecated
+// CSS to stop selecting: user-select: none;</code></pre>
+<ul><li>Event order for copy/cut/paste: handler runs, then (if not prevented) the browser performs the action. <code>cut</code> also removes the selection and then fires <code>input</code>.</li>
+<li>Uses: sanitise pasted text, strip formatting, limit length, confirm password fields, add attribution on copy, custom "copy to clipboard" buttons.</li></ul>
+<div class="trap"><b>Trap:</b> blocking copy/paste doesn't protect data and harms accessibility and password managers. <code>e.clipboardData</code> exists only inside the event; after an <code>await</code> it is empty. <code>readText()</code> requires permission and focus.</div>
+<details open><summary>Explain cut, copy and paste events. How do you stop them?</summary><p>They fire when the user cuts, copies or pastes via keyboard, menu or context menu; the event has <code>clipboardData</code>. Stop with <code>event.preventDefault()</code> in a listener (or <code>return false</code> in the inline attribute).</p></details>
+</section>
+
+<section id="d14"><h2>14. Extra DOM and browser questions interviewers ask</h2>
+<div class="w"><table><tr><th>Question</th><th>Answer</th></tr>
+<tr><td>DOMContentLoaded vs load</td><td><code>DOMContentLoaded</code>: HTML parsed and DOM ready (no waiting for images/styles). <code>load</code> (window): everything including images, iframes finished.</td></tr>
+<tr><td>script, async, defer</td><td>Plain: blocks parsing. <code>async</code>: downloads in parallel, runs as soon as ready (order not guaranteed). <code>defer</code>: downloads in parallel, runs after parsing, in order, before DOMContentLoaded. Modules are deferred by default.</td></tr>
+<tr><td>localStorage vs sessionStorage vs cookies</td><td>localStorage: ~5-10MB, persists, same origin, strings. sessionStorage: per tab, cleared on tab close. Cookies: ~4KB, sent to the server with each request, can be HttpOnly/Secure/SameSite and expire. Don't store secrets in Web Storage (readable by XSS).</td></tr>
+<tr><td>Virtual DOM</td><td>A lightweight JS copy of the UI that React diffs against the previous version to apply minimal real-DOM updates (covered in the React sections).</td></tr>
+<tr><td>Shadow DOM / Web Components</td><td>Encapsulated DOM subtree with scoped styles attached to an element (<code>attachShadow</code>), plus custom elements.</td></tr>
+<tr><td>MutationObserver / IntersectionObserver / ResizeObserver</td><td>Observe DOM changes / visibility in viewport (lazy loading, infinite scroll) / element size, without polling.</td></tr>
+<tr><td>Debounce vs throttle</td><td>Debounce: run after events stop for N ms (search input). Throttle: run at most once per N ms (scroll, resize).</td></tr>
+<tr><td>Same-origin policy / CORS / XSS</td><td>Browser blocks cross-origin reads unless the server allows via CORS headers. XSS = injecting script via unsanitised HTML (use textContent, escape, CSP).</td></tr>
+<tr><td>Reflow vs repaint</td><td>Reflow recalculates layout (size/position changes, expensive); repaint redraws pixels (colour changes). Reflow always causes repaint.</td></tr>
+<tr><td>Event loop and DOM</td><td>DOM updates and event callbacks run on the main thread as tasks; microtasks (promises) run before the next render/task.</td></tr></table></div>
+<pre><code>const debounce = (fn, ms) =&gt; { let t; return (...a) =&gt; { clearTimeout(t); t = setTimeout(() =&gt; fn(...a), ms) } };
+const throttle = (fn, ms) =&gt; { let last = 0; return (...a) =&gt; { const n = Date.now(); if (n - last &gt;= ms) { last = n; fn(...a) } } };
+document.addEventListener("DOMContentLoaded", init);
+new IntersectionObserver(([en]) =&gt; en.isIntersecting &amp;&amp; load(), { threshold: 0.1 }).observe(el);</code></pre>
+</section>
+
+<section id="cheat"><h2>Quick revision cheat sheet</h2>
+<div class="w"><table><tr><th>Topic</th><th>Remember</th></tr>
+<tr><td>window vs document</td><td>window = global/BOM; document = page/DOM, a property of window</td></tr>
+<tr><td>Timers</td><td>window methods; clear with the id; delay is a minimum; recursive setTimeout avoids overlap</td></tr>
+<tr><td>Propagation</td><td>capture down, target, bubble up; default bubble; capture = 3rd arg true; stopPropagation; target vs currentTarget</td></tr>
+<tr><td>Delegation</td><td>listener on parent + <code>e.target.closest()</code>; works for dynamic children; not for non-bubbling events</td></tr>
+<tr><td>Navigation</td><td>childNodes (all) vs children (elements); text nodes from whitespace; lastChild.nextSibling is null</td></tr>
+<tr><td>Selectors</td><td>getElementById doc-only; getElementsBy* live HTMLCollection; querySelectorAll static NodeList</td></tr>
+<tr><td>Events</td><td>addEventListener over inline/onclick; options once/passive/capture/signal; same ref to remove</td></tr>
+<tr><td>Mouse</td><td>contextmenu + preventDefault; button 0/1/2; ctrlKey || metaKey</td></tr>
+<tr><td>Coordinates</td><td>client = viewport, page = document, screen = monitor, offset = element</td></tr>
+<tr><td>Keyboard</td><td>key = character (layout), code = physical key; keypress deprecated</td></tr>
+<tr><td>Input events</td><td>input = every change; change = committed; blur = focus lost; select: change + options[selectedIndex].text</td></tr>
+<tr><td>Clipboard</td><td>cut/copy/paste cancelable, clipboardData; navigator.clipboard async API</td></tr></table></div>
+<h3>Rapid-fire "what does this print?"</h3>
+<pre><code>console.log(window === globalThis, typeof document.setTimeout);     // true "undefined"
+for (var i = 0; i &lt; 3; i++) setTimeout(() =&gt; console.log(i), 0);        // 3 3 3
+setTimeout(() =&gt; console.log("T")); Promise.resolve().then(() =&gt; console.log("P")); console.log("S"); // S P T
+ul.lastChild.nextSibling;                                            // null
+document.getElementsByClassName("x").length;   // live: updates after DOM changes
+document.querySelectorAll(".x").length;        // static snapshot
+btn.addEventListener("click", () =&gt; console.log(this));              // window (arrow, top-level)
+// clicking a nested child with listeners on parent (bubble) and child: child logs first, then parent</code></pre>
+</section>
+</main>
+<script>
+(function(){
+var re=/(\/\/.*$)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`)|\b(const|let|var|function|return|if|else|for|while|of|in|new|class|extends|yield|try|catch|finally|throw|typeof|async|await|this|null|undefined|true|false|break|continue)\b|\b(\d+\.?\d*n?)\b/gm;
+document.querySelectorAll("pre code").forEach(function(el){
+var t=el.textContent.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+el.innerHTML=t.replace(re,function(m,c,s,k,n){return c?'<span class="c">'+c+'</span>':s?'<span class="s">'+s+'</span>':k?'<span class="k">'+k+'</span>':'<span class="n">'+n+'</span>'})});
+document.getElementById("th").onclick=function(){var r=document.documentElement,d=r.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");r.setAttribute("data-theme",d==="dark"?"light":"dark")};
+})();
+</script></body></html>

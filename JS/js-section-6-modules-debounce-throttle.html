@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JavaScript Bible · Section 6 · Modules, Debounce & Throttle</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#17212b;--mut:#5b6b7a;--line:#d9e0e6;--acc:#0b6e8a;--code:#eef2f5;--trap:#fdf1e3;--trapb:#c9701a;--k:#a12b8c;--s:#18794e;--c:#7a8794;--n:#b35c00;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0d1319;--card:#141c24;--ink:#e3eaf0;--mut:#93a3b2;--line:#27333f;--acc:#4cc2e4;--code:#0a1015;--trap:#2a1f12;--trapb:#e39a4d;--k:#e08be0;--s:#6fd3a1;--c:#7d8c9a;--n:#f0b366}}
+:root[data-theme=dark]{--bg:#0d1319;--card:#141c24;--ink:#e3eaf0;--mut:#93a3b2;--line:#27333f;--acc:#4cc2e4;--code:#0a1015;--trap:#2a1f12;--trapb:#e39a4d;--k:#e08be0;--s:#6fd3a1;--c:#7d8c9a;--n:#f0b366}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "IBM Plex Sans",system-ui,sans-serif}
+main{max-width:860px;margin:0 auto;padding:20px 16px 60px}
+header h1{font-size:clamp(1.6rem,5vw,2.3rem);line-height:1.2;margin:.2em 0}header p{color:var(--mut);margin:0}
+#th{float:right;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;padding:6px 12px;cursor:pointer;font:inherit}
+nav{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0 8px}nav a{font-size:.85rem;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:4px 10px;border-radius:5px;text-decoration:none}nav a:hover{border-color:var(--acc);color:var(--acc)}
+section{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:8px;padding:6px 20px 16px;margin:22px 0}
+h2{font-size:1.4rem;margin:.8em 0 .3em}h3{font-size:1rem;margin:1.2em 0 .3em;color:var(--acc)}
+ul{padding-left:1.2em;margin:.4em 0}li{margin:.2em 0}
+code{font:.88em "JetBrains Mono",ui-monospace,monospace;background:var(--code);padding:1px 5px;border-radius:4px}
+pre{background:var(--code);border:1px solid var(--line);border-radius:6px;padding:12px;overflow-x:auto;margin:.7em 0;max-width:100%}pre code{background:none;padding:0;font-size:.84rem;line-height:1.5}
+.k{color:var(--k)}.s{color:var(--s)}.c{color:var(--c);font-style:italic}.n{color:var(--n)}
+.trap{background:var(--trap);border-left:4px solid var(--trapb);padding:8px 14px;border-radius:6px;margin:.8em 0}.trap b{color:var(--trapb)}
+details{border:1px solid var(--line);border-radius:6px;margin:.4em 0;padding:6px 12px}summary{cursor:pointer;font-weight:600}details p{margin:.5em 0 .2em}
+table{border-collapse:collapse;width:100%;font-size:.9rem}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{background:var(--code)}
+.w{overflow-x:auto}
+</style></head><body><main>
+<header><button id="th" aria-label="Toggle theme">Light / Dark</button>
+<h1>JavaScript Bible: Section 6<br>Modules, Debounce &amp; Throttle</h1>
+<p>Every course question answered, plus the module-system traps and the "implement debounce / throttle" questions that come up in almost every frontend interview. Includes a live demo you can try.</p></header>
+<nav><a href="#m1">What is a module</a><a href="#m2">Named export</a><a href="#m3">Default export</a><a href="#m4">Re-exports, dynamic, live bindings</a><a href="#m5">ESM vs CommonJS</a><a href="#t1">Debounce vs Throttle</a><a href="#t2">Throttle code</a><a href="#t3">Debounce code</a><a href="#t4">Use cases</a><a href="#t5">React &amp; advanced</a><a href="#cheat">Cheat sheet</a></nav>
+
+<section id="m1"><h2>1. What is a module?</h2>
+<p>A <strong>module</strong> is a single JavaScript file with its <em>own private scope</em> that explicitly <strong>exports</strong> what others may use and <strong>imports</strong> what it needs from other modules. ES modules (ESM, ES2015) are the language standard, replacing older patterns: IIFE/revealing-module pattern, CommonJS (<code>require</code>, Node), AMD and UMD.</p>
+<ul><li><strong>Why modules</strong>: no global namespace pollution, encapsulation, reuse, explicit dependencies, maintainability, lazy loading, tree-shaking (bundlers drop unused exports).</li>
+<li><strong>Properties of an ES module</strong>: always strict mode; top-level variables are module-scoped (not <code>window</code> properties); top-level <code>this</code> is <code>undefined</code>; evaluated <strong>once</strong> and cached (a singleton shared by all importers); imports/exports are <strong>static</strong> (must be at top level, analysable before running); supports top-level <code>await</code>; loaded with CORS rules.</li></ul>
+<pre><code>// math.js
+export const PI = 3.14159;
+export function add(a, b) { return a + b }
+
+// app.js
+import { PI, add } from "./math.js";     // path + extension required in browsers
+console.log(add(2, 3), PI);</code></pre>
+<h3>Using modules in a browser</h3>
+<pre><code>&lt;!-- type="module" is REQUIRED to use import/export --&gt;
+&lt;script type="module" src="app.js"&gt;&lt;/script&gt;
+
+&lt;script type="module"&gt;                 &lt;!-- inline module also works --&gt;
+  import { add } from "./math.js";
+  console.log(add(1, 2));
+&lt;/script&gt;
+
+&lt;script src="app.js"&gt;&lt;/script&gt;         &lt;!-- classic script containing import/export: --&gt;
+// SyntaxError: Cannot use import statement outside a module
+
+&lt;script nomodule src="legacy.js"&gt;&lt;/script&gt;   &lt;!-- fallback for browsers without module support --&gt;
+
+// dynamic import() works even in classic scripts
+button.onclick = async () =&gt; { const m = await import("./heavy.js"); m.run() };</code></pre>
+<ul><li>Module scripts are <strong>deferred</strong> by default (run after HTML is parsed, in order), so no need for <code>defer</code>. <code>async</code> makes them run as soon as loaded.</li>
+<li>Browser specifiers must be a URL or relative path (<code>"./a.js"</code>, <code>"/a.js"</code>, <code>"https://..."</code>). Bare names like <code>"lodash"</code> need a bundler or an <strong>import map</strong> (<code>&lt;script type="importmap"&gt;</code>).</li>
+<li>onclick="..." inline handlers can't see module-scoped functions; attach with <code>addEventListener</code> or assign to <code>window</code>.</li></ul>
+<h3>Running import/export on your local machine</h3>
+<ul><li><strong>Browser</strong>: opening <code>index.html</code> via <code>file://</code> fails with a CORS error ("origin null") because module scripts are fetched with CORS. Serve over HTTP: VS Code <em>Live Server</em>, <code>npx serve</code>, <code>python3 -m http.server</code>, or a dev server like <code>npm create vite@latest</code>.</li>
+<li><strong>Node.js</strong>: either name files <code>.mjs</code>, or add <code>"type": "module"</code> to <code>package.json</code> (then <code>.js</code> is ESM). Then <code>node app.js</code>. Relative imports need the extension. No <code>__dirname</code>/<code>__filename</code>; use <code>import.meta.url</code>.</li></ul>
+<pre><code>// Node ESM replacement for __dirname
+import { fileURLToPath } from "node:url"; import path from "node:path";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));</code></pre>
+<div class="trap"><b>Traps:</b> <code>import</code> in a plain <code>&lt;script&gt;</code> is a SyntaxError. A module's top-level <code>var x</code> does not create <code>window.x</code>. Forgetting the <code>.js</code> extension in the browser gives a 404. Import and export statements cannot be inside <code>if</code>, functions or try blocks (use <code>import()</code>). Opening via <code>file://</code> is the #1 "my modules don't work" problem.</div>
+<details open><summary>What is a module?</summary><p>A file (unit of code) with its own scope that shares functionality through <code>export</code> and consumes it through <code>import</code>, helping organise and reuse code without global variables.</p></details>
+<details open><summary>Can you import a module inside a normal script tag?</summary><p>Only if the tag is <code>&lt;script type="module"&gt;</code> (inline or <code>src</code>). In a classic script, static <code>import/export</code> throws a SyntaxError; the dynamic <code>import("./x.js")</code> expression is the exception and works anywhere.</p></details>
+<details open><summary>How do you run import/export locally?</summary><p>Use <code>type="module"</code> and serve the files over HTTP (Live Server, <code>http-server</code>, Vite) instead of opening with <code>file://</code>. In Node use <code>.mjs</code> or <code>"type":"module"</code>.</p></details>
+<details open><summary>Benefits of modules? Does a module run more than once if imported in many files?</summary><p>Encapsulation, reuse, dependency clarity, tree-shaking and lazy loading. No: a module is fetched and evaluated once; every importer gets the same instance (so module-level state is shared, which is how singletons work).</p></details>
+</section>
+
+<section id="m2"><h2>2. Named export and import</h2>
+<p>A module may have <strong>many named exports</strong>. Importers must use the exported name (inside <code>{ }</code>), though they can alias it.</p>
+<pre><code>// utils.js: three equivalent ways to export
+export const PI = 3.14;                       // inline
+export function add(a, b) { return a + b }
+export class Counter {}
+const sub = (a, b) =&gt; a - b, mul = (a, b) =&gt; a * b;
+export { sub, mul as multiply };              // list at the bottom, with alias
+
+// app.js
+import { PI, add } from "./utils.js";         // names must match the exports
+import { multiply as times, sub } from "./utils.js";   // alias with `as`
+import * as utils from "./utils.js";          // namespace import: ALL named exports as one object
+utils.add(1, 2); utils.PI; Object.keys(utils);
+import { add as add2, add as add3 } from "./utils.js";  // same export twice: fine
+
+import { missing } from "./utils.js";         // SyntaxError: module does not provide an export named 'missing'</code></pre>
+<ul><li><strong>Braces are mandatory for named imports</strong>. Without braces you are asking for the <em>default</em> export. <code>import add from "./utils.js"</code> fails if there is no default.</li>
+<li><strong>Rename on import</strong> with <code>as</code> (and on export). The local name can differ; the name in braces must match the exported name.</li>
+<li><strong>Namespace import</strong> (<code>import * as ns</code>) gives a read-only module namespace object (also contains <code>default</code> if present).</li>
+<li><strong>Hoisting</strong>: <code>import</code> declarations are hoisted: all imports are resolved and the imported modules are executed <em>before</em> the importing module's own code, wherever the import line is written. Exports are also declared up front. But <code>let/const/class</code> exports are still in the <strong>TDZ</strong> until their line runs (matters in circular imports).</li></ul>
+<pre><code>console.log(add(1, 2));              // 3: works even though the import is below
+import { add } from "./utils.js";    // hoisted (convention: keep imports at top)
+
+import { x } from "./a.js";   // a.js imports b.js which imports a.js (circular):
+// x may be in TDZ at that moment -&gt; ReferenceError: Cannot access 'x' before initialization</code></pre>
+<div class="trap"><b>Traps:</b> a typo in a named import is a <em>parse-time</em> SyntaxError (not <code>undefined</code> like in CommonJS). Imported bindings are read-only: <code>add = 5</code> throws TypeError. You cannot <code>export</code> a destructuring that is not declared (<code>export { a }</code> needs <code>a</code> in scope). Importing names inside braces is not destructuring (you cannot nest or default them), even though it looks similar.</div>
+<details open><summary>What is a named export and import?</summary><p>Exporting one or more bindings by name (<code>export const a</code>, <code>export { a, b }</code>) and importing them by those names in braces. A file can have any number of them.</p></details>
+<details open><summary>Can you avoid {} while importing a named module?</summary><p>No, braces are the syntax for named imports. The alternatives are a namespace import (<code>import * as m</code>) or a default import (no braces) when the module has a default export.</p></details>
+<details open><summary>How do you import all named exports? Is it good practice?</summary><p><code>import * as utils from "./utils.js"</code>. It is handy to avoid name clashes and for small utility modules, and modern bundlers can still tree-shake when you access members statically (<code>utils.add</code>). But importing everything by habit hides dependencies, hampers tree-shaking if members are accessed dynamically (<code>utils[name]</code>), and makes code less clear; prefer importing just what you need.</p></details>
+<details open><summary>Do modules hoist?</summary><p>Yes: static imports are hoisted and executed before the module body, regardless of position. Exported function declarations are usable early; <code>let/const/class</code> exports stay in the TDZ until initialised.</p></details>
+<details open><summary>Must the name be the same on import?</summary><p>For named imports the name in braces must match the export, but you may rename locally with <code>as</code>. (Default imports can use any name.)</p></details>
+</section>
+
+<section id="m3"><h2>3. Default export and import</h2>
+<p>Each module can have <strong>at most one</strong> <code>default</code> export, the module's "main thing". It is imported <strong>without braces and with any name you like</strong>.</p>
+<pre><code>// ways to default-export (only ONE per file)
+export default function greet() {}            // 1. named or anonymous function
+export default class User {}                  // 2. class
+export default 42;                            // 3. any expression/value
+export default { api: "/v1", retries: 3 };    // 4. object literal
+export default () =&gt; "hi";                    // 5. anonymous arrow
+const store = {}; export default store;       // 6. declare first, then export the identifier
+export { store as default };                  // 7. equivalent alias form
+export default const x = 1;                   // SyntaxError: use `const x = 1; export default x`
+
+// importing
+import greet from "./greet.js";               // any local name
+import hello from "./greet.js";               // same module, different name: fine
+import { default as sayHi } from "./greet.js";// explicit form
+import greet2, { helper, VERSION } from "./lib.js";   // default + named together (React: import React, { useState } from "react")
+import * as lib from "./lib.js"; lib.default; // default lives under the key "default"</code></pre>
+<div class="w"><table><tr><th></th><th>Named export</th><th>Default export</th></tr>
+<tr><td>How many per file</td><td>many</td><td>only one</td></tr>
+<tr><td>Import syntax</td><td><code>import { a, b } from</code> (braces)</td><td><code>import anyName from</code> (no braces)</td></tr>
+<tr><td>Name on import</td><td>must match (alias with <code>as</code>)</td><td>free choice</td></tr>
+<tr><td>Typo detection</td><td>error if name doesn't exist</td><td>none, any name accepted (inconsistent naming across files)</td></tr>
+<tr><td>Tree-shaking / auto-import / refactor</td><td>excellent</td><td>weaker tooling support; some teams ban defaults</td></tr>
+<tr><td>Typical use</td><td>utility libraries, constants, many functions</td><td>a component, class or single main value per file</td></tr></table></div>
+<div class="trap"><b>Traps:</b> <code>export default</code> exports the <em>value</em> (the binding is not live under a new name for expressions). <code>export default function(){}</code> is a declaration (hoisted), whereas <code>export default (function(){})</code> is an expression. You cannot write <code>import { default } from</code> (default is a reserved word, so alias it: <code>{ default as x }</code>). Mixing both in a file is allowed but keep it consistent.</div>
+<details open><summary>What is default export/import? Difference between named and default?</summary><p>Default: one main export per module, imported without braces under any name. Named: many exports, imported with braces by exact name (aliasable). See the table above.</p></details>
+<details open><summary>Various ways to implement default export/import?</summary><p>Export: <code>export default</code> followed by a function, class, value, object or arrow; or <code>export { x as default }</code>; or declare then <code>export default x</code>. Import: <code>import x from</code>, <code>import { default as x } from</code>, <code>import x, { named } from</code> and <code>import * as ns</code> (then <code>ns.default</code>).</p></details>
+<details open><summary>Default vs named: which should you prefer?</summary><p>Many style guides prefer named exports for consistent names, safer refactoring, easy auto-imports and tree-shaking; defaults remain common for components and for frameworks that require them (Next.js pages, lazy-loaded components with <code>React.lazy</code>).</p></details>
+</section>
+
+<section id="m4"><h2>4. Re-exports, dynamic import, live bindings</h2>
+<pre><code>// Re-exports and barrel files (components/index.js)
+export { Button } from "./Button.js";          // re-export a named export
+export { default as Modal } from "./Modal.js"; // re-export a default under a name
+export * from "./helpers.js";                  // re-export all named (NOT default)
+export * as math from "./math.js";             // re-export namespace
+import "./polyfills.js";                       // side-effect only import (runs the file)
+
+// Dynamic import(): returns a Promise of the module namespace; can be anywhere, path can be computed
+const { add, default: Main } = await import("./math.js");
+if (isAdmin) { const m = await import("./admin.js"); m.init() }
+const lang = await import(`./i18n/${locale}.js`);       // conditional / computed loading, code splitting
+button.onclick = () =&gt; import("./chart.js").then(m =&gt; m.draw());   // lazy-load on demand
+
+// JSON modules (modern engines, with import attributes; check support)
+import data from "./data.json" with { type: "json" };
+
+// live bindings: imports are READ-ONLY VIEWS of the exporter's variables
+// counter.js
+export let count = 0;
+export function inc() { count++ }
+// main.js
+import { count, inc } from "./counter.js";
+console.log(count); inc(); console.log(count);   // 0 then 1 (live!)
+count = 10;                                      // TypeError: Assignment to constant variable
+
+// import.meta and top-level await (modules only)
+import.meta.url;                                 // URL of the current module
+const config = await fetch("/config.json").then(r =&gt; r.json());</code></pre>
+<ul><li><strong>Dynamic import</strong> enables code splitting and lazy loading: the code downloads only when needed (React <code>React.lazy(() =&gt; import("./Page"))</code>, route-based splitting).</li>
+<li><strong>Circular dependencies</strong> work in ESM thanks to live bindings, but accessing a binding before its module has run gives TDZ <code>ReferenceError</code> (or undefined for <code>var</code>/functions hoisted). Avoid by restructuring.</li>
+<li>Import maps let browsers map bare specifiers: <code>{ "imports": { "lodash": "/vendor/lodash.js" } }</code>.</li></ul>
+<div class="trap"><b>Trap:</b> <code>export *</code> does not re-export the default. Barrel files can defeat tree-shaking and slow dev servers in huge projects. <code>import()</code> is an expression returning a promise, so <code>await</code> it. Static <code>import</code> paths can't be variables or template strings.</div>
+<details open><summary>What are live bindings?</summary><p>An import is a read-only reference to the original exported variable, not a copy. If the exporting module changes the variable, importers see the new value, though they can't assign to it themselves. (CommonJS exports copies of values at <code>require</code> time.)</p></details>
+<details open><summary>What is dynamic import and when to use it?</summary><p><code>import(path)</code> loads a module on demand and returns a promise. Use it for lazy loading routes/components, heavy libraries, feature flags, and locale files, improving initial load time.</p></details>
+<details open><summary>What is a barrel file?</summary><p>An <code>index.js</code> that re-exports from several modules so consumers can import from one path (<code>import { Button, Modal } from "./components"</code>).</p></details>
+</section>
+
+<section id="m5"><h2>5. ES Modules vs CommonJS</h2>
+<div class="w"><table><tr><th></th><th>ES Modules (ESM)</th><th>CommonJS (CJS)</th></tr>
+<tr><td>Syntax</td><td><code>import / export</code></td><td><code>require() / module.exports</code></td></tr>
+<tr><td>Loading</td><td>static, asynchronous, parsed before run</td><td>dynamic, synchronous at runtime</td></tr>
+<tr><td>Exports are</td><td>live read-only bindings</td><td>copies (objects shared by reference)</td></tr>
+<tr><td>Placement</td><td>top-level only (plus dynamic <code>import()</code>)</td><td><code>require</code> anywhere, even in <code>if</code></td></tr>
+<tr><td>Tree-shaking</td><td>yes (static analysis)</td><td>hard</td></tr>
+<tr><td>Strict mode</td><td>always</td><td>opt-in</td></tr>
+<tr><td>Top-level await</td><td>yes</td><td>no</td></tr>
+<tr><td>Where</td><td>browsers, modern Node, bundlers</td><td>legacy Node, many older packages</td></tr>
+<tr><td>Globals</td><td><code>import.meta.url</code></td><td><code>__dirname, __filename, require, module</code></td></tr>
+<tr><td>Typo in name</td><td>SyntaxError at link time</td><td>undefined at use time</td></tr></table></div>
+<pre><code>// CommonJS
+const fs = require("fs");
+module.exports = { add };            // or exports.add = add   (don't reassign `exports` itself)
+const { add } = require("./math");
+
+// interop: ESM can import CJS (default = module.exports); CJS needs await import("esm-pkg") to load ESM
+// Old patterns: IIFE / revealing module
+const Counter = (function () { let c = 0; return { inc: () =&gt; ++c, get: () =&gt; c } })();</code></pre>
+<details open><summary>ESM vs CommonJS: key differences?</summary><p>ESM is the standard: static, async, live bindings, tree-shakable, in browsers and Node; CommonJS is Node's older synchronous <code>require</code> system with value copies and dynamic loading. ESM is preferred in new code.</p></details>
+<details open><summary>Why can bundlers tree-shake ESM but not CJS?</summary><p>ESM imports/exports are static, so tools know at build time which exports are used and can drop the rest; <code>require</code> can be dynamic (<code>require(name)</code>), defeating analysis.</p></details>
+</section>
+
+<section id="t1"><h2>6. Debounce vs throttle: the concept</h2>
+<p>Some events fire at a very high rate: <code>mousemove</code>, <code>scroll</code>, <code>resize</code>, <code>input/keyup</code>, rapid clicks. Running an expensive handler (API call, layout work, re-render) on every event wastes CPU and network and makes the UI janky. <strong>Debounce</strong> and <strong>throttle</strong> are two ways to control how often the handler really runs.</p>
+<div class="w"><table><tr><th></th><th>Throttle</th><th>Debounce</th></tr>
+<tr><td>Idea</td><td>Run at most <strong>once every N ms</strong> while events keep coming</td><td>Run only after events have <strong>stopped for N ms</strong> (a pause)</td></tr>
+<tr><td>During a continuous burst</td><td>fires regularly (every N ms)</td><td>fires once at the end (nothing during the burst)</td></tr>
+<tr><td>Timer behaviour</td><td>timer is NOT reset by new events</td><td>timer is RESET by every new event</td></tr>
+<tr><td>Analogy</td><td>a tap releasing one drip per second</td><td>an elevator door that keeps reopening until nobody enters for a while</td></tr>
+<tr><td>Best for</td><td>scroll, mousemove, resize tracking, drag, game input, button spamming</td><td>search-as-you-type, form validation, autosave, window-resize end</td></tr></table></div>
+<pre><code>events (each |):  | | | | | | | |                    |  |
+time  ------------------------------------------------------&gt;
+throttle (N): T       T       T       T                     T      fires at regular intervals during the burst
+debounce (N):                               D (N after last of burst)   D (N after last)
+                                            ^ waits for the quiet period</code></pre>
+<div class="demo" id="demo"><h3>Try it live</h3>
+<p>Move your mouse fast over the box (or touch it). Delay is 500 ms for both.</p>
+<div id="dbox" style="height:110px;border:2px dashed var(--acc);border-radius:8px;display:flex;align-items:center;justify-content:center;touch-action:none;user-select:none">Move the pointer here</div>
+<div class="w"><table><tr><th>Raw events</th><th>Throttled (every 500ms)</th><th>Debounced (500ms after you stop)</th></tr>
+<tr><td id="c-raw">0</td><td id="c-thr">0</td><td id="c-deb">0</td></tr></table></div>
+<button id="c-reset" style="border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;padding:4px 12px;cursor:pointer;font:inherit">Reset</button></div>
+<details open><summary>What is throttling and debouncing?</summary><p>Both limit how often a function runs in response to rapid events. Throttling guarantees at most one execution per time window (regular cadence). Debouncing delays execution until the events have stopped for a set time, collapsing a burst into one call.</p></details>
+<details open><summary>When would you choose one over the other?</summary><p>Use <strong>throttle</strong> when you need regular updates during continuous activity (scroll position, resize, mouse tracking, preventing click spam). Use <strong>debounce</strong> when only the final value matters (search box, validation, autosave, "resize ended").</p></details>
+</section>
+
+<section id="t2"><h2>7. Throttling: implementation</h2>
+<pre><code>// A) Course approach: a flag + setTimeout (runs the handler AFTER each window: "trailing")
+let normalCount = 0, throttledCount = 0, throttleWait = false;
+document.addEventListener("mousemove", () =&gt; {
+  normalCount++;                                  // every event
+  if (throttleWait) return;                       // ignore events while the timer is running
+  throttleWait = true;
+  setTimeout(() =&gt; { throttledCount++; throttleWait = false }, 500);   // runs once per 500ms
+});
+
+// B) Reusable throttle: leading edge (runs immediately, then ignores for `ms`)
+function throttle(fn, ms) {
+  let wait = false;
+  return function (...args) {
+    if (wait) return;
+    fn.apply(this, args);                         // preserve `this` and arguments
+    wait = true;
+    setTimeout(() =&gt; (wait = false), ms);
+  };
+}
+
+// C) Timestamp version (no timers)
+function throttleTs(fn, ms) {
+  let last = 0;
+  return function (...args) {
+    const now = Date.now();
+    if (now - last &gt;= ms) { last = now; return fn.apply(this, args) }
+  };
+}
+
+// D) Leading + trailing (last event is not lost): what lodash does by default
+function throttleFull(fn, ms) {
+  let last = 0, timer = null, lastArgs, lastThis;
+  return function (...args) {
+    const now = Date.now(); lastArgs = args; lastThis = this;
+    const remaining = ms - (now - last);
+    if (remaining &lt;= 0) { clearTimeout(timer); timer = null; last = now; fn.apply(this, args) }
+    else if (!timer) timer = setTimeout(() =&gt; { last = Date.now(); timer = null; fn.apply(lastThis, lastArgs) }, remaining);
+  };
+}
+
+window.addEventListener("scroll", throttle(updateProgressBar, 200));
+// 10 events, one every 100ms (0..900ms), throttle(300) leading-only runs at 0, 300, 600, 900 -&gt; 4 calls</code></pre>
+<div class="trap"><b>Traps:</b> an arrow function as the returned wrapper loses the caller's <code>this</code> (use <code>function</code> + <code>apply</code>). Plain leading-only throttle drops the <em>last</em> event, so the UI can end on a stale value (e.g. last scroll position); add trailing execution. Don't create the throttled function inside the event handler (a new closure each time resets the state): create it once outside. For visual updates, <code>requestAnimationFrame</code> throttling syncs to the screen refresh. Throttled functions return <code>undefined</code> when skipped.</div>
+<details open><summary>How do you implement throttling?</summary><p>Keep a flag (or last-run timestamp) in a closure. If the flag is set, ignore the call; otherwise run (or schedule) the function and set the flag, clearing it with <code>setTimeout</code> after the interval.</p></details>
+<details open><summary>Leading vs trailing edge?</summary><p>Leading: run on the first event of a window, then ignore the rest. Trailing: run once at the end of the window with the latest data. Lodash lets you choose both: <code>_.throttle(fn, ms, { leading, trailing })</code>.</p></details>
+</section>
+
+<section id="t3"><h2>8. Debouncing: implementation</h2>
+<pre><code>// Course approach: a bounce timer that is reset on every event
+let normalCount = 0, debouncedCount = 0, bounceTimer;
+document.addEventListener("mousemove", () =&gt; {
+  normalCount++;
+  clearTimeout(bounceTimer);                       // cancel the previous pending run
+  bounceTimer = setTimeout(() =&gt; { debouncedCount++ }, 500);   // runs only after 500ms of inactivity
+});
+
+// Reusable debounce
+function debounce(fn, ms) {
+  let timer;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() =&gt; fn.apply(this, args), ms);   // arrow inside keeps outer `this`
+  };
+}
+
+// With leading option, cancel() and flush()
+function debounceFull(fn, ms, { leading = false } = {}) {
+  let timer, lastArgs, lastThis;
+  function debounced(...args) {
+    lastArgs = args; lastThis = this;
+    const callNow = leading &amp;&amp; !timer;
+    clearTimeout(timer);
+    timer = setTimeout(() =&gt; { timer = null; if (!leading) fn.apply(lastThis, lastArgs) }, ms);
+    if (callNow) fn.apply(this, args);
+  }
+  debounced.cancel = () =&gt; { clearTimeout(timer); timer = null };
+  debounced.flush = () =&gt; { if (timer) { clearTimeout(timer); timer = null; fn.apply(lastThis, lastArgs) } };
+  return debounced;
+}
+
+input.addEventListener("input", debounce(e =&gt; search(e.target.value), 300));
+// typing "javascript" fast (10 keystrokes, gaps &lt; 300ms) -&gt; 1 API call after you pause</code></pre>
+<div class="trap"><b>Traps:</b> create the debounced function <strong>once</strong>; <code>input.oninput = e =&gt; debounce(fn, 300)(e)</code> makes a new timer every time, so nothing is ever debounced. A debounced handler gets the <em>last</em> event object; read <code>e.target.value</code> at call time (events are not reused in modern browsers, but copy values if needed). Constant events with gaps always below N never fire a debounced function (e.g. continuous scroll): use throttle, or <code>maxWait</code> in lodash. Debounced results arrive asynchronously, so return values are not available.</div>
+<details open><summary>How do you implement debouncing?</summary><p>Store a timer id in a closure; on every call clear the existing timer and start a new <code>setTimeout</code> that will run the function after the delay. Only the last call in a burst survives.</p></details>
+<details open><summary>Why does it use closures, and what about this and arguments?</summary><p>The closure holds <code>timer</code> (or <code>wait</code>) between calls. Use a regular function wrapper with <code>fn.apply(this, args)</code> (or an arrow inside) to forward the original <code>this</code> and arguments.</p></details>
+</section>
+
+<section id="t4"><h2>9. Real-world use cases</h2>
+<div class="w"><table><tr><th>Use case</th><th>Technique</th><th>Why</th></tr>
+<tr><td>Live search / autocomplete</td><td>Debounce 250-400ms</td><td>Without it each keystroke hits the API: typing "javascript" sends 10 requests; with debounce, 1 request after the pause (counts drop from keystrokes to API calls)</td></tr>
+<tr><td>Form validation (username available?)</td><td>Debounce</td><td>Validate once the user stops typing</td></tr>
+<tr><td>Auto-save draft</td><td>Debounce (or throttle with maxWait)</td><td>Save after a pause, not on every character</td></tr>
+<tr><td>Window resize layout recalculation</td><td>Debounce (end) or throttle (live)</td><td>Resize fires dozens of events/sec</td></tr>
+<tr><td>Rapid button clicks (like, buy, submit)</td><td>Throttle 1 per second (or leading debounce)</td><td>Prevent duplicate orders and spam; first click fires immediately</td></tr>
+<tr><td>Scroll: infinite scroll, sticky header, progress bar, lazy loading</td><td>Throttle (or IntersectionObserver)</td><td>Need regular updates but not 60+ per second</td></tr>
+<tr><td>Mousemove: tooltips, drag, canvas drawing, parallax</td><td>Throttle / rAF</td><td>Update at a steady rate</td></tr>
+<tr><td>Game or shooting rate limit</td><td>Throttle</td><td>Cap actions per time</td></tr>
+<tr><td>Analytics / telemetry events</td><td>Throttle or batch</td><td>Reduce network load</td></tr></table></div>
+<div class="trap"><b>Trap:</b> a debounced search can show out-of-order results (slow older response arrives last). Pair it with <code>AbortController</code> (cancel the previous fetch) or a request id check. Also a debounced "Submit" delays the click: use a <em>leading</em> debounce or throttle for buttons.</div>
+<details open><summary>Give a practical example of throttling and of debouncing.</summary><p>Throttling: a button or scroll handler that must fire at most once per second even when the user clicks/scrolls rapidly. Debouncing: a search box that calls the API only after the user pauses typing.</p></details>
+<details open><summary>Debounce vs throttle for a scroll event or a resize event?</summary><p>Scroll: throttle (continuous feedback needed). Resize: debounce if you only need the final size, throttle if the layout must follow along.</p></details>
+</section>
+
+<section id="t5"><h2>10. React usage and advanced points</h2>
+<pre><code>// React: a component re-renders, so a debounce created in the body is re-created each time and never works.
+// 1) useDebounce value hook (most common)
+function useDebounce(value, ms = 300) {
+  const [v, setV] = useState(value);
+  useEffect(() =&gt; { const t = setTimeout(() =&gt; setV(value), ms); return () =&gt; clearTimeout(t) }, [value, ms]);
+  return v;
+}
+const debouncedQuery = useDebounce(query, 400);
+useEffect(() =&gt; { if (debouncedQuery) fetchResults(debouncedQuery) }, [debouncedQuery]);
+
+// 2) debounced callback: keep ONE instance across renders
+const debouncedSave = useMemo(() =&gt; debounce(save, 500), []);     // or useRef / useCallback
+useEffect(() =&gt; () =&gt; debouncedSave.cancel?.(), [debouncedSave]); // cleanup on unmount
+// Wrong: onChange={debounce(handle, 300)} creates a NEW debounced function each render
+
+// Lodash
+import debounce from "lodash/debounce"; import throttle from "lodash/throttle";
+debounce(fn, 300, { leading: false, trailing: true, maxWait: 1000 });   // maxWait guarantees a run
+throttle(fn, 300, { leading: true, trailing: true });
+
+// Alternatives for high-frequency work
+requestAnimationFrame(update);                          // sync to display refresh (~60fps)
+window.addEventListener("scroll", fn, { passive: true });   // passive: browser doesn't wait for preventDefault
+new IntersectionObserver(cb).observe(el);               // visibility instead of scroll math</code></pre>
+<ul><li><strong>Debounce vs throttle vs rAF</strong>: rAF = at most once per frame, great for visual updates.</li>
+<li>Always cancel pending timers on unmount (memory leak and state-update-after-unmount).</li>
+<li>Stale closure: a debounced function created once captures the props/state of that render; read latest values via a ref.</li>
+<li>Throttle = rate limiting, which also appears server-side (API rate limits, token bucket); debounce is mostly a client concept.</li></ul>
+<details open><summary>Why doesn't debounce work inside a React component by default?</summary><p>The component function runs on every render, creating a new debounced function and a new timer closure each time, so previous timers are never cleared. Memoise the debounced function (<code>useMemo/useRef</code>) or debounce the <em>value</em> with a hook.</p></details>
+<details open><summary>Write debounce / throttle from scratch (most asked)</summary><p>See sections 7 and 8: closure holding a timer (debounce) or a flag/timestamp (throttle), <code>apply(this, args)</code>, optional leading/trailing and <code>cancel</code>.</p></details>
+</section>
+
+<section id="cheat"><h2>Quick revision cheat sheet</h2>
+<div class="w"><table><tr><th>Topic</th><th>Remember</th></tr>
+<tr><td>Module</td><td>file-level scope, explicit import/export, strict, singleton, static; needs <code>type="module"</code> and HTTP server (not file://)</td></tr>
+<tr><td>Named</td><td>many per file; <code>{ }</code> required; names must match (alias with <code>as</code>); <code>import * as ns</code> for all</td></tr>
+<tr><td>Default</td><td>one per file; no braces; any local name; <code>export default</code> can't precede <code>const</code></td></tr>
+<tr><td>Hoisting</td><td>imports hoisted and run first; let/const exports in TDZ; live read-only bindings</td></tr>
+<tr><td>Dynamic</td><td><code>import()</code> returns a promise, works in classic scripts, enables lazy loading</td></tr>
+<tr><td>ESM vs CJS</td><td>static/live/tree-shakable vs dynamic/copies/sync</td></tr>
+<tr><td>Throttle</td><td>max once per N ms, regular cadence; flag or timestamp; add trailing to keep last event</td></tr>
+<tr><td>Debounce</td><td>run after N ms of quiet; clearTimeout + setTimeout; create once</td></tr>
+<tr><td>Choice</td><td>search/validation/autosave = debounce; scroll/mousemove/click spam = throttle</td></tr>
+<tr><td>React</td><td>memoise debounced fn (useMemo/useRef) or useDebounce(value); clean up timers</td></tr></table></div>
+<h3>Rapid-fire "what does this do?"</h3>
+<pre><code>import { a } from "./x.js";  // in a plain &lt;script&gt;            -&gt; SyntaxError (needs type="module")
+import add from "./utils.js"; // utils has only named exports  -&gt; SyntaxError: no default export
+export default const a = 1;  //                                -&gt; SyntaxError
+console.log(typeof helper); import { helper } from "./h.js";   // "function" (imports are hoisted)
+import { count } from "./c.js"; count++;                       // TypeError: assignment to constant variable
+// two files both import "./store.js" -&gt; store.js code runs once, shared instance
+// debounce(fn,300) with keystrokes every 100ms for 2s -&gt; fn runs once, 300ms after the last keystroke
+// throttle(fn,300) with the same stream (leading) -&gt; about 7 calls (t=0,300,...,1800)</code></pre>
+</section>
+<script>
+(function(){var raw=0,thr=0,deb=0,wait=false,timer;
+var $=function(i){return document.getElementById(i)},b=$("dbox");if(!b)return;
+function draw(){$("c-raw").textContent=raw;$("c-thr").textContent=thr;$("c-deb").textContent=deb}
+b.addEventListener("pointermove",function(){raw++;
+if(!wait){wait=true;setTimeout(function(){thr++;wait=false;draw()},500)}
+clearTimeout(timer);timer=setTimeout(function(){deb++;draw()},500);draw()});
+$("c-reset").onclick=function(){raw=thr=deb=0;draw()};})();
+</script>
+</main>
+<script>
+(function(){
+var re=/(\/\/.*$)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`)|\b(const|let|var|function|return|if|else|for|while|of|in|new|class|extends|yield|try|catch|finally|throw|typeof|async|await|this|null|undefined|true|false|break|continue)\b|\b(\d+\.?\d*n?)\b/gm;
+document.querySelectorAll("pre code").forEach(function(el){
+var t=el.textContent.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+el.innerHTML=t.replace(re,function(m,c,s,k,n){return c?'<span class="c">'+c+'</span>':s?'<span class="s">'+s+'</span>':k?'<span class="k">'+k+'</span>':'<span class="n">'+n+'</span>'})});
+document.getElementById("th").onclick=function(){var r=document.documentElement,d=r.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");r.setAttribute("data-theme",d==="dark"?"light":"dark")};
+})();
+</script></body></html>

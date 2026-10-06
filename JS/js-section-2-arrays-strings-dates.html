@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JavaScript Bible · Section 2 · Arrays, Strings & Dates</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#17212b;--mut:#5b6b7a;--line:#d9e0e6;--acc:#0b6e8a;--code:#eef2f5;--trap:#fdf1e3;--trapb:#c9701a;--k:#a12b8c;--s:#18794e;--c:#7a8794;--n:#b35c00;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0d1319;--card:#141c24;--ink:#e3eaf0;--mut:#93a3b2;--line:#27333f;--acc:#4cc2e4;--code:#0a1015;--trap:#2a1f12;--trapb:#e39a4d;--k:#e08be0;--s:#6fd3a1;--c:#7d8c9a;--n:#f0b366}}
+:root[data-theme=dark]{--bg:#0d1319;--card:#141c24;--ink:#e3eaf0;--mut:#93a3b2;--line:#27333f;--acc:#4cc2e4;--code:#0a1015;--trap:#2a1f12;--trapb:#e39a4d;--k:#e08be0;--s:#6fd3a1;--c:#7d8c9a;--n:#f0b366}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "IBM Plex Sans",system-ui,sans-serif}
+main{max-width:860px;margin:0 auto;padding:20px 16px 60px}
+header h1{font-size:clamp(1.6rem,5vw,2.3rem);line-height:1.2;margin:.2em 0}header p{color:var(--mut);margin:0}
+#th{float:right;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;padding:6px 12px;cursor:pointer;font:inherit}
+nav{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0 8px}nav a{font-size:.85rem;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:4px 10px;border-radius:5px;text-decoration:none}nav a:hover{border-color:var(--acc);color:var(--acc)}
+section{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:8px;padding:6px 20px 16px;margin:22px 0}
+h2{font-size:1.4rem;margin:.8em 0 .3em}h3{font-size:1rem;margin:1.2em 0 .3em;color:var(--acc)}
+ul{padding-left:1.2em;margin:.4em 0}li{margin:.2em 0}
+code{font:.88em "JetBrains Mono",ui-monospace,monospace;background:var(--code);padding:1px 5px;border-radius:4px}
+pre{background:var(--code);border:1px solid var(--line);border-radius:6px;padding:12px;overflow-x:auto;margin:.7em 0;max-width:100%}pre code{background:none;padding:0;font-size:.84rem;line-height:1.5}
+.k{color:var(--k)}.s{color:var(--s)}.c{color:var(--c);font-style:italic}.n{color:var(--n)}
+.trap{background:var(--trap);border-left:4px solid var(--trapb);padding:8px 14px;border-radius:6px;margin:.8em 0}.trap b{color:var(--trapb)}
+details{border:1px solid var(--line);border-radius:6px;margin:.4em 0;padding:6px 12px}summary{cursor:pointer;font-weight:600}details p{margin:.5em 0 .2em}
+table{border-collapse:collapse;width:100%;font-size:.9rem}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{background:var(--code)}
+.w{overflow-x:auto}
+</style></head><body><main>
+<header><button id="th" aria-label="Toggle theme">Light / Dark</button>
+<h1>JavaScript Bible: Section 2<br>Arrays, Strings &amp; Dates</h1>
+<p>Concepts, tricky outputs and interview Q&amp;A, including every course question plus the ones interviewers add.</p></header>
+<nav><a href="#a1">Arrays &amp; loops</a><a href="#a2">Add/Remove</a><a href="#a3">Search</a><a href="#a4">map</a><a href="#a5">flatten &amp; reduce</a><a href="#a6">sort</a><a href="#a7">Destructuring</a><a href="#a8">Unicode</a><a href="#a9">Templates</a><a href="#a10">Search methods</a><a href="#a11">Extraction</a><a href="#a12">Case &amp; replace</a><a href="#a13">Date basics</a><a href="#a14">Date methods</a><a href="#a15">Time</a><a href="#cheat">Cheat sheet</a></nav>
+
+<section id="a1"><h2>1. Arrays and traversal</h2>
+<ul><li>An array is an ordered, zero-indexed, resizable list, and a special object (<code>typeof [] === "object"</code>; use <code>Array.isArray(x)</code>). Elements can be of mixed types.</li>
+<li>Create: <code>[1,2]</code>, <code>new Array(3)</code> (3 empty slots), <code>Array.of(3)</code> ([3]), <code>Array.from("abc")</code>, <code>Array.from({length:3},(_, i)=&gt;i)</code>.</li>
+<li><code>length</code> is writable: <code>arr.length = 0</code> clears; setting smaller truncates. <code>arr[arr.length]</code> is <code>undefined</code> (last item is <code>length-1</code>). <code>arr.at(-1)</code> gives the last.</li></ul>
+<pre><code>const arr = ["ES5","ES6","ES7","ES8"];
+for (let i = 0; i &lt; arr.length; i++) {}          // classic: break/continue/await OK
+for (const v of arr) {}                           // values, any iterable, break OK
+for (const [i, v] of arr.entries()) {}            // index + value
+arr.forEach((v, i, a) =&gt; {});                     // no break, return value ignored
+for (const i in arr) {}                           // KEYS as strings, includes inherited: avoid</code></pre>
+<h3>Traversal methods compared</h3>
+<div class="w"><table><tr><th>Method</th><th>Returns</th><th>Use</th></tr>
+<tr><td>forEach</td><td>undefined</td><td>side effects</td></tr><tr><td>map</td><td>new array, same length</td><td>transform</td></tr>
+<tr><td>filter</td><td>new array, subset</td><td>select</td></tr><tr><td>reduce</td><td>single value</td><td>aggregate</td></tr>
+<tr><td>some / every</td><td>boolean (short-circuit)</td><td>any / all test; <code>some</code> can stop early</td></tr>
+<tr><td>find / findIndex</td><td>first match / index</td><td>stops at first hit</td></tr></table></div>
+<div class="trap"><b>Trap:</b> the course snippet using <code>break</code> inside <code>forEach</code> is a <code>SyntaxError: Illegal break statement</code>, so nothing runs at all. <code>return</code> inside forEach only skips that one callback. To stop early use <code>for...of</code>, <code>some()</code>, <code>every()</code> or <code>find()</code>.<br>
+<code>arr.forEach(async x =&gt; await f(x))</code> does not wait. Use <code>for...of</code> with await, or <code>Promise.all(arr.map(...))</code>.<br>
+<code>new Array(3).map((_, i) =&gt; i)</code> returns three empty slots: map skips holes. <code>Array(3).fill({})</code> shares ONE object across slots.</div>
+<details open><summary>for...in vs for...of?</summary><p><code>for...in</code> iterates enumerable property <em>keys</em> (strings, includes inherited and added props, order not guaranteed for non-integer keys); use it on objects. <code>for...of</code> iterates <em>values</em> of any iterable (arrays, strings, Map, Set, generators) and cannot iterate plain objects.</p></details>
+<details open><summary>Output of arr[arr.length] with [7,9,0]?</summary><p><code>undefined</code>. Index 3 does not exist; reading a missing index never throws.</p></details>
+<details open><summary>How do you copy an array? Shallow vs deep?</summary><p><code>[...a]</code>, <code>a.slice()</code>, <code>Array.from(a)</code> are shallow (nested objects shared). Deep: <code>structuredClone(a)</code>. <code>JSON.parse(JSON.stringify(a))</code> loses undefined, functions, Dates and NaN.</p></details>
+<details open><summary>What is a sparse array / hole?</summary><p>Slots with no value, made by <code>delete a[1]</code>, <code>[1,,3]</code> or <code>new Array(3)</code>. <code>forEach/map</code> skip them, <code>for...of</code> reads them as undefined. Avoid; use <code>fill</code> or <code>Array.from</code>.</p></details>
+</section>
+
+<section id="a2"><h2>2. Add, remove, insert, replace</h2>
+<div class="w"><table><tr><th>Method</th><th>Mutates?</th><th>Returns</th></tr>
+<tr><td>push(...x) / unshift(...x)</td><td>yes</td><td>new length</td></tr>
+<tr><td>pop() / shift()</td><td>yes</td><td>removed element (undefined if empty)</td></tr>
+<tr><td>splice(start, del, ...items)</td><td>yes</td><td>array of removed elements (<code>[]</code> if none)</td></tr>
+<tr><td>slice(start, end)</td><td>no</td><td>shallow copy of range (end excluded)</td></tr>
+<tr><td>concat / spread</td><td>no</td><td>new array</td></tr>
+<tr><td>toSpliced / toSorted / toReversed / with</td><td>no (ES2023)</td><td>new array</td></tr></table></div>
+<pre><code>const a = [1, 2, 3];
+a.push(4);          // 4   -&gt; [1,2,3,4]
+a.unshift(0);       // 5   -&gt; [0,1,2,3,4]   (O(n): shifts every index)
+a.pop();            // 4   -&gt; [0,1,2,3]
+a.shift();          // 0   -&gt; [1,2,3]
+a.splice(1, 0, "x");        // []         insert at 1  -&gt; [1,"x",2,3]
+a.splice(1, 1);             // ["x"]      remove one
+a.splice(1, 1, "y");        // [2]        replace   -&gt; [1,"y",3]
+a.splice(-1);               // [3]        remove last
+a.splice(1, 0);             // []         nothing removed -&gt; returns empty array
+a[1] = "z";                 // replace by index
+a.with(1, "q");             // non-mutating replace (new array)
+
+const i = a.indexOf("z"); if (i &gt; -1) a.splice(i, 1);   // remove a specific value
+const b = a.filter(v =&gt; v !== "z");                      // non-mutating removal</code></pre>
+<div class="trap"><b>Trap:</b> <code>splice</code> (mutates, takes a count) vs <code>slice</code> (copy, takes an end index) is a classic mix-up. Removing inside a forward loop skips items, so loop backwards or use <code>filter</code>. React state must not be mutated: use spread/filter/map instead of push/splice.</div>
+<details open><summary>push vs unshift? pop vs shift?</summary><p>push/pop work at the end (fast, O(1)); unshift/shift work at the start and re-index everything (O(n)). push/unshift return the new length; pop/shift return the removed element.</p></details>
+<details open><summary>What does splice return when nothing is removed?</summary><p>An empty array <code>[]</code>, even if items were inserted.</p></details>
+<details open><summary>How do you insert at a given position and remove a specific element?</summary><p>Insert: <code>arr.splice(pos, 0, item)</code>. Remove: find with <code>indexOf</code> then <code>splice(i,1)</code>, or <code>filter</code>. Remove all duplicates of a value: <code>filter</code>.</p></details>
+<details open><summary>How do you remove duplicates?</summary><p><code>[...new Set(arr)]</code> for primitives. For objects, dedupe by key with a Map or <code>filter((x,i,a)=&gt;a.findIndex(y=&gt;y.id===x.id)===i)</code>.</p></details>
+</section>
+
+<section id="a3"><h2>3. Searching an array</h2>
+<div class="w"><table><tr><th>Method</th><th>Returns</th><th>Notes</th></tr>
+<tr><td>indexOf(v, from)</td><td>index or -1</td><td>strict <code>===</code>; cannot find NaN</td></tr>
+<tr><td>lastIndexOf(v)</td><td>index or -1</td><td>searches from the end</td></tr>
+<tr><td>includes(v)</td><td>boolean</td><td>finds NaN (SameValueZero)</td></tr>
+<tr><td>find(fn) / findLast</td><td>element or undefined</td><td>first (or last) match</td></tr>
+<tr><td>findIndex(fn)</td><td>index or <b>-1</b></td><td>-1 when none match</td></tr>
+<tr><td>filter(fn)</td><td>array (maybe empty)</td><td>all matches</td></tr>
+<tr><td>some / every</td><td>boolean</td><td>every on [] is true</td></tr></table></div>
+<pre><code>const arr = ["One","Two","Three","Four","Five"];
+arr.lastIndexOf("Abcd");              // -1
+[NaN].indexOf(NaN);                   // -1
+[NaN].includes(NaN);                  // true
+const users = [{id:1,n:"A"},{id:2,n:"B"}];
+users.find(u =&gt; u.id === 2);          // {id:2,n:"B"}
+users.filter(u =&gt; u.id &gt; 5);          // []   (truthy! check .length)
+users.find(u =&gt; u.id &gt; 5);            // undefined
+
+// search multiple values
+const want = ["Two","Five"];
+arr.filter(x =&gt; want.includes(x));    // ["Two","Five"]
+want.every(w =&gt; arr.includes(w));     // true (all present)
+want.some(w =&gt; arr.includes(w));      // true (any present)</code></pre>
+<div class="trap"><b>Trap:</b> <code>if (arr.filter(...))</code> is always truthy because an empty array is truthy. <code>indexOf</code> returns <code>0</code> for the first element, so <code>if (arr.indexOf(x))</code> is a bug; compare with <code>!== -1</code>. <code>find</code> on objects needs a callback, <code>indexOf</code> compares references.</div>
+<details open><summary>find vs filter?</summary><p><code>find</code> returns the first matching element (or <code>undefined</code>) and stops; <code>filter</code> returns an array of all matches (possibly empty) and always scans everything.</p></details>
+<details open><summary>indexOf vs includes?</summary><p><code>indexOf</code> returns a position (-1 if absent), <code>includes</code> returns a boolean and handles NaN. Use <code>includes</code> for existence checks.</p></details>
+<details open><summary>What does findIndex return when nothing matches?</summary><p><code>-1</code> (while <code>find</code> returns <code>undefined</code>).</p></details>
+</section>
+
+<section id="a4"><h2>4. map()</h2>
+<p><code>map(cb(value, index, array))</code> returns a <strong>new array of the same length</strong> with each callback result. It doesn't mutate the original. The callback must <code>return</code> (curly-brace arrows need an explicit return).</p>
+<pre><code>["apple","fig"].map(s =&gt; s.length);          // [5, 3]
+[4, 9, 16].map(Math.sqrt);                   // [2, 3, 4]
+const products = [{pCode:1,pName:"Apple"},{pCode:2,pName:"Banana"}];
+products.map(p =&gt; p.pName);                  // ["Apple","Banana"]
+products.map(p =&gt; ({ ...p, price: 10 }));    // add field (parentheses for object)
+products.map(p =&gt; { p.pName })               // [undefined, undefined]: no return!
+["1","2","3"].map(parseInt);                 // [1, NaN, NaN]
+["1","2","3"].map(Number);                   // [1, 2, 3]</code></pre>
+<ul><li>Chaining: <code>users.filter(u=&gt;u.active).map(u=&gt;u.name).sort()</code>.</li>
+<li><code>map</code> vs <code>forEach</code>: map for building a new array; forEach for side effects only.</li>
+<li>Polyfill idea (common interview ask): <code>Array.prototype.myMap = function(cb){ const r=[]; for(let i=0;i&lt;this.length;i++) if(i in this) r[i]=cb(this[i],i,this); return r }</code></li></ul>
+<details open><summary>Can map be used instead of forEach? Does it mutate?</summary><p>It works but allocates an unused array; use forEach for side effects. map doesn't mutate the source, but callbacks that mutate objects inside it will (objects are shared).</p></details>
+</section>
+
+<section id="a5"><h2>5. Flatten and reduce()</h2>
+<h3>Flatten</h3>
+<pre><code>const nested = [1, [2, [3, [4]]]];
+nested.flat();            // [1,2,[3,[4]]]  depth 1 by default
+nested.flat(Infinity);    // [1,2,3,4]
+[].concat(...[[1,2],[3]]);                       // 2D only: [1,2,3]
+[[1,2],[3]].reduce((acc, x) =&gt; acc.concat(x), []);// [1,2,3]
+["a b","c"].flatMap(s =&gt; s.split(" "));          // ["a","b","c"] (map + flat depth 1)
+const flatten = a =&gt; a.reduce((r, x) =&gt; Array.isArray(x) ? [...r, ...flatten(x)] : [...r, x], []); // recursive</code></pre>
+<h3>reduce(callback(acc, cur, i, arr), initial)</h3>
+<pre><code>const employees = [{eNo:1001,salary:3000},{eNo:1002,salary:2200},{eNo:1003,salary:3400},{eNo:1004,salary:6000}];
+const total = employees.reduce((sum, e) =&gt; sum + e.salary, 0);   // 14600
+const avg = total / employees.length;                            // 3650
+[1,2,3,4].reduce((a, b) =&gt; a * b, 1);                            // 24 product
+[].reduce((a, b) =&gt; a + b);        // TypeError: no initial value on empty array
+[].reduce((a, b) =&gt; a + b, 0);     // 0
+["a","b"].reduceRight((acc, c) =&gt; acc + c);   // "ba" (right to left)
+
+// groupBy / count with reduce
+["a","b","a"].reduce((m, k) =&gt; (m[k] = (m[k] || 0) + 1, m), {});   // {a:2, b:1}
+Math.max(...employees.map(e =&gt; e.salary));                      // 6000</code></pre>
+<div class="trap"><b>Trap:</b> always give reduce an initial value; without it the first element becomes the accumulator and an empty array throws. Forgetting to <code>return acc</code> makes the next iteration receive undefined. <code>flat()</code> also removes holes. Newer engines have <code>Object.groupBy</code> and <code>Map.groupBy</code>; check support.</div>
+<details open><summary>reduce vs reduceRight?</summary><p>Same logic, but reduceRight walks from the last index to the first. It matters for non-commutative operations like string building or function composition.</p></details>
+<details open><summary>Write reduce as a polyfill or use it to implement map/filter?</summary><p><code>map = (a,f)=&gt;a.reduce((r,x,i)=&gt;(r.push(f(x,i)),r),[])</code>. Using reduce to build everything is possible but less readable than the dedicated methods.</p></details>
+</section>
+
+<section id="a6"><h2>6. Sorting</h2>
+<ul><li><code>sort()</code> <strong>mutates</strong> the array and returns the same array. Default order converts items to <em>strings</em> and compares UTF-16 code units.</li>
+<li>Comparator <code>(a,b)=&gt;n</code>: negative keeps a before b, positive puts b first, 0 keeps order. Sort is stable (ES2019).</li>
+<li>Non-mutating copy: <code>toSorted()</code> (ES2023) or <code>[...arr].sort()</code>.</li></ul>
+<pre><code>[10, 9, 1, 100].sort();                  // [1, 10, 100, 9]  string order!
+[10, 9, 1, 100].sort((a, b) =&gt; a - b);   // [1, 9, 10, 100]  ascending
+[10, 9, 1, 100].sort((a, b) =&gt; b - a);   // [100, 10, 9, 1]  descending
+[3, undefined, 1, , 2].sort();           // [1, 2, 3, undefined, &lt;empty&gt;]: undefined last, holes after
+["b","a","C"].sort();                    // ["C","a","b"] uppercase first
+["b","a","C"].sort((x, y) =&gt; x.localeCompare(y));       // ["a","b","C"]
+["é","e","z"].sort(new Intl.Collator("fr").compare);
+
+const emps = [{n:"Raj",s:3000},{n:"Anu",s:2200}];
+emps.sort((a, b) =&gt; a.s - b.s);          // by number key
+emps.sort((a, b) =&gt; a.n.localeCompare(b.n));  // by string key
+// "sorting an object literal": sort its entries, rebuild
+const o = {b:2, a:1};
+Object.fromEntries(Object.entries(o).sort(([k1],[k2]) =&gt; k1.localeCompare(k2))); // {a:1,b:2}</code></pre>
+<div class="trap"><b>Trap:</b> a comparator returning a boolean (<code>(a,b)=&gt;a&gt;b</code>) is wrong: true/false become 1/0 and never -1. <code>undefined</code> values are never passed to the comparator; they always sort to the end. Sorting state arrays in React mutates state; copy first. <code>reverse()</code> also mutates.</div>
+<details open><summary>Why does [10,9,1].sort() give [1,10,9]?</summary><p>Elements are compared as strings: "1" &lt; "10" &lt; "9" character by character. Provide a numeric comparator.</p></details>
+<details open><summary>How do you shuffle an array fairly?</summary><p>Fisher-Yates: loop from the end, swap with a random earlier index. <code>sort(()=&gt;Math.random()-0.5)</code> is biased.</p></details>
+</section>
+
+<section id="a7"><h2>7. Array destructuring</h2>
+<p>Destructuring unpacks values from an iterable into variables by <em>position</em>. Works on any iterable (strings, Sets, Maps, generators).</p>
+<pre><code>let [a, b, c] = [5, , 7];        // a=5 b=undefined c=7 (hole skipped, not shifted)
+const [x, , z] = [1, 2, 3];      // skip with an empty slot: x=1 z=3
+const [p = 10, q = 20] = [1];    // defaults: p=1, q=20 (only for undefined)
+const [m = 9] = [null];          // m = null (null is NOT undefined)
+const [h, ...t] = [1, 2, 3];     // t=[2,3] rest must be last
+const [[n1, n2], n3] = [[1, 2], 3];   // nested
+[a, b] = [b, a];                 // swap, no temp variable
+const [first] = "hello";         // "h"
+function minMax(a){ return [Math.min(...a), Math.max(...a)] }
+const [lo, hi] = minMax([4, 2, 8]);   // return multiple values
+const [k, v] = Object.entries({id: 7})[0];   // "id", 7</code></pre>
+<div class="trap"><b>Trap:</b> the swap line after a statement without a semicolon (<code>let a=1, b=2 \n [a,b]=[b,a]</code>) gets glued to the previous line by ASI. Start with <code>;</code>. Destructuring <code>null</code> or <code>undefined</code> throws TypeError. Default expressions are evaluated lazily.</div>
+<details open><summary>What is destructuring assignment?</summary><p>Syntax that unpacks array elements (by position) or object properties (by name) into distinct variables in one statement, with support for defaults, skipping, rest and nesting.</p></details>
+</section>
+
+<section id="a8"><h2>8. Strings basics and Unicode (UTF-16)</h2>
+<ul><li>Strings are <strong>immutable</strong> primitives: <code>s[0] = "x"</code> silently does nothing (throws in strict mode); methods return new strings.</li>
+<li>Declare: <code>'single'</code>, <code>"double"</code>, <code>`template`</code>, <code>String(123)</code>; <code>new String("a")</code> creates an object (<code>typeof</code> is "object", avoid).</li>
+<li>JS stores strings as <strong>UTF-16 code units</strong>. Characters beyond U+FFFF (emoji, some CJK) use two units (a surrogate pair), so <code>length</code> counts units, not visible characters.</li></ul>
+<pre><code>"\u0041";          // "A"  (4-hex escape)
+"\x41";            // "A"  (2-hex escape)
+"\u{1F600}";       // 😀  (code point escape, any length, ES6)
+"\u{1F600}".length;            // 2
+[..."\u{1F600}"].length;       // 1  (iterates by code point)
+"😀".codePointAt(0);           // 128512  (charCodeAt gives only the first half: 55357)
+String.fromCodePoint(128512);  // "😀"
+"A".charCodeAt(0);             // 65
+"café" === "cafe\u0301";       // false; fix with .normalize()
+"cafe\u0301".normalize() === "café";  // true
+"line1\nline2", 'It\'s', "say \"hi\"", "C:\\path"   // common escapes
+"abc"[1], "abc".at(-1);        // "b" "c"
+"a" &lt; "b", "a" &lt; "B";          // true false (compares code units)</code></pre>
+<div class="trap"><b>Trap:</b> reversing with <code>str.split("").reverse().join("")</code> breaks emoji (splits surrogate pairs); use <code>[...str]</code>. <code>"5" + 3</code> is "53" but <code>"5" - 3</code> is 2. <code>isWellFormed()</code> (new) detects broken surrogates.</div>
+<details open><summary>Ways to declare a string? How do you handle Unicode and long code points?</summary><p>Quotes, backticks, <code>String()</code>. For Unicode use <code>\uXXXX</code> for BMP characters and <code>\u{XXXXX}</code> for longer ones, <code>codePointAt</code>/<code>fromCodePoint</code> to convert, spread or <code>for...of</code> to iterate by code point, <code>normalize()</code> to compare accents, and <code>Intl.Segmenter</code> for true user-perceived characters.</p></details>
+<details open><summary>Primitive string vs String object?</summary><p><code>"a" === "a"</code> true; <code>new String("a") === new String("a")</code> false (object identity). JS auto-wraps primitives to call methods and discards the wrapper.</p></details>
+</section>
+
+<section id="a9"><h2>9. Template literals</h2>
+<ul><li>Backtick strings with <code>${expression}</code> interpolation (any expression, even function calls, ternaries, nested templates), real multi-line text, and tagged templates.</li>
+<li>Advantages: readability over <code>+</code> concatenation, multi-line without <code>\n</code>, auto string conversion, safer HTML/SQL building via tags.</li></ul>
+<pre><code>const n = "Asha", a = 30;
+`Hi ${n}, next year you'll be ${a + 1}`;     // expression inside
+`${a &gt; 18 ? "adult" : "minor"}`;             // ternary
+`line 1
+line 2`;                                      // keeps the newline
+`&lt;li&gt;${items.map(i =&gt; `&lt;b&gt;${i}&lt;/b&gt;`).join("")}&lt;/li&gt;`;   // nested
+`\${not interpolated}`;                       // escape with backslash
+`${[1,2]}`, `${{}}`, `${null}`;               // "1,2" "[object Object]" "null"
+
+function tag(strings, ...vals){ return strings.raw.join("|") + vals.join(",") }
+tag`a${1}b${2}c`;   // "a|b|c1,2"  (strings array + values)
+String.raw`C:\new`;  // "C:\new" (no escape processing)</code></pre>
+<details open><summary>What is a template literal and how do you display an expression?</summary><p>A backtick-delimited string literal (ES6) that evaluates <code>${...}</code> expressions and converts them to strings, supports multi-line text and tag functions (used by styled-components, GraphQL <code>gql</code>, lit-html).</p></details>
+</section>
+
+<section id="a10"><h2>10. length and search methods</h2>
+<div class="w"><table><tr><th>Method</th><th>Returns</th><th>Notes</th></tr>
+<tr><td>indexOf(s, from)</td><td>index / -1</td><td>case-sensitive, string only</td></tr>
+<tr><td>lastIndexOf(s, from)</td><td>index / -1</td><td>searches backwards; match must <em>start</em> at or before <code>from</code></td></tr>
+<tr><td>search(regexp)</td><td>index / -1</td><td>regex, no start position, ignores <code>g</code></td></tr>
+<tr><td>includes / startsWith / endsWith</td><td>boolean</td><td>no regex; accept position</td></tr>
+<tr><td>match / matchAll</td><td>array / iterator</td><td>regex, capture groups</td></tr></table></div>
+<pre><code>const str = "This is a test";   // T0 h1 i2 s3 _4 i5 s6 _7 ...
+str.indexOf("is");        // 2
+str.indexOf("is", 5);     // 5   (second "is" starts at 5)
+str.lastIndexOf("is", 1); // -1  (backwards from index 1: a match starting at 2 is too far right)
+str.lastIndexOf("is");    // 5
+str.search(/is/);         // 2
+str.search("is");         // 2   (string is converted to RegExp)
+str.length;               // 14 (read-only)
+"abc".indexOf("");        // 0
+"Abc".includes("a");      // false (case-sensitive)</code></pre>
+<details open><summary>search() vs indexOf()?</summary><p><code>search</code> takes a regex (or converts a string to one, so special chars like <code>.</code> act as patterns) and has no start offset; <code>indexOf</code> takes a literal string and an optional start index. Neither is global. indexOf is faster for plain text.</p></details>
+<details open><summary>Explain the output of indexOf("is",5) and lastIndexOf("is",1).</summary><p>First: search for "is" starting at index 5, found at 5. Second: search backwards starting at index 1; the only candidates start at 0 or 1 ("Th", "hi"), so no match, -1.</p></details>
+</section>
+
+<section id="a11"><h2>11. Extraction methods</h2>
+<div class="w"><table><tr><th>Method</th><th>Args</th><th>Negative / swap behaviour</th></tr>
+<tr><td>slice(start, end)</td><td>end excluded</td><td>negatives count from end; if start &gt; end returns ""</td></tr>
+<tr><td>substring(start, end)</td><td>end excluded</td><td>negatives and NaN become 0; <strong>swaps</strong> if start &gt; end</td></tr>
+<tr><td>substr(start, length)</td><td>length!</td><td>start can be negative; <em>deprecated</em>, avoid</td></tr></table></div>
+<pre><code>const s = "JavaScript";
+s.slice(0, 4);       // "Java"
+s.slice(-6);         // "Script"
+s.slice(4, 0);       // ""
+s.substring(4, 0);   // "Java"  (swapped)
+s.substring(-3, 4);  // "Java"  (-3 treated as 0)
+s.substr(4, 6);      // "Script"
+s.charAt(0), s[0], s.at(-1);   // "J" "J" "t"
+s.charAt(99), s[99];           // "" undefined
+s.charCodeAt(0);               // 74
+s.split("a");                  // ["J","v","Script"]
+s.split("");                   // letters (breaks emoji)
+"  hi ".trim(); "5".padStart(3, "0");  // "hi"  "005"
+"ab".repeat(2);                // "abab"</code></pre>
+<div class="trap"><b>Trap:</b> <code>charAt</code> returns "" for out of range but <code>[]</code> returns <code>undefined</code>. Remember slice's second argument is an end index but substr's is a length. Default to <code>slice</code>.</div>
+<details open><summary>slice vs substring vs substr?</summary><p><code>slice</code> supports negative indices and returns "" for reversed ranges; <code>substring</code> clamps negatives to 0 and swaps reversed arguments; <code>substr</code> takes (start, length) and is deprecated.</p></details>
+<details open><summary>Reverse a string / check palindrome / count characters?</summary><p><code>[...s].reverse().join("")</code>; palindrome: compare with its reverse after lowercasing and stripping non-alphanumerics (<code>s.replace(/[^a-z0-9]/gi,"")</code>); count: loop with an object or <code>reduce</code>.</p></details>
+</section>
+
+<section id="a12"><h2>12. Case conversion and replace()</h2>
+<pre><code>"Hello".toUpperCase(); "Hello".toLowerCase();   // "HELLO" "hello"
+"a-b-a".replace("a", "X");        // "X-b-a"  only FIRST match (string pattern)
+"a-b-a".replace(/a/g, "X");       // "X-b-X"  global regex replaces all
+"a-b-a".replaceAll("a", "X");     // "X-b-X"  (ES2021); string patterns allowed
+"John Smith".replace(/(\w+) (\w+)/, "$2, $1");   // "Smith, John" ($1 = capture group)
+"a1b2".replace(/\d/g, d =&gt; d * 2);               // "a2b4" (callback)
+"hello world".replace(/\b\w/g, c =&gt; c.toUpperCase()); // "Hello World"
+"İ".toLowerCase().length;                         // locale/unicode quirks exist
+s.toLocaleUpperCase("tr");
+
+// vowel or consonant
+function check(ch){
+  if (!/^[a-z]$/i.test(ch)) return "not a letter";
+  return "aeiou".includes(ch.toLowerCase()) ? "vowel" : "consonant";
+}
+check("E");  // "vowel"</code></pre>
+<div class="trap"><b>Trap:</b> strings are immutable, so <code>s.toUpperCase()</code> alone changes nothing; you must use the return value. <code>replaceAll</code> with a regex lacking <code>/g</code> throws TypeError. In the replacement string, <code>$&amp;</code> is the match and <code>$$</code> a literal dollar.</div>
+<details open><summary>How do you replace all occurrences?</summary><p><code>replaceAll("x","y")</code> or <code>replace(/x/g,"y")</code>; older code used <code>split("x").join("y")</code>.</p></details>
+<details open><summary>Capitalise the first letter of each word?</summary><p><code>s.split(" ").map(w =&gt; w[0].toUpperCase() + w.slice(1)).join(" ")</code> (guard empty words) or the regex callback above.</p></details>
+</section>
+
+<section id="a13"><h2>13. Date and time basics</h2>
+<ul><li>A <code>Date</code> is an object holding <strong>milliseconds since 1 Jan 1970 UTC</strong> (the epoch). It displays in the local time zone but stores UTC.</li>
+<li>Months are <strong>0-indexed</strong> (0 = January); days of the month are 1-31; <code>getDay()</code> is 0 (Sunday) to 6.</li></ul>
+<pre><code>new Date();                         // now
+new Date(0);                        // epoch (ms number)
+new Date("2020-09-23");             // ISO string
+new Date(2020, 8, 23, 10, 30, 15, 500); // y, month(0-11), d, h, m, s, ms  (local)
+new Date(otherDate);                // copy
+Date.now();                         // number, ms now (not a Date)
+Date.UTC(2020, 8, 23);              // ms, UTC-based
++new Date(); new Date().getTime();  // number
+
+const dt = new Date(2020, 08, 23);  // 23 September 2020, 00:00:00 local time
+console.log(dt);                    // Wed Sep 23 2020 00:00:00 GMT+0530 (India Standard Time)
+new Date(2020, 0);                  // 1 Jan 2020 (day defaults to 1)
+new Date(99, 0);                    // year 1999! (0-99 maps to 1900-1999)
+new Date("invalid");                // Invalid Date; getTime() is NaN</code></pre>
+<h3>ISO 8601 formats JS understands</h3>
+<ul><li><code>YYYY</code>, <code>YYYY-MM</code>, <code>YYYY-MM-DD</code> (date-only is parsed as <strong>UTC</strong>).</li>
+<li><code>YYYY-MM-DDTHH:mm</code>, <code>...:ss</code>, <code>...:ss.sss</code> with no zone is parsed as <strong>local time</strong>.</li>
+<li>Add <code>Z</code> (UTC) or an offset <code>+05:30</code>. <code>toISOString()</code> always gives <code>YYYY-MM-DDTHH:mm:ss.sssZ</code>.</li>
+<li>Non-ISO strings like <code>"23/09/2020"</code> or <code>"Sep 23, 2020"</code> are implementation-dependent; avoid.</li></ul>
+<div class="trap"><b>Trap:</b> <code>new Date("2020-09-23")</code> is UTC midnight, so in US time zones it displays as 22 Sep evening, while <code>new Date("2020-09-23T00:00")</code> is local. In the course snippet <code>08</code> works only in sloppy mode; in strict mode/modules a leading-zero literal like <code>08</code> is a SyntaxError, so write <code>8</code>. A Date is an object: <code>d1 == d2</code> is false for equal times; compare <code>d1.getTime() === d2.getTime()</code>. <code>d1 &lt; d2</code> works because of valueOf.</div>
+<details open><summary>Different ways of creating a Date?</summary><p>No args (now), milliseconds number, date string (ISO preferred), components <code>(y, m, d, h, mi, s, ms)</code>, or another Date; <code>Date.now()</code> for a timestamp number only.</p></details>
+<details open><summary>Why is Date considered painful and what is the fix?</summary><p>Mutable, 0-based months, parsing inconsistencies, poor time zone support. Use <code>Intl.DateTimeFormat</code>, libraries like date-fns/Day.js, or the upcoming <code>Temporal</code> API (check browser support before using).</p></details>
+</section>
+
+<section id="a14"><h2>14. Date methods</h2>
+<div class="w"><table><tr><th>Get</th><th>Set</th><th>Range / note</th></tr>
+<tr><td>getFullYear()</td><td>setFullYear()</td><td>use instead of getYear (deprecated)</td></tr>
+<tr><td>getMonth()</td><td>setMonth()</td><td>0-11</td></tr>
+<tr><td>getDate()</td><td>setDate()</td><td>day of month 1-31</td></tr>
+<tr><td>getDay()</td><td>none</td><td>weekday 0=Sun</td></tr>
+<tr><td>getHours/Minutes/Seconds/Milliseconds</td><td>set...</td><td>local; <code>getUTC*</code>/<code>setUTC*</code> variants</td></tr>
+<tr><td>getTime()</td><td>setTime()</td><td>epoch ms</td></tr></table></div>
+<p>Setters <strong>mutate</strong> the date and return the new timestamp. Values that overflow roll into the next unit.</p>
+<pre><code>const d = new Date(2020, 8, 23);
+d.getMonth();                                   // 8 (not 9!)
+["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()]; // "Sep"
+d.toLocaleString("en-US", { month: "long" });   // "September" (character month)
+d.toLocaleDateString("en-IN", { weekday:"long", day:"numeric", month:"short", year:"numeric" });
+
+// date 50 days before
+const before = new Date(d);          // copy first! setters mutate
+before.setDate(before.getDate() - 50);   // Aug 4 2020 (rolls back across months)
+
+// overflow in constructor
+new Date(2020, 0, 35);   // Feb 4 2020  (Jan has 31 days; 35 - 31 = 4)
+new Date(2020, 12, 1);   // Jan 1 2021  (month 12 rolls the year)
+new Date(2020, 1, 30);   // Mar 1 2020  (2020 leap year: Feb has 29)
+new Date(2021, 2, 0);    // Feb 28 2021 (day 0 = last day of previous month)
+new Date(y, m + 1, 0).getDate();   // number of days in month m
+
+// add days helper
+const addDays = (dt, n) =&gt; { const r = new Date(dt); r.setDate(r.getDate() + n); return r };</code></pre>
+<div class="trap"><b>Trap:</b> <code>getDate()</code> is the day of the month, <code>getDay()</code> the weekday. <code>const x = d; x.setDate(1)</code> also mutates <code>d</code> (same reference). <code>toString()</code> output is local, <code>toISOString()</code> is UTC, <code>toJSON()</code> uses ISO.</div>
+<details open><summary>Output of adding 35 as the date in new Date(2020, 0, 35)?</summary><p>4 February 2020, local midnight. Overflowing days roll into following months; the constructor does not validate.</p></details>
+<details open><summary>How do you check whether a Date is valid? Format as dd/mm/yyyy?</summary><p><code>d instanceof Date &amp;&amp; !isNaN(d)</code>. Format: <code>d.toLocaleDateString("en-GB")</code> gives 23/09/2020, or pad parts manually with <code>String(n).padStart(2,"0")</code>.</p></details>
+</section>
+
+<section id="a15"><h2>15. Time methods and date arithmetic</h2>
+<pre><code>const d1 = new Date("2024-01-01"), d2 = new Date("2024-03-01");
+const MS_DAY = 24 * 60 * 60 * 1000;
+(d2 - d1) / MS_DAY;                        // 60 (subtraction gives ms)
+Math.round((d2 - d1) / MS_DAY);            // round to absorb DST hour shifts for local dates
+Math.floor(Math.abs(d2 - d1) / MS_DAY);    // whole days, either order
+
+const t = new Date();
+t.setHours(14, 30, 0, 0);            // 2:30:00.000 pm today (h, m, s, ms)
+t.setMinutes(t.getMinutes() + 45);   // add 45 min, rolls the hour
+t.setHours(0, 0, 0, 0);              // start of day
+t.getTimezoneOffset();               // minutes behind UTC (IST gives -330)
+t.toTimeString(); t.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+new Intl.DateTimeFormat("en-IN", { dateStyle: "medium", timeStyle: "short" }).format(t);
+
+// age from DOB
+function age(dob){ const n = new Date(); let a = n.getFullYear() - dob.getFullYear();
+  if (n &lt; new Date(n.getFullYear(), dob.getMonth(), dob.getDate())) a--; return a }
+
+// timer / elapsed
+const start = performance.now(); /* work */ const ms = performance.now() - start;</code></pre>
+<ul><li>Subtracting Dates coerces to numbers; adding (<code>d1 + d2</code>) concatenates their strings. Use <code>Date.now()</code> for timestamps, <code>performance.now()</code> for precise durations.</li>
+<li>Days between dates crossing a DST change can be 23 or 25 hours; do arithmetic in UTC (<code>Date.UTC</code>) for exactness.</li>
+<li>Store and transmit dates as ISO/UTC strings or epoch ms; convert to local time only for display.</li></ul>
+<details open><summary>Calculate the date difference in days.</summary><p>Subtract the two dates (milliseconds), divide by 86,400,000, then round or floor depending on whether partial days count.</p></details>
+<details open><summary>How do you change hours or minutes?</summary><p><code>setHours(h, m, s, ms)</code> and <code>setMinutes</code>; overflow carries (e.g. <code>setMinutes(75)</code> adds 1 hour 15 min). Work on a copy to avoid mutating the original.</p></details>
+<details open><summary>Compare two dates / find the day of the week?</summary><p>Compare with <code>getTime()</code> or relational operators (never <code>==</code>). Weekday: <code>["Sun",...][d.getDay()]</code> or <code>toLocaleDateString("en-US",{weekday:"long"})</code>.</p></details>
+</section>
+
+<section id="cheat"><h2>Quick revision cheat sheet</h2>
+<div class="w"><table><tr><th>Topic</th><th>Remember</th></tr>
+<tr><td>Loops</td><td>no break in forEach; for...of values, for...in keys; async needs for...of</td></tr>
+<tr><td>Mutating</td><td>push pop shift unshift splice sort reverse fill; copies: slice concat map filter toSorted</td></tr>
+<tr><td>Returns</td><td>push/unshift length; pop/shift element; splice removed array (empty if none); findIndex -1</td></tr>
+<tr><td>sort</td><td>default string order; comparator a-b; undefined last; mutates; stable</td></tr>
+<tr><td>reduce</td><td>always pass initial value; empty array without it throws</td></tr>
+<tr><td>flat</td><td>flat(Infinity); flatMap depth 1</td></tr>
+<tr><td>Destructuring</td><td>by position; defaults for undefined only; swap needs leading ;</td></tr>
+<tr><td>Strings</td><td>immutable; UTF-16 units; \u{...}; spread for code points; normalize()</td></tr>
+<tr><td>Extraction</td><td>slice (negatives, end idx), substring (swaps), substr (length, deprecated)</td></tr>
+<tr><td>replace</td><td>first match only; /g or replaceAll; callback and $1</td></tr>
+<tr><td>Date</td><td>ms since epoch; month 0-based; overflow rolls; date-only ISO is UTC; setters mutate; compare getTime()</td></tr></table></div>
+<h3>Rapid-fire "what does this print?"</h3>
+<pre><code>console.log([1,2,3] + [4,5]);            // "1,2,34,5"
+console.log([10,1,3].sort());            // [1, 10, 3]
+console.log([] + [], [] == false);       // "" true
+console.log(["a","b"].push("c"));        // 3
+console.log([1,2,3].splice(1,1));        // [2]
+console.log([,1].length, [1,2,3].at(-1)); // 2 3
+console.log("abc".slice(-2), "abc".substring(-2)); // "bc" "abc"
+console.log("b" + "a" + +"a" + "a");     // "baNaNa"
+console.log(typeof new Date(), typeof Date.now()); // object number
+console.log(new Date(2024, 1, 30).getMonth());  // 2 (rolled to March)</code></pre>
+</section>
+</main>
+<script>
+(function(){
+var re=/(\/\/.*$)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`)|\b(const|let|var|function|return|if|else|for|while|of|in|new|class|extends|yield|try|catch|finally|throw|typeof|async|await|this|null|undefined|true|false|break|continue)\b|\b(\d+\.?\d*n?)\b/gm;
+document.querySelectorAll("pre code").forEach(function(el){
+var t=el.textContent.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+el.innerHTML=t.replace(re,function(m,c,s,k,n){return c?'<span class="c">'+c+'</span>':s?'<span class="s">'+s+'</span>':k?'<span class="k">'+k+'</span>':'<span class="n">'+n+'</span>'})});
+document.getElementById("th").onclick=function(){var r=document.documentElement,d=r.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");r.setAttribute("data-theme",d==="dark"?"light":"dark")};
+})();
+</script></body></html>

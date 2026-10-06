@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JavaScript Bible · Section 5 · Asynchronous JavaScript</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#17212b;--mut:#5b6b7a;--line:#d9e0e6;--acc:#0b6e8a;--code:#eef2f5;--trap:#fdf1e3;--trapb:#c9701a;--k:#a12b8c;--s:#18794e;--c:#7a8794;--n:#b35c00;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0d1319;--card:#141c24;--ink:#e3eaf0;--mut:#93a3b2;--line:#27333f;--acc:#4cc2e4;--code:#0a1015;--trap:#2a1f12;--trapb:#e39a4d;--k:#e08be0;--s:#6fd3a1;--c:#7d8c9a;--n:#f0b366}}
+:root[data-theme=dark]{--bg:#0d1319;--card:#141c24;--ink:#e3eaf0;--mut:#93a3b2;--line:#27333f;--acc:#4cc2e4;--code:#0a1015;--trap:#2a1f12;--trapb:#e39a4d;--k:#e08be0;--s:#6fd3a1;--c:#7d8c9a;--n:#f0b366}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "IBM Plex Sans",system-ui,sans-serif}
+main{max-width:860px;margin:0 auto;padding:20px 16px 60px}
+header h1{font-size:clamp(1.6rem,5vw,2.3rem);line-height:1.2;margin:.2em 0}header p{color:var(--mut);margin:0}
+#th{float:right;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;padding:6px 12px;cursor:pointer;font:inherit}
+nav{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0 8px}nav a{font-size:.85rem;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:4px 10px;border-radius:5px;text-decoration:none}nav a:hover{border-color:var(--acc);color:var(--acc)}
+section{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:8px;padding:6px 20px 16px;margin:22px 0}
+h2{font-size:1.4rem;margin:.8em 0 .3em}h3{font-size:1rem;margin:1.2em 0 .3em;color:var(--acc)}
+ul{padding-left:1.2em;margin:.4em 0}li{margin:.2em 0}
+code{font:.88em "JetBrains Mono",ui-monospace,monospace;background:var(--code);padding:1px 5px;border-radius:4px}
+pre{background:var(--code);border:1px solid var(--line);border-radius:6px;padding:12px;overflow-x:auto;margin:.7em 0;max-width:100%}pre code{background:none;padding:0;font-size:.84rem;line-height:1.5}
+.k{color:var(--k)}.s{color:var(--s)}.c{color:var(--c);font-style:italic}.n{color:var(--n)}
+.trap{background:var(--trap);border-left:4px solid var(--trapb);padding:8px 14px;border-radius:6px;margin:.8em 0}.trap b{color:var(--trapb)}
+details{border:1px solid var(--line);border-radius:6px;margin:.4em 0;padding:6px 12px}summary{cursor:pointer;font-weight:600}details p{margin:.5em 0 .2em}
+table{border-collapse:collapse;width:100%;font-size:.9rem}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{background:var(--code)}
+.w{overflow-x:auto}
+</style></head><body><main>
+<header><button id="th" aria-label="Toggle theme">Light / Dark</button>
+<h1>JavaScript Bible: Section 5<br>Asynchronous JavaScript</h1>
+<p>All 37 course questions answered, with the event loop explained first, step-by-step traces for every tricky output, and the patterns interviewers ask you to code.</p></header>
+<nav><a href="#e1">Async &amp; event loop</a><a href="#e2">Callbacks</a><a href="#e3">Promise</a><a href="#e4">Chaining</a><a href="#e5">all/allSettled/race/any</a><a href="#e6">async/await</a><a href="#e7">Output puzzles</a><a href="#e8">AJAX &amp; XHR</a><a href="#e9">Fetch</a><a href="#e10">Async iterators</a><a href="#e11">Coding patterns</a><a href="#cheat">Cheat sheet</a></nav>
+
+<section id="e1"><h2>1. What is asynchronous? The event loop (read this first)</h2>
+<ul><li><strong>Synchronous</strong>: statements run one after another; each waits for the previous one to finish. <strong>Asynchronous</strong>: a long-running task (timer, network call, file read) is started, the program <em>keeps going</em>, and the result is handled later when it is ready.</li>
+<li>JavaScript has <strong>one thread</strong> (one call stack). It stays responsive because slow work is handed to the environment (browser Web APIs / Node libuv), and the finished callbacks are queued and run by the <strong>event loop</strong> when the stack is empty.</li></ul>
+<pre><code>             +-----------------+      Web APIs (timers, fetch, DOM events) run outside the stack
+  code  --&gt;  |   Call Stack    |  &lt;-- runs one function at a time
+             +-----------------+
+                    ^   when the stack is EMPTY, the event loop picks the next job:
+                    |
+   1) Microtask queue  : promise .then/.catch/.finally, await continuations, queueMicrotask, MutationObserver
+                         -&gt; ALL of it is drained (including newly added microtasks) before anything else
+   2) (browser may render here)
+   3) Macrotask queue  : setTimeout, setInterval, DOM events, I/O, MessageChannel  -&gt; ONE task per loop turn</code></pre>
+<p><strong>Golden rule:</strong> run all synchronous code &rarr; drain every microtask &rarr; (render) &rarr; take one macrotask &rarr; drain microtasks again &rarr; repeat. That is why a resolved promise's <code>.then</code> beats <code>setTimeout(fn, 0)</code>.</p>
+<pre><code>console.log("A");
+setTimeout(() =&gt; console.log("B"), 0);          // macrotask
+Promise.resolve().then(() =&gt; console.log("C")); // microtask
+console.log("D");
+// A D C B</code></pre>
+<div class="trap"><b>Traps:</b> <code>setTimeout(fn, 0)</code> does not run immediately: it runs after the current script and all microtasks. A never-ending microtask chain (<code>function f(){ Promise.resolve().then(f) }</code>) freezes the page because macrotasks and rendering never get a turn. Heavy synchronous loops block everything, including timers and clicks. Async does not mean multi-threaded; use Web Workers for CPU-heavy work.</div>
+<details open><summary>What is an asynchronous process?</summary><p>A task that is started now and completes later without blocking the main thread. The engine continues executing other code, then runs the task's callback (or resolves its promise) via the event loop once the result is ready, e.g. HTTP requests, timers, file/database access.</p></details>
+<details open><summary>Is JavaScript single-threaded? How then is it asynchronous?</summary><p>Yes, one call stack. Asynchrony comes from the host environment doing the waiting (timers, network) and the event loop feeding completed callbacks back onto the stack one at a time.</p></details>
+<details open><summary>Microtask vs macrotask?</summary><p>Microtasks (promise reactions, <code>await</code> continuations, <code>queueMicrotask</code>) run right after the current task and before the next macrotask; macrotasks (<code>setTimeout</code>, events, I/O) are processed one per loop turn. Microtasks always have priority.</p></details>
+</section>
+
+<section id="e2"><h2>2. Callbacks and callback hell</h2>
+<p>A <strong>callback</strong> is a function passed as an argument to another function, to be called later. Callbacks can be <em>synchronous</em> (<code>arr.map(cb)</code>, <code>forEach</code>, <code>sort</code>) or <em>asynchronous</em> (<code>setTimeout(cb)</code>, event handlers, old Node APIs). Functions are first-class values in JS, which makes this possible.</p>
+<pre><code>function greet(name, cb) { cb(`Hello ${name}`) }
+greet("Asha", msg =&gt; console.log(msg));          // synchronous callback
+
+setTimeout(() =&gt; console.log("later"), 1000);    // asynchronous callback
+
+// Node style: error-first callback
+fs.readFile("a.txt", (err, data) =&gt; { if (err) return handle(err); use(data) });
+
+// CALLBACK HELL / pyramid of doom: each step depends on the previous, nesting grows rightwards
+getUser(1, (err, user) =&gt; {
+  if (err) return handle(err);
+  getOrders(user.id, (err, orders) =&gt; {
+    if (err) return handle(err);
+    getItems(orders[0].id, (err, items) =&gt; {
+      if (err) return handle(err);
+      console.log(items);              // hard to read, repeated error handling, hard to extend
+    });
+  });
+});
+
+// Fixed with promises / async-await
+getUser(1).then(u =&gt; getOrders(u.id)).then(o =&gt; getItems(o[0].id)).then(console.log).catch(handle);
+try { const u = await getUser(1); const o = await getOrders(u.id); console.log(await getItems(o[0].id)) } catch (e) { handle(e) }</code></pre>
+<ul><li><strong>Problems with callbacks</strong>: deep nesting, duplicated error handling, no return values or <code>try/catch</code> across async boundaries, <em>inversion of control</em> (you trust a third-party function to call your callback once, with the right args), hard to run in parallel.</li>
+<li><strong>Ways out</strong>: name and flatten functions, promises, async/await, modularise.</li></ul>
+<div class="trap"><b>Trap:</b> <code>try { setTimeout(() =&gt; { throw new Error("x") }, 0) } catch (e) {}</code> does not catch: the callback runs later on a fresh stack. A callback invoked both synchronously and asynchronously in different branches ("Zalgo") creates unpredictable order; always be consistently async.</div>
+<details open><summary>What is a callback function?</summary><p>A function passed into another function as an argument, which the receiving function invokes later (immediately or after an async operation completes).</p></details>
+<details open><summary>What is callback hell / pyramid of doom?</summary><p>Deeply nested callbacks used to sequence dependent async steps, forming a rightward pyramid that is hard to read, debug and handle errors in. Promises and async/await flatten it.</p></details>
+</section>
+
+<section id="e3"><h2>3. Promise basics</h2>
+<p>A <code>Promise</code> is an object representing the <strong>eventual result</strong> of an async operation: a placeholder for a value that will arrive later (or an error).</p>
+<div class="w"><table><tr><th>State</th><th>Meaning</th><th>How you get there</th></tr>
+<tr><td><strong>pending</strong> (default)</td><td>initial, not finished</td><td><code>new Promise(...)</code> just created</td></tr>
+<tr><td><strong>fulfilled</strong> (resolved successfully)</td><td>completed with a value</td><td><code>resolve(value)</code></td></tr>
+<tr><td><strong>rejected</strong></td><td>failed with a reason</td><td><code>reject(err)</code> or a thrown error in the executor</td></tr></table></div>
+<p>Fulfilled or rejected = <strong>settled</strong>. A promise settles <strong>only once</strong>; its state and value are then immutable. Further <code>resolve/reject</code> calls are silently ignored.</p>
+<pre><code>const p = new Promise((resolve, reject) =&gt; {   // executor runs SYNCHRONOUSLY
+  setTimeout(() =&gt; {
+    Math.random() &gt; 0.5 ? resolve("ok") : reject(new Error("fail"));
+  }, 1000);
+});
+console.log(p);                 // Promise { &lt;pending&gt; }
+
+p.then(value =&gt; console.log(value))             // runs on fulfil
+ .catch(err =&gt; console.log(err.message))        // runs on reject (or an error in earlier .then)
+ .finally(() =&gt; console.log("cleanup"));        // runs either way, receives NO argument
+
+p.then(onFulfilled, onRejected);                // two-arg form: onRejected does NOT catch errors thrown in onFulfilled
+
+Promise.resolve(42);   Promise.reject(new Error("x"));   // already-settled promises
+Promise.resolve(somePromise) === somePromise;            // returns the same promise
+const sleep = ms =&gt; new Promise(r =&gt; setTimeout(r, ms)); // promisify a timer
+const { promise, resolve, reject } = Promise.withResolvers();   // ES2024: expose resolvers (check support)</code></pre>
+<h3>How finally behaves</h3>
+<ul><li>Runs on both outcomes for cleanup (hide spinner, close connection). Gets no arguments.</li>
+<li>Passes the original value/reason through; its return value is ignored. If it throws or returns a rejected promise, that new rejection replaces the result.</li></ul>
+<pre><code>Promise.resolve(1).finally(() =&gt; 2).then(v =&gt; console.log(v));            // 1
+Promise.reject("e").finally(() =&gt; {}).catch(e =&gt; console.log(e));         // "e"
+Promise.resolve(1).finally(() =&gt; { throw "boom" }).catch(e =&gt; console.log(e)); // "boom"</code></pre>
+<div class="trap"><b>Traps:</b> the executor runs immediately, only <code>then</code> callbacks are async. <code>resolve(x)</code> does not stop the executor (code after it still runs). A promise rejected with no handler triggers <code>unhandledrejection</code> (browser event) / process warning or crash (Node 15+). "Resolved" is not the same as "fulfilled": a promise resolved with another pending promise is "resolved" but still pending. A thenable is any object with a <code>then</code> method, and promises adopt it.</div>
+<details open><summary>What is a Promise?</summary><p>An object representing the eventual completion (value) or failure (reason) of an async operation, with <code>then/catch/finally</code> to attach handlers, avoiding callback nesting.</p></details>
+<details open><summary>What is the default status? What status after resolve or reject?</summary><p>Default <strong>pending</strong>. <code>resolve(v)</code> makes it <strong>fulfilled</strong>; <code>reject(e)</code> makes it <strong>rejected</strong>. After that it can never change.</p></details>
+<details open><summary>How do you run code at the end of resolve OR reject?</summary><p><code>promise.finally(callback)</code>. It runs regardless of the outcome and is ideal for cleanup.</p></details>
+<details open><summary>What happens if you throw inside the executor or a then?</summary><p>The promise is rejected with the thrown value; thrown errors inside <code>then</code> reject the promise returned by that <code>then</code>. Errors thrown later in async callbacks (a <code>setTimeout</code> inside the executor) are NOT converted; they become uncaught exceptions.</p></details>
+</section>
+
+<section id="e4"><h2>4. Promise chaining</h2>
+<p>Every <code>.then()</code> / <code>.catch()</code> / <code>.finally()</code> returns a <strong>new promise</strong>, so calls can be chained so each step receives the previous step's result. Rules for what the next promise does:</p>
+<div class="w"><table><tr><th>Handler...</th><th>Next promise</th></tr>
+<tr><td>returns a plain value</td><td>fulfilled with that value</td></tr>
+<tr><td>returns a promise</td><td>adopts it (waits, then takes its result or error)</td></tr>
+<tr><td>returns nothing</td><td>fulfilled with <code>undefined</code></td></tr>
+<tr><td>throws</td><td>rejected with the error</td></tr>
+<tr><td>no handler for that state (e.g. no <code>.catch</code>)</td><td>passes the value/error along unchanged</td></tr></table></div>
+<pre><code>fetchUser(1)                          // promise
+  .then(user =&gt; fetchOrders(user.id)) // return a promise: next step waits for it
+  .then(orders =&gt; orders.length)      // return a value
+  .then(count =&gt; { console.log(count) })   // returns undefined
+  .catch(err =&gt; { console.error(err); return 0 })   // catches ANY earlier failure, then chain continues fulfilled with 0
+  .finally(() =&gt; hideSpinner());
+
+// common mistakes
+p.then(v =&gt; { doAsync(v) });          // forgot return: next then gets undefined and doesn't wait
+p.then(v =&gt; { return doAsync(v) });   // correct
+p.then(a =&gt; { p2.then(b =&gt; use(a, b)) });   // nested again: flatten with return or async/await
+
+Promise.resolve(1).then(2).then(v =&gt; console.log(v));   // 1 (non-function arg is ignored; value passes through)</code></pre>
+<h3>The course output question (traced step by step)</h3>
+<pre><code>const pr = new Promise((resolve, reject) =&gt; {
+  resolve("Over");                       // 1. fulfils pr with "Over" immediately
+  setTimeout(() =&gt; { resolve("Again") }, 2000);   // 4. later: ignored, pr is already settled
+});
+
+pr.then(msg =&gt; {
+  console.log(msg);                      // 2. prints "Over"
+  return pr;                             // returns the same, already-fulfilled promise
+}).then(msg =&gt; {
+  console.log(msg);                      // 3. receives "Over" again, prints "Over"
+});
+// Output:
+// Over
+// Over</code></pre>
+<p><strong>Why:</strong> a promise can be settled only once, so <code>resolve("Again")</code> after two seconds does nothing. The second <code>then</code> gets the value of the returned <code>pr</code>, which is still <code>"Over"</code>. The two logs appear immediately (microtasks), not after 2 seconds. The timer still runs but has no visible effect.</p>
+<div class="trap"><b>Trap:</b> a <code>.catch</code> in the middle <em>recovers</em> the chain: later <code>.then</code> handlers run with the catch's return value. To keep failing, rethrow: <code>.catch(e =&gt; { log(e); throw e })</code>. Returning a promise from inside <code>then</code> costs extra microtask ticks, which affects ordering puzzles.</div>
+<details open><summary>What is promise chaining? Syntax?</summary><p>Sequencing async steps by chaining <code>.then().then().catch().finally()</code>; each returns a new promise whose result is whatever the previous handler returned (or the error it threw). Return a promise from a handler to make the next step wait.</p></details>
+<details open><summary>then(a, b) vs then(a).catch(b)?</summary><p>With <code>then(a, b)</code>, <code>b</code> handles only rejections of the original promise, not errors thrown inside <code>a</code>. <code>.then(a).catch(b)</code> also catches errors from <code>a</code>, so it is usually preferred.</p></details>
+</section>
+
+<section id="e5"><h2>5. Promise.all, allSettled, race, any</h2>
+<div class="w"><table><tr><th>Method</th><th>Resolves when</th><th>Result</th><th>Rejects when</th></tr>
+<tr><td><code>Promise.all</code></td><td>ALL fulfil</td><td>array of values, in input order</td><td>FIRST rejection (fail-fast)</td></tr>
+<tr><td><code>Promise.allSettled</code></td><td>ALL settle (never rejects)</td><td>array of <code>{status:"fulfilled", value}</code> or <code>{status:"rejected", reason}</code></td><td>never</td></tr>
+<tr><td><code>Promise.race</code></td><td>FIRST settles (win or lose)</td><td>that value</td><td>if the first to settle is a rejection</td></tr>
+<tr><td><code>Promise.any</code></td><td>FIRST fulfils</td><td>that value</td><td>ALL reject: <code>AggregateError</code> with <code>.errors</code></td></tr></table></div>
+<pre><code>const p1 = new Promise(r =&gt; setTimeout(() =&gt; r("Promise1"), 2000));
+const p2 = "Normal string";                       // not a promise
+const p3 = new Promise(r =&gt; setTimeout(() =&gt; r("Promise3"), 2000));
+
+Promise.all([p1, p2, p3]).then(console.log).catch(console.log);
+// after ~2s: ["Promise1", "Normal string", "Promise3"]
+// Non-promise values are wrapped with Promise.resolve(), so they count as already fulfilled. Order matches input order, not finish order.
+
+Promise.all([]);            // resolves immediately with []
+Promise.race([]);           // pending FOREVER
+Promise.any([]);            // rejects with AggregateError
+Promise.allSettled([]);     // resolves with []
+
+const r = await Promise.allSettled([Promise.resolve(1), Promise.reject("x")]);
+// [{status:"fulfilled", value:1}, {status:"rejected", reason:"x"}]
+const ok = r.filter(x =&gt; x.status === "fulfilled").map(x =&gt; x.value);
+
+const obj = Promise.race([]);
+console.log(obj);                     // Promise { &lt;pending&gt; }
+setTimeout(() =&gt; console.log(obj), 2000);   // Promise { &lt;pending&gt; } again: nothing can ever settle it</code></pre>
+<h3>Handling several promises that may reject</h3>
+<pre><code>// 1) Need every outcome (batch jobs, dashboard widgets): allSettled
+const results = await Promise.allSettled(urls.map(u =&gt; fetch(u).then(r =&gt; r.json())));
+
+// 2) Want all-or-nothing but with fallbacks: catch per promise so one failure doesn't reject all
+const safe = p =&gt; p.catch(e =&gt; ({ error: e }));
+const out = await Promise.all(tasks.map(t =&gt; safe(t())));
+
+// 3) Need only the first success (mirrors/CDNs): any
+const fastest = await Promise.any([fetch(a), fetch(b)]);
+
+// 4) Fail-fast is fine: all (the others keep running, their results are just ignored; they are not cancelled)
+// race for a timeout
+const withTimeout = (p, ms) =&gt; Promise.race([p, new Promise((_, rej) =&gt; setTimeout(() =&gt; rej(new Error("Timeout")), ms))]);</code></pre>
+<div class="trap"><b>Traps:</b> <code>Promise.all</code> rejects with only the first error; later rejections are handled silently (no unhandled warning) but lost. Passing <em>functions</em> or an array of already-started work does not run them in parallel any differently: promises begin when created, <code>all</code> only waits. <code>Promise.race</code> does not cancel the losers. Input must be iterable; passing a non-iterable rejects with TypeError.</div>
+<details open><summary>Promise.all vs allSettled vs race?</summary><p><code>all</code>: waits for all, returns values array, rejects on first failure. <code>allSettled</code>: waits for all, returns status objects, never rejects. <code>race</code>: settles as soon as the first promise settles, with its outcome. (<code>any</code>: first fulfilment.)</p></details>
+<details open><summary>What if an element in all() isn't a promise?</summary><p>It's treated as an already-resolved value, so the code above prints <code>["Promise1","Normal string","Promise3"]</code> after about 2 seconds.</p></details>
+<details open><summary>What is the purpose of race()? What for an empty iterable?</summary><p>Take whichever settles first: request timeouts, fastest-server selection, cancelling UI waits. <code>Promise.race([])</code> stays <code>pending</code> forever, so both logs print <code>Promise { &lt;pending&gt; }</code>.</p></details>
+<details open><summary>Most efficient way to handle multiple rejected promises?</summary><p>Use <code>Promise.allSettled</code> to inspect every outcome in one go, or attach <code>.catch</code> to each promise when you want per-item fallbacks while still using <code>Promise.all</code>. For "first success", use <code>Promise.any</code>.</p></details>
+</section>
+
+<section id="e6"><h2>6. async / await</h2>
+<p>Syntactic sugar over promises that lets async code read like synchronous code.</p>
+<ul><li><code>async function</code> <strong>always returns a promise</strong>. A returned value is wrapped with <code>Promise.resolve</code>; a thrown error becomes a rejection. You do <em>not</em> need to return a promise explicitly.</li>
+<li><code>await promise</code> pauses <strong>only that function</strong> (not the thread), unwraps the fulfilled value, or throws the rejection reason. The rest of the function resumes as a <strong>microtask</strong>. Awaiting a non-promise just waits one microtask tick.</li>
+<li><code>await</code> is only valid inside an <code>async</code> function or at the top level of an ES module (top-level await). Elsewhere it is a SyntaxError.</li></ul>
+<pre><code>async function getData() { return 5 }          // same as: return Promise.resolve(5)
+getData().then(console.log);                    // 5
+async function bad() { throw new Error("x") }   // returns a rejected promise, doesn't throw synchronously
+
+function f() { const x = await g() }            // SyntaxError: await is only valid in async functions
+// top-level await: only in &lt;script type="module"&gt; / .mjs
+const data = await fetch(url).then(r =&gt; r.json());
+
+// async IIFE (the way to use await in a script / immediately)
+(async () =&gt; {
+  const user = await getUser();
+  console.log(user);
+})();
+(async function () { /* ... */ })();           // also fine; ends the same way
+
+// error handling: try/catch/finally
+async function load() {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();                    // `return await` so a rejection is caught HERE
+  } catch (err) {
+    console.error(err); return null;
+  } finally { hideSpinner() }
+}
+load().catch(handle);                           // alternatively catch on the caller side
+
+// Go-style helper, avoids try/catch blocks everywhere
+const to = p =&gt; p.then(v =&gt; [null, v], e =&gt; [e, undefined]);
+const [err, user] = await to(getUser());
+
+// parallel with Promise.all + await
+const [user2, posts] = await Promise.all([getUser(), getPosts()]);   // both start immediately
+const results = await Promise.all(ids.map(id =&gt; fetchItem(id)));     // array in parallel</code></pre>
+<h3>Sequential vs parallel (very common interview trap)</h3>
+<pre><code>// SLOW: sequential, total = a + b
+const a = await fetchA(); const b = await fetchB();
+// FAST: start both, then await
+const pa = fetchA(), pb = fetchB(); const [a2, b2] = [await pa, await pb];
+// or: await Promise.all([fetchA(), fetchB()])
+
+ids.forEach(async id =&gt; { await save(id) });     // BUG: forEach ignores the promises, doesn't wait, errors unhandled
+for (const id of ids) { await save(id) }          // sequential, waits correctly
+await Promise.all(ids.map(save));                 // parallel, waits correctly
+for await (const x of asyncIterable) {}           // consuming async iterables (section 10)</code></pre>
+<div class="trap"><b>Traps:</b> an async function never throws synchronously, it rejects. Forgetting <code>await</code> gives you a pending promise (<code>if (checkUser())</code> is always truthy). <code>await</code> in a loop is sequential. Without try/catch or <code>.catch</code>, a rejection becomes an unhandled rejection. <code>return promise</code> inside <code>try</code> without <code>await</code> skips the local catch. Awaiting makes the code after it run in a microtask, so it runs after the synchronous code that follows the call.</div>
+<details open><summary>Explain the functionality of async/await.</summary><p><code>async</code> marks a function that returns a promise and allows <code>await</code>; <code>await</code> suspends that function until the promise settles, giving the fulfilled value or throwing the rejection. It makes promise chains read like sequential code and works with try/catch.</p></details>
+<details open><summary>Can you write await without async? Do you need to return a promise from an async function?</summary><p>No to the first (SyntaxError), except top-level await in ES modules. No to the second: return any value and it is auto-wrapped in a promise.</p></details>
+<details open><summary>Can you have an async IIFE?</summary><p>Yes: <code>(async () =&gt; { await ...; })();</code>, useful in scripts without top-level await.</p></details>
+<details open><summary>Best way to handle errors with await? Promise.all with async/await syntax?</summary><p><code>try/catch/finally</code> around the awaits (or <code>.catch()</code> on the async call, or a <code>to()</code> helper). For parallel work: <code>const [a, b] = await Promise.all([p1, p2])</code>, wrapped in try/catch because it rejects if any promise rejects.</p></details>
+<details open><summary>How is async/await implemented / what is it equivalent to?</summary><p>It behaves like a generator driven by promises: each <code>await</code> is like <code>yield</code> and the runner resumes the function with the settled result via <code>.then</code>.</p></details>
+</section>
+
+<section id="e7"><h2>7. Output puzzles (trace like the engine)</h2>
+<p>Method: (1) run all sync code top to bottom, noting what is queued; (2) run the microtask queue until empty; (3) run one macrotask, then microtasks again.</p>
+<pre><code>// Puzzle 1
+console.log("1");
+setTimeout(() =&gt; console.log("2"), 0);
+Promise.resolve().then(() =&gt; console.log("3"));
+console.log("4");
+// 1 4 3 2
+
+// Puzzle 2: async/await ordering
+async function a() { console.log("a1"); await b(); console.log("a2") }
+async function b() { console.log("b") }
+console.log("s");
+a();
+new Promise(r =&gt; { console.log("p"); r() }).then(() =&gt; console.log("then"));
+console.log("e");
+// s a1 b p e a2 then
+// a() runs synchronously until the first await (a1, b); its continuation (a2) is queued first, "then" second.
+
+// Puzzle 3: two chains interleave
+Promise.resolve().then(() =&gt; console.log(1)).then(() =&gt; console.log(2));
+Promise.resolve().then(() =&gt; console.log(3)).then(() =&gt; console.log(4));
+// 1 3 2 4
+
+// Puzzle 4: timers created inside microtasks
+setTimeout(() =&gt; console.log("timeout1"), 0);
+Promise.resolve().then(() =&gt; { console.log("micro1"); setTimeout(() =&gt; console.log("timeout2"), 0) }).then(() =&gt; console.log("micro2"));
+// micro1 micro2 timeout1 timeout2
+
+// Puzzle 5: catch recovers
+Promise.reject("e").then(() =&gt; console.log("a")).catch(e =&gt; { console.log(e); return "r" }).then(v =&gt; console.log(v));
+// e r
+
+// Puzzle 6: executor is synchronous
+new Promise(res =&gt; { console.log("exec"); res() }); console.log("after");
+// exec after
+
+// Puzzle 7: throw in async callback inside executor is NOT caught
+new Promise(() =&gt; { setTimeout(() =&gt; { throw new Error("x") }, 0) }).catch(() =&gt; console.log("caught?"));
+// Uncaught Error: x   (the promise stays pending; catch never runs)
+
+// Puzzle 8: finally passes through
+Promise.resolve("v").finally(() =&gt; "ignored").then(console.log);   // v
+
+// Puzzle 9: setTimeout vs setImmediate vs nextTick (Node)
+// process.nextTick runs before promise microtasks; setImmediate after I/O phase</code></pre>
+<div class="trap"><b>Trap:</b> the "extra ticks" rule: returning a promise from a <code>then</code> handler (or <code>async</code> function returning a promise) adds about two extra microtask ticks, so chains that look equal can interleave unexpectedly in puzzles that mix them. Interviewers mostly test the sync &rarr; microtask &rarr; macrotask order, so master that.</div>
+</section>
+
+<section id="e8"><h2>8. AJAX and XMLHttpRequest (XHR)</h2>
+<p><strong>AJAX</strong> = Asynchronous JavaScript And XML: a technique (not a library) for sending requests and receiving data from a server <em>in the background without reloading the page</em>. XML is historical; JSON is the norm. Implemented with <code>XMLHttpRequest</code> (older) or <code>fetch</code> (modern).</p>
+<pre><code>const xhr = new XMLHttpRequest();
+xhr.open("GET", "https://api.example.com/users/1", true);   // (method, url, async=true); readyState becomes 1
+xhr.timeout = 5000;                       // ms, set BEFORE send(); ontimeout fires when exceeded
+xhr.responseType = "json";                // "" | "text" | "json" | "blob" | "arraybuffer" | "document" (set before send)
+xhr.setRequestHeader("Accept", "application/json");   // after open(), before send()
+
+xhr.onreadystatechange = () =&gt; {          // fires on EVERY readyState change
+  if (xhr.readyState === 4) {             // DONE
+    if (xhr.status &gt;= 200 &amp;&amp; xhr.status &lt; 300) console.log(xhr.response);
+    else console.error(xhr.status, xhr.statusText);
+  }
+};
+xhr.onload = () =&gt; console.log("done", xhr.status, xhr.response);   // request COMPLETED (any HTTP status incl. 404/500)
+xhr.onerror = () =&gt; console.log("network error");                   // network failure / CORS block
+xhr.ontimeout = () =&gt; console.log("timed out");
+xhr.onabort = () =&gt; console.log("aborted");
+xhr.onprogress = e =&gt; e.lengthComputable &amp;&amp; console.log(e.loaded / e.total);
+xhr.upload.onprogress = e =&gt; {};          // upload progress (fetch can't do this easily)
+xhr.send();                               // GET: no body
+
+// POST JSON
+const x = new XMLHttpRequest();
+x.open("POST", "/api/users");             // 1. open
+x.setRequestHeader("Content-Type", "application/json");   // 2. headers
+x.send(JSON.stringify({ name: "Asha" })); // 3. send
+
+xhr.abort();                              // force stop: readyState 0, fires "abort" (and "loadend")
+
+// response headers (available from readyState 2)
+xhr.getResponseHeader("Content-Type");    // one header, case-insensitive, null if missing
+xhr.getAllResponseHeaders();              // one string "name: value\r\n..." (parse by splitting)</code></pre>
+<h3>readyState values</h3>
+<div class="w"><table><tr><th>Value</th><th>Name</th><th>Meaning</th></tr>
+<tr><td>0</td><td>UNSENT</td><td>object created, <code>open()</code> not called yet</td></tr>
+<tr><td>1</td><td>OPENED</td><td><code>open()</code> called, can set headers</td></tr>
+<tr><td>2</td><td>HEADERS_RECEIVED</td><td><code>send()</code> called, status and headers available</td></tr>
+<tr><td>3</td><td>LOADING</td><td>response body downloading (<code>responseText</code> partial)</td></tr>
+<tr><td>4</td><td>DONE</td><td>operation complete (success or failure)</td></tr></table></div>
+<div class="trap"><b>Traps:</b> <code>setRequestHeader</code> before <code>open()</code> throws InvalidStateError; after <code>send()</code> also throws. "Forbidden" headers (<code>Host</code>, <code>Cookie</code>, <code>Content-Length</code>, <code>Origin</code>...) can't be set by script. <code>load</code> is an <em>event</em> (use <code>onload</code>), and it fires even for 404/500; check <code>status</code>. <code>xhr.readyState === 4</code> is also reached on errors, with <code>status 0</code>. <code>responseText</code> throws if <code>responseType</code> isn't "" or "text"; use <code>xhr.response</code>. Synchronous XHR (<code>open(..., false)</code>) freezes the UI and is deprecated. Calling <code>abort()</code> after completion does nothing.</div>
+<details open><summary>What is AJAX?</summary><p>A technique that lets a page exchange data with a server asynchronously in the background and update parts of the DOM without a full reload, using XHR or fetch (JSON/XML/text payloads).</p></details>
+<details open><summary>How do you set a timeout, response format, and force stop?</summary><p><code>xhr.timeout = ms</code> (+ <code>ontimeout</code>) before send; <code>xhr.responseType = "json"</code> etc.; <code>xhr.abort()</code> to cancel.</p></details>
+<details open><summary>Explain readyState and onreadystatechange.</summary><p><code>readyState</code> (0-4) tracks the request lifecycle. <code>onreadystatechange</code> is called every time it changes; typically you act when it is <code>4</code> and <code>status</code> is 2xx.</p></details>
+<details open><summary>When is the "load" event called?</summary><p>When the request has completed successfully at the network level and the response has fully arrived (readyState 4), regardless of HTTP status. Failures trigger <code>error</code>, <code>timeout</code> or <code>abort</code> instead; <code>loadend</code> fires after any of them.</p></details>
+<details open><summary>How do you set HTTP headers (sequence)? How do you read response headers?</summary><p>Order: <code>new XMLHttpRequest()</code> &rarr; <code>open()</code> &rarr; <code>setRequestHeader()</code> (one or more) &rarr; <code>send()</code>. Read with <code>getResponseHeader(name)</code> for one or <code>getAllResponseHeaders()</code> for all, once readyState is at least 2.</p></details>
+</section>
+
+<section id="e9"><h2>9. Fetch API</h2>
+<p><code>fetch(url, options)</code> is the modern, promise-based replacement for XHR. It returns a <strong>Promise&lt;Response&gt;</strong> that resolves once headers arrive; the body is read with a second promise-returning method.</p>
+<pre><code>// GET
+const res = await fetch("/api/users");
+if (!res.ok) throw new Error(`HTTP ${res.status}`);   // fetch does NOT reject on 404/500!
+const users = await res.json();                       // .text() .blob() .arrayBuffer() .formData() .json()
+
+// POST JSON
+await fetch("/api/users", {
+  method: "POST",
+  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+  body: JSON.stringify({ name: "Asha" })              // body must be a string / FormData / Blob / URLSearchParams
+});
+
+// DELETE
+const del = await fetch(`/api/users/${id}`, { method: "DELETE" });
+if (del.status === 204 || del.ok) console.log("deleted");   // often 204 No Content: don't call .json() on an empty body
+// PUT / PATCH are the same with method and body
+
+// FormData upload (do NOT set Content-Type; the browser adds the multipart boundary)
+const fd = new FormData(); fd.append("file", input.files[0]);
+await fetch("/upload", { method: "POST", body: fd });
+
+// cancel and timeout
+const ctrl = new AbortController();
+fetch(url, { signal: ctrl.signal }).catch(e =&gt; e.name === "AbortError" &amp;&amp; console.log("aborted"));
+ctrl.abort();
+fetch(url, { signal: AbortSignal.timeout(5000) });    // reject with TimeoutError after 5s
+
+// cookies / CORS options
+fetch(url, { credentials: "include", mode: "cors", cache: "no-store" });
+
+// Response details
+res.status; res.statusText; res.ok; res.headers.get("content-type"); res.url; res.redirected;
+const copy = res.clone();                             // a body can be read only ONCE
+
+// reusable wrapper
+async function api(path, opts = {}) {
+  const r = await fetch(path, { headers: { "Content-Type": "application/json" }, ...opts });
+  if (!r.ok) { const e = new Error(r.statusText); e.status = r.status; e.body = await r.text(); throw e }
+  return r.status === 204 ? null : r.json();
+}</code></pre>
+<div class="w"><table><tr><th></th><th>XHR</th><th>fetch</th></tr>
+<tr><td>Style</td><td>events / callbacks</td><td>promises (async/await friendly)</td></tr>
+<tr><td>HTTP errors (404/500)</td><td>load fires, check status</td><td>promise still resolves, check <code>res.ok</code></td></tr>
+<tr><td>Rejects on</td><td>error event</td><td>network failure, CORS block, abort only</td></tr>
+<tr><td>Timeout</td><td>built-in <code>timeout</code></td><td><code>AbortSignal.timeout</code> / AbortController</td></tr>
+<tr><td>Upload progress</td><td>yes (<code>upload.onprogress</code>)</td><td>not simple (streams)</td></tr>
+<tr><td>Cookies by default</td><td>same-origin sent</td><td>same-origin sent; cross-origin needs <code>credentials</code></td></tr>
+<tr><td>Streaming</td><td>no</td><td>yes (<code>res.body</code> ReadableStream)</td></tr></table></div>
+<div class="trap"><b>Traps:</b> forgetting <code>res.ok</code> (an error page counts as success). <code>res.json()</code> on an empty or non-JSON body throws. Sending an object as <code>body</code> without <code>JSON.stringify</code> sends "[object Object]". A cross-origin request with custom headers triggers a CORS <em>preflight</em> (OPTIONS). Reading the body twice throws "body stream already read". Fetch has no built-in timeout. Unlike axios, fetch doesn't auto-parse JSON or throw on HTTP errors.</div>
+<details open><summary>Explain the functionality of the fetch API.</summary><p>It performs network requests and returns a promise that resolves with a <code>Response</code> object once headers arrive (even for HTTP error statuses). You check <code>ok/status</code> and then read the body with <code>json()/text()/blob()</code>, each of which returns another promise. It supports options for method, headers, body, credentials, CORS, caching and cancellation via <code>AbortController</code>.</p></details>
+<details open><summary>How do you make a DELETE request?</summary><p><code>fetch(url, { method: "DELETE" })</code>, optionally with headers; check <code>res.ok</code> (often status 204 with no body).</p></details>
+<details open><summary>Why doesn't fetch reject on 404?</summary><p>Because the request itself succeeded at the HTTP level: the server answered. Only network-level failures reject, so you must test <code>response.ok</code> yourself.</p></details>
+<details open><summary>fetch vs axios?</summary><p>Axios auto-parses JSON, rejects on non-2xx, has interceptors, timeouts, upload progress and works in Node/older browsers; fetch is built in, zero dependency, streams, but needs a small wrapper for the same conveniences.</p></details>
+</section>
+
+<section id="e10"><h2>10. Async iterators and async generators</h2>
+<ul><li><strong>Iterable</strong> (sync) has <code>[Symbol.iterator]()</code> returning <code>{ next() }</code> with <code>{ value, done }</code>.</li>
+<li><strong>Async iterable</strong> has <code>[Symbol.asyncIterator]()</code> returning an iterator whose <code>next()</code> returns a <strong>Promise</strong> of <code>{ value, done }</code>. Consume it with <code>for await...of</code> (inside an async function or module top level).</li>
+<li><code>Symbol.asyncIterator</code> is the well-known symbol that tells the language "this object can be iterated asynchronously", for data that arrives over time: paginated APIs, streams, WebSocket messages, file chunks.</li></ul>
+<pre><code>// manual async iterable
+const feed = {
+  from: 1, to: 3,
+  [Symbol.asyncIterator]() {
+    let cur = this.from, end = this.to;
+    return {
+      async next() {
+        await new Promise(r =&gt; setTimeout(r, 500));                 // simulate async wait
+        return cur &lt;= end ? { value: cur++, done: false } : { value: undefined, done: true };
+      }
+    };
+  }
+};
+(async () =&gt; { for await (const n of feed) console.log(n) })();      // 1, 2, 3 (each after 500ms)
+
+// the same with an ASYNC GENERATOR: far shorter
+async function* feed2(from, to) {
+  for (let i = from; i &lt;= to; i++) { await sleep(500); yield i }
+}
+for await (const n of feed2(1, 3)) console.log(n);
+const gen = feed2(1, 3); await gen.next();   // {value:1, done:false}  (Promise-returning)
+
+// as an object method
+const obj = { async *[Symbol.asyncIterator]() { yield 1; yield 2 } };
+
+// paginated API
+async function* pages(url) {
+  while (url) {
+    const r = await fetch(url).then(r =&gt; r.json());
+    yield* r.items;                  // yield* works with (async) iterables
+    url = r.next;
+  }
+}
+for await (const item of pages("/api/items?page=1")) { if (item.id === 42) break }  // break stops fetching more pages (calls return())
+
+// streams
+for await (const chunk of response.body) { /* Uint8Array chunks (supported in modern browsers; Node streams too) */ }
+
+// spread does NOT work with async iterables
+[...obj];                            // TypeError: obj is not iterable (spread looks for Symbol.iterator only)
+const out = []; for await (const v of obj) out.push(v);   // collect manually
+const arr = await Array.fromAsync(obj);                    // newer engines; check support
+// for await also accepts sync iterables of promises:
+for await (const v of [Promise.resolve(1), 2]) console.log(v);   // 1, 2</code></pre>
+<div class="trap"><b>Traps:</b> <code>for...of</code> over an async iterable throws "not iterable"; use <code>for await</code>. <code>for await</code> processes items <em>one at a time</em> (sequential); use <code>Promise.all</code> for parallel work on known promises. An async generator's <code>next()</code> calls are queued, so concurrent calls are served in order. A <code>break</code>/<code>return</code>/throw inside <code>for await</code> triggers the iterator's <code>return()</code> for cleanup. Use <code>try/finally</code> inside generators to release resources.</div>
+<details open><summary>What is Symbol.asyncIterator?</summary><p>A built-in symbol identifying the method that returns an async iterator; objects having it can be consumed with <code>for await...of</code>. Its iterator's <code>next()</code> returns a promise resolving to <code>{ value, done }</code>.</p></details>
+<details open><summary>Can we use the spread operator with an async iterator, e.g. [...obj]?</summary><p>No. Spread and array destructuring use <code>Symbol.iterator</code> synchronously and will throw a TypeError. Use <code>for await</code> to collect into an array (or <code>Array.fromAsync</code> where supported).</p></details>
+<details open><summary>How do you handle an async iterator using generator syntax?</summary><p>Declare <code>async function*</code> (or <code>async *[Symbol.asyncIterator]()</code>), use <code>await</code> and <code>yield</code> inside, and consume with <code>for await...of</code>. The generator automatically implements the async iterator protocol.</p></details>
+</section>
+
+<section id="e11"><h2>11. Coding patterns interviewers ask you to write</h2>
+<pre><code>// 1) Promise.all polyfill
+function myAll(promises) {
+  return new Promise((resolve, reject) =&gt; {
+    const results = []; let done = 0;
+    if (!promises.length) return resolve(results);
+    promises.forEach((p, i) =&gt; {
+      Promise.resolve(p).then(v =&gt; { results[i] = v; if (++done === promises.length) resolve(results) }, reject);
+    });
+  });
+}
+
+// 2) Promise.race / allSettled sketches
+const myRace = ps =&gt; new Promise((res, rej) =&gt; ps.forEach(p =&gt; Promise.resolve(p).then(res, rej)));
+const mySettled = ps =&gt; Promise.all(ps.map(p =&gt; Promise.resolve(p).then(value =&gt; ({ status: "fulfilled", value }), reason =&gt; ({ status: "rejected", reason }))));
+
+// 3) Retry with backoff
+async function retry(fn, tries = 3, delay = 300) {
+  for (let i = 0; i &lt; tries; i++) {
+    try { return await fn() } catch (e) { if (i === tries - 1) throw e; await sleep(delay * 2 ** i) }
+  }
+}
+
+// 4) Timeout wrapper (race) and promisify
+const timeout = (p, ms) =&gt; Promise.race([p, new Promise((_, r) =&gt; setTimeout(() =&gt; r(new Error("timeout")), ms))]);
+const promisify = fn =&gt; (...args) =&gt; new Promise((res, rej) =&gt; fn(...args, (err, data) =&gt; err ? rej(err) : res(data)));
+
+// 5) Run promises sequentially
+async function sequence(tasks) { const out = []; for (const t of tasks) out.push(await t()); return out }
+tasks.reduce((chain, t) =&gt; chain.then(t), Promise.resolve());   // reduce version
+
+// 6) Concurrency limit (pool of N)
+async function pool(tasks, limit) {
+  const results = []; let i = 0;
+  const worker = async () =&gt; { while (i &lt; tasks.length) { const idx = i++; results[idx] = await tasks[idx]() } };
+  await Promise.all(Array.from({ length: limit }, worker));
+  return results;
+}
+
+// 7) Debounced async search that ignores stale responses
+let latest = 0;
+async function search(q) { const id = ++latest; const r = await fetch(`/s?q=${q}`).then(r =&gt; r.json()); if (id === latest) render(r) }
+
+// 8) Cancel previous request
+let ctrl; async function load(q) { ctrl?.abort(); ctrl = new AbortController(); return fetch(`/s?q=${q}`, { signal: ctrl.signal }) }
+
+// 9) Implement a mini Promise (core idea): state, value, handlers[], then returns new Promise, handlers run via queueMicrotask
+const sleep = ms =&gt; new Promise(r =&gt; setTimeout(r, ms));</code></pre>
+<details open><summary>How do you run tasks one by one vs in parallel vs with a limit?</summary><p>Sequential: <code>for...of</code> with await (or reduce chain). Parallel: <code>Promise.all(tasks.map(fn))</code>. Limited concurrency: a worker pool pulling from a shared index (pattern 6) or a library like p-limit.</p></details>
+<details open><summary>How do you avoid race conditions in async UI code?</summary><p>Cancel the previous request (AbortController) or tag each request with an id and ignore responses that are not the latest; debounce user input.</p></details>
+<details open><summary>What is an unhandled promise rejection?</summary><p>A rejected promise without any handler by the time the microtask queue drains. Browsers fire <code>unhandledrejection</code> on window; Node 15+ terminates the process by default. Always end chains with <code>.catch</code> or use try/catch around await.</p></details>
+</section>
+
+<section id="cheat"><h2>Quick revision cheat sheet</h2>
+<div class="w"><table><tr><th>Topic</th><th>Remember</th></tr>
+<tr><td>Event loop</td><td>sync code &rarr; ALL microtasks (promises, await) &rarr; one macrotask (timers, events) &rarr; repeat</td></tr>
+<tr><td>Callback</td><td>function passed to run later; hell = deep nesting; fix with promises / async-await</td></tr>
+<tr><td>Promise</td><td>pending &rarr; fulfilled | rejected; settles once; executor runs sync; <code>finally</code> has no arg and passes value through</td></tr>
+<tr><td>Chaining</td><td>then returns a new promise; return values to pass on; return a promise to wait; catch recovers</td></tr>
+<tr><td>Combinators</td><td>all: fail-fast, ordered; allSettled: never rejects; race: first settle; any: first success; race([]) pends forever</td></tr>
+<tr><td>async/await</td><td>async returns a promise; await only in async/module; try/catch; parallel via Promise.all; forEach+await is a bug</td></tr>
+<tr><td>XHR</td><td>open &rarr; setRequestHeader &rarr; send; readyState 0-4; timeout, responseType, abort(); load = completed (even 404)</td></tr>
+<tr><td>Fetch</td><td>resolves on any HTTP response; check res.ok; json() is a promise; DELETE via method; abort via signal</td></tr>
+<tr><td>Async iterator</td><td>Symbol.asyncIterator + for await; async function*; no spread</td></tr></table></div>
+<h3>Rapid-fire "what does this print?"</h3>
+<pre><code>console.log(1); setTimeout(() =&gt; console.log(2)); Promise.resolve().then(() =&gt; console.log(3)); console.log(4);  // 1 4 3 2
+(async () =&gt; { console.log("a"); await null; console.log("b") })(); console.log("c");                       // a c b
+Promise.resolve(1).then(2).then(console.log);                  // 1
+Promise.reject(1).catch(x =&gt; x + 1).then(x =&gt; console.log(x)); // 2
+Promise.all([1, Promise.resolve(2), new Promise(r =&gt; setTimeout(() =&gt; r(3), 10))]).then(console.log); // [1,2,3]
+Promise.race([new Promise(r =&gt; setTimeout(() =&gt; r("slow"), 50)), "fast"]).then(console.log);   // fast
+Promise.allSettled([Promise.reject("x")]).then(r =&gt; console.log(r[0].status));                   // rejected
+const p = Promise.resolve(); console.log(p === Promise.resolve(p));                               // true
+async function f() { return 1 } console.log(f() instanceof Promise);                              // true
+console.log(typeof (async () =&gt; {})().then);                                                      // function</code></pre>
+</section>
+</main>
+<script>
+(function(){
+var re=/(\/\/.*$)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`)|\b(const|let|var|function|return|if|else|for|while|of|in|new|class|extends|yield|try|catch|finally|throw|typeof|async|await|this|null|undefined|true|false|break|continue)\b|\b(\d+\.?\d*n?)\b/gm;
+document.querySelectorAll("pre code").forEach(function(el){
+var t=el.textContent.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+el.innerHTML=t.replace(re,function(m,c,s,k,n){return c?'<span class="c">'+c+'</span>':s?'<span class="s">'+s+'</span>':k?'<span class="k">'+k+'</span>':'<span class="n">'+n+'</span>'})});
+document.getElementById("th").onclick=function(){var r=document.documentElement,d=r.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");r.setAttribute("data-theme",d==="dark"?"light":"dark")};
+})();
+</script></body></html>

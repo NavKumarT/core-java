@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JavaScript Bible · Section 3 · Objects, this, Classes, Map & Set</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#17212b;--mut:#5b6b7a;--line:#d9e0e6;--acc:#0b6e8a;--code:#eef2f5;--trap:#fdf1e3;--trapb:#c9701a;--k:#a12b8c;--s:#18794e;--c:#7a8794;--n:#b35c00;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0d1319;--card:#141c24;--ink:#e3eaf0;--mut:#93a3b2;--line:#27333f;--acc:#4cc2e4;--code:#0a1015;--trap:#2a1f12;--trapb:#e39a4d;--k:#e08be0;--s:#6fd3a1;--c:#7d8c9a;--n:#f0b366}}
+:root[data-theme=dark]{--bg:#0d1319;--card:#141c24;--ink:#e3eaf0;--mut:#93a3b2;--line:#27333f;--acc:#4cc2e4;--code:#0a1015;--trap:#2a1f12;--trapb:#e39a4d;--k:#e08be0;--s:#6fd3a1;--c:#7d8c9a;--n:#f0b366}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "IBM Plex Sans",system-ui,sans-serif}
+main{max-width:860px;margin:0 auto;padding:20px 16px 60px}
+header h1{font-size:clamp(1.6rem,5vw,2.3rem);line-height:1.2;margin:.2em 0}header p{color:var(--mut);margin:0}
+#th{float:right;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;padding:6px 12px;cursor:pointer;font:inherit}
+nav{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0 8px}nav a{font-size:.85rem;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:4px 10px;border-radius:5px;text-decoration:none}nav a:hover{border-color:var(--acc);color:var(--acc)}
+section{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:8px;padding:6px 20px 16px;margin:22px 0}
+h2{font-size:1.4rem;margin:.8em 0 .3em}h3{font-size:1rem;margin:1.2em 0 .3em;color:var(--acc)}
+ul{padding-left:1.2em;margin:.4em 0}li{margin:.2em 0}
+code{font:.88em "JetBrains Mono",ui-monospace,monospace;background:var(--code);padding:1px 5px;border-radius:4px}
+pre{background:var(--code);border:1px solid var(--line);border-radius:6px;padding:12px;overflow-x:auto;margin:.7em 0;max-width:100%}pre code{background:none;padding:0;font-size:.84rem;line-height:1.5}
+.k{color:var(--k)}.s{color:var(--s)}.c{color:var(--c);font-style:italic}.n{color:var(--n)}
+.trap{background:var(--trap);border-left:4px solid var(--trapb);padding:8px 14px;border-radius:6px;margin:.8em 0}.trap b{color:var(--trapb)}
+details{border:1px solid var(--line);border-radius:6px;margin:.4em 0;padding:6px 12px}summary{cursor:pointer;font-weight:600}details p{margin:.5em 0 .2em}
+table{border-collapse:collapse;width:100%;font-size:.9rem}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{background:var(--code)}
+.w{overflow-x:auto}
+</style></head><body><main>
+<header><button id="th" aria-label="Toggle theme">Light / Dark</button>
+<h1>JavaScript Bible: Section 3<br>Objects, this, Classes, Map &amp; Set</h1>
+<p>The most interview-heavy section. Every course question is answered, plus the traps and follow-ups interviewers add.</p></header>
+<nav><a href="#o1">Object literal</a><a href="#o2">this</a><a href="#o3">call/apply/bind</a><a href="#o4">Classes</a><a href="#o5">Inheritance</a><a href="#o6">Destructuring</a><a href="#o7">Getters/Setters</a><a href="#o8">Map</a><a href="#o9">Set</a><a href="#o10">WeakMap/WeakSet</a><a href="#cheat">Cheat sheet</a></nav>
+
+<section id="o1"><h2>1. Object literal</h2>
+<p>An object is a collection of <strong>key: value</strong> pairs (properties). An <em>object literal</em> is the <code>{ ... }</code> syntax that creates one directly. Keys are strings or Symbols (numbers are converted to strings); values can be anything, including functions (methods).</p>
+<pre><code>const user = {
+  name: "Asha", age: 30,
+  "full-name": "Asha K",            // quotes needed for non-identifier keys
+  address: { city: "Hyderabad" },
+  greet() { return `Hi ${this.name}` },   // method shorthand
+  get initial() { return this.name[0] }   // accessor
+};
+user.name; user["full-name"];       // dot vs bracket access
+user.address?.city;                 // optional chaining
+user.zip = 500001; delete user.zip; // add / delete
+"name" in user;                     // true (includes inherited)
+Object.hasOwn(user, "name");        // true (own only; prefer over hasOwnProperty)</code></pre>
+<h3>Dynamic (computed) keys</h3>
+<pre><code>const field = "score", i = 1;
+const o = { [field]: 90, ["id_" + i]: 7, [`${field}Max`]: 100 };  // {score:90, id_1:7, scoreMax:100}
+const o2 = {}; o2[field] = 5;                // bracket assignment also dynamic</code></pre>
+<h3>Property value shorthand</h3>
+<pre><code>const name = "Asha", age = 30;
+const p = { name, age };           // same as { name: name, age: age }
+const makeUser = (id, role) =&gt; ({ id, role, active: true });</code></pre>
+<h3>Read-only properties</h3>
+<pre><code>const cfg = {};
+Object.defineProperty(cfg, "API", { value: "v1", writable: false, enumerable: true, configurable: false });
+cfg.API = "v2";           // silently ignored (TypeError in strict mode / modules)
+const g = { get id() { return 42 } };   // getter without setter = read-only
+const f = Object.freeze({ a: 1, nested: { b: 2 } });
+f.a = 9;                  // ignored; f.nested.b = 5 still works (freeze is SHALLOW)
+Object.isFrozen(f);       // true
+Object.seal(o);           // cannot add/delete, can still edit values
+Object.preventExtensions(o); // cannot add, can delete/edit
+Object.getOwnPropertyDescriptor(cfg, "API"); // {value:"v1", writable:false, enumerable:true, configurable:false}</code></pre>
+<div class="w"><table><tr><th></th><th>add</th><th>delete</th><th>edit value</th></tr>
+<tr><td>preventExtensions</td><td>no</td><td>yes</td><td>yes</td></tr><tr><td>seal</td><td>no</td><td>no</td><td>yes</td></tr><tr><td>freeze</td><td>no</td><td>no</td><td>no</td></tr></table></div>
+<h3>Reference vs copy (course question)</h3>
+<pre><code>let obj = { a: "First" };
+let obj1 = obj;          // copies the REFERENCE, not the object
+obj1.a = "Second";
+console.log(obj.a);      // "Second": both variables point to the same object in the heap
+{} === {};               // false (different references)
+const a = { x: 1 }, b = a; a === b;  // true</code></pre>
+<h3>Cloning</h3>
+<pre><code>const c1 = { ...obj };               // shallow (own enumerable props)
+const c2 = Object.assign({}, obj);   // shallow (triggers setters on target)
+const c3 = structuredClone(obj);     // DEEP: handles Date, Map, Set, cycles; throws on functions
+const c4 = JSON.parse(JSON.stringify(obj)); // deep but loses undefined, functions, Date (becomes string), Infinity/NaN (null), Map/Set
+// shallow trap
+const s = { n: { v: 1 } }, t = { ...s }; t.n.v = 99; s.n.v;  // 99, nested object is shared
+// full clone including prototype and accessors
+Object.create(Object.getPrototypeOf(s), Object.getOwnPropertyDescriptors(s));</code></pre>
+<h3>Useful object utilities</h3>
+<pre><code>Object.keys(o); Object.values(o); Object.entries(o);        // own enumerable, arrays
+Object.fromEntries([["a",1],["b",2]]);                      // {a:1,b:2}
+Object.assign(target, src1, src2);                          // merge (mutates target)
+const merged = { ...a, ...b };                              // later keys win
+Object.entries(o).map(([k, v]) =&gt; [k, v * 2]);              // transform values
+Object.is(NaN, NaN);                                        // true
+Object.keys({ b: 1, 2: 1, 1: 1, a: 1 });                    // ["1","2","b","a"] integer keys first ascending</code></pre>
+<div class="trap"><b>Traps:</b> <code>obj[{}]</code> uses the key <code>"[object Object]"</code>, so two different object keys collide (this is why Map exists). <code>delete</code> returns true even when the key was missing. <code>for...in</code> also visits inherited enumerable props, so guard with <code>Object.hasOwn</code>. <code>typeof null</code> is "object". Comparing objects with <code>==</code> or <code>===</code> compares references; for content compare use a deep-equal function. <code>JSON.stringify</code> skips undefined, functions and Symbols.</div>
+<details open><summary>Can you have dynamic keys with an object literal?</summary><p>Yes, with computed property names: <code>{ [expr]: value }</code>, where expr is any expression evaluated at creation time. You can also assign later with <code>obj[expr] = value</code>.</p></details>
+<details open><summary>How do you add read-only properties?</summary><p><code>Object.defineProperty</code> with <code>writable: false</code>, a getter with no setter, or <code>Object.freeze</code> for the whole object. In strict mode writes throw TypeError; otherwise they fail silently.</p></details>
+<details open><summary>What is property value shorthand?</summary><p>When the key name equals the variable name, write it once: <code>{ name, age }</code>. Method shorthand <code>{ greet() {} }</code> is the sibling feature.</p></details>
+<details open><summary>Output of the obj / obj1 snippet and why?</summary><p><code>"Second"</code>. Objects are reference types; assignment copies the reference, so both names point to one object. Primitives would be copied by value instead.</p></details>
+<details open><summary>How do you clone an object? Shallow vs deep?</summary><p>Shallow: spread or <code>Object.assign</code> (nested objects still shared). Deep: <code>structuredClone</code> (best built-in), a library like lodash <code>cloneDeep</code>, or JSON round-trip with its data-loss caveats.</p></details>
+<details open><summary>Object.freeze vs const?</summary><p><code>const</code> stops reassigning the variable; <code>freeze</code> stops changing the object's own properties (shallowly). Use both for constants; deep-freeze recursively for nested data.</p></details>
+<details open><summary>How do you check if an object is empty?</summary><p><code>Object.keys(o).length === 0</code> (also check <code>o.constructor === Object</code> if needed). <code>if (o)</code> is always true for objects.</p></details>
+<details open><summary>How do you loop over an object's properties?</summary><p><code>Object.entries(o)</code> with <code>for...of</code> or <code>forEach</code> (best), <code>Object.keys</code>, or <code>for...in</code> with <code>Object.hasOwn</code>. Plain objects are not iterable.</p></details>
+</section>
+
+<section id="o2"><h2>2. The this keyword</h2>
+<p><code>this</code> is decided by <strong>how a function is called</strong>, not where it is defined (except arrow functions, which take it from where they are defined). Rules, in priority order:</p>
+<div class="w"><table><tr><th>#</th><th>Call style</th><th>this is</th></tr>
+<tr><td>1</td><td><code>new Fn()</code></td><td>the newly created object</td></tr>
+<tr><td>2</td><td><code>fn.call/apply/bind(ctx)</code></td><td>ctx (explicit)</td></tr>
+<tr><td>3</td><td><code>obj.fn()</code></td><td>obj (the thing before the dot)</td></tr>
+<tr><td>4</td><td><code>fn()</code> plain call</td><td>global object (window) in sloppy mode; <code>undefined</code> in strict mode, modules and class bodies</td></tr>
+<tr><td>-</td><td>arrow function</td><td>this of the enclosing scope (lexical); cannot be changed</td></tr></table></div>
+<pre><code>function test() { console.log(this) }
+test();   // browser, non-strict script: the Window object
+          // "use strict" / ES module / class code: undefined
+          // Node module: globalThis in sloppy, undefined in strict
+
+const obj = { test: () =&gt; { console.log(this) } };
+obj.test();   // Window (browser script): the arrow has no this, so it uses the outer (global) this
+              // ES module: undefined; Node CommonJS: {} (module.exports)
+
+const user = { name: "Asha", hi() { return this.name } };
+user.hi();             // "Asha"  (implicit binding)
+const lost = user.hi;
+lost();                // "" in browser (window.name), undefined in Node/strict: this was lost
+setTimeout(user.hi, 0);// same loss: callbacks get detached
+setTimeout(() =&gt; user.hi(), 0);   // fixed with arrow wrapper
+setTimeout(user.hi.bind(user), 0);// fixed with bind</code></pre>
+<h3>Common cases</h3>
+<ul><li><strong>Event handler</strong> (regular function): <code>this</code> is the element (<code>event.currentTarget</code>). Arrow handler: outer this.</li>
+<li><strong>Nested regular function inside a method</strong> gets its own (lost) this; use an arrow function, <code>const self = this</code>, or bind.</li>
+<li><strong>Class methods</strong> lose this when passed as callbacks; fix in constructor with bind or use a class-field arrow function (React class components).</li>
+<li>Top-level <code>this</code>: window in a classic script, <code>undefined</code> in an ES module.</li></ul>
+<pre><code>const o = { n: "o",
+  regular() { return [1].map(function () { return this }) },    // [window] or [undefined]
+  arrow()   { return [1].map(() =&gt; this) }                       // [o]
+};
+const counter = { count: 0, inc() { this.count++ } };
+const { inc } = counter; inc();   // sloppy: NaN set on window; strict: TypeError</code></pre>
+<div class="trap"><b>Trap:</b> an arrow function as an object method (<code>{ f: () =&gt; this.x }</code>) never sees the object. Object literal braces do <em>not</em> create a scope or a this. Also <code>this</code> in <code>function(){}</code> callbacks of <code>forEach</code> is lost unless you pass the thisArg: <code>arr.forEach(fn, ctx)</code>.</div>
+<details open><summary>What will test() print in the browser and why?</summary><p>The <code>window</code> object: a plain call uses default binding, which is the global object in non-strict code. In strict mode or an ES module it prints <code>undefined</code>.</p></details>
+<details open><summary>What is this inside an arrow function? Output of obj.test()?</summary><p>Arrows have no own <code>this</code>; they capture it lexically from the surrounding scope at definition. Here the surrounding scope is the global scope, so it prints <code>window</code> (browser script) rather than <code>obj</code>.</p></details>
+<details open><summary>Explain this in the global scope, a method, a constructor, an event handler.</summary><p>Global: window/undefined (module). Method: the owning object. Constructor: the new instance. Handler: the DOM element (regular function) or lexical this (arrow).</p></details>
+</section>
+
+<section id="o3"><h2>3. call(), apply() and bind()</h2>
+<p>All three set <code>this</code> explicitly for a function. They live on <code>Function.prototype</code>.</p>
+<div class="w"><table><tr><th></th><th>Invokes now?</th><th>Arguments</th><th>Returns</th></tr>
+<tr><td><code>fn.call(ctx, a, b)</code></td><td>yes</td><td>listed one by one</td><td>fn's result</td></tr>
+<tr><td><code>fn.apply(ctx, [a, b])</code></td><td>yes</td><td>one array (or array-like)</td><td>fn's result</td></tr>
+<tr><td><code>fn.bind(ctx, a)</code></td><td>no</td><td>pre-filled (partial application)</td><td>a NEW bound function</td></tr></table></div>
+<pre><code>function intro(greet, p) { return `${greet} ${this.name}${p}` }
+const a = { name: "Asha" };
+intro.call(a, "Hi", "!");         // "Hi Asha!"
+intro.apply(a, ["Hi", "!"]);      // "Hi Asha!"
+const f = intro.bind(a, "Hello"); // new function, this = a, greet pre-filled
+f("?");                           // "Hello Asha?"
+
+// method borrowing and array-likes
+Array.prototype.slice.call(arguments);
+Math.max.apply(null, [3, 9, 2]);  // 9 (today: Math.max(...arr))
+const bound = f.bind({ name: "Other" }); bound("!"); // still "Hello Asha!": bind is permanent
+
+const obj = { a: 6 };
+function test() { this = obj; }   // SyntaxError: Invalid left-hand side in assignment
+test();                           // never runs: it is an early error at parse time</code></pre>
+<h3>Polyfill (very common machine-coding question)</h3>
+<pre><code>Function.prototype.myCall = function (ctx = globalThis, ...args) {
+  const key = Symbol();            // avoid overwriting existing props
+  ctx[key] = this;                 // this = the function being called
+  const res = ctx[key](...args);
+  delete ctx[key];
+  return res;
+};
+Function.prototype.myBind = function (ctx, ...pre) {
+  const fn = this;
+  return function (...post) { return fn.apply(ctx, [...pre, ...post]) };
+};</code></pre>
+<div class="trap"><b>Trap:</b> <code>this</code> cannot be assigned (it is not a variable); the only ways to set it are <code>new</code>, call/apply/bind and the call site. Arrow functions ignore the ctx passed to call/apply/bind (but bind still pre-fills args). A bound function ignores later binding; with <code>new</code>, the bound ctx is ignored too.</div>
+<details open><summary>Difference between call, apply and bind?</summary><p>call and apply invoke immediately (arguments listed vs array: "Comma vs Array"); bind returns a new function with this (and optionally leading arguments) fixed, to be called later.</p></details>
+<details open><summary>Can you assign this with =?</summary><p>No. <code>this = obj</code> is a SyntaxError (Invalid left-hand side in assignment) raised before any code runs.</p></details>
+<details open><summary>When would you use bind in practice?</summary><p>Passing methods as callbacks (event handlers, timers, React class components), partial application (<code>multiply.bind(null, 2)</code>), and fixing this for borrowed methods.</p></details>
+</section>
+
+<section id="o4"><h2>4. Classes, class expressions and static members</h2>
+<p>A <code>class</code> (ES6) is <strong>syntactic sugar over prototype-based inheritance</strong>: <code>typeof Class === "function"</code>, methods live on <code>Class.prototype</code>, and instances are linked to it.</p>
+<pre><code>class Person {
+  species = "human";        // public instance field (per instance)
+  #ssn;                     // private field: only accessible inside the class
+  static count = 0;         // static field
+
+  constructor(name, ssn) {  // runs automatically on `new Person(...)`; only one allowed
+    this.name = name; this.#ssn = ssn; Person.count++;
+  }
+  greet() { return `Hi ${this.name}` }       // on the prototype, shared
+  #secret() { return this.#ssn }             // private method
+  static create(n) { return new this(n) }    // static factory
+  static { /* static initialisation block (ES2022) */ }
+}
+const p = new Person("Asha", 123);
+p.greet();  p.#ssn;   // SyntaxError outside the class
+Person();              // TypeError: Class constructor Person cannot be invoked without 'new'
+typeof Person;         // "function"</code></pre>
+<h3>Rules to remember</h3>
+<ul><li>Class declarations are hoisted but in the <strong>TDZ</strong> (<code>new A(); class A {}</code> throws ReferenceError), unlike function declarations.</li>
+<li>Class bodies are always in strict mode. Methods are <strong>non-enumerable</strong> (don't show in <code>for...in</code>).</li>
+<li>No constructor written = default <code>constructor(){}</code> (derived classes: <code>constructor(...args){ super(...args) }</code>). If a constructor returns an object, that object replaces the instance.</li>
+<li>Arrow function class fields (<code>handle = () =&gt; {...}</code>) are per-instance copies with bound this; normal methods are shared on the prototype.</li></ul>
+<h3>Dynamic names and class expressions</h3>
+<pre><code>const m = "greet", k = "id";
+class A { [m]() { return "hi" }  static [`make_${k}`]() {}  get [k]() { return 1 } }
+new A().greet();                 // "hi" (computed method names)
+
+const B = class { };             // anonymous class expression; B.name === "B"
+const C = class Inner { who() { return Inner.name } };  // Inner visible only inside
+new (class { x = 1 })().x;       // 1 (anonymous, instantly used)
+const Mixin = Base =&gt; class extends Base { fly() {} };  // class factory (mixin)</code></pre>
+<h3>Static members</h3>
+<p>Belong to the class itself, not to instances (<code>instance.staticFn</code> is undefined). Use for utilities, factories, constants, counters and caches shared across instances. Subclasses inherit statics.</p>
+<pre><code>class MathX {
+  static PI = 3.14159;
+  static square(x) { return x * x }
+  static cube(x) { return x * this.square(x) }      // static -&gt; static: use this or MathX.
+  area(r) { return MathX.PI * MathX.square(r) }      // instance -&gt; static: use ClassName or this.constructor
+}
+MathX.cube(3);  // 27     new MathX().square // undefined</code></pre>
+<div class="trap"><b>Trap:</b> <code>this</code> inside a static method is the class, so <code>const f = MathX.cube; f(2)</code> loses it (this = undefined). Class fields are initialised before the constructor body in base classes, but after <code>super()</code> in derived ones. Private fields are truly private (not <code>_name</code> convention), and <code>JSON.stringify</code> ignores them.</div>
+<details open><summary>How can you create a class? When is constructor() called?</summary><p><code>class Name { constructor(){} method(){} }</code>. The constructor runs exactly once per <code>new</code>, before the instance is returned; it initialises instance state.</p></details>
+<details open><summary>Can you have dynamic property or method names?</summary><p>Yes, computed names with brackets for methods, accessors and static members: <code>[expr]() {}</code>.</p></details>
+<details open><summary>What is a class expression?</summary><p>A class defined inside an expression, named or anonymous, assignable to a variable or returned from a function. A name on it is only visible inside the class body.</p></details>
+<details open><summary>What are static members and why use them?</summary><p>Properties and methods on the constructor itself, shared and callable without an instance (<code>Array.isArray</code>, <code>Object.keys</code>, <code>Promise.all</code> are static). They keep helpers and shared state with the class.</p></details>
+<details open><summary>How do you call another static method?</summary><p>Inside static code use <code>this.other()</code> or <code>ClassName.other()</code>; from instance code use <code>ClassName.other()</code> or <code>this.constructor.other()</code>.</p></details>
+<details open><summary>Class vs constructor function? Are classes real?</summary><p>Classes add enforced <code>new</code>, strict mode, non-enumerable methods, TDZ, private fields and clean <code>extends/super</code>. Under the hood both use prototypes.</p></details>
+</section>
+
+<section id="o5"><h2>5. Inheritance, subclassing and extending built-ins</h2>
+<pre><code>class Animal {
+  constructor(name) { this.name = name }
+  speak() { return `${this.name} makes a sound` }
+  static kingdom() { return "Animalia" }
+}
+class Dog extends Animal {            // subclassing
+  constructor(name, breed) {
+    super(name);                      // MUST come before any use of this
+    this.breed = breed;
+  }
+  speak() { return super.speak() + ": Woof" }   // override and reuse parent logic
+}
+const d = new Dog("Rex", "Lab");
+d.speak();              // "Rex makes a sound: Woof"
+Dog.kingdom();          // "Animalia" (statics inherited)
+d instanceof Dog, d instanceof Animal;   // true true
+Object.getPrototypeOf(Dog.prototype) === Animal.prototype;  // true</code></pre>
+<ul><li><code>extends</code> sets up two chains: <code>Dog.prototype → Animal.prototype</code> (instances) and <code>Dog → Animal</code> (statics).</li>
+<li><code>super(...)</code> calls the parent constructor; in a derived class, accessing <code>this</code> before it throws <code>ReferenceError</code>. <code>super.method()</code> calls the parent version; works in static methods too.</li>
+<li>Overriding = defining a method with the same name in the subclass. Property lookup walks the prototype chain until found, then <code>null</code>.</li>
+<li>A class can extend only one class (no multiple inheritance). Combine behaviours with <strong>mixins</strong> or favour composition (has-a) over inheritance (is-a).</li></ul>
+<h3>Extending built-ins</h3>
+<pre><code>class Stack extends Array {
+  peek() { return this[this.length - 1] }
+}
+const s = new Stack(); s.push(1, 2);
+s.peek();                  // 2
+s.length;                  // 2 (length behaves correctly)
+s.map(x =&gt; x) instanceof Stack;   // true (Symbol.species creates the same subclass)
+
+class AppError extends Error {
+  constructor(msg, code) { super(msg); this.name = "AppError"; this.code = code }
+}
+try { throw new AppError("Boom", 500) } catch (e) { e instanceof AppError, e instanceof Error, e.stack }
+
+class DefaultMap extends Map { get(k) { return super.has(k) ? super.get(k) : 0 } }</code></pre>
+<h3>Pre-ES6 (prototype) inheritance, still asked</h3>
+<pre><code>function Animal(name) { this.name = name }
+Animal.prototype.speak = function () { return this.name };
+function Dog(name) { Animal.call(this, name) }              // inherit instance props
+Dog.prototype = Object.create(Animal.prototype);             // link chain
+Dog.prototype.constructor = Dog;                             // repair constructor
+const o = Object.create(proto);   // create an object directly from a prototype</code></pre>
+<div class="trap"><b>Trap:</b> forgetting <code>super()</code> in a derived constructor throws "Must call super constructor". Arrow-function methods (fields) are NOT on the prototype, so <code>super.method()</code> can't reach them. Extending built-ins in old transpiled code (Babel ES5) broke <code>instanceof</code>. <code>Object.create(null)</code> makes an object with no prototype (useful as a pure dictionary).</div>
+<details open><summary>How do you inherit a class? What is subclassing?</summary><p>Use <code>class Child extends Parent</code>. Subclassing is creating a specialised class that reuses and extends another class's behaviour.</p></details>
+<details open><summary>What is the purpose of super?</summary><p>As a function (<code>super(args)</code>) it calls the parent constructor and creates <code>this</code>; as an object (<code>super.m()</code>) it accesses parent methods and statics, enabling overriding with reuse.</p></details>
+<details open><summary>How do you override a method? Extend a built-in?</summary><p>Redefine it with the same name in the child (call <code>super.name()</code> to keep parent behaviour). Built-ins like Array, Error, Map and Promise can be extended with <code>extends</code> and a <code>super()</code> call.</p></details>
+<details open><summary>Explain the prototype chain and __proto__ vs prototype.</summary><p><code>prototype</code> is a property of constructor functions/classes, used as the template for instances. <code>__proto__</code> (use <code>Object.getPrototypeOf</code>) is each object's internal link to its parent. Lookups walk that link chain to <code>Object.prototype</code> then <code>null</code>.</p></details>
+</section>
+
+<section id="o6"><h2>6. Object destructuring</h2>
+<p>Unpacks properties <strong>by name</strong> (order does not matter) into variables.</p>
+<pre><code>const user = { id: 1, name: "Asha", address: { city: "HYD", pin: 500001 }, tags: ["a", "b"] };
+const { id, name } = user;                         // basic
+const { name: userName } = user;                   // rename -&gt; userName
+const { role = "guest" } = user;                   // default (only when undefined)
+const { address: { city } } = user;                // nested (address itself is NOT a variable)
+const { id: uid, ...others } = user;               // rest collects remaining props
+const { [key]: val } = user;                       // computed key
+const { tags: [firstTag] } = user;                 // mix with array destructuring
+let x; ({ x } = { x: 5 });                         // assignment form needs parentheses
+
+const { a = 90, b } = {};
+console.log(a, b);         // 90 undefined
+const { c = 1 } = { c: null };   // c = null (null does not trigger the default)
+const { length } = "hello";      // 5 (works on primitives)
+const { z } = null;              // TypeError: Cannot destructure property 'z' of null
+
+// function parameters
+function render({ title, size = 12, theme: { dark = false } = {} } = {}) {}
+render({ title: "Hi" });
+const Component = ({ name, age }) =&gt; `${name} ${age}`;          // React props pattern
+const { data, error } = await fetchUser();                       // API response
+const { type, payload } = action;                                // Redux action
+for (const { id, name } of users) {}                             // in loops
+const { [dynamicKey]: removed, ...withoutIt } = obj;             // immutably omit a key</code></pre>
+<div class="trap"><b>Trap:</b> <code>{ a } = obj</code> at statement start is parsed as a block, so wrap in parentheses. Defaults only replace <code>undefined</code>. A nested default needs both levels (<code>{ a: { b } = {} }</code>) or destructuring a missing parent throws. Rest must be last and gives a shallow copy.</div>
+<details open><summary>Practical scenario for object destructuring?</summary><p>Reading API responses (<code>const { data, status } = res</code>), named function options with defaults (<code>function f({ retries = 3 })</code>), React props/hooks, importing named exports, and omitting properties with rest.</p></details>
+<details open><summary>Output of const { a=90, b } = { }?</summary><p><code>90 undefined</code>: <code>a</code> uses the default because the property is missing; <code>b</code> has no default, so undefined.</p></details>
+</section>
+
+<section id="o7"><h2>7. Class accessors: getters and setters</h2>
+<p>Accessor properties run a function when read (<code>get</code>) or written (<code>set</code>) but look like normal properties. Used for computed values, validation, encapsulation and read-only data.</p>
+<pre><code>class Temp {
+  #c = 0;
+  get fahrenheit() { return this.#c * 9 / 5 + 32 }     // t.fahrenheit (no parentheses)
+  set fahrenheit(f) {                                   // t.fahrenheit = 212
+    if (typeof f !== "number") throw new TypeError("number required");
+    this.#c = (f - 32) * 5 / 9;
+  }
+  get celsius() { return this.#c }                      // getter only = read-only
+}
+const t = new Temp(); t.fahrenheit = 212; t.celsius;    // 100
+t.celsius = 5;                                          // ignored (TypeError in strict mode/class code)
+
+const o = { _n: 1, get n() { return this._n }, set n(v) { this._n = v } };   // literal accessors
+Object.defineProperty(o, "x", { get() { return 1 }, enumerable: true });</code></pre>
+<ul><li>Getters/setters live on the prototype, are not own properties, and don't show in <code>JSON.stringify</code> of a class instance (but do for object-literal getters).</li>
+<li>Setter takes exactly one parameter. Use a different backing name (<code>_n</code>, <code>#n</code>) or you get infinite recursion.</li>
+<li>A getter is recomputed on each read; cache if it is expensive.</li></ul>
+<details open><summary>What is a getter or setter method?</summary><p>Special methods defined with <code>get</code>/<code>set</code> that intercept property reads and writes, allowing computed or validated properties with plain property syntax.</p></details>
+<details open><summary>What happens if you have a getter but no setter?</summary><p>The property is read-only; writes are silently ignored in sloppy mode and throw TypeError in strict mode and classes.</p></details>
+</section>
+
+<section id="o8"><h2>8. Map</h2>
+<p>A <code>Map</code> is a collection of key/value pairs where keys can be <strong>any type</strong> (objects, functions, NaN) and insertion order is remembered.</p>
+<pre><code>const m = new Map([["a", 1], ["b", 2]]);
+m.set("c", 3).set({ id: 1 }, "obj");   // set returns the map: chainable
+m.get("a");        // 1 (missing key: undefined)
+m.has("b");        // true
+m.delete("b");     // true (boolean: was it there?)
+m.size;            // property, not method
+m.clear();         // remove everything
+
+// iteration (insertion order)
+for (const [k, v] of m) {}              // default iterator = entries()
+for (const k of m.keys()) {}            // keys(), values(), entries()
+m.forEach((value, key) =&gt; {});          // note: value first, key second
+[...m]; Array.from(m.values());
+
+// conversion
+const map = new Map(Object.entries({ x: 1, y: 2 }));   // object -&gt; Map
+const obj = Object.fromEntries(map);                    // Map -&gt; object (keys become strings)
+const arr = [...map];                                   // [["x",1],["y",2]]
+
+// not an entry!
+const mm = new Map();
+mm["key"] = "value";     // sets a regular PROPERTY on the Map object
+mm.size; mm.get("key");  // 0 undefined, use mm.set("key", "value")
+
+const keyObj = {}; const w = new Map([[keyObj, 1]]); w.get(keyObj);  // 1 (by reference)
+w.get({});                                                           // undefined
+new Map([[NaN, "n"]]).get(NaN);                                      // "n"</code></pre>
+<h3>Map vs Object</h3>
+<div class="w"><table><tr><th></th><th>Map</th><th>Object</th></tr>
+<tr><td>Key types</td><td>any</td><td>string / Symbol only</td></tr>
+<tr><td>Order</td><td>insertion order</td><td>integer keys sorted first, then insertion</td></tr>
+<tr><td>Size</td><td><code>map.size</code></td><td><code>Object.keys(o).length</code></td></tr>
+<tr><td>Iterable</td><td>directly (for...of)</td><td>no, need <code>Object.entries</code></td></tr>
+<tr><td>Inherited keys</td><td>none (safe from <code>toString</code>, <code>__proto__</code> clashes)</td><td>has prototype keys</td></tr>
+<tr><td>Performance</td><td>better for frequent add/delete</td><td>fine for small, fixed shapes</td></tr>
+<tr><td>JSON</td><td><code>JSON.stringify(map)</code> is <code>"{}"</code>; convert first</td><td>native</td></tr></table></div>
+<div class="trap"><b>Trap:</b> <code>Map.prototype.forEach</code> callback is <code>(value, key)</code>, the reverse of what you may expect. <code>m.get(obj)</code> needs the same reference. <code>Object.fromEntries(map)</code> stringifies keys and later duplicates win. Map has no <code>map/filter</code>; spread to an array first: <code>new Map([...m].filter(([k, v]) =&gt; v &gt; 1))</code>.</div>
+<details open><summary>Advantages of Map over objects?</summary><p>Any key type, guaranteed insertion order, direct iteration, a real <code>size</code>, no prototype key collisions, and better performance for frequent additions and removals. Use objects for fixed-shape records and JSON data.</p></details>
+<details open><summary>How do you iterate over a Map?</summary><p><code>for...of</code> (entries), <code>keys()</code>, <code>values()</code>, <code>entries()</code>, or <code>forEach((v, k) =&gt; ...)</code>.</p></details>
+<details open><summary>Can you use map['key'] = value? Why?</summary><p>Syntactically yes, but it creates an ordinary property on the Map object instead of an entry: <code>size</code> stays 0, <code>get</code>/<code>has</code> don't see it, and it isn't iterated. Use <code>set</code>.</p></details>
+<details open><summary>Object to Map and Map to object? Remove an item or all items?</summary><p><code>new Map(Object.entries(obj))</code> and <code>Object.fromEntries(map)</code>. <code>map.delete(key)</code> removes one (returns boolean), <code>map.clear()</code> removes all.</p></details>
+<details open><summary>Practical uses?</summary><p>Frequency counters, caching/memoisation keyed by object or argument, grouping, LRU cache (insertion order + delete/set to refresh), associating metadata with DOM nodes.</p></details>
+</section>
+
+<section id="o9"><h2>9. Set</h2>
+<p>A <code>Set</code> stores <strong>unique values</strong> of any type in insertion order. Equality uses SameValueZero (<code>NaN</code> equals <code>NaN</code>, objects compare by reference).</p>
+<pre><code>const s = new Set([1, 2, 2, 3, NaN, NaN]);   // {1,2,3,NaN}
+s.add(4).add(1);        // chainable; duplicate ignored
+s.has(2);               // true  (O(1), faster than array.includes)
+s.delete(2);            // true  removes a specific value
+s.size; s.clear();
+new Set([{}, {}]).size; // 2 (different references)
+
+[...s]; Array.from(s); for (const v of s) {}  s.forEach(v =&gt; {});
+const unique = [...new Set([1, 1, 2])];       // dedupe array: [1,2]
+[...new Set("hello")].join("");               // "helo"
+
+// entries() returns [value, value] pairs; keys() is the same as values()
+new Set(["a"]).entries().next().value;        // ["a", "a"]
+Set.prototype.keys === Set.prototype.values;  // true
+
+// set operations
+const A = new Set([1, 2, 3]), B = new Set([2, 3, 4]);
+const union = new Set([...A, ...B]);
+const inter = new Set([...A].filter(x =&gt; B.has(x)));      // {2,3}
+const diff  = new Set([...A].filter(x =&gt; !B.has(x)));     // {1}
+// newer engines: A.union(B), A.intersection(B), A.difference(B), A.isSubsetOf(B) (check support)</code></pre>
+<div class="trap"><b>Trap:</b> Set has no index or <code>get</code>; you can't read <code>s[0]</code>. Objects with equal content are not duplicates, so dedupe objects by a key using a Map. Mutating a Set while iterating can revisit or skip values.</div>
+<details open><summary>Difference between Map and Set?</summary><p>Map holds key/value pairs (keys unique); Set holds only unique values. Both keep insertion order, are iterable, and use SameValueZero equality. Set is for membership and uniqueness; Map for lookups by key.</p></details>
+<details open><summary>How do you remove specific values? What does entries() return?</summary><p><code>set.delete(value)</code> returns a boolean. <code>entries()</code> returns an iterator of <code>[value, value]</code> arrays (to mirror Map's API).</p></details>
+<details open><summary>Remove duplicates from an array, and find common elements?</summary><p><code>[...new Set(arr)]</code>; common elements: filter one array by <code>setOfOther.has</code>, O(n+m).</p></details>
+</section>
+
+<section id="o10"><h2>10. WeakMap and WeakSet</h2>
+<p>Like Map and Set but they hold their <strong>keys/values weakly</strong>: if nothing else references the object, the garbage collector may remove the entry automatically.</p>
+<pre><code>const wm = new WeakMap();
+let el = { id: 1 };
+wm.set(el, { clicks: 0 });  // key must be an object (or non-registered Symbol)
+wm.get(el); wm.has(el); wm.delete(el);
+wm.set("str", 1);           // TypeError: invalid value used as weak map key
+el = null;                  // the entry becomes collectable
+
+const visited = new WeakSet();
+function walk(node) { if (visited.has(node)) return; visited.add(node); /* ... */ }   // cycle-safe traversal
+
+// private data and memoisation without leaks
+const priv = new WeakMap();
+class User { constructor(n) { priv.set(this, { secret: n }) } get s() { return priv.get(this).secret } }</code></pre>
+<div class="w"><table><tr><th></th><th>Map / Set</th><th>WeakMap / WeakSet</th></tr>
+<tr><td>Keys / values</td><td>any type</td><td>objects only</td></tr>
+<tr><td>Reference</td><td>strong (prevents GC)</td><td>weak (does not prevent GC)</td></tr>
+<tr><td>Iterable, size, clear</td><td>yes</td><td>no (GC timing is non-deterministic)</td></tr>
+<tr><td>Methods</td><td>full</td><td>WeakMap: get, set, has, delete; WeakSet: add, has, delete</td></tr>
+<tr><td>Use for</td><td>data you manage</td><td>metadata about objects owned elsewhere (DOM nodes, instances)</td></tr></table></div>
+<details open><summary>Difference between Map and WeakMap?</summary><p>Map keys can be any type and are strongly held, so entries stay until deleted; it is iterable with <code>size</code>. WeakMap keys must be objects and are weakly held, so entries vanish when the key is otherwise unreachable; it is not iterable and has no <code>size</code> or <code>clear</code>. This avoids memory leaks when caching per-object data.</p></details>
+<details open><summary>Difference between Set and WeakSet?</summary><p>Same idea: WeakSet holds only objects, weakly, with just <code>add/has/delete</code>, and cannot be iterated or sized. Use it to tag/track objects (visited, branded) without preventing their collection.</p></details>
+<details open><summary>Why can't you iterate a WeakMap?</summary><p>Contents depend on when the GC runs, so exposing them would make program behaviour non-deterministic and would require holding strong references.</p></details>
+</section>
+
+<section id="cheat"><h2>Quick revision cheat sheet</h2>
+<div class="w"><table><tr><th>Topic</th><th>Remember</th></tr>
+<tr><td>Objects</td><td>reference types; computed keys <code>[k]</code>; shorthand; freeze shallow; clone with spread (shallow) or structuredClone (deep)</td></tr>
+<tr><td>this</td><td>new &gt; call/apply/bind &gt; obj.method &gt; plain call (window/undefined); arrow = lexical</td></tr>
+<tr><td>call/apply/bind</td><td>call(args...), apply([args]), bind returns function; <code>this = x</code> is SyntaxError</td></tr>
+<tr><td>Class</td><td>sugar over prototypes; TDZ; needs new; strict; private #; static on class</td></tr>
+<tr><td>Inheritance</td><td>extends + super() before this; super.m() for parent; one parent only</td></tr>
+<tr><td>Destructuring</td><td>by name; rename a: b; defaults only for undefined; null throws</td></tr>
+<tr><td>Accessors</td><td>get/set look like properties; getter-only = read-only</td></tr>
+<tr><td>Map</td><td>any key, ordered, size, set/get/has/delete; map[k]=v is NOT an entry</td></tr>
+<tr><td>Set</td><td>unique values; entries() gives [v, v]; dedupe with spread</td></tr>
+<tr><td>Weak*</td><td>object keys only, GC-friendly, not iterable</td></tr></table></div>
+<h3>Rapid-fire "what does this print?"</h3>
+<pre><code>console.log({} === {}, [] === []);             // false false
+console.log(typeof null, typeof class {});      // object function
+const a = { n: 1 }; const b = a; b.n = 2; console.log(a.n);   // 2
+console.log(Object.keys({ b: 1, 1: 1, a: 1 }));                // ["1","b","a"]
+const f = Object.freeze({ x: { y: 1 } }); f.x.y = 2; console.log(f.x.y);  // 2
+const o = { v: 1, get() { return this.v } }; const g = o.get; console.log(g()); // undefined
+console.log(new Set([1, "1", 1]).size, new Map([[NaN, 1]]).get(NaN));      // 2 1
+console.log([...new Set([3, 1, 3])], Object.entries({ a: 1 }));           // [3,1] [["a",1]]
+class P { static s = 1; } console.log(new P().s, P.s);                       // undefined 1
+const { x = 5, y } = { x: undefined, y: null }; console.log(x, y);          // 5 null</code></pre>
+</section>
+</main>
+<script>
+(function(){
+var re=/(\/\/.*$)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`)|\b(const|let|var|function|return|if|else|for|while|of|in|new|class|extends|yield|try|catch|finally|throw|typeof|async|await|this|null|undefined|true|false|break|continue)\b|\b(\d+\.?\d*n?)\b/gm;
+document.querySelectorAll("pre code").forEach(function(el){
+var t=el.textContent.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+el.innerHTML=t.replace(re,function(m,c,s,k,n){return c?'<span class="c">'+c+'</span>':s?'<span class="s">'+s+'</span>':k?'<span class="k">'+k+'</span>':'<span class="n">'+n+'</span>'})});
+document.getElementById("th").onclick=function(){var r=document.documentElement,d=r.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");r.setAttribute("data-theme",d==="dark"?"light":"dark")};
+})();
+</script></body></html>
