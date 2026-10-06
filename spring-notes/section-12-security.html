@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spring Boot Bible — Section 12: Microservices Security</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0f14; --bg-elev:#111820; --bg-elev-2:#161f2a; --border:#233042;
+  --text:#dbe4ee; --text-dim:#8a9bb0; --text-faint:#5c6b7e;
+  --accent:#6DB33F; --accent-soft:#6DB33F22;
+  --accent-2:#4fa3d1; --accent-2-soft:#4fa3d122;
+  --sec:#eab308; --sec-soft:#eab30822;
+  --warn:#e0a94f; --warn-soft:#e0a94f22;
+  --danger:#e0655f; --danger-soft:#e0655f22;
+  --code-bg:#0d1420; --code-border:#1e2a3a;
+  --shadow: 0 8px 24px rgba(0,0,0,0.35); --radius: 10px; --sidebar-w: 300px;
+}
+html[data-theme="light"]{
+  --bg:#f6f4ee; --bg-elev:#ffffff; --bg-elev-2:#eef0e8; --border:#dcdccf;
+  --text:#1c231d; --text-dim:#586257; --text-faint:#8b9188;
+  --accent:#3f7d1f; --accent-soft:#3f7d1f1a;
+  --accent-2:#1f6f9c; --accent-2-soft:#1f6f9c1a;
+  --sec:#946c05; --sec-soft:#946c0518;
+  --warn:#8a5a12; --warn-soft:#8a5a1218;
+  --danger:#a3352f; --danger-soft:#a3352f18;
+  --code-bg:#fbfaf5; --code-border:#e2e0d2;
+  --shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;line-height:1.65;font-size:15.5px;}
+::selection{background:var(--sec-soft);color:var(--sec);}
+h1,h2,h3,h4{font-family:'Space Mono',monospace;letter-spacing:-0.01em;color:var(--text);}
+code, pre, .mono{font-family:'Space Mono',monospace;}
+a{color:var(--accent-2);text-decoration:none;}
+a:hover{text-decoration:underline;}
+
+.shell{display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;border-right:1px solid var(--border);background:var(--bg-elev);position:sticky;top:0;height:100vh;overflow-y:auto;padding:22px 16px 60px;}
+.sidebar::-webkit-scrollbar{width:6px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:4px;padding:0 6px;}
+.brand-badge{width:34px;height:34px;border-radius:8px;background:var(--sec);display:flex;align-items:center;justify-content:center;font-family:'Space Mono';font-weight:700;color:#0b0f14;font-size:14px;flex-shrink:0;}
+.brand-text{font-family:'Space Mono';font-weight:700;font-size:14.5px;line-height:1.2;}
+.brand-text span{display:block;font-size:10.5px;color:var(--text-faint);font-weight:400;margin-top:2px;letter-spacing:0.04em;}
+.theme-toggle{margin:14px 6px 20px;width:calc(100% - 12px);background:var(--bg-elev-2);border:1px solid var(--border);color:var(--text-dim);padding:8px 10px;border-radius:8px;font-family:'Inter';font-size:12.5px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
+.theme-toggle:hover{color:var(--text);border-color:var(--sec);}
+.nav-group{margin-bottom:6px;}
+.nav-group-title{font-size:10.5px;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-faint);padding:14px 8px 6px;font-family:'Space Mono';}
+.nav-link{display:block;padding:7px 10px;border-radius:7px;font-size:13px;color:var(--text-dim);margin-bottom:1px;border-left:2px solid transparent;}
+.nav-link:hover{background:var(--bg-elev-2);color:var(--text);text-decoration:none;}
+.nav-link.active{background:var(--sec-soft);color:var(--sec);border-left:2px solid var(--sec);font-weight:600;}
+.nav-link .vid-no{color:var(--text-faint);margin-right:5px;}
+
+main{flex:1;min-width:0;padding:48px 56px 120px;max-width:980px;}
+.hero{margin-bottom:44px;}
+.hero-eyebrow{font-family:'Space Mono';font-size:11.5px;color:var(--sec);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.hero-eyebrow::before{content:"";width:20px;height:1px;background:var(--sec);}
+.hero h1{font-size:32px;margin:0 0 12px;line-height:1.25;}
+.hero p{color:var(--text-dim);font-size:15.5px;max-width:680px;}
+.scope-box{margin-top:20px;border:1px solid var(--border);background:var(--bg-elev);border-radius:var(--radius);padding:16px 18px;font-size:13px;color:var(--text-dim);}
+.scope-box b{color:var(--text);}
+
+section.topic{margin-bottom:56px;scroll-margin-top:24px;}
+.topic-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;border-bottom:1px solid var(--border);padding-bottom:14px;}
+.topic-no{font-family:'Space Mono';color:var(--sec);font-size:13px;background:var(--sec-soft);padding:3px 9px;border-radius:20px;flex-shrink:0;}
+.topic-head h2{font-size:22px;margin:0;}
+.topic-sub{color:var(--text-faint);font-size:12.5px;margin:8px 0 22px;}
+
+p{color:var(--text-dim);}
+h3.subhead{font-size:16.5px;color:var(--text);margin:28px 0 10px;display:flex;align-items:center;gap:8px;}
+h3.subhead::before{content:"";width:3px;height:15px;background:var(--accent-2);border-radius:2px;}
+h4.minihead{font-size:13.5px;color:var(--text);margin:18px 0 8px;font-family:'Inter';font-weight:700;}
+ul,ol{color:var(--text-dim);padding-left:22px;}
+li{margin-bottom:6px;}
+strong{color:var(--text);}
+
+.ann-box{border:1px solid var(--code-border);background:var(--bg-elev);border-radius:var(--radius);margin:14px 0;overflow:hidden;}
+.ann-box-head{display:flex;align-items:center;gap:10px;padding:11px 16px;background:var(--sec-soft);border-bottom:1px solid var(--code-border);}
+.ann-tag{font-family:'Space Mono';font-weight:700;color:var(--sec);font-size:14px;}
+.ann-loc{margin-left:auto;font-size:10.5px;color:var(--text-faint);font-family:'Space Mono';text-transform:uppercase;letter-spacing:0.05em;}
+.ann-body{padding:12px 16px;}
+.ann-body p{margin:4px 0 8px;font-size:13.5px;}
+.ann-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0;}
+@media(max-width:760px){.ann-grid{grid-template-columns:1fr;}}
+
+.code-panel{border:1px solid var(--code-border);border-radius:var(--radius);overflow:hidden;margin:16px 0;background:var(--code-bg);}
+.code-tabs{display:flex;background:var(--bg-elev-2);border-bottom:1px solid var(--code-border);overflow-x:auto;}
+.code-tab{padding:9px 16px;font-family:'Space Mono';font-size:12px;color:var(--text-faint);cursor:pointer;border-right:1px solid var(--code-border);white-space:nowrap;user-select:none;}
+.code-tab:hover{color:var(--text-dim);}
+.code-tab.active{color:var(--sec);background:var(--code-bg);border-bottom:2px solid var(--sec);margin-bottom:-1px;}
+.code-body{position:relative;}
+.code-pane{display:none;padding:16px 18px;overflow-x:auto;}
+.code-pane.active{display:block;}
+pre{margin:0;font-size:12.8px;line-height:1.65;color:#c7d3e0;}
+html[data-theme="light"] pre{color:#333c30;}
+.kw{color:#c586c0;}
+.ann{color:var(--sec);font-weight:700;}
+.str{color:#ce9178;}
+.cm{color:var(--text-faint);font-style:italic;}
+.ty{color:#4ec9b0;}
+.cl{color:#e5c07b;}
+
+.callout{border-radius:var(--radius);padding:14px 16px;margin:16px 0;border:1px solid;font-size:13.5px;}
+.callout.info{background:var(--accent-2-soft);border-color:var(--accent-2);color:var(--text);}
+.callout.warn{background:var(--warn-soft);border-color:var(--warn);color:var(--text);}
+.callout.pitfall{background:var(--danger-soft);border-color:var(--danger);color:var(--text);}
+.callout b.lbl{display:block;font-family:'Space Mono';font-size:11px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;}
+.callout.info b.lbl{color:var(--accent-2);}
+.callout.warn b.lbl{color:var(--warn);}
+.callout.pitfall b.lbl{color:var(--danger);}
+.callout p{margin:0;color:var(--text-dim);}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left;color:var(--text-dim);}
+th{background:var(--bg-elev-2);color:var(--text);font-family:'Space Mono';font-size:11.5px;text-transform:uppercase;letter-spacing:0.04em;}
+tr:hover td{background:var(--bg-elev-2);}
+
+.diagram{border:1px solid var(--code-border);background:var(--code-bg);border-radius:var(--radius);padding:22px 18px;margin:18px 0;overflow-x:auto;}
+.dflow{display:flex;align-items:stretch;gap:10px;min-width:max-content;flex-wrap:wrap;}
+.dbox{flex-shrink:0;min-width:120px;border:1px solid var(--border);background:var(--bg-elev);border-radius:8px;padding:12px 14px;text-align:center;}
+.dbox .t{font-family:'Space Mono';font-size:12px;color:var(--text);font-weight:700;}
+.dbox .s{font-size:10.5px;color:var(--text-faint);margin-top:4px;}
+.dbox.accent{border-color:var(--sec);background:var(--sec-soft);}
+.dbox.accent .t{color:var(--sec);}
+.dbox.warn{border-color:var(--warn);background:var(--warn-soft);}
+.dbox.warn .t{color:var(--warn);}
+.dbox.dim{opacity:0.55;}
+.darrow{flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-family:'Space Mono';font-size:16px;min-width:24px;}
+.dstack{display:flex;flex-direction:column;gap:8px;}
+.dcol{display:flex;flex-direction:column;gap:8px;align-items:center;}
+.dphase-label{font-family:'Space Mono';font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;text-align:center;margin-top:8px;}
+
+.seq-list{counter-reset:seq;list-style:none;padding-left:0;}
+.seq-list li{counter-increment:seq;position:relative;padding-left:34px;margin-bottom:10px;}
+.seq-list li::before{content:counter(seq);position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;background:var(--sec-soft);color:var(--sec);font-family:'Space Mono';font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+
+.qa-section{margin-top:26px;}
+.qa-tabs{display:flex;gap:8px;margin-bottom:14px;}
+.qa-tab-btn{font-family:'Space Mono';font-size:11.5px;padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg-elev);color:var(--text-dim);cursor:pointer;text-transform:uppercase;letter-spacing:0.04em;}
+.qa-tab-btn.common.active{background:var(--accent-2-soft);border-color:var(--accent-2);color:var(--accent-2);}
+.qa-tab-btn.faang.active{background:var(--danger-soft);border-color:var(--danger);color:var(--danger);}
+.qa-pane{display:none;}
+.qa-pane.active{display:block;}
+details.qa{border:1px solid var(--border);border-radius:8px;margin-bottom:8px;background:var(--bg-elev);overflow:hidden;}
+details.qa[open]{border-color:var(--accent-2);}
+details.qa summary{padding:12px 16px;cursor:pointer;font-weight:600;font-size:13.8px;list-style:none;display:flex;align-items:flex-start;gap:10px;color:var(--text);}
+details.qa summary::-webkit-details-marker{display:none;}
+details.qa summary::before{content:"Q";flex-shrink:0;font-family:'Space Mono';font-size:11px;color:var(--accent-2);background:var(--accent-2-soft);width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+details.qa .qa-answer{padding:0 16px 16px 46px;color:var(--text-dim);font-size:13.5px;}
+details.qa .qa-answer p{margin:0 0 8px;color:var(--text-dim);}
+details.qa .qa-answer p:last-child{margin-bottom:0;}
+
+.divider{height:1px;background:linear-gradient(90deg,var(--border),transparent);margin:44px 0;}
+.footer-note{color:var(--text-faint);font-size:12px;text-align:center;padding:30px 0 10px;}
+
+@media(max-width:900px){
+  .shell{flex-direction:column;}
+  .sidebar{position:relative;width:100%;height:auto;}
+  main{padding:32px 20px 80px;}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-badge">🔐</div>
+    <div class="brand-text">Spring Boot Bible<span>Section 12 · Security</span></div>
+  </div>
+  <button class="theme-toggle" id="themeToggle">🌙 Dark mode <span>⇄</span></button>
+
+  <div class="nav-group">
+    <div class="nav-group-title">Foundations</div>
+    <a class="nav-link" href="#security-intro"><span class="vid-no">180</span>Intro to Microservices Security</a>
+    <a class="nav-link" href="#oauth2-problems"><span class="vid-no">181</span>Problems OAuth2 Solves</a>
+    <a class="nav-link" href="#oauth2-intro"><span class="vid-no">182</span>Introduction to OAuth2</a>
+    <a class="nav-link" href="#oauth2-terminology"><span class="vid-no">183</span>OAuth2 Terminology & Roles</a>
+    <a class="nav-link" href="#oidc-intro"><span class="vid-no">184</span>OpenID Connect</a>
+    <a class="nav-link" href="#iam-keycloak"><span class="vid-no">185</span>IAM Products & Why Keycloak</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Client Credentials Flow</div>
+    <a class="nav-link" href="#client-credentials-deepdive"><span class="vid-no">186</span>Client Credentials Deep Dive</a>
+    <a class="nav-link" href="#securing-gateway-theory"><span class="vid-no">187</span>Securing Gateway — Theory</a>
+    <a class="nav-link" href="#keycloak-setup"><span class="vid-no">188</span>Setup Auth Server (Keycloak)</a>
+    <a class="nav-link" href="#register-client-cc"><span class="vid-no">189</span>Register Client — CC Flow</a>
+    <a class="nav-link" href="#get-access-token"><span class="vid-no">190</span>Getting an Access Token</a>
+    <a class="nav-link" href="#gateway-resource-server"><span class="vid-no">191-192</span>Gateway as Resource Server</a>
+    <a class="nav-link" href="#role-authorization"><span class="vid-no">193-194</span>Role-Based Authorization</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Authorization Code Flow</div>
+    <a class="nav-link" href="#auth-code-deepdive"><span class="vid-no">195</span>Authorization Code Deep Dive</a>
+    <a class="nav-link" href="#auth-code-theory"><span class="vid-no">196</span>Securing Gateway — Theory</a>
+    <a class="nav-link" href="#register-client-ac"><span class="vid-no">197</span>Register Client & User — AC Flow</a>
+    <a class="nav-link" href="#auth-code-demo"><span class="vid-no">198</span>Auth Code Flow Demo</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Docker Integration</div>
+    <a class="nav-link" href="#docker-security-demo"><span class="vid-no">199-200</span>Docker Compose Demo</a>
+  </div>
+</aside>
+
+<main>
+  <div class="hero">
+    <div class="hero-eyebrow">Section 12 · Spring Boot Bible</div>
+    <h1>Microservices Security</h1>
+    <p>Section 9 hid every internal service's port behind the Gateway; Section 11 gave you full visibility into what the system is doing. Neither addressed a basic question: right now, <strong>anyone</strong> who can reach the Gateway can call every route on it. This section closes that gap with OAuth2 and OpenID Connect via Keycloak — covering both machine-to-machine authentication (Client Credentials grant, securing the Gateway itself and inter-service calls) and real end-user authentication (Authorization Code grant, the flow behind virtually every "Sign in" button you've ever clicked) — plus role-based authorization enforced centrally at the Gateway, exactly where Section 9 argued cross-cutting concerns belong.</p>
+    <div class="scope-box">
+      <b>How to use this document:</b> OAuth2/OIDC terminology gets confused constantly even by experienced engineers — topic 183 and 184 are worth over-preparing, since "explain the difference between OAuth2 and OpenID Connect" and "walk me through the Authorization Code flow, and explain why it isn't simpler" are two of the most consistently asked questions in backend/security-adjacent interviews at any company handling real user data.
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="security-intro">
+    <div class="topic-head"><span class="topic-no">180</span><h2>Introduction to Microservices Security</h2></div>
+    <p class="topic-sub">What's actually still missing, given everything built in Sections 9 and 11.</p>
+
+    <h3 class="subhead">The gap this section closes</h3>
+    <p>Recall Section 9's architecture: the Gateway is the sole external entry point, and internal services no longer publish ports at all. This solved <em>routing</em> and <em>topology hiding</em> — but as configured so far, the Gateway will happily route <strong>any</strong> incoming request to Accounts, Loans, or Cards, with zero verification of who's calling or whether they're allowed to. Anyone who can reach the Gateway's public port can call every route on it.</p>
+
+    <h3 class="subhead">The two questions security must answer, every request</h3>
+    <table>
+      <tr><th>Question</th><th>Concern</th></tr>
+      <tr><td><strong>Authentication</strong> — "Who are you?"</td><td>Verifying the identity of the caller (a human user, or another service/application) making the request</td></tr>
+      <tr><td><strong>Authorization</strong> — "What are you allowed to do?"</td><td>Given a verified identity, determining whether that specific identity is permitted to perform this specific action (e.g. only an ADMIN role can call the delete-account endpoint)</td></tr>
+    </table>
+
+    <div class="callout warn"><b class="lbl">These are two genuinely different concerns — conflating them is a classic interview mistake</b><p>A request can be perfectly <em>authenticated</em> (we know exactly who's calling, their identity is cryptographically verified) and still be correctly <em>rejected</em> for lacking <em>authorization</em> (they're not allowed to do this specific thing). Security systems — and interview answers — need to treat these as two separate, sequential checks, not one combined "is this request okay" gate.</p></div>
+
+    <h3 class="subhead">Where this needs to be enforced, and why centrally</h3>
+    <p>Consistent with every cross-cutting concern covered since Section 9, authentication/authorization logic duplicated independently inside every microservice is exactly the anti-pattern this course has repeatedly argued against — the Gateway is the natural, single place to enforce it, for the same reasons SSL termination, rate limiting, and correlation ID generation belong there.</p>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q1-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q1-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q1-common">
+        <details class="qa"><summary>What's the difference between authentication and authorization?</summary><div class="qa-answer"><p>Authentication verifies who is making a request (identity). Authorization determines, given a verified identity, whether that identity is permitted to perform the specific requested action — a request can be fully authenticated and still correctly denied for lacking authorization.</p></div></details>
+        <details class="qa"><summary>Why does it make sense to enforce security centrally at the Gateway rather than in each individual microservice?</summary><div class="qa-answer"><p>It follows the same cross-cutting-concerns argument from Section 9 — centralizing auth avoids duplicating and potentially inconsistently implementing the same logic across every service, and lets unauthenticated/unauthorized requests be rejected at the system's single entry point before they ever reach internal services at all.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q1-faang">
+        <details class="qa"><summary>If the Gateway already enforces authentication/authorization, is there any reason an internal service would still need its own security checks?</summary><div class="qa-answer"><p>This is a genuine, actively-debated architectural question, not a settled one — a pure "trust the perimeter" model (only the Gateway checks, internal services trust anything reaching them) is simpler but assumes the internal network is fully trusted and the Gateway can never be misconfigured or bypassed. A <strong>zero-trust</strong> model argues every service should independently validate incoming requests (re-verifying the token, not just trusting an internal network boundary), since a compromised internal service or an internal network misconfiguration could otherwise let an attacker who's gained any foothold inside the network call other services with no further checks at all. In practice, many organizations land on a middle ground: the Gateway does the primary, user-facing authentication/authorization enforcement (rejecting clearly invalid/unauthorized requests early, cheaply, at one place), while individual services still perform lightweight token validation for defense-in-depth — directly paralleling the Section 9 discussion of API Gateway vs Service Mesh responsibilities, where mTLS and service-level policy enforcement inside a mesh provide exactly this kind of additional internal-layer protection beyond the edge.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="oauth2-problems">
+    <div class="topic-head"><span class="topic-no">181</span><h2>Problems That OAuth2 Solves</h2></div>
+    <p class="topic-sub">The motivating scenario — why "just check a username and password" isn't sufficient once delegation is involved.</p>
+
+    <h3 class="subhead">The password anti-pattern</h3>
+    <p>Imagine a third-party budgeting app wants to read a user's transaction history from eazybank. The naive approach — the user gives the budgeting app their actual eazybank username and password — is a real, historically common pattern, and a genuinely serious problem:</p>
+    <ul>
+      <li><strong>The third party gets full access</strong>, not the narrow "read transaction history" access the user actually intended to grant — the password grants everything the user's account can do.</li>
+      <li><strong>No easy revocation</strong> — the only way to cut off the third party's access is to change the actual account password, which also logs out every other legitimate session/device.</li>
+      <li><strong>The user's real credential is now stored by a third party</strong>, multiplying the number of places a single leak could compromise the user's actual eazybank account.</li>
+      <li><strong>No audit trail distinguishing the user's own actions from the third party's</strong> — everything looks identical, authenticated as the user directly.</li>
+    </ul>
+
+    <h3 class="subhead">What OAuth2 provides instead</h3>
+    <p><strong>Delegated, scoped, revocable access</strong> — the user authenticates directly with the trusted authorization server (never handing credentials to the third party at all), explicitly grants a narrow, specific scope of access ("read transaction history only," not full account access), receives a token representing exactly that grant, and can revoke that specific token/grant independently at any time without affecting their actual account credentials or other sessions.</p>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q2-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q2-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q2-common">
+        <details class="qa"><summary>What's the core problem with a third-party app asking users for their actual password?</summary><div class="qa-answer"><p>It grants the third party full account access rather than a narrow, specific scope, requires storing the user's real credential outside the primary account (multiplying leak risk), and offers no way to revoke just that third party's access without changing the password entirely (logging out everything else too).</p></div></details>
+        <details class="qa"><summary>What does OAuth2 provide instead of password sharing?</summary><div class="qa-answer"><p>Delegated, scoped, and independently revocable access — the user authenticates directly with a trusted authorization server, grants a specific narrow scope, and receives a token representing exactly that grant, which can be revoked on its own without touching the actual account credentials.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q2-faang">
+        <details class="qa"><summary>Why is "no audit trail distinguishing the user's actions from the third party's" a real security concern, beyond just being inconvenient?</summary><div class="qa-answer"><p>Without a distinguishable identity for the delegated access, any anomaly-detection or forensic investigation after a security incident can't tell whether unusual activity originated from the legitimate user or from a compromised or malicious third-party integration acting under the shared credential — a serious gap for detecting and responding to abuse. OAuth2's token-based model inherently carries information about which client/application a given request is associated with (the token was issued to a specific registered client), enabling exactly this kind of attribution — a genuinely important operational security benefit beyond the more commonly-cited "scoping" and "revocation" advantages.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="oauth2-intro">
+    <div class="topic-head"><span class="topic-no">182</span><h2>Introduction to OAuth2</h2></div>
+    <p class="topic-sub">Precisely what OAuth2 is — and, just as importantly, what it explicitly is not.</p>
+
+    <h3 class="subhead">OAuth2 is an authorization framework, not an authentication protocol</h3>
+    <p><strong>OAuth 2.0</strong> (RFC 6749) is a framework that defines how a <strong>client</strong> application obtains a limited-scope <strong>access token</strong>, which it then presents to a <strong>resource server</strong> to access protected resources — <em>without</em> the client ever needing to handle the resource owner's actual credentials. It is fundamentally about <strong>delegated authorization</strong>: "this client is allowed to do X, on behalf of this resource owner (or on its own behalf)."</p>
+
+    <div class="callout pitfall"><b class="lbl">The single most common misconception, worth stating precisely</b><p>OAuth2, by itself, says nothing about <em>who the user is</em> — it only establishes that a token grants some specific scope of access. A resource server receiving a valid OAuth2 access token knows the request is authorized for some scope, but OAuth2 alone provides no standardized way to learn the authenticated user's actual identity (name, email, a stable user ID) from that transaction. This exact gap is what topic 184's OpenID Connect exists to fill — and correctly stating "OAuth2 is authorization, not authentication" unprompted is a strong, specific signal in an interview.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q3-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q3-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q3-common">
+        <details class="qa"><summary>Is OAuth2 an authentication protocol or an authorization framework?</summary><div class="qa-answer"><p>An authorization framework — it defines how a client obtains a limited-scope access token to access protected resources, without needing the resource owner's actual credentials. It doesn't, by itself, standardize how to verify or communicate the user's actual identity.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q3-faang">
+        <details class="qa"><summary>Concretely, what could go wrong if a system used raw OAuth2 access tokens to "authenticate" users, without OpenID Connect?</summary><div class="qa-answer"><p>Since a plain OAuth2 access token's structure and content aren't standardized for identity purposes (its format and claims are entirely up to the specific authorization server's implementation), a resource server trying to infer user identity purely from an access token is relying on implementation-specific, non-standardized behavior rather than a guaranteed contract — different authorization servers might structure tokens completely differently, and there's no standardized claim guaranteed to represent "who is this," no standardized way to verify the token was actually intended for identity purposes (an access token might be scoped for a narrow API purpose, not meant to double as a proof-of-identity), and historically this exact ambiguity led to real, documented security vulnerabilities in systems that tried to use OAuth2 access tokens as a de facto login mechanism before OpenID Connect standardized the correct way to do this (via a distinct ID Token, covered next).</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="oauth2-terminology">
+    <div class="topic-head"><span class="topic-no">183</span><h2>OAuth2 Jargons, Terminologies, or Roles</h2></div>
+    <p class="topic-sub">The vocabulary every subsequent topic in this section assumes fluency in — worth memorizing precisely.</p>
+
+    <table>
+      <tr><th>Term</th><th>Definition</th><th>In this course's system</th></tr>
+      <tr><td><strong>Resource Owner</strong></td><td>The entity (usually an end user) who owns the protected data/resource and can grant access to it</td><td>An eazybank customer</td></tr>
+      <tr><td><strong>Client</strong></td><td>The application requesting access to a protected resource — can act on behalf of a user, or on its own behalf</td><td>The Gateway itself (Client Credentials), or a web/mobile front-end (Authorization Code)</td></tr>
+      <tr><td><strong>Authorization Server</strong></td><td>Authenticates the resource owner (or the client itself) and issues access tokens after successful authorization</td><td>Keycloak</td></tr>
+      <tr><td><strong>Resource Server</strong></td><td>Hosts the protected resources and validates incoming access tokens before serving requests</td><td>The Gateway (and, in a defense-in-depth model, potentially each backend service)</td></tr>
+      <tr><td><strong>Access Token</strong></td><td>A credential representing the granted scope of authorization, presented by the client to the resource server on every request</td><td>A JWT, typically sent as an `Authorization: Bearer &lt;token&gt;` header</td></tr>
+      <tr><td><strong>Refresh Token</strong></td><td>A longer-lived credential used to obtain a new access token once the current one expires, without requiring the resource owner to re-authenticate</td><td>Issued alongside the access token in the Authorization Code flow</td></tr>
+      <tr><td><strong>Scope</strong></td><td>A named, granular unit of permission being requested/granted (e.g. `read:accounts`)</td><td>Custom scopes definable per Keycloak client</td></tr>
+      <tr><td><strong>Grant Type</strong></td><td>The specific, standardized flow/protocol used to actually obtain a token — the mechanics differ significantly depending on whether a human user is involved</td><td>Client Credentials (topics 186-194) and Authorization Code (topics 195-198), the two covered in this section</td></tr>
+    </table>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q4-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q4-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q4-common">
+        <details class="qa"><summary>What's the difference between an access token and a refresh token?</summary><div class="qa-answer"><p>An access token is presented on every request to prove authorization and is typically short-lived. A refresh token is longer-lived and used specifically to obtain a new access token once the current one expires, without requiring the resource owner to fully re-authenticate.</p></div></details>
+        <details class="qa"><summary>In OAuth2 terminology, what role does the Gateway play?</summary><div class="qa-answer"><p>Depending on the flow, the Gateway acts as the Resource Server (validating incoming access tokens before routing requests to backend services) and, in the Client Credentials flow, also as the Client itself when authenticating on its own behalf.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q4-faang">
+        <details class="qa"><summary>Why are access tokens deliberately kept short-lived, given the added complexity of needing a separate refresh mechanism?</summary><div class="qa-answer"><p>This is a direct security/usability trade-off: a short-lived access token limits the damage window if a token is ever leaked or stolen (an attacker with a stolen access token can only misuse it until it naturally expires, often within minutes), while the longer-lived refresh token — used far less frequently and typically kept more securely (e.g. never exposed to client-side JavaScript in a browser context) — lets the user avoid needing to fully re-authenticate (re-enter credentials) every few minutes. This mirrors a broader security principle seen elsewhere in this course too — Section 10's circuit breaker sliding windows and Section 6's short-lived CI credentials both reflect the same underlying idea: bound the blast radius of any single compromised credential by keeping its useful lifetime short, and pay the complexity cost of a renewal mechanism in exchange.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="oidc-intro">
+    <div class="topic-head"><span class="topic-no">184</span><h2>What Is OpenID Connect & Why It Is Important</h2></div>
+    <p class="topic-sub">The identity layer OAuth2 deliberately doesn't provide — and the exact, precise relationship between the two.</p>
+
+    <h3 class="subhead">OIDC is a thin identity layer built on top of OAuth2</h3>
+    <p><strong>OpenID Connect (OIDC)</strong> extends OAuth2 with exactly what topic 182 flagged as missing: a standardized way to authenticate a user and obtain verified identity information, using the exact same underlying OAuth2 flows and infrastructure. It adds three concrete things on top of plain OAuth2:</p>
+    <table>
+      <tr><th>Addition</th><th>Purpose</th></tr>
+      <tr><td><strong>ID Token</strong></td><td>A JWT — distinct from the access token — containing standardized identity <strong>claims</strong> about the authenticated user (`sub` = subject/user ID, `name`, `email`, `iss` = issuer, `exp` = expiration)</td></tr>
+      <tr><td><strong><code>openid</code> scope</strong></td><td>Including this specific, reserved scope in the authorization request is what signals "this is an OIDC request, please also issue an ID Token," turning a plain OAuth2 flow into an OIDC-enabled one</td></tr>
+      <tr><td><strong>UserInfo endpoint</strong></td><td>A standardized endpoint (`/userinfo`) the client can call with a valid access token to retrieve additional user profile claims beyond what's embedded in the ID Token itself</td></tr>
+    </table>
+
+    <div class="callout info"><b class="lbl">The precise, interview-ready one-liner</b><p><strong>OAuth2 answers "is this client authorized to do X?" OpenID Connect answers "who is this user, verified?"</strong> — OIDC doesn't replace or compete with OAuth2; it's a standardized identity layer built directly on top of the same OAuth2 protocol flows, adding the ID Token as the concrete mechanism for conveying verified identity. This distinction is worth stating in almost exactly these words if asked directly, since it's precise, correct, and demonstrates the exact nuance many engineers get wrong.</p></div>
+
+    <table>
+      <tr><th>Token</th><th>Purpose</th><th>Consumed by</th></tr>
+      <tr><td><strong>Access Token</strong></td><td>Authorizes API calls to a resource server</td><td>The resource server, on every API request</td></tr>
+      <tr><td><strong>ID Token</strong></td><td>Proves the user's authenticated identity, once, at login time</td><td>The client application itself (not sent on every subsequent API call) — used to establish "who is logged in" client-side</td></tr>
+    </table>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q5-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q5-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q5-common">
+        <details class="qa"><summary>What is OpenID Connect's relationship to OAuth2?</summary><div class="qa-answer"><p>OIDC is a thin identity layer built directly on top of OAuth2, using the same underlying flows, adding a standardized ID Token (a JWT with identity claims about the authenticated user), the reserved `openid` scope, and a UserInfo endpoint.</p></div></details>
+        <details class="qa"><summary>What's the difference between an access token and an ID token?</summary><div class="qa-answer"><p>An access token authorizes API calls and is sent to the resource server on every request. An ID token proves the user's authenticated identity at login time and is consumed by the client application itself to establish who's logged in, not sent on every subsequent API call.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q5-faang">
+        <details class="qa"><summary>Why does including the openid scope specifically trigger OIDC behavior — what's actually happening mechanically?</summary><div class="qa-answer"><p>The `openid` scope is a reserved, standardized signal that tells the authorization server "this specific authorization request should also produce an ID Token, per the OIDC specification" — an authorization server that supports OIDC recognizes this scope specifically and, in addition to whatever access token it would normally issue for a plain OAuth2 request, also generates and returns the standardized ID Token alongside it. Without the `openid` scope, the exact same underlying OAuth2 flow (Authorization Code, for instance) still works and issues an access token, but no ID Token is produced — it's a genuinely opt-in extension layered onto the existing protocol, not a separate, parallel mechanism, which is precisely why OIDC is accurately described as being built "on top of" rather than "alongside" OAuth2.</p></div></details>
+        <details class="qa"><summary>Should a client ever send the ID Token to a resource server as if it were an access token?</summary><div class="qa-answer"><p>No — this is a genuine, documented anti-pattern. The ID Token is specifically intended for the client application's own consumption (to establish and display "who is logged in"), and its claims/audience are typically scoped to the client itself, not to arbitrary resource servers the client might call. Using it as a bearer credential for API authorization conflates two purpose-built, differently-scoped tokens, and can create real security gaps (a resource server might not correctly validate an ID Token's audience/intended-use the way it would for an access token specifically designed for that purpose) — the correct token for authorizing API calls is always the access token, and the ID Token should stay client-side, used only to establish identity information for the application's own UI/session purposes.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="iam-keycloak">
+    <div class="topic-head"><span class="topic-no">185</span><h2>Introduction to IAM Products & Why Keycloak</h2></div>
+    <p class="topic-sub">Choosing an actual Authorization Server implementation, rather than building OAuth2/OIDC compliance from scratch.</p>
+
+    <h3 class="subhead">Why nobody hand-rolls their own Authorization Server</h3>
+    <p>Correctly implementing OAuth2/OIDC — token signing and rotation, session management, secure credential storage, protection against the many well-documented OAuth2-specific attack vectors (covered implicitly throughout this section's flow deep-dives) — is genuinely difficult, security-critical infrastructure. Virtually every organization uses a dedicated <strong>IAM (Identity and Access Management)</strong> product rather than building this themselves.</p>
+
+    <table>
+      <tr><th>Product</th><th>Notes</th></tr>
+      <tr><td><strong>Keycloak</strong></td><td>Open-source (originally Red Hat/JBoss, now a CNCF project), self-hostable, fully-featured OAuth2/OIDC/SAML support — what this course uses</td></tr>
+      <tr><td><strong>Okta / Auth0</strong></td><td>Popular managed, commercial IAM-as-a-service platforms</td></tr>
+      <tr><td><strong>AWS Cognito / Azure Entra ID</strong></td><td>Cloud-provider-native IAM offerings, convenient when already committed to that cloud ecosystem</td></tr>
+    </table>
+
+    <h3 class="subhead">Why Keycloak specifically for this course</h3>
+    <ul>
+      <li><strong>Free and self-hostable</strong> — runs easily in Docker, no external account/billing needed for learning.</li>
+      <li><strong>Fully standards-compliant</strong> — genuine OAuth2/OIDC support, so everything learned transfers directly to any other compliant IAM product (the protocol, not the vendor, is what matters most).</li>
+      <li><strong>Real production usage</strong> — Keycloak is a legitimate, widely-used production IAM choice at many real organizations, not just a learning-only tool.</li>
+      <li><strong>Realms, clients, and roles map cleanly onto this section's exact needs</strong> — everything covered from topic 188 onward.</li>
+    </ul>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q6-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q6-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q6-common">
+        <details class="qa"><summary>What is an IAM product, and why do most organizations use one rather than building their own Authorization Server?</summary><div class="qa-answer"><p>Identity and Access Management products (Keycloak, Okta, Auth0, Cognito) implement the security-critical, genuinely difficult-to-get-right details of OAuth2/OIDC compliance — token signing, session management, secure credential handling — so organizations don't need to build and maintain this themselves, which carries significant security risk if done incorrectly.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q6-faang">
+        <details class="qa"><summary>What's the trade-off between a self-hosted IAM product like Keycloak versus a managed commercial one like Okta/Auth0?</summary><div class="qa-answer"><p>Self-hosting Keycloak gives full control (data residency, no per-user/per-request vendor pricing, ability to customize deeply, no dependency on a third party's uptime) but shifts operational responsibility onto the organization — patching, scaling, securing, and maintaining high availability for what's genuinely critical, security-sensitive infrastructure becomes the organization's own job. A managed service like Okta/Auth0 offloads that operational burden (the vendor handles uptime, security patching, scaling) at the cost of ongoing subscription pricing (often scaling with user count or request volume, which can become significant at scale) and less deep customization flexibility. The decision typically comes down to team size/expertise available to operate identity infrastructure reliably, cost sensitivity at the organization's actual scale, and any regulatory/data-residency requirements that might favor keeping identity data fully in-house — a genuinely "it depends on the organization's specific constraints" answer worth reasoning through explicitly rather than asserting one option as universally correct.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="client-credentials-deepdive">
+    <div class="topic-head"><span class="topic-no">186</span><h2>Deep Dive of Client Credentials Grant Type Flow</h2></div>
+    <p class="topic-sub">The machine-to-machine flow — no end user, no browser redirect, no consent screen.</p>
+
+    <h3 class="subhead">When this flow applies</h3>
+    <p>The <strong>Client Credentials</strong> grant is used when the <em>client itself</em> is the entity being authorized — not acting on behalf of any human user. Classic use cases: one backend service calling another (service-to-service/machine-to-machine), a scheduled batch job, or — as this course applies it — the Gateway needing its own identity/authorization to operate as a trusted client.</p>
+
+    <div class="diagram">
+      <div class="dflow">
+        <div class="dbox accent"><div class="t">Client</div><div class="s">client_id + client_secret</div></div>
+        <div class="darrow">→ direct request →</div>
+        <div class="dbox warn"><div class="t">Authorization Server</div><div class="s">Keycloak's /token endpoint</div></div>
+        <div class="darrow">→ access token →</div>
+        <div class="dbox"><div class="t">Client</div><div class="s">uses token to call Resource Server</div></div>
+      </div>
+    </div>
+
+    <ol class="seq-list">
+      <li>The client authenticates directly with the Authorization Server's token endpoint, presenting its own `client_id` and `client_secret` — a simple, direct, back-channel HTTP request, no browser or redirect involved at all.</li>
+      <li>The Authorization Server validates the client's credentials and, if valid, issues an access token directly in the response.</li>
+      <li>The client uses that access token (typically as a Bearer token) to call the Resource Server.</li>
+    </ol>
+
+    <div class="callout info"><b class="lbl">Why this flow is so much simpler than Authorization Code (topic 195)</b><p>Because there's no human resource owner involved, there's nothing to redirect a browser to, no login page, no consent screen — the client's own credentials <em>are</em> the authorization proof, exchanged directly in one request/response round trip. This flow is only appropriate specifically because the client is trusted to hold and protect a secret credential itself (a backend service can securely store a `client_secret`; a browser-based JavaScript app or a mobile app generally cannot, which is exactly why user-facing applications need the different Authorization Code flow instead).</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q7-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q7-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q7-common">
+        <details class="qa"><summary>When is the Client Credentials grant type appropriate to use?</summary><div class="qa-answer"><p>When the client itself is the entity being authorized, not acting on behalf of a human user — machine-to-machine scenarios like service-to-service calls, scheduled jobs, or a Gateway authenticating as itself.</p></div></details>
+        <details class="qa"><summary>Why doesn't this flow involve a browser redirect or consent screen?</summary><div class="qa-answer"><p>There's no human resource owner involved to authenticate or grant consent — the client directly presents its own credentials (client_id/client_secret) to the Authorization Server's token endpoint in a single back-channel request, and receives a token directly in response.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q7-faang">
+        <details class="qa"><summary>Why is this flow only safe for confidential clients that can securely store a secret, and what happens if you tried using it from a mobile app or browser SPA?</summary><div class="qa-answer"><p>The entire security of this flow rests on the `client_secret` staying genuinely secret — if a mobile app or browser-based JavaScript application embedded a client secret, any user could extract it from the compiled app binary or browser dev tools/network inspector, since these are fundamentally untrusted, user-controlled execution environments. Once leaked, anyone possessing that secret could impersonate the client and obtain tokens with its full authorized scope — a serious compromise. This is precisely why Client Credentials is reserved for genuinely confidential clients (backend services, server-side applications) that run in environments the organization fully controls and can keep secrets in, and why user-facing public clients need the fundamentally different Authorization Code flow (with PKCE, discussed in topic 195) instead.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="securing-gateway-theory">
+    <div class="topic-head"><span class="topic-no">187</span><h2>Securing Gateway Server Using Client Credentials Grant Type Flow — Theory</h2></div>
+    <p class="topic-sub">Applying the flow concretely to this course's own system.</p>
+
+    <p>Any caller wanting to hit the Gateway must first independently obtain an access token from Keycloak using the Client Credentials flow (presenting its own registered client_id/secret), then include that token as a Bearer token on every request to the Gateway. The Gateway, configured as an OAuth2 <strong>Resource Server</strong> (topics 191-192), validates the token's signature and claims before allowing the request to proceed to routing at all — an unauthenticated or invalid-token request is rejected right at the edge, never reaching Accounts, Loans, or Cards.</p>
+
+    <div class="diagram">
+      <div class="dflow">
+        <div class="dbox"><div class="t">Caller</div></div>
+        <div class="darrow">1. get token →</div>
+        <div class="dbox warn"><div class="t">Keycloak</div></div>
+        <div class="darrow">2. token →</div>
+        <div class="dbox"><div class="t">Caller</div></div>
+        <div class="darrow">3. Bearer token →</div>
+        <div class="dbox accent"><div class="t">Gateway (Resource Server)</div><div class="s">validates before routing</div></div>
+        <div class="darrow">4. only if valid →</div>
+        <div class="dbox"><div class="t">Accounts/Loans/Cards</div></div>
+      </div>
+    </div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q8-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q8-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q8-common">
+        <details class="qa"><summary>What role does the Gateway play once secured as a Resource Server?</summary><div class="qa-answer"><p>It validates every incoming request's access token (signature and claims) before allowing routing to internal services — an unauthenticated or invalid request is rejected at the Gateway itself, never reaching Accounts, Loans, or Cards.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q8-faang">
+        <details class="qa"><summary>Does token acquisition and token validation need to happen through the same request path, or are these genuinely separate transactions?</summary><div class="qa-answer"><p>Genuinely separate — token acquisition (the caller obtaining a token from Keycloak) is a completely independent transaction from token usage (the caller presenting that already-obtained token to the Gateway on a subsequent, separate API call). The caller typically acquires a token once and reuses it across many subsequent API calls until it expires, rather than fetching a fresh token before every single request — an important operational detail, since re-authenticating with Keycloak on every API call would add unnecessary latency and load to the Authorization Server for no security benefit, given the token itself already carries verifiable proof of authorization for its full validity window.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="keycloak-setup">
+    <div class="topic-head"><span class="topic-no">188</span><h2>Setup of Auth Server Using KeyCloak</h2></div>
+    <p class="topic-sub">Getting Keycloak running, and the concept of a Realm.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">docker run — Keycloak</div></div>
+      <div class="code-body"><div class="code-pane active"><pre>$ docker run -p 7080:8080 \
+    -e KEYCLOAK_ADMIN=admin \
+    -e KEYCLOAK_ADMIN_PASSWORD=admin \
+    quay.io/keycloak/keycloak:latest start-dev</pre></div></div>
+    </div>
+
+    <h3 class="subhead">Realms — Keycloak's tenant isolation concept</h3>
+    <p>A <strong>Realm</strong> is an isolated namespace within Keycloak — its own set of clients, users, roles, and configuration, completely separate from any other realm on the same Keycloak instance. This is directly analogous to a multi-tenant system's tenant isolation: one Keycloak deployment can serve entirely separate applications/organizations (or separate environments — dev/staging/prod) without their clients or users ever mixing. For this course, a dedicated realm (e.g. `eazybank`) is created to hold everything specific to this system.</p>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q9-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q9-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q9-common">
+        <details class="qa"><summary>What is a Keycloak Realm?</summary><div class="qa-answer"><p>An isolated namespace within a Keycloak instance, containing its own set of clients, users, roles, and configuration — completely separate from any other realm on the same instance.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q9-faang">
+        <details class="qa"><summary>Would you use separate realms for dev/staging/prod, or separate Keycloak deployments entirely?</summary><div class="qa-answer"><p>Both patterns are used in practice, with different trade-offs: separate realms on one shared Keycloak deployment reduce infrastructure overhead (one system to operate) and are simpler for smaller teams, but mean a Keycloak-level outage or misconfiguration risks affecting every environment simultaneously, and it requires careful realm-level access control to prevent, say, a developer with staging-realm access from accidentally touching production realm configuration. Fully separate Keycloak deployments per environment (a common pattern for anything security-sensitive, like a production identity system) provide genuine blast-radius isolation — a staging environment issue can never affect production's actual identity infrastructure at all — at the cost of more infrastructure to operate and keep configuration consistent across. For genuinely production, security-critical identity infrastructure, most mature organizations lean toward separate deployments (or at minimum, very strong access boundaries) for production specifically, even if lower environments share more.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="register-client-cc">
+    <div class="topic-head"><span class="topic-no">189</span><h2>Register Client Details Inside KeyCloak for Client Credentials Grant Flow</h2></div>
+    <p class="topic-sub">The specific settings that enable this exact grant type.</p>
+
+    <table>
+      <tr><th>Setting</th><th>Value / purpose</th></tr>
+      <tr><td><strong>Client ID</strong></td><td>A unique identifier for this client (e.g. `eazybank-client`) — used in token requests</td></tr>
+      <tr><td><strong>Client authentication</strong></td><td>Enabled — this marks the client as <strong>confidential</strong> (requires a secret), a prerequisite for Client Credentials</td></tr>
+      <tr><td><strong>Service accounts roles</strong></td><td>Enabled — this specific toggle is what actually turns on support for the Client Credentials grant type in Keycloak; it creates an internal "service account" identity representing the client itself</td></tr>
+      <tr><td><strong>Client secret</strong></td><td>Auto-generated by Keycloak once client authentication is enabled — copied into the caller's configuration alongside the client ID</td></tr>
+    </table>
+
+    <div class="callout info"><b class="lbl">Confidential vs public clients — a distinction worth being precise about</b><p>A <strong>confidential client</strong> can securely hold a secret (a backend service, run in an environment the organization controls) and is required for Client Credentials. A <strong>public client</strong> cannot securely hold a secret (a browser SPA, a mobile app) — this is exactly the category that needs the Authorization Code flow (with PKCE) instead, covered from topic 195 onward, and is precisely the distinction raised in topic 186's FAANG answer about why Client Credentials can't be used from a mobile app or browser.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q10-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q10-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q10-common">
+        <details class="qa"><summary>What Keycloak client setting specifically enables the Client Credentials grant type?</summary><div class="qa-answer"><p>"Service accounts roles" — enabling this on a confidential client (one with "Client authentication" turned on) turns on support for the Client Credentials grant, creating an internal service account identity representing the client itself.</p></div></details>
+        <details class="qa"><summary>What's the difference between a confidential client and a public client?</summary><div class="qa-answer"><p>A confidential client can securely store a secret (e.g. a backend service) and is required for flows like Client Credentials. A public client (a browser SPA or mobile app) can't securely hold a secret and needs a different flow — Authorization Code with PKCE — designed for that constraint.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q10-faang">
+        <details class="qa"><summary>What security practice should govern how a client_secret is actually stored and injected into the calling application, once generated?</summary><div class="qa-answer"><p>Never hardcoded into source code or committed to version control — this is exactly the secrets-management discipline covered back in Section 6 (Spring Cloud Config's encryption support, or an external secrets manager) applied here to an OAuth2 client secret specifically. The secret should be injected at deploy time via an environment variable or a dedicated secrets manager, exactly the same pattern used for database credentials throughout this course, and ideally rotated periodically — a leaked client_secret is functionally equivalent to an attacker being able to impersonate that client and obtain valid, fully-authorized access tokens at will, a serious compromise worth treating with the same operational rigor as any other production credential.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="get-access-token">
+    <div class="topic-head"><span class="topic-no">190</span><h2>Getting Access Token from Auth Server in Client Credentials Grant Flow</h2></div>
+    <p class="topic-sub">The actual HTTP request, and what's inside the JWT that comes back.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="gt1">Token request</div>
+        <div class="code-tab" data-pane="gt2">Decoded JWT payload (conceptual)</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="gt1"><pre>$ curl -X POST \
+  http://localhost:7080/realms/eazybank/protocol/openid-connect/token \
+  -H <span class="str">"Content-Type: application/x-www-form-urlencoded"</span> \
+  -d <span class="str">"grant_type=client_credentials"</span> \
+  -d <span class="str">"client_id=eazybank-client"</span> \
+  -d <span class="str">"client_secret=&lt;secret&gt;"</span>
+
+<span class="cm"># response:</span>
+{
+  <span class="str">"access_token"</span>: <span class="str">"eyJhbGciOiJSUzI1NiIs..."</span>,
+  <span class="str">"expires_in"</span>: <span class="str">300</span>,
+  <span class="str">"token_type"</span>: <span class="str">"Bearer"</span>
+}</pre></div>
+        <div class="code-pane" id="gt2"><pre>{
+  <span class="str">"iss"</span>: <span class="str">"http://keycloak:7080/realms/eazybank"</span>,
+  <span class="str">"sub"</span>: <span class="str">"service-account-eazybank-client"</span>,
+  <span class="str">"exp"</span>: <span class="str">1712345678</span>,
+  <span class="str">"iat"</span>: <span class="str">1712345378</span>,
+  <span class="str">"scope"</span>: <span class="str">"profile email"</span>,
+  <span class="str">"realm_access"</span>: { <span class="str">"roles"</span>: [<span class="str">"ACCOUNTS"</span>] },
+  <span class="str">"azp"</span>: <span class="str">"eazybank-client"</span>
+}</pre></div>
+      </div>
+    </div>
+
+    <h3 class="subhead">JWT structure — header.payload.signature</h3>
+    <p>The returned access token is a <strong>JWT (JSON Web Token)</strong>: three base64url-encoded segments separated by dots — a <strong>header</strong> (algorithm/key metadata), a <strong>payload</strong> (the claims shown above), and a <strong>signature</strong> (cryptographically signed by Keycloak's private key). Crucially, JWTs are <strong>self-contained and independently verifiable</strong> — a resource server can validate a JWT's signature (using Keycloak's <em>public</em> key, fetched from a standard JWKS endpoint) entirely on its own, without needing to call back to Keycloak on every single request.</p>
+
+    <div class="callout warn"><b class="lbl">This "stateless validation" property is a genuinely important architectural fact</b><p>Unlike an <strong>opaque token</strong> (a random-looking string with no embedded meaning, which requires the resource server to call an <em>introspection endpoint</em> on the Authorization Server for every single validation), a JWT lets the Gateway validate tokens locally and independently — fast, no extra network round-trip per request, no added load on Keycloak proportional to API traffic. The trade-off: since validation is local and doesn't consult Keycloak live, a JWT <strong>can't be instantly revoked</strong> before its natural expiration — this specific trade-off is a very common, precise follow-up question.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q11-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q11-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q11-common">
+        <details class="qa"><summary>What are the three parts of a JWT?</summary><div class="qa-answer"><p>Header (algorithm/key metadata), payload (the claims — identity/authorization information), and signature (cryptographic proof the token hasn't been tampered with), each base64url-encoded and separated by dots.</p></div></details>
+        <details class="qa"><summary>Why can a resource server validate a JWT without calling back to the Authorization Server?</summary><div class="qa-answer"><p>Because a JWT's signature can be independently verified using the Authorization Server's public key (fetched once from a standard JWKS endpoint) — the token is self-contained proof, so validation is a local cryptographic check, not a live network call to Keycloak on every request.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q11-faang">
+        <details class="qa"><summary>Given that JWTs can't be instantly revoked, how would you handle needing to immediately invalidate a compromised token or a terminated user's access?</summary><div class="qa-answer"><p>Several complementary mitigations, none of which fully restore instant revocation without giving up JWT's stateless-validation benefit entirely: (1) keep access token lifetimes genuinely short (minutes, not hours) so any compromise has a small, bounded window regardless — the primary, simplest mitigation; (2) maintain a server-side <strong>token blocklist/denylist</strong> for genuinely urgent revocations (a compromised token, an immediately-terminated employee) that the resource server checks in addition to signature validation — this sacrifices some of the "no extra lookup needed" benefit specifically for the rare urgent-revocation case, rather than for every request; (3) for the refresh token specifically (which is typically opaque/checked against the Authorization Server, not a self-contained JWT in many implementations), revoking it prevents obtaining any *new* access tokens going forward, even though already-issued access tokens remain valid until their own natural, short expiry. Explicitly weighing "instant revocability" against "stateless validation performance" as a genuine trade-off — rather than claiming JWTs are either strictly better or strictly worse than opaque tokens — is exactly the kind of nuanced answer that distinguishes strong candidates on this specific, frequently-asked question.</p></div></details>
+        <details class="qa"><summary>What is a JWKS endpoint, and why does the resource server need to fetch keys from it rather than hardcoding Keycloak's public key?</summary><div class="qa-answer"><p>JWKS (JSON Web Key Set) is a standardized endpoint (part of the OIDC discovery mechanism, typically at `/realms/{realm}/protocol/openid-connect/certs`) exposing the Authorization Server's current public signing key(s) in a standard format. Fetching keys dynamically from this endpoint — rather than hardcoding a specific public key value into the resource server's configuration — allows the Authorization Server to <strong>rotate its signing keys</strong> periodically (a security best practice, limiting the impact if a private signing key were ever somehow compromised) without requiring every resource server across the organization to be manually reconfigured with a new hardcoded key every time rotation happens; resource servers typically cache the JWKS response but refresh it periodically or when they encounter a token signed with a key ID (`kid` in the JWT header) they don't currently recognize, seamlessly picking up newly-rotated keys.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="gateway-resource-server">
+    <div class="topic-head"><span class="topic-no">191-192</span><h2>Securing Gateway Server as a Resource Server</h2></div>
+    <p class="topic-sub">The actual Spring Security configuration — reactive, since the Gateway runs on WebFlux (Section 9).</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="rs1">pom.xml</div>
+        <div class="code-tab" data-pane="rs2">application.yml</div>
+        <div class="code-tab" data-pane="rs3">SecurityConfig.java</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="rs1"><pre>&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-oauth2-resource-server&lt;/artifactId&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-security&lt;/artifactId&gt;
+&lt;/dependency&gt;</pre></div>
+        <div class="code-pane" id="rs2"><pre><span class="cl">spring</span>:
+  <span class="cl">security</span>:
+    <span class="cl">oauth2</span>:
+      <span class="cl">resourceserver</span>:
+        <span class="cl">jwt</span>:
+          <span class="cl">issuer-uri</span>: <span class="str">http://keycloak:7080/realms/eazybank</span></pre></div>
+        <div class="code-pane" id="rs3"><pre><span class="ann">@Configuration</span>
+<span class="ann">@EnableWebFluxSecurity</span>
+<span class="kw">public</span> <span class="kw">class</span> <span class="cl">SecurityConfig</span> {
+
+    <span class="ann">@Bean</span>
+    <span class="kw">public</span> SecurityWebFilterChain securityWebFilterChain(
+            ServerHttpSecurity serverHttpSecurity) {
+        <span class="kw">return</span> serverHttpSecurity
+            .authorizeExchange(exchange -&gt; exchange
+                .anyExchange().authenticated())
+            .oauth2ResourceServer(oauth2 -&gt; oauth2.jwt(withDefaults()))
+            .csrf(ServerHttpSecurity.CsrfSpec::disable)
+            .build();
+    }
+}</pre></div>
+      </div>
+    </div>
+
+    <h3 class="subhead">Annotation & configuration reference</h3>
+    <div class="ann-grid">
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">issuer-uri</span></div><div class="ann-body"><p>Points Spring Security at Keycloak's realm — from this single URL, Spring Security's OAuth2 Resource Server auto-configuration discovers the JWKS endpoint (topic 190's FAANG answer), the expected issuer claim to validate against, and other OIDC discovery metadata automatically, rather than needing every piece configured by hand.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">@EnableWebFluxSecurity</span></div><div class="ann-body"><p>The reactive counterpart to the more commonly-seen `@EnableWebSecurity` — required because the Gateway runs on WebFlux (Section 9's architectural choice), not traditional Servlet-based Spring MVC; using the wrong annotation here is a very plausible, specific mistake to make if copying security config from a non-reactive service.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">.oauth2ResourceServer(oauth2 -&gt; oauth2.jwt(...))</span></div><div class="ann-body"><p>Enables JWT-based Resource Server behavior — every incoming request now needs a valid Bearer token, validated automatically (signature, expiration, issuer) using the JWKS keys discovered via `issuer-uri`.</p></div></div>
+      <div class="ann-box"><div class="ann-box-head"><span class="ann-tag">.anyExchange().authenticated()</span></div><div class="ann-body"><p>The simplest possible authorization rule — every request requires a valid, authenticated token, with no exceptions. Topics 193-194 refine this into per-route, role-specific rules rather than this blanket all-or-nothing gate.</p></div></div>
+    </div>
+
+    <div class="callout pitfall"><b class="lbl">Don't disable CSRF protection casually — understand why it's safe here specifically</b><p>Disabling CSRF protection (as shown above) is only appropriate because this is a stateless, token-based API (Bearer tokens explicitly attached per-request, not browser-managed cookies/sessions) — CSRF attacks specifically exploit browsers automatically attaching session cookies to cross-site requests, a vulnerability model that doesn't apply to token-based APIs where the client must deliberately attach the Authorization header itself. Disabling CSRF on a genuinely cookie/session-based application would be a real, serious vulnerability — the safety of this specific configuration depends entirely on the token-based, stateless nature of this API, not a general rule that CSRF protection is unnecessary.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q12-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q12-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q12-common">
+        <details class="qa"><summary>What does the issuer-uri property enable Spring Security to do automatically?</summary><div class="qa-answer"><p>It triggers OIDC discovery — Spring Security automatically finds the JWKS endpoint (for signature verification) and the expected issuer to validate against, from this single configured URL, rather than needing each piece manually configured.</p></div></details>
+        <details class="qa"><summary>Why does this Gateway security config use @EnableWebFluxSecurity instead of @EnableWebSecurity?</summary><div class="qa-answer"><p>Because the Gateway runs on the reactive WebFlux stack (established back in Section 9), not traditional Servlet-based Spring MVC — `@EnableWebFluxSecurity` is the reactive-stack-specific equivalent needed for Spring Security to work correctly in this environment.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q12-faang">
+        <details class="qa"><summary>Is it safe to disable CSRF protection here, and under what circumstances would it NOT be safe?</summary><div class="qa-answer"><p>Safe here specifically because this is a stateless, Bearer-token-based API — CSRF exploits the browser's automatic cookie attachment behavior on cross-site requests, which simply doesn't apply when authorization requires an explicit, deliberately-attached `Authorization` header the browser won't automatically send cross-site. It would NOT be safe to disable CSRF protection on an application relying on cookie-based session authentication (where the browser automatically includes credentials on every request to that domain, including ones triggered by a malicious third-party site) — disabling CSRF there removes a real, necessary defense. This is a good example of a security configuration choice that's correct <em>because of specific architectural context</em> (stateless token auth) rather than a universally-safe default, and articulating that reasoning explicitly is a stronger interview answer than just stating the config is fine.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="role-authorization">
+    <div class="topic-head"><span class="topic-no">193-194</span><h2>Implementing Authorization Inside Gateway Server Using Roles</h2></div>
+    <p class="topic-sub">Moving from "is this request authenticated at all" to "is this specific caller allowed to do this specific thing."</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="ra1">SecurityConfig.java — role-based route rules</div>
+        <div class="code-tab" data-pane="ra2">Custom JWT authorities converter</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="ra1"><pre><span class="ann">@Bean</span>
+<span class="kw">public</span> SecurityWebFilterChain securityWebFilterChain(
+        ServerHttpSecurity serverHttpSecurity) {
+    <span class="kw">return</span> serverHttpSecurity
+        .authorizeExchange(exchange -&gt; exchange
+            .pathMatchers(<span class="str">"/eazybank/accounts/**"</span>).hasRole(<span class="str">"ACCOUNTS"</span>)
+            .pathMatchers(<span class="str">"/eazybank/loans/**"</span>).hasRole(<span class="str">"LOANS"</span>)
+            .pathMatchers(<span class="str">"/eazybank/cards/**"</span>).hasRole(<span class="str">"CARDS"</span>)
+            .anyExchange().authenticated())
+        .oauth2ResourceServer(oauth2 -&gt; oauth2.jwt(jwtSpec -&gt; jwtSpec
+            .jwtAuthenticationConverter(grantedAuthoritiesExtractor())))
+        .csrf(ServerHttpSecurity.CsrfSpec::disable)
+        .build();
+}</pre></div>
+        <div class="code-pane" id="ra2"><pre><span class="kw">private</span> Converter&lt;Jwt, Mono&lt;AbstractAuthenticationToken&gt;&gt; grantedAuthoritiesExtractor() {
+    <span class="kw">var</span> jwtAuthenticationConverter = <span class="kw">new</span> JwtAuthenticationConverter();
+    jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(<span class="kw">new</span> KeycloakRoleConverter());
+    <span class="kw">return</span> <span class="kw">new</span> ReactiveJwtAuthenticationConverterAdapter(jwtAuthenticationConverter);
+}
+
+<span class="cm">// KeycloakRoleConverter reads realm_access.roles from the JWT claims</span>
+<span class="cm">// and maps each role into a Spring Security GrantedAuthority,</span>
+<span class="cm">// prefixed "ROLE_" so hasRole("ACCOUNTS") correctly matches "ROLE_ACCOUNTS"</span></pre></div>
+      </div>
+    </div>
+
+    <h3 class="subhead">Why a custom converter is needed at all</h3>
+    <p>Keycloak embeds roles inside the JWT under a Keycloak-specific claim structure (`realm_access.roles`, an array), which doesn't match Spring Security's default expectation for where authorities live in a JWT. A custom <code>Converter</code> bridges this gap — extracting Keycloak's specific claim structure and mapping each role string into a proper Spring Security <code>GrantedAuthority</code> (conventionally prefixed <code>ROLE_</code>, which is what makes <code>.hasRole("ACCOUNTS")</code> — which implicitly checks for `ROLE_ACCOUNTS` — actually work correctly).</p>
+
+    <div class="callout warn"><b class="lbl">This is genuinely a common, specific integration gotcha worth knowing by name</b><p>Spring Security's OAuth2 Resource Server support is written generically to work with any OIDC-compliant provider, but different Authorization Servers structure their role/authority claims differently in the JWT payload — what works out-of-the-box for one IAM provider's token structure often doesn't for another's, and Keycloak's `realm_access.roles` nesting specifically requires this custom converter. Encountering `hasRole(...)` checks silently always failing/denying, despite a token that clearly contains the expected role when manually decoded, is a very plausible real debugging scenario this custom converter directly explains.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q13-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q13-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q13-common">
+        <details class="qa"><summary>Why is a custom JWT authorities converter needed when integrating Keycloak with Spring Security?</summary><div class="qa-answer"><p>Keycloak embeds roles under its own specific claim structure (`realm_access.roles`), which doesn't match Spring Security's default expectations for where authorities live in a JWT — the custom converter extracts Keycloak's claim structure and maps each role into a proper Spring Security GrantedAuthority.</p></div></details>
+        <details class="qa"><summary>Why does the converter prefix roles with "ROLE_"?</summary><div class="qa-answer"><p>Because Spring Security's `hasRole("ACCOUNTS")` check conventionally looks for an authority named `ROLE_ACCOUNTS` internally — without the prefix being applied during conversion, role checks would silently fail to match even if the underlying role data is otherwise correct.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q13-faang">
+        <details class="qa"><summary>Should role checks like hasRole("ACCOUNTS") be based on realm-level roles or client-specific roles in Keycloak, and what's the difference?</summary><div class="qa-answer"><p>Keycloak supports both <strong>realm roles</strong> (global to the whole realm, embedded under `realm_access.roles`, as used in this example) and <strong>client roles</strong> (scoped to a specific registered client, embedded under `resource_access.{client_id}.roles`) — the choice matters architecturally: realm roles are appropriate for genuinely cross-cutting permission concepts shared meaningfully across multiple clients/applications in the realm, while client roles are better for permissions genuinely specific to one particular application's own authorization model, keeping that application's role vocabulary from polluting the shared realm-wide namespace. For a system like this course's, where roles like ACCOUNTS/LOANS/CARDS are specifically about which Gateway route a caller can access — arguably a Gateway-specific authorization concern rather than a realm-wide identity concept — a case could be made either way depending on whether other clients in the realm would ever meaningfully care about these same role names; this is a genuine design decision worth being able to discuss with reasoning rather than a single universally-correct answer.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="auth-code-deepdive">
+    <div class="topic-head"><span class="topic-no">195</span><h2>Deep Dive of Authorization Code Grant Type Flow</h2></div>
+    <p class="topic-sub">The gold-standard flow for real end users — significantly more involved than Client Credentials, deliberately so.</p>
+
+    <h3 class="subhead">When this flow applies</h3>
+    <p>Used whenever a real human resource owner is involved — logging into a web application, a mobile app, any user-facing "Sign in" experience. Unlike Client Credentials, this flow requires the user to actively authenticate (and consent) via a browser redirect to the Authorization Server directly — the client application itself never sees the user's actual password.</p>
+
+    <div class="diagram">
+      <div class="dcol">
+        <div class="dflow">
+          <div class="dbox"><div class="t">User's browser</div></div>
+          <div class="darrow">1. redirect to /authorize →</div>
+          <div class="dbox warn"><div class="t">Keycloak login page</div></div>
+        </div>
+        <div class="dflow" style="margin-top:8px;">
+          <div class="dbox warn"><div class="t">User authenticates + consents</div></div>
+          <div class="darrow">2. redirect back with code →</div>
+          <div class="dbox"><div class="t">Client's redirect_uri</div></div>
+        </div>
+        <div class="dflow" style="margin-top:8px;">
+          <div class="dbox"><div class="t">Client backend</div></div>
+          <div class="darrow">3. exchange code (back-channel) →</div>
+          <div class="dbox accent"><div class="t">Keycloak /token endpoint</div></div>
+          <div class="darrow">4. access + refresh + ID token →</div>
+          <div class="dbox"><div class="t">Client backend</div></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="seq-list">
+      <li>The client redirects the user's browser to the Authorization Server's `/authorize` endpoint, including its `client_id`, requested `scope` (including `openid` for OIDC), and a `redirect_uri`.</li>
+      <li>The user authenticates directly with Keycloak (enters credentials on Keycloak's own login page — the client application never sees the password) and, if required, explicitly consents to the requested scopes.</li>
+      <li>Keycloak redirects the browser back to the client's `redirect_uri`, appending a short-lived, single-use <strong>authorization code</strong> as a query parameter.</li>
+      <li>The client's <strong>backend</strong> (not the browser) exchanges this code — along with its own `client_id`/`client_secret` — for tokens at Keycloak's `/token` endpoint, a direct back-channel server-to-server request.</li>
+      <li>Keycloak returns an access token, refresh token, and (since `openid` scope was requested) an ID token.</li>
+    </ol>
+
+    <h3 class="subhead">Why the extra "code" indirection step exists — the single most important nuance of this flow</h3>
+    <p>A simpler-seeming design might have Keycloak redirect the browser directly back with the access token itself attached to the URL. This was actually an earlier, now-deprecated OAuth2 flow (the "Implicit" grant) — and it's insecure specifically because <strong>browser URLs are a leaky channel</strong>: they can appear in browser history, get logged by web servers/proxies along the redirect chain, leak via the `Referer` header to any third-party resources the page subsequently loads, and are visible to any browser extension. The Authorization Code flow instead puts only a <strong>short-lived, single-use code</strong> — not the actual token — through this leaky browser channel; the real token exchange happens over a secure, direct back-channel connection between the client's backend and Keycloak, a channel never exposed to the browser or any of those leak vectors at all.</p>
+
+    <div class="callout info"><b class="lbl">PKCE — the extension that makes this flow safe for public clients too</b><p><strong>PKCE (Proof Key for Code Exchange)</strong> extends this flow specifically for <strong>public clients</strong> (mobile apps, browser SPAs) that can't securely hold a `client_secret` at all. The client generates a random secret (`code_verifier`) locally, sends a hashed version (`code_challenge`) with the initial authorization request, and must present the original `code_verifier` when exchanging the authorization code for a token — meaning even if the authorization code itself were somehow intercepted mid-flow, an attacker without the original `code_verifier` (which never left the legitimate client) couldn't complete the exchange. PKCE is now recommended for confidential clients too, as defense-in-depth, not just public ones.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q14-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q14-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q14-common">
+        <details class="qa"><summary>Why does the Authorization Code flow redirect back with a code instead of the access token directly?</summary><div class="qa-answer"><p>Because browser URLs are a leaky channel (browser history, server logs, Referer headers, browser extensions) — putting a short-lived, single-use code through that channel instead of the actual token, then exchanging that code for the real token over a secure server-to-server back-channel, keeps the actual token out of the leaky browser-facing path entirely.</p></div></details>
+        <details class="qa"><summary>What is PKCE, and why is it needed?</summary><div class="qa-answer"><p>Proof Key for Code Exchange — an extension letting public clients (mobile apps, browser SPAs, which can't securely hold a client secret) safely use the Authorization Code flow, by requiring the client to prove it's the same entity that initiated the flow via a locally-generated secret (code_verifier/code_challenge pair) rather than relying on a client_secret.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q14-faang">
+        <details class="qa"><summary>Why was the older Implicit grant deprecated, and what specifically made it insecure compared to Authorization Code?</summary><div class="qa-answer"><p>The Implicit grant returned the access token directly in the browser redirect URL fragment, skipping the code-exchange step entirely — meaning the actual, usable access token itself was exposed to every leaky channel a URL passes through (browser history, potentially server/proxy logs depending on configuration, browser extensions with URL access, and in some cases the Referer header if not carefully handled). Beyond exposure risk, the Implicit grant also had no secure mechanism to verify the token wasn't intercepted or substituted in transit, and typically didn't support refresh tokens safely (since a public client receiving a long-lived refresh token directly via a leaky browser channel would compound the exposure risk significantly). The Authorization Code flow (with PKCE for public clients) is now the universally recommended replacement — OAuth2 security best-practice guidance (RFC 8252 and the OAuth 2.0 Security Best Current Practice document) formally deprecates the Implicit grant for exactly these reasons.</p></div></details>
+        <details class="qa"><summary>Walk through exactly why PKCE's code_verifier/code_challenge mechanism defeats an authorization code interception attack.</summary><div class="qa-answer"><p>Without PKCE, if an attacker could somehow intercept the authorization code as it's redirected back to the client (e.g. via a malicious app registering the same custom URL scheme on a mobile device, a documented real attack vector for mobile OAuth2 flows), they could exchange that intercepted code for a real access token themselves, since the code alone was sufficient. With PKCE: the legitimate client generates a random `code_verifier`, computes a hash of it (`code_challenge`), and sends only the hash with the initial authorization request — Keycloak stores this hash, associated with the eventual authorization code it issues. When exchanging the code for a token, the client must supply the original, unhashed `code_verifier`; Keycloak re-hashes it and confirms it matches the `code_challenge` stored earlier for that specific code. An attacker who intercepted only the authorization code (not the original `code_verifier`, which never left the legitimate client's memory) cannot produce a matching `code_verifier`, so the token exchange fails even with a valid, intercepted code in hand — the code alone is no longer sufficient, which is precisely what closes this specific attack vector.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="auth-code-theory">
+    <div class="topic-head"><span class="topic-no">196</span><h2>Securing Gateway Server Using Authorization Code Grant Type Flow — Theory</h2></div>
+    <p class="topic-sub">Applying the flow to a genuine user-facing scenario in this course's system.</p>
+
+    <p>For an actual eazybank customer logging into a web or mobile front-end, the Authorization Code flow (not Client Credentials) is the correct choice — a real resource owner is involved, and their credentials must never be handled directly by the client application. The front-end client redirects to Keycloak's login page, the customer authenticates, and the resulting access token (carrying the customer's own identity and role claims) is what gets presented to the Gateway on subsequent API calls — the same Resource Server validation logic from topics 191-194 applies unchanged, since from the Gateway's perspective, a valid JWT is a valid JWT regardless of which grant type originally produced it.</p>
+
+    <div class="callout info"><b class="lbl">Why the Gateway-side code doesn't need to change between the two flows</b><p>This is a genuinely elegant property worth calling out explicitly: the Resource Server configuration built in topics 191-194 validates JWTs based on their signature, issuer, and claims — it has no awareness of, or dependency on, which specific grant type produced the token in the first place. Whether a token arrived via Client Credentials (topic 190) or Authorization Code (this flow), the Gateway's validation and role-based authorization logic works identically, unchanged.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q15-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q15-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q15-common">
+        <details class="qa"><summary>Does the Gateway's Resource Server configuration need to change depending on which grant type produced the token?</summary><div class="qa-answer"><p>No — the Gateway validates JWTs based on signature, issuer, and claims, independent of which grant type originally produced the token; the same Resource Server config works identically for tokens from either Client Credentials or Authorization Code flows.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q15-faang">
+        <details class="qa"><summary>If both a machine client (via Client Credentials) and a real user (via Authorization Code) can obtain tokens that pass the same Gateway validation, how would the Gateway or downstream services distinguish "this is a service acting on its own behalf" from "this is a request on behalf of a specific user"?</summary><div class="qa-answer"><p>By inspecting specific claims within the validated JWT itself — the `sub` (subject) claim differs meaningfully between the two cases (a service-account identifier like `service-account-eazybank-client` for Client Credentials tokens, versus an actual user ID for Authorization Code tokens), and the `azp` (authorized party) claim identifies which client obtained the token. Downstream business logic that needs to behave differently depending on whether a request is genuinely user-initiated versus system-initiated (e.g. an audit log wanting to record "which human customer initiated this" versus "this was an automated batch process") would inspect these specific claims rather than assuming all validated tokens represent the same kind of caller — a good illustration that "the token is valid" and "who/what does this token actually represent" are related but distinct questions worth answering explicitly in code that cares about the difference.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="register-client-ac">
+    <div class="topic-head"><span class="topic-no">197</span><h2>Register Client & End User Inside KeyCloak for Authorization Code Grant Flow</h2></div>
+    <p class="topic-sub">Different client settings than Client Credentials — plus creating an actual test human user for the first time.</p>
+
+    <table>
+      <tr><th>Setting</th><th>Value / purpose</th></tr>
+      <tr><td><strong>Client authentication</strong></td><td>Depends on client type — enabled (confidential) for a server-rendered web app that can hold a secret; disabled (public) for a browser SPA or mobile app, which instead relies on PKCE</td></tr>
+      <tr><td><strong>Standard flow enabled</strong></td><td>This is the specific toggle enabling Authorization Code grant support (distinct from "Service accounts roles," which was Client Credentials's enabling toggle in topic 189)</td></tr>
+      <tr><td><strong>Valid redirect URIs</strong></td><td>An explicit allow-list of URIs Keycloak is permitted to redirect back to after authentication — a critical security control (see callout below), never left wide open</td></tr>
+    </table>
+
+    <p>Unlike Client Credentials (which uses an automatically-generated internal service account), this flow requires an actual <strong>end user</strong> to exist in Keycloak — created directly in the realm's Users section, with a set password (or configured for a proper self-registration/password-reset flow in a real production setup) and assigned the appropriate roles for testing role-based authorization end to end.</p>
+
+    <div class="callout pitfall"><b class="lbl">Why "Valid redirect URIs" being an explicit, tightly-scoped allow-list matters so much</b><p>If Keycloak allowed redirecting to <em>any</em> URI a request happened to specify, an attacker could craft a malicious authorization request specifying <strong>their own</strong> server as the `redirect_uri` — tricking a user into authenticating through a legitimate-looking flow, only for the resulting authorization code (or, in some historical misconfigurations, even the token) to be delivered straight to the attacker's server instead of the legitimate application. This exact class of vulnerability (open redirect in OAuth2 flows) is a real, well-documented attack pattern — configuring a tight, explicit allow-list of legitimate redirect URIs (never a wildcard in production) is a genuinely load-bearing security control, not a minor configuration detail.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q16-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q16-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q16-common">
+        <details class="qa"><summary>What Keycloak setting specifically enables the Authorization Code grant type, distinct from Client Credentials?</summary><div class="qa-answer"><p>"Standard flow enabled" — a different toggle from "Service accounts roles" (which enables Client Credentials), reflecting that these are genuinely different grant types with independently configurable support per client.</p></div></details>
+        <details class="qa"><summary>Why does this flow require an actual end user to exist in Keycloak, unlike Client Credentials?</summary><div class="qa-answer"><p>Because a real resource owner is involved in this flow — the user must actually authenticate with their own credentials against Keycloak's login page, so a genuine user account (username/password, assigned roles) needs to exist to test and use this flow, unlike Client Credentials which uses an automatically-generated internal service account representing the client itself.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q16-faang">
+        <details class="qa"><summary>Why is a wildcard or overly permissive redirect_uri configuration considered a serious vulnerability, specifically?</summary><div class="qa-answer"><p>It enables an open-redirect-style attack against the OAuth2 flow itself — an attacker crafts an authorization request specifying their own malicious server as the `redirect_uri`; if Keycloak doesn't strictly validate this against a pre-registered allow-list, it will happily redirect the user's browser (post-authentication) to the attacker's server with the authorization code attached, letting the attacker complete the code-exchange themselves and obtain a valid access token representing the victim's identity — effectively account takeover, despite the user having "correctly" authenticated with their real credentials at the legitimate Keycloak login page the whole time. This is precisely why strict redirect URI validation is called out explicitly in OAuth2 security best-practice guidance as a mandatory control, not an optional hardening step — it's one of the most consequential single misconfigurations possible in an OAuth2 deployment.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="auth-code-demo">
+    <div class="topic-head"><span class="topic-no">198</span><h2>Demo of Authorization Code Grant Type Flow</h2></div>
+    <p class="topic-sub">Walking the full flow end to end, and inspecting what actually comes back.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs">
+        <div class="code-tab active" data-pane="acd1">1. Authorization request (browser)</div>
+        <div class="code-tab" data-pane="acd2">2. Token exchange (back-channel)</div>
+      </div>
+      <div class="code-body">
+        <div class="code-pane active" id="acd1"><pre><span class="cm"># browser is directed to:</span>
+GET http://localhost:7080/realms/eazybank/protocol/openid-connect/auth
+    ?client_id=eazybank-webapp
+    &amp;redirect_uri=http://localhost:8080/callback
+    &amp;response_type=code
+    &amp;scope=openid profile email
+    &amp;state=&lt;random-anti-csrf-value&gt;
+
+<span class="cm"># after login + consent, Keycloak redirects to:</span>
+http://localhost:8080/callback?code=&lt;auth-code&gt;&amp;state=&lt;same-value&gt;</pre></div>
+        <div class="code-pane" id="acd2"><pre>$ curl -X POST \
+  http://localhost:7080/realms/eazybank/protocol/openid-connect/token \
+  -d <span class="str">"grant_type=authorization_code"</span> \
+  -d <span class="str">"client_id=eazybank-webapp"</span> \
+  -d <span class="str">"client_secret=&lt;secret&gt;"</span> \
+  -d <span class="str">"code=&lt;auth-code&gt;"</span> \
+  -d <span class="str">"redirect_uri=http://localhost:8080/callback"</span>
+
+<span class="cm"># response includes access_token, refresh_token, AND id_token</span>
+<span class="cm"># (id_token present specifically because "openid" scope was requested)</span></pre></div>
+      </div>
+    </div>
+
+    <div class="ann-box">
+      <div class="ann-box-head"><span class="ann-tag">state</span></div>
+      <div class="ann-body"><p>A random value the client generates and includes in the initial authorization request, then verifies matches on the redirect back — a CSRF-protection mechanism specifically for the OAuth2 flow itself, ensuring the authorization response genuinely corresponds to a request this client actually initiated, not a forged callback an attacker is attempting to inject.</p></div>
+    </div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q17-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q17-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q17-common">
+        <details class="qa"><summary>What's the purpose of the state parameter in the Authorization Code flow?</summary><div class="qa-answer"><p>A random value generated by the client and verified on the redirect back, protecting against CSRF attacks against the OAuth2 flow itself — ensuring the authorization response actually corresponds to a request this specific client genuinely initiated.</p></div></details>
+        <details class="qa"><summary>Which three tokens are typically present in the final token response for this flow, and why?</summary><div class="qa-answer"><p>Access token (for calling APIs), refresh token (for obtaining new access tokens later without re-authentication), and ID token (present specifically because the `openid` scope was requested, per topic 184's OIDC coverage) — providing authorization for API calls plus verified user identity information.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q17-faang">
+        <details class="qa"><summary>What would go wrong if a client skipped validating the state parameter on the redirect back?</summary><div class="qa-answer"><p>Without state validation, an attacker could potentially initiate their own authorization flow (obtaining their own valid authorization code, tied to their own account), then trick a victim's browser into visiting the callback URL with the attacker's code attached — if the victim's client-side session doesn't verify the callback genuinely corresponds to a flow it initiated, it could end up completing the token exchange for the attacker's code and effectively logging the victim in as the attacker (or otherwise confusing session state), a specific CSRF-style attack against the login flow itself. This is precisely why `state` (and its more modern, cryptographically-bound cousin in some implementations) exists as a mandatory, not optional, part of a correctly-implemented Authorization Code flow.</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <section class="topic" id="docker-security-demo">
+    <div class="topic-head"><span class="topic-no">199-200</span><h2>Demo of Microservices Security Using Docker Containers & Docker Compose</h2></div>
+    <p class="topic-sub">Wiring Keycloak into the full stack, and verifying every layer of security actually works end to end.</p>
+
+    <div class="code-panel">
+      <div class="code-tabs"><div class="code-tab active">docker-compose.yml addition</div></div>
+      <div class="code-body"><div class="code-pane active"><pre><span class="cl">keycloak</span>:
+  <span class="cl">image</span>: <span class="str">quay.io/keycloak/keycloak:latest</span>
+  <span class="cl">container_name</span>: <span class="str">keycloak</span>
+  <span class="cl">command</span>: <span class="str">start-dev --import-realm</span>
+  <span class="cl">environment</span>:
+    <span class="cl">KEYCLOAK_ADMIN</span>: <span class="str">admin</span>
+    <span class="cl">KEYCLOAK_ADMIN_PASSWORD</span>: <span class="str">admin</span>
+  <span class="cl">volumes</span>:
+    - <span class="str">./realms/:/opt/keycloak/data/import/</span>
+  <span class="cl">ports</span>:
+    - <span class="str">"7080:8080"</span>
+  <span class="cl">networks</span>:
+    - <span class="str">eazybank</span>
+
+<span class="cl">gatewayserver</span>:
+  <span class="cl">environment</span>:
+    <span class="cl">SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI</span>: <span class="str">"http://keycloak:8080/realms/eazybank"</span>
+  <span class="cl">depends_on</span>:
+    <span class="cl">keycloak</span>:
+      <span class="cl">condition</span>: <span class="str">service_started</span></pre></div></div>
+    </div>
+
+    <h3 class="subhead">The full verification checklist</h3>
+    <ol>
+      <li><strong>Unauthenticated request rejected</strong>: call any Gateway route with no `Authorization` header — confirm a 401 Unauthorized, and confirm the request never actually reached Accounts/Loans/Cards (verifiable via those services' logs, tying directly back to Section 11's observability tooling).</li>
+      <li><strong>Client Credentials flow, end to end</strong>: obtain a token via topic 190's request, call the Gateway with it as a Bearer token, confirm successful routing.</li>
+      <li><strong>Role enforcement</strong>: obtain a token whose roles only grant `ACCOUNTS` access, attempt to call a `/eazybank/loans/**` route, confirm a 403 Forbidden — proving authorization (not just authentication) is genuinely enforced.</li>
+      <li><strong>Authorization Code flow, end to end</strong>: walk through the full browser-redirect login flow from topic 198, confirm the resulting user-scoped token works correctly against the Gateway.</li>
+      <li><strong>Import realm configuration for repeatability</strong>: the `--import-realm` flag plus a mounted realm export file lets the entire Keycloak realm configuration (clients, roles, a test user) be version-controlled and reproduced automatically on every `docker compose up`, rather than needing manual re-configuration through Keycloak's admin console every time the stack is rebuilt.</li>
+    </ol>
+
+    <div class="callout info"><b class="lbl">The realm-import pattern is worth understanding as a general infrastructure-as-code principle</b><p>Manually re-clicking through Keycloak's admin console to recreate clients/roles/users every time the environment is rebuilt is exactly the kind of manual, error-prone, non-reproducible setup this entire course has consistently pushed back against — from Section 6's config-as-code to Section 4's Dockerfiles. Exporting the realm configuration as a version-controlled JSON file and importing it automatically on startup applies that same infrastructure-as-code discipline to identity/security configuration specifically.</p></div>
+
+    <div class="qa-section">
+      <div class="qa-tabs">
+        <button class="qa-tab-btn common active" data-target="q18-common">Common</button>
+        <button class="qa-tab-btn faang" data-target="q18-faang">FAANG-level</button>
+      </div>
+      <div class="qa-pane active" id="q18-common">
+        <details class="qa"><summary>What HTTP status code confirms authentication is being enforced (missing/invalid token), and what confirms authorization is separately being enforced (valid token, insufficient role)?</summary><div class="qa-answer"><p>401 Unauthorized for a missing or invalid token (authentication failure). 403 Forbidden for a valid, authenticated token that lacks the required role/permission for the specific requested resource (authorization failure) — these are the concrete, testable proof points for the authentication-vs-authorization distinction established back in topic 180.</p></div></details>
+        <details class="qa"><summary>What does the --import-realm flag with a mounted realm export file achieve?</summary><div class="qa-answer"><p>It lets the entire Keycloak realm configuration (clients, roles, test users) be defined as version-controlled configuration and automatically reproduced on every startup, rather than requiring manual reconfiguration through the admin console each time the environment is rebuilt.</p></div></details>
+      </div>
+      <div class="qa-pane" id="q18-faang">
+        <details class="qa"><summary>How would you verify, using Section 11's observability tooling, that a rejected unauthenticated request genuinely never reached the internal services?</summary><div class="qa-answer"><p>Query Loki (Section 11's centralized logging pillar) scoped to Accounts/Loans/Cards's log streams for the time window of the test request — the complete absence of any log line corresponding to that request (no controller invocation logged, no correlation ID matching that call) confirms it was rejected entirely at the Gateway and never reached routing/proxying to any backend service. This is a genuinely good concrete illustration of how the observability infrastructure from Section 11 isn't just for debugging failures — it's directly useful for <em>verifying security properties empirically</em>, the same "don't just trust configuration, verify behavior" principle raised repeatedly across Sections 10 and 11 (chaos-engineering-style resiliency verification, log-to-trace navigation), now applied specifically to confirming a security boundary is genuinely being enforced as designed.</p></div></details>
+        <details class="qa"><summary>Looking back across this entire section, what's the most significant remaining security gap in this system's architecture?</summary><div class="qa-answer"><p>Internal east-west traffic (Accounts calling Loans via Feign, established in Section 8) still isn't independently secured — once a request passes the Gateway's authentication/authorization check, internal service-to-service calls proceed with no further verification, relying entirely on network-level trust (internal services not exposing ports, per Section 9) rather than genuine service-to-service authentication. This is exactly the "perimeter trust vs zero trust" tension raised back in topic 180's FAANG answer, now concretely visible as an actual architectural gap: a defense-in-depth-minded system would additionally secure internal calls (via mTLS in a service mesh, or by propagating and re-validating the original token — or a service-specific token obtained via internal Client Credentials — on internal calls too) rather than relying solely on the Gateway as a single security checkpoint for the entire system. Naming this gap explicitly, unprompted, is a strong way to demonstrate genuinely thinking through a system's security posture holistically rather than treating "we added OAuth2 at the Gateway" as a complete answer to "is this system secure."</p></div></details>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer-note">Spring Boot Bible · Section 12 of N · Standalone reference document · Generated for interview preparation</div>
+</main>
+</div>
+
+<script>
+const themeToggle = document.getElementById('themeToggle');
+const html = document.documentElement;
+function applyThemeLabel(){
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  themeToggle.innerHTML = isDark ? '🌙 Dark mode <span>⇄</span>' : '☀️ Light mode <span>⇄</span>';
+}
+themeToggle.addEventListener('click', () => {
+  const cur = html.getAttribute('data-theme');
+  html.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+  applyThemeLabel();
+  localStorage.setItem('sb-bible-theme', html.getAttribute('data-theme'));
+});
+(function initTheme(){
+  const saved = localStorage.getItem('sb-bible-theme');
+  if(saved){ html.setAttribute('data-theme', saved); }
+  applyThemeLabel();
+})();
+
+document.querySelectorAll('.code-panel').forEach(panel => {
+  const tabs = panel.querySelectorAll('.code-tab');
+  if(tabs.length <= 1) return;
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.getAttribute('data-pane');
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      panel.querySelectorAll('.code-pane').forEach(p => p.classList.remove('active'));
+      const pane = panel.querySelector('#' + target);
+      if(pane) pane.classList.add('active');
+    });
+  });
+});
+
+document.querySelectorAll('.qa-section').forEach(section => {
+  const btns = section.querySelectorAll('.qa-tab-btn');
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-target');
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      section.querySelectorAll('.qa-pane').forEach(p => p.classList.remove('active'));
+      document.getElementById(target).classList.add('active');
+    });
+  });
+});
+
+const navLinks = document.querySelectorAll('.nav-link');
+const topics = document.querySelectorAll('section.topic');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const id = entry.target.getAttribute('id');
+    const link = document.querySelector('.nav-link[href="#' + id + '"]');
+    if(!link) return;
+    if(entry.isIntersecting){
+      navLinks.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-15% 0px -75% 0px', threshold: 0 });
+topics.forEach(t => observer.observe(t));
+</script>
+</body>
+</html>
