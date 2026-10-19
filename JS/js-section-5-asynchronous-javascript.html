@@ -23,11 +23,15 @@ pre{background:var(--code);border:1px solid var(--line);border-radius:6px;paddin
 details{border:1px solid var(--line);border-radius:6px;margin:.4em 0;padding:6px 12px}summary{cursor:pointer;font-weight:600}details p{margin:.5em 0 .2em}
 table{border-collapse:collapse;width:100%;font-size:.9rem}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{background:var(--code)}
 .w{overflow-x:auto}
-</style></head><body><main>
-<header><button id="th" aria-label="Toggle theme">Light / Dark</button>
+</style><link rel="stylesheet" href="javascript-docs.css"></head><body><main class="main">
+<header class="header-block"><button id="th" aria-label="Toggle theme">Light / Dark</button>
+<div class="eyebrow">JavaScript Engineer · Course Section 05</div>
 <h1>JavaScript Bible: Section 5<br>Asynchronous JavaScript</h1>
-<p>All 37 course questions answered, with the event loop explained first, step-by-step traces for every tricky output, and the patterns interviewers ask you to code.</p></header>
-<nav><a href="#e1">Async &amp; event loop</a><a href="#e2">Callbacks</a><a href="#e3">Promise</a><a href="#e4">Chaining</a><a href="#e5">all/allSettled/race/any</a><a href="#e6">async/await</a><a href="#e7">Output puzzles</a><a href="#e8">AJAX &amp; XHR</a><a href="#e9">Fetch</a><a href="#e10">Async iterators</a><a href="#e11">Coding patterns</a><a href="#cheat">Cheat sheet</a></nav>
+<p>All 37 course questions answered, with the event loop explained first, step-by-step traces for every tricky output, and the patterns interviewers ask you to code.</p>
+<div class="meta-row"><span class="meta-pill">11 topics</span><span class="meta-pill">Async + networking</span><span class="meta-pill">Prereq: promises helpful</span></div></header>
+<div class="course-overview"><div class="overview-heading"><span class="section-badge">Study focus</span><span class="overview-note">Trace queues before writing code</span></div><div class="overview-grid"><div><strong>Core model</strong><p>Follow the event loop, microtasks, promise states, async control flow and network cancellation.</p></div><div><strong>Interview lens</strong><p>Trace output, distinguish parallel from sequential work, and explain errors and cancellation.</p></div><div><strong>Practice habit</strong><p>Draw the call stack and queues first. Then implement the smallest correct async version.</p></div></div><div class="box info"><div class="box-title">How to use this section</div><p>Read the event loop topic first and keep the output puzzles nearby. Every later pattern becomes easier when the scheduling model is clear.</p></div></div>
+<div class="course-nav"><a href="js-section-1-language-fundamentals.html">01 Language</a><a href="js-section-2-arrays-strings-dates.html">02 Data</a><a href="js-section-3-objects-classes-collections.html">03 Objects</a><a href="js-section-4-dom-browser-apis.html">04 DOM</a><a href="js-section-5-asynchronous-javascript.html">05 Async</a><a href="js-section-6-modules-debounce-throttle.html">06 Modules</a></div>
+<nav><a href="#e1">Async &amp; event loop</a><a href="#deep-concurrency">Concurrency</a><a href="#e2">Callbacks</a><a href="#e3">Promise</a><a href="#e4">Chaining</a><a href="#e5">all/allSettled/race/any</a><a href="#e6">async/await</a><a href="#e7">Output puzzles</a><a href="#deep-cancellation">Cancellation</a><a href="#e8">AJAX &amp; XHR</a><a href="#e9">Fetch</a><a href="#e10">Async iterators</a><a href="#e11">Coding patterns</a><a href="#cheat">Cheat sheet</a></nav>
 
 <section id="e1"><h2>1. What is asynchronous? The event loop (read this first)</h2>
 <ul><li><strong>Synchronous</strong>: statements run one after another; each waits for the previous one to finish. <strong>Asynchronous</strong>: a long-running task (timer, network call, file read) is started, the program <em>keeps going</em>, and the result is handled later when it is ready.</li>
@@ -51,6 +55,35 @@ console.log("D");
 <details open><summary>What is an asynchronous process?</summary><p>A task that is started now and completes later without blocking the main thread. The engine continues executing other code, then runs the task's callback (or resolves its promise) via the event loop once the result is ready, e.g. HTTP requests, timers, file/database access.</p></details>
 <details open><summary>Is JavaScript single-threaded? How then is it asynchronous?</summary><p>Yes, one call stack. Asynchrony comes from the host environment doing the waiting (timers, network) and the event loop feeding completed callbacks back onto the stack one at a time.</p></details>
 <details open><summary>Microtask vs macrotask?</summary><p>Microtasks (promise reactions, <code>await</code> continuations, <code>queueMicrotask</code>) run right after the current task and before the next macrotask; macrotasks (<code>setTimeout</code>, events, I/O) are processed one per loop turn. Microtasks always have priority.</p></details>
+</section>
+
+<section id="deep-concurrency"><h2>Deep dive: sequential, parallel and bounded concurrency</h2>
+<p>Asynchronous code has two independent choices: <strong>ordering</strong> and <strong>concurrency</strong>. Use sequential work when each step depends on the previous result. Start independent work together with <code>Promise.all</code>. For a large input set, use a small worker pool so you do not create unlimited requests at once.</p>
+<pre><code>// Sequential: preserves order and limits work to one active task.
+for (const id of ids) {
+  await save(id);
+}
+
+// Parallel: starts all independent tasks and fails if one rejects.
+const results = await Promise.all(ids.map(id =&gt; load(id)));
+
+async function mapWithConcurrency(items, limit, worker) {
+  const output = new Array(items.length);
+  let next = 0;
+  async function run() {
+    while (true) {
+      const index = next++;
+      if (index &gt;= items.length) return;
+      output[index] = await worker(items[index], index);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, run));
+  return output;
+}
+
+const rows = await mapWithConcurrency(ids, 4, load);</code></pre>
+<div class="w"><table><tr><th>Pattern</th><th>When to use</th><th>Tradeoff</th></tr><tr><td><code>for...of</code> + <code>await</code></td><td>Each operation depends on the previous one or order is critical</td><td>Slowest total time, simplest pressure control.</td></tr><tr><td><code>Promise.all</code></td><td>Independent work with a manageable input count</td><td>Fast, but creates all work immediately.</td></tr><tr><td>Worker pool</td><td>Many independent operations or a rate-limited service</td><td>More code, controlled resource use.</td></tr></table></div>
+<details open><summary>Why does <code>Promise.all</code> preserve input order?</summary><p>It records each result by the input index, even though the underlying operations may finish in a different order. Completion order and result order are separate concepts.</p></details>
 </section>
 
 <section id="e2"><h2>2. Callbacks and callback hell</h2>
@@ -318,6 +351,37 @@ Promise.resolve("v").finally(() =&gt; "ignored").then(console.log);   // v
 <div class="trap"><b>Trap:</b> the "extra ticks" rule: returning a promise from a <code>then</code> handler (or <code>async</code> function returning a promise) adds about two extra microtask ticks, so chains that look equal can interleave unexpectedly in puzzles that mix them. Interviewers mostly test the sync &rarr; microtask &rarr; macrotask order, so master that.</div>
 </section>
 
+<section id="deep-cancellation"><h2>Deep dive: cancellation, timeouts and retries</h2>
+<p>A promise represents an outcome; it does not automatically stop the work that will produce that outcome. Cancellation must travel through the API being used, usually with an <code>AbortSignal</code>. A timeout is a policy layered on top of cancellation.</p>
+<pre><code>async function fetchJson(url, { timeout = 5000, signal } = {}) {
+  const controller = new AbortController();
+  const timer = setTimeout(() =&gt; controller.abort("timeout"), timeout);
+  signal?.addEventListener("abort", () =&gt; controller.abort(signal.reason), { once: true });
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function retry(fn, attempts = 3) {
+  let lastError;
+  for (let attempt = 1; attempt &lt;= attempts; attempt++) {
+    try { return await fn(); }
+    catch (error) {
+      lastError = error;
+      if (attempt === attempts) throw error;
+      await new Promise(resolve =&gt; setTimeout(resolve, 2 ** attempt * 100));
+    }
+  }
+  throw lastError;
+}</code></pre>
+<ul><li>Do not retry validation errors, authentication failures or non-idempotent writes blindly.</li><li>Add jitter to large-scale retry backoff so many clients do not retry together.</li><li>Always clear timers and distinguish an abort from a real server failure when presenting UI feedback.</li><li>Cancellation prevents stale work from updating the UI, but it does not undo a request that already reached a server.</li></ul>
+<details open><summary>Why is a timeout not the same as cancellation?</summary><p>A timeout decides that the caller will stop waiting. Cancellation asks the underlying operation to stop if it supports that signal. Without passing the signal through, the operation may continue in the background.</p></details>
+</section>
+
 <section id="e8"><h2>8. AJAX and XMLHttpRequest (XHR)</h2>
 <p><strong>AJAX</strong> = Asynchronous JavaScript And XML: a technique (not a library) for sending requests and receiving data from a server <em>in the background without reloading the page</em>. XML is historical; JSON is the norm. Implemented with <code>XMLHttpRequest</code> (older) or <code>fetch</code> (modern).</p>
 <pre><code>const xhr = new XMLHttpRequest();
@@ -529,6 +593,8 @@ const sleep = ms =&gt; new Promise(r =&gt; setTimeout(r, ms));</code></pre>
 <details open><summary>How do you avoid race conditions in async UI code?</summary><p>Cancel the previous request (AbortController) or tag each request with an id and ignore responses that are not the latest; debounce user input.</p></details>
 <details open><summary>What is an unhandled promise rejection?</summary><p>A rejected promise without any handler by the time the microtask queue drains. Browsers fire <code>unhandledrejection</code> on window; Node 15+ terminates the process by default. Always end chains with <code>.catch</code> or use try/catch around await.</p></details>
 </section>
+
+<section class="review-section" id="review"><div class="review-kicker">Before you move on</div><h2>Async production checklist</h2><p>Reliable asynchronous code makes timing, failure and cancellation explicit.</p><ul><li>Use <code>Promise.all</code> for independent work and sequential <code>await</code> only when one result depends on another.</li><li>Bound concurrency when processing many inputs; unlimited parallel requests can overload the client or server.</li><li>Handle rejected promises at a meaningful boundary and preserve enough context to debug the failure.</li><li>Use <code>AbortController</code> for cancellation and ignore stale results when a newer request wins.</li><li>Do not use <code>await</code> inside <code>forEach</code>; use <code>for...of</code> for sequential work or <code>Promise.all</code> for parallel work.</li></ul><details><summary>Interview prompt: why does <code>Promise.all</code> reject early?</summary><p>It settles as soon as one input rejects, but it does not automatically cancel the other operations. Cancellation needs a separate mechanism.</p></details><details><summary>Interview prompt: where should retry logic live?</summary><p>At a boundary that knows whether the operation is safe to repeat. Add bounded attempts, backoff and a way to distinguish transient failures from permanent ones.</p></details></section>
 
 <section id="cheat"><h2>Quick revision cheat sheet</h2>
 <div class="w"><table><tr><th>Topic</th><th>Remember</th></tr>

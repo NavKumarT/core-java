@@ -23,12 +23,34 @@ pre{background:var(--code);border:1px solid var(--line);border-radius:6px;paddin
 details{border:1px solid var(--line);border-radius:6px;margin:.4em 0;padding:6px 12px}summary{cursor:pointer;font-weight:600}details p{margin:.5em 0 .2em}
 table{border-collapse:collapse;width:100%;font-size:.9rem}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{background:var(--code)}
 .w{overflow-x:auto}
-</style></head><body><main>
-<header><button id="th" aria-label="Toggle theme">Light / Dark</button>
+</style><link rel="stylesheet" href="javascript-docs.css"></head><body><main class="main">
+<header class="header-block"><button id="th" aria-label="Toggle theme">Light / Dark</button>
+<div class="eyebrow">JavaScript Engineer · Course Section 01</div>
 <h1>JavaScript Bible: Section 1<br>Language Fundamentals</h1>
-<p>Concepts, tricky outputs and interview Q&amp;A. Tap a question to reveal the answer; try to answer aloud first.</p></header>
+<p>Concepts, tricky outputs and interview Q&amp;A. Tap a question to reveal the answer; try to answer aloud first.</p>
+<div class="meta-row"><span class="meta-pill">13 topics</span><span class="meta-pill">Language + runtime</span><span class="meta-pill">Prereq: basic JS</span></div></header>
+<div class="course-overview"><div class="overview-heading"><span class="section-badge">Study focus</span><span class="overview-note">Learn -&gt; trace -&gt; explain -&gt; implement</span></div><div class="overview-grid"><div><strong>Core model</strong><p>Understand values, scope, coercion, closures, iterators and errors as runtime rules.</p></div><div><strong>Interview lens</strong><p>Predict the output, explain why it happens, and name the safer production alternative.</p></div><div><strong>Practice habit</strong><p>Answer each question aloud, then run the snippet and compare your mental model.</p></div></div><div class="box info"><div class="box-title">How to use this section</div><p>Start with the topic order, keep the cheat sheet for revision, and revisit any question you cannot explain without executing it.</p></div></div>
+<div class="course-nav"><a href="js-section-1-language-fundamentals.html">01 Language</a><a href="js-section-2-arrays-strings-dates.html">02 Data</a><a href="js-section-3-objects-classes-collections.html">03 Objects</a><a href="js-section-4-dom-browser-apis.html">04 DOM</a><a href="js-section-5-asynchronous-javascript.html">05 Async</a><a href="js-section-6-modules-debounce-throttle.html">06 Modules</a></div>
 <nav>
-<a href="#s1">null vs undefined</a><a href="#s2">Scope</a><a href="#s3">ASI</a><a href="#s4">Rest &amp; Spread</a><a href="#s5">Infinity</a><a href="#s6">NaN</a><a href="#s7">Arrow fns</a><a href="#s8">Closures</a><a href="#s9">sum(5)(6)</a><a href="#s10">Iterators</a><a href="#s11">Generators</a><a href="#s12">Memory &amp; GC</a><a href="#s13">Errors</a><a href="#cheat">Cheat sheet</a></nav>
+<a href="#deep-types">Runtime types</a><a href="#s1">null vs undefined</a><a href="#s2">Scope</a><a href="#s3">ASI</a><a href="#s4">Rest &amp; Spread</a><a href="#s5">Infinity</a><a href="#s6">NaN</a><a href="#s7">Arrow fns</a><a href="#s8">Closures</a><a href="#s9">sum(5)(6)</a><a href="#s10">Iterators</a><a href="#s11">Generators</a><a href="#s12">Memory &amp; GC</a><a href="#deep-errors">Error design</a><a href="#s13">Errors</a><a href="#cheat">Cheat sheet</a></nav>
+
+<section id="deep-types"><h2>Deep dive: values, types and equality</h2>
+<p>Before choosing an API, identify what kind of value you have. JavaScript has <strong>primitive values</strong> (string, number, bigint, boolean, symbol, undefined and null) and <strong>objects</strong> (including arrays, functions, dates, maps and sets). Primitives are immutable values; objects are mutable identities that variables point to.</p>
+<div class="w"><table><tr><th>Question</th><th>Reliable check</th><th>Why it matters</th></tr><tr><td>Is it an array?</td><td><code>Array.isArray(value)</code></td><td><code>typeof []</code> is only <code>"object"</code>.</td></tr><tr><td>Is it a finite number?</td><td><code>Number.isFinite(value)</code></td><td>Unlike global <code>isFinite</code>, it does not coerce strings.</td></tr><tr><td>Does an object own a key?</td><td><code>Object.hasOwn(obj, key)</code></td><td>It ignores inherited properties and avoids prototype pitfalls.</td></tr><tr><td>Are two values exactly the same?</td><td><code>Object.is(a, b)</code></td><td>It treats <code>NaN</code> as equal to itself and distinguishes <code>0</code> from <code>-0</code>.</td></tr></table></div>
+<pre><code>const a = { count: 1 };
+const b = a;
+const c = { count: 1 };
+
+b.count = 2;
+console.log(a.count);       // 2: a and b share the same object identity
+console.log(a === c);       // false: equal shape is not equal identity
+console.log(Object.is(NaN, NaN)); // true
+console.log(NaN === NaN);        // false
+console.log(Object.is(0, -0));   // false</code></pre>
+<div class="trap"><b>Trap:</b> <code>===</code> prevents coercion, but it still compares objects by reference. Copying an object with spread creates a new outer object while leaving nested references shared.</div>
+<details open><summary>When should you use <code>Object.is</code> instead of <code>===</code>?</summary><p>Use <code>===</code> for most application comparisons. <code>Object.is</code> is useful when the exact numeric edge cases matter, such as detecting <code>NaN</code> or preserving the distinction between <code>0</code> and <code>-0</code>.</p></details>
+<details open><summary>Why is <code>typeof</code> not a complete type system?</summary><p>It groups arrays, dates and null under <code>object</code>, and every function under <code>function</code>. Use a domain-specific check such as <code>Array.isArray</code>, <code>instanceof</code>, a tag, or a schema validator when the distinction matters.</p></details>
+</section>
 
 <section id="s1"><h2>1. null vs undefined</h2>
 <ul><li><code>undefined</code>: the engine's "no value assigned yet". Seen on uninitialised variables, missing properties, missing arguments, functions with no <code>return</code>.</li>
@@ -84,6 +106,30 @@ let x = null; x?.a;               // undefined, no error
 ({}).a === undefined;             // true
 "a" in {a: undefined};            // true</code></pre>
 <details open><summary>When would you return null vs undefined from your own API?</summary><p>Return <code>null</code> for "looked, found nothing / intentionally empty"; leave <code>undefined</code> for "not provided/not set". Pick one convention per codebase, since JSON keeps null but drops undefined.</p></details>
+</section>
+
+<section id="deep-errors"><h2>Deep dive: designing errors at boundaries</h2>
+<p>Errors are part of an API contract. Throw when the operation cannot produce a valid result and the caller must decide what to do; return a normal value for expected business outcomes such as "not found" when that is part of the domain.</p>
+<pre><code>class ValidationError extends Error {
+  constructor(message, field) {
+    super(message, { cause: "input" });
+    this.name = "ValidationError";
+    this.field = field;
+  }
+}
+
+function parsePort(value) {
+  const port = Number(value);
+  if (!Number.isInteger(port) || port &lt; 1 || port &gt; 65535) {
+    throw new ValidationError("Port must be an integer from 1 to 65535", "port");
+  }
+  return port;
+}
+
+try { parsePort("abc"); }
+catch (error) { console.log(error.name, error.field); }</code></pre>
+<ul><li>Throw an <code>Error</code> object, not a string, so callers keep a stack and a stable type.</li><li>Add context with custom fields or <code>cause</code>, but do not expose secrets or raw internal data in user-facing messages.</li><li>Catch at the boundary that can recover, translate or log. Catching everywhere often hides the original failure.</li><li>Use <code>finally</code> for cleanup that must happen on success and failure.</li></ul>
+<details open><summary>Should validation return false or throw?</summary><p>Use a return value when invalid input is expected and the caller can branch naturally. Throw when continuing would violate an invariant or when the function's contract promises a valid result.</p></details>
 </section>
 
 <section id="s3"><h2>3. Automatic Semicolon Insertion (ASI)</h2>
@@ -401,6 +447,8 @@ async function retry(fn, n = 3){            // retry pattern
 <li>Operational vs programmer errors: handle expected failures (network, validation); let bugs (TypeError) surface and be logged.</li></ul>
 <details open><summary>Promise.all vs allSettled vs any vs race for errors?</summary><p><code>all</code> rejects on the first failure; <code>allSettled</code> never rejects and reports each outcome; <code>any</code> resolves with the first success (AggregateError if all fail); <code>race</code> settles with the first result, success or failure.</p></details>
 </section>
+
+<section class="review-section" id="review"><div class="review-kicker">Before you move on</div><h2>Runtime decision guide</h2><p>Use this checklist to turn the section into working judgment, not just remembered definitions.</p><div class="w"><table><tr><th>When you need to...</th><th>Reach for...</th><th>Watch for...</th></tr><tr><td>Represent an intentional empty value</td><td><code>null</code></td><td>Do not confuse it with an uninitialised or missing value.</td></tr><tr><td>Share state across a callback</td><td>A closure</td><td>The closure retains bindings, so long-lived listeners can retain data.</td></tr><tr><td>Process a custom data source</td><td>An iterable or generator</td><td>Know whether the iterator is reusable or already consumed.</td></tr><tr><td>Attach metadata to object keys</td><td><code>Map</code> or <code>WeakMap</code></td><td>Choose weak collections when object lifetime should control cleanup.</td></tr></table></div><details><summary>Interview prompt: when is <code>==</code> defensible?</summary><p>Usually only for the intentional <code>null == undefined</code> check. Prefer strict equality elsewhere so coercion does not hide a type mistake.</p></details><details><summary>Interview prompt: what does a closure retain?</summary><p>It retains access to the lexical bindings it references, not a frozen snapshot of every variable in the outer function.</p></details></section>
 
 <section id="cheat"><h2>Quick revision cheat sheet</h2>
 <div class="w"><table>

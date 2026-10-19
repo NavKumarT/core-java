@@ -23,11 +23,15 @@ pre{background:var(--code);border:1px solid var(--line);border-radius:6px;paddin
 details{border:1px solid var(--line);border-radius:6px;margin:.4em 0;padding:6px 12px}summary{cursor:pointer;font-weight:600}details p{margin:.5em 0 .2em}
 table{border-collapse:collapse;width:100%;font-size:.9rem}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{background:var(--code)}
 .w{overflow-x:auto}
-</style></head><body><main>
-<header><button id="th" aria-label="Toggle theme">Light / Dark</button>
+</style><link rel="stylesheet" href="javascript-docs.css"></head><body><main class="main">
+<header class="header-block"><button id="th" aria-label="Toggle theme">Light / Dark</button>
+<div class="eyebrow">JavaScript Engineer · Course Section 06</div>
 <h1>JavaScript Bible: Section 6<br>Modules, Debounce &amp; Throttle</h1>
-<p>Every course question answered, plus the module-system traps and the "implement debounce / throttle" questions that come up in almost every frontend interview. Includes a live demo you can try.</p></header>
-<nav><a href="#m1">What is a module</a><a href="#m2">Named export</a><a href="#m3">Default export</a><a href="#m4">Re-exports, dynamic, live bindings</a><a href="#m5">ESM vs CommonJS</a><a href="#t1">Debounce vs Throttle</a><a href="#t2">Throttle code</a><a href="#t3">Debounce code</a><a href="#t4">Use cases</a><a href="#t5">React &amp; advanced</a><a href="#cheat">Cheat sheet</a></nav>
+<p>Every course question answered, plus the module-system traps and the "implement debounce / throttle" questions that come up in almost every frontend interview. Includes a live demo you can try.</p>
+<div class="meta-row"><span class="meta-pill">10 topics</span><span class="meta-pill">Modules + performance</span><span class="meta-pill">Prereq: browser basics</span></div></header>
+<div class="course-overview"><div class="overview-heading"><span class="section-badge">Study focus</span><span class="overview-note">Make dependencies and timing explicit</span></div><div class="overview-grid"><div><strong>Core model</strong><p>Understand ESM scope, bindings, loading, caching, and the timing semantics of debounce and throttle.</p></div><div><strong>Interview lens</strong><p>Explain static versus dynamic imports, live bindings, timer boundaries and React lifecycle cleanup.</p></div><div><strong>Practice habit</strong><p>Implement each utility from scratch, then test leading, trailing and cancellation boundaries.</p></div></div><div class="box info"><div class="box-title">How to use this section</div><p>Learn modules first, then timing utilities. The combination gives you a practical foundation for organizing and keeping frontend applications responsive.</p></div></div>
+<div class="course-nav"><a href="js-section-1-language-fundamentals.html">01 Language</a><a href="js-section-2-arrays-strings-dates.html">02 Data</a><a href="js-section-3-objects-classes-collections.html">03 Objects</a><a href="js-section-4-dom-browser-apis.html">04 DOM</a><a href="js-section-5-asynchronous-javascript.html">05 Async</a><a href="js-section-6-modules-debounce-throttle.html">06 Modules</a></div>
+<nav><a href="#m1">What is a module</a><a href="#m2">Named export</a><a href="#m3">Default export</a><a href="#m4">Re-exports, dynamic, live bindings</a><a href="#deep-graph">Module graph</a><a href="#m5">ESM vs CommonJS</a><a href="#t1">Debounce vs Throttle</a><a href="#deep-timing">Timing contract</a><a href="#t2">Throttle code</a><a href="#t3">Debounce code</a><a href="#t4">Use cases</a><a href="#t5">React &amp; advanced</a><a href="#cheat">Cheat sheet</a></nav>
 
 <section id="m1"><h2>1. What is a module?</h2>
 <p>A <strong>module</strong> is a single JavaScript file with its <em>own private scope</em> that explicitly <strong>exports</strong> what others may use and <strong>imports</strong> what it needs from other modules. ES modules (ESM, ES2015) are the language standard, replacing older patterns: IIFE/revealing-module pattern, CommonJS (<code>require</code>, Node), AMD and UMD.</p>
@@ -175,6 +179,30 @@ const config = await fetch("/config.json").then(r =&gt; r.json());</code></pre>
 <details open><summary>What is a barrel file?</summary><p>An <code>index.js</code> that re-exports from several modules so consumers can import from one path (<code>import { Button, Modal } from "./components"</code>).</p></details>
 </section>
 
+<section id="deep-graph"><h2>Deep dive: module graphs, cycles and boundaries</h2>
+<p>Imports form a directed graph. A good module boundary makes dependencies visible, keeps side effects deliberate and lets tools load or remove code safely. A barrel file can improve ergonomics, but it should not hide a large or cyclic graph.</p>
+<div class="w"><table><tr><th>Concern</th><th>Good default</th><th>Failure mode</th></tr><tr><td>Side effects</td><td>Keep initialization explicit and isolated</td><td>Importing a helper unexpectedly changes global state.</td></tr><tr><td>Circular dependency</td><td>Move shared types/constants to a lower-level module</td><td>Reading a live binding before initialization causes a TDZ error.</td></tr><tr><td>Lazy feature</td><td>Use <code>import()</code> at the feature boundary</td><td>Loading work eagerly makes the initial path slower.</td></tr><tr><td>Public package API</td><td>Export a small stable surface</td><td>Consumers become coupled to internal file paths.</td></tr></table></div>
+<pre><code>// Prefer a dependency direction like:
+// ui -&gt; application -&gt; data -&gt; infrastructure
+// Avoid: ui -&gt; application -&gt; ui
+
+// Keep side effects explicit:
+import { createLogger } from "./logger.js";
+const logger = createLogger();
+
+// Lazy boundary with an explicit loading failure:
+async function openReports() {
+  try {
+    const { ReportsView } = await import("./reports-view.js");
+    return new ReportsView();
+  } catch (error) {
+    throw new Error("Reports could not be loaded", { cause: error });
+  }
+}</code></pre>
+<details open><summary>Why can circular imports fail even though the module exists?</summary><p>Modules expose live bindings, but a binding can still be uninitialised while the cycle is being evaluated. Reading it too early hits the temporal dead zone. Break the cycle or defer the read until after initialization.</p></details>
+<details open><summary>What makes a module boundary healthy?</summary><p>It has one reason to change, a small public surface, explicit dependencies, predictable side effects and tests that do not need to know its internal file layout.</p></details>
+</section>
+
 <section id="m5"><h2>5. ES Modules vs CommonJS</h2>
 <div class="w"><table><tr><th></th><th>ES Modules (ESM)</th><th>CommonJS (CJS)</th></tr>
 <tr><td>Syntax</td><td><code>import / export</code></td><td><code>require() / module.exports</code></td></tr>
@@ -197,6 +225,36 @@ const { add } = require("./math");
 const Counter = (function () { let c = 0; return { inc: () =&gt; ++c, get: () =&gt; c } })();</code></pre>
 <details open><summary>ESM vs CommonJS: key differences?</summary><p>ESM is the standard: static, async, live bindings, tree-shakable, in browsers and Node; CommonJS is Node's older synchronous <code>require</code> system with value copies and dynamic loading. ESM is preferred in new code.</p></details>
 <details open><summary>Why can bundlers tree-shake ESM but not CJS?</summary><p>ESM imports/exports are static, so tools know at build time which exports are used and can drop the rest; <code>require</code> can be dynamic (<code>require(name)</code>), defeating analysis.</p></details>
+</section>
+
+<section id="deep-timing"><h2>Deep dive: the timing contract of debounce and throttle</h2>
+<p>The implementation is only half the problem. Before coding, define the contract: should the first call run immediately, should the last call run after the burst, what does the wrapper return, and can a pending call be cancelled or flushed?</p>
+<div class="w"><table><tr><th>Option</th><th>Meaning</th><th>Typical use</th></tr><tr><td>Leading</td><td>Run at the start of a burst/window</td><td>Immediate feedback for a button or drag start.</td></tr><tr><td>Trailing</td><td>Run with the latest arguments after activity pauses/window ends</td><td>Final search query or final scroll position.</td></tr><tr><td><code>cancel()</code></td><td>Drop pending trailing work</td><td>Component teardown or navigation away.</td></tr><tr><td><code>flush()</code></td><td>Run pending trailing work now</td><td>Save before submitting or unmounting.</td></tr><tr><td><code>maxWait</code></td><td>Guarantee a run during continuous activity</td><td>Keep a long-running input stream responsive.</td></tr></table></div>
+<pre><code>function debounceWithCancel(fn, wait) {
+  let timer = null;
+  let lastArgs;
+  let lastThis;
+
+  function wrapped(...args) {
+    lastArgs = args;
+    lastThis = this;
+    clearTimeout(timer);
+    timer = setTimeout(() =&gt; {
+      timer = null;
+      fn.apply(lastThis, lastArgs);
+      lastArgs = lastThis = undefined;
+    }, wait);
+  }
+  wrapped.cancel = () =&gt; {
+    clearTimeout(timer);
+    timer = lastArgs = lastThis = null;
+  };
+  return wrapped;
+}
+
+const saveDraft = debounceWithCancel(save, 500);
+window.addEventListener("beforeunload", saveDraft.cancel);</code></pre>
+<details open><summary>Why must the wrapper preserve <code>this</code> and arguments?</summary><p>The wrapper replaces the original function at the call site. Using <code>fn.apply(lastThis, lastArgs)</code> keeps methods and event handlers working with the receiver and the latest values.</p></details>
 </section>
 
 <section id="t1"><h2>6. Debounce vs throttle: the concept</h2>
@@ -358,6 +416,8 @@ new IntersectionObserver(cb).observe(el);               // visibility instead of
 <details open><summary>Why doesn't debounce work inside a React component by default?</summary><p>The component function runs on every render, creating a new debounced function and a new timer closure each time, so previous timers are never cleared. Memoise the debounced function (<code>useMemo/useRef</code>) or debounce the <em>value</em> with a hook.</p></details>
 <details open><summary>Write debounce / throttle from scratch (most asked)</summary><p>See sections 7 and 8: closure holding a timer (debounce) or a flag/timestamp (throttle), <code>apply(this, args)</code>, optional leading/trailing and <code>cancel</code>.</p></details>
 </section>
+
+<section class="review-section" id="review"><div class="review-kicker">Before you move on</div><h2>Module and performance checklist</h2><p>Use these checks when code moves from a demo into a shared application.</p><ul><li>Keep exports explicit and keep module boundaries aligned with responsibilities.</li><li>Use dynamic import for genuinely optional or deferred work, then handle loading and failure states.</li><li>Remember that imported bindings are live and read-only from the importer.</li><li>Clean up timers, listeners and observers when a component or view is removed.</li><li>Define whether debounce or throttle should run on the leading edge, trailing edge, or both, and test that contract.</li><li>Measure before optimizing. A smaller bundle or fewer calls is useful only when it improves the real interaction.</li></ul><details><summary>Interview prompt: what is the practical difference between debounce and throttle?</summary><p>Debounce waits for a quiet period and usually runs once after a burst. Throttle guarantees at most one run per interval while the burst continues.</p></details><details><summary>Interview prompt: why can a barrel export affect performance?</summary><p>A barrel can make dependency edges less obvious and may cause more modules to be evaluated or included, depending on the runtime and bundler. Measure the resulting graph.</p></details></section>
 
 <section id="cheat"><h2>Quick revision cheat sheet</h2>
 <div class="w"><table><tr><th>Topic</th><th>Remember</th></tr>

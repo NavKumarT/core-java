@@ -23,11 +23,15 @@ pre{background:var(--code);border:1px solid var(--line);border-radius:6px;paddin
 details{border:1px solid var(--line);border-radius:6px;margin:.4em 0;padding:6px 12px}summary{cursor:pointer;font-weight:600}details p{margin:.5em 0 .2em}
 table{border-collapse:collapse;width:100%;font-size:.9rem}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{background:var(--code)}
 .w{overflow-x:auto}
-</style></head><body><main>
-<header><button id="th" aria-label="Toggle theme">Light / Dark</button>
+</style><link rel="stylesheet" href="javascript-docs.css"></head><body><main class="main">
+<header class="header-block"><button id="th" aria-label="Toggle theme">Light / Dark</button>
+<div class="eyebrow">JavaScript Engineer · Course Section 02</div>
 <h1>JavaScript Bible: Section 2<br>Arrays, Strings &amp; Dates</h1>
-<p>Concepts, tricky outputs and interview Q&amp;A, including every course question plus the ones interviewers add.</p></header>
-<nav><a href="#a1">Arrays &amp; loops</a><a href="#a2">Add/Remove</a><a href="#a3">Search</a><a href="#a4">map</a><a href="#a5">flatten &amp; reduce</a><a href="#a6">sort</a><a href="#a7">Destructuring</a><a href="#a8">Unicode</a><a href="#a9">Templates</a><a href="#a10">Search methods</a><a href="#a11">Extraction</a><a href="#a12">Case &amp; replace</a><a href="#a13">Date basics</a><a href="#a14">Date methods</a><a href="#a15">Time</a><a href="#cheat">Cheat sheet</a></nav>
+<p>Concepts, tricky outputs and interview Q&amp;A, including every course question plus the ones interviewers add.</p>
+<div class="meta-row"><span class="meta-pill">15 topics</span><span class="meta-pill">Data manipulation</span><span class="meta-pill">Prereq: Section 1</span></div></header>
+<div class="course-overview"><div class="overview-heading"><span class="section-badge">Study focus</span><span class="overview-note">Choose the right data operation</span></div><div class="overview-grid"><div><strong>Core model</strong><p>Choose array, string and date APIs by mutation, return shape, complexity and timezone behavior.</p></div><div><strong>Interview lens</strong><p>Spot sparse arrays, sort coercion, reduce edge cases, Unicode boundaries and UTC/local date traps.</p></div><div><strong>Practice habit</strong><p>Write one immutable and one mutating version of each common transformation.</p></div></div><div class="box info"><div class="box-title">How to use this section</div><p>For every method, learn the input, output, mutation behavior and one boundary case. That is the fastest route from API memory to reliable code.</p></div></div>
+<div class="course-nav"><a href="js-section-1-language-fundamentals.html">01 Language</a><a href="js-section-2-arrays-strings-dates.html">02 Data</a><a href="js-section-3-objects-classes-collections.html">03 Objects</a><a href="js-section-4-dom-browser-apis.html">04 DOM</a><a href="js-section-5-asynchronous-javascript.html">05 Async</a><a href="js-section-6-modules-debounce-throttle.html">06 Modules</a></div>
+<nav><a href="#a1">Arrays &amp; loops</a><a href="#deep-arrays">Performance</a><a href="#a2">Add/Remove</a><a href="#a3">Search</a><a href="#a4">map</a><a href="#a5">flatten &amp; reduce</a><a href="#a6">sort</a><a href="#a7">Destructuring</a><a href="#a8">Unicode</a><a href="#a9">Templates</a><a href="#a10">Search methods</a><a href="#a11">Extraction</a><a href="#a12">Case &amp; replace</a><a href="#a13">Date basics</a><a href="#deep-time">Time zones</a><a href="#a14">Date methods</a><a href="#a15">Time</a><a href="#cheat">Cheat sheet</a></nav>
 
 <section id="a1"><h2>1. Arrays and traversal</h2>
 <ul><li>An array is an ordered, zero-indexed, resizable list, and a special object (<code>typeof [] === "object"</code>; use <code>Array.isArray(x)</code>). Elements can be of mixed types.</li>
@@ -52,6 +56,21 @@ for (const i in arr) {}                           // KEYS as strings, includes i
 <details open><summary>Output of arr[arr.length] with [7,9,0]?</summary><p><code>undefined</code>. Index 3 does not exist; reading a missing index never throws.</p></details>
 <details open><summary>How do you copy an array? Shallow vs deep?</summary><p><code>[...a]</code>, <code>a.slice()</code>, <code>Array.from(a)</code> are shallow (nested objects shared). Deep: <code>structuredClone(a)</code>. <code>JSON.parse(JSON.stringify(a))</code> loses undefined, functions, Dates and NaN.</p></details>
 <details open><summary>What is a sparse array / hole?</summary><p>Slots with no value, made by <code>delete a[1]</code>, <code>[1,,3]</code> or <code>new Array(3)</code>. <code>forEach/map</code> skip them, <code>for...of</code> reads them as undefined. Avoid; use <code>fill</code> or <code>Array.from</code>.</p></details>
+</section>
+
+<section id="deep-arrays"><h2>Deep dive: array performance, holes and copy depth</h2>
+<p>Array code is easier to choose when you separate <strong>what the result should be</strong> from <strong>how much work it costs</strong>. Appending with <code>push</code> is usually cheap; inserting at the front or middle shifts indexes. A readable linear pass is often better than a clever chain that repeatedly scans the same data.</p>
+<div class="w"><table><tr><th>Operation</th><th>Typical cost</th><th>Production note</th></tr><tr><td>Read by index</td><td>O(1)</td><td>Fast, but still validate the index when input is external.</td></tr><tr><td>push / pop</td><td>Usually O(1)</td><td>Good queue end for stack-like work.</td></tr><tr><td>shift / unshift</td><td>O(n)</td><td>Use a head index or a deque abstraction for large queues.</td></tr><tr><td>find / filter / map</td><td>O(n)</td><td>Short-circuit with <code>find</code> or <code>some</code> when possible.</td></tr><tr><td>sort</td><td>Implementation-dependent, commonly O(n log n)</td><td>Copies are safer with <code>toSorted</code> when mutation is not intended.</td></tr></table></div>
+<pre><code>const state = { items: [{ done: false }] };
+const shallow = { ...state };
+shallow.items[0].done = true;
+console.log(state.items[0].done); // true: nested reference is shared
+
+const independent = structuredClone(state);
+independent.items[0].done = false;
+console.log(state.items[0].done); // true: deep copy is independent</code></pre>
+<ul><li>A hole is not the same as an explicit <code>undefined</code>; many array methods skip holes, while indexed reads return <code>undefined</code> for both.</li><li><code>flatMap</code> combines a map and one-level flatten when each input can produce zero, one or many outputs.</li><li>Prefer <code>toSorted</code>, <code>toReversed</code>, <code>toSpliced</code> and <code>with</code> when the caller must retain the original array.</li></ul>
+<details open><summary>When should you use a Set or Map instead of an array?</summary><p>Use a Set for frequent membership checks and uniqueness, and a Map for keyed lookup. Arrays are best when order and positional traversal are the primary concerns.</p></details>
 </section>
 
 <section id="a2"><h2>2. Add, remove, insert, replace</h2>
@@ -329,6 +348,23 @@ new Date("invalid");                // Invalid Date; getTime() is NaN</code></pr
 <details open><summary>Why is Date considered painful and what is the fix?</summary><p>Mutable, 0-based months, parsing inconsistencies, poor time zone support. Use <code>Intl.DateTimeFormat</code>, libraries like date-fns/Day.js, or the upcoming <code>Temporal</code> API (check browser support before using).</p></details>
 </section>
 
+<section id="deep-time"><h2>Deep dive: instants, calendar dates and time zones</h2>
+<p>A timestamp is an <strong>instant</strong>: one point on the global timeline. A birthday or due date is a <strong>calendar date</strong>: a label whose meaning may not include a time or timezone. Many date bugs happen when code stores one concept and displays it as the other.</p>
+<pre><code>const instant = new Date("2026-10-19T09:30:00Z");
+const formatter = new Intl.DateTimeFormat("en-IN", {
+  dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Kolkata"
+});
+console.log(formatter.format(instant));
+
+// Date-only values are calendar dates, not user-local instants.
+const birthday = "1995-04-12";
+const [year, month, day] = birthday.split("-").map(Number);
+console.log({ year, month, day });</code></pre>
+<div class="w"><table><tr><th>Input</th><th>Meaning to confirm</th><th>Safer habit</th></tr><tr><td><code>2026-10-19T09:30:00Z</code></td><td>UTC instant</td><td>Store the instant and format for the user's timezone.</td></tr><tr><td><code>2026-10-19T09:30:00+05:30</code></td><td>Instant with explicit offset</td><td>Good for a serialized event with a known offset.</td></tr><tr><td><code>2026-10-19</code></td><td>Calendar date; parsing as UTC can surprise local display</td><td>Keep it as a date string or construct with explicit calendar parts.</td></tr></table></div>
+<details open><summary>Why should formatting happen near the UI boundary?</summary><p>Storage and APIs should use a stable representation, usually an ISO instant or an explicit date-only value. Formatting at the edge lets each user see the same instant in their own locale and timezone.</p></details>
+<details open><summary>What does <code>getTimezoneOffset()</code> tell you?</summary><p>It tells you the local timezone's offset from UTC for that particular date. The value can change across daylight-saving transitions, so do not treat one offset as a permanent property of a location.</p></details>
+</section>
+
 <section id="a14"><h2>14. Date methods</h2>
 <div class="w"><table><tr><th>Get</th><th>Set</th><th>Range / note</th></tr>
 <tr><td>getFullYear()</td><td>setFullYear()</td><td>use instead of getYear (deprecated)</td></tr>
@@ -390,6 +426,8 @@ const start = performance.now(); /* work */ const ms = performance.now() - start
 <details open><summary>How do you change hours or minutes?</summary><p><code>setHours(h, m, s, ms)</code> and <code>setMinutes</code>; overflow carries (e.g. <code>setMinutes(75)</code> adds 1 hour 15 min). Work on a copy to avoid mutating the original.</p></details>
 <details open><summary>Compare two dates / find the day of the week?</summary><p>Compare with <code>getTime()</code> or relational operators (never <code>==</code>). Weekday: <code>["Sun",...][d.getDay()]</code> or <code>toLocaleDateString("en-US",{weekday:"long"})</code>.</p></details>
 </section>
+
+<section class="review-section" id="review"><div class="review-kicker">Before you move on</div><h2>Data API decision guide</h2><p>Use the operation first, then select the method. This keeps the API choice intentional.</p><div class="w"><table><tr><th>Goal</th><th>Good default</th><th>Important boundary</th></tr><tr><td>Transform every item</td><td><code>map</code></td><td>It returns a new array; do not use it for side effects.</td></tr><tr><td>Keep matching items</td><td><code>filter</code></td><td>An empty result is valid and expected.</td></tr><tr><td>Combine into one result</td><td><code>reduce</code></td><td>Provide an initial value so empty input is defined.</td></tr><tr><td>Sort values</td><td><code>toSorted</code> or copied <code>sort</code></td><td>Default sort compares strings, and <code>sort</code> mutates.</td></tr><tr><td>Format a moment</td><td><code>Intl.DateTimeFormat</code></td><td>Decide whether the input represents UTC or local time first.</td></tr></table></div><details><summary>Interview prompt: why can <code>Array.from</code> be safer than spread?</summary><p>It can map while creating the array and works with array-like values that are not iterable. Both are shallow operations.</p></details><details><summary>Interview prompt: why is date-only parsing tricky?</summary><p>A date-only ISO string is interpreted as UTC by the standard, so displaying it in a local timezone can show the previous calendar day.</p></details></section>
 
 <section id="cheat"><h2>Quick revision cheat sheet</h2>
 <div class="w"><table><tr><th>Topic</th><th>Remember</th></tr>

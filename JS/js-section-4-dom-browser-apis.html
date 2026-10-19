@@ -23,11 +23,15 @@ pre{background:var(--code);border:1px solid var(--line);border-radius:6px;paddin
 details{border:1px solid var(--line);border-radius:6px;margin:.4em 0;padding:6px 12px}summary{cursor:pointer;font-weight:600}details p{margin:.5em 0 .2em}
 table{border-collapse:collapse;width:100%;font-size:.9rem}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{background:var(--code)}
 .w{overflow-x:auto}
-</style></head><body><main>
-<header><button id="th" aria-label="Toggle theme">Light / Dark</button>
+</style><link rel="stylesheet" href="javascript-docs.css"></head><body><main class="main">
+<header class="header-block"><button id="th" aria-label="Toggle theme">Light / Dark</button>
+<div class="eyebrow">JavaScript Engineer · Course Section 04</div>
 <h1>JavaScript Bible: Section 4<br>DOM &amp; Browser APIs</h1>
-<p>All 66 course questions answered, plus the follow-ups and traps interviewers add. Code samples assume a browser.</p></header>
-<nav><a href="#d1">DOM &amp; BOM</a><a href="#d2">Timers</a><a href="#d3">Bubbling &amp; capturing</a><a href="#d4">Delegation</a><a href="#d5">Navigation</a><a href="#d6">Selecting</a><a href="#d7">Manipulating</a><a href="#d8">Event basics</a><a href="#d9">Mouse</a><a href="#d10">Coordinates</a><a href="#d11">Keyboard</a><a href="#d12">Input events</a><a href="#d13">Clipboard</a><a href="#d14">Extras</a><a href="#cheat">Cheat sheet</a></nav>
+<p>All 66 course questions answered, plus the follow-ups and traps interviewers add. Code samples assume a browser.</p>
+<div class="meta-row"><span class="meta-pill">14 topics</span><span class="meta-pill">Browser engineering</span><span class="meta-pill">Prereq: DOM basics</span></div></header>
+<div class="course-overview"><div class="overview-heading"><span class="section-badge">Study focus</span><span class="overview-note">Make the browser do useful work</span></div><div class="overview-grid"><div><strong>Core model</strong><p>Understand the DOM tree, event flow, selectors, mutation, browser APIs and user input.</p></div><div><strong>Interview lens</strong><p>Explain delegation, cleanup, propagation, coordinates, performance and accessibility together.</p></div><div><strong>Practice habit</strong><p>Build one tiny interaction per topic and inspect the DOM, event target and browser state.</p></div></div><div class="box info"><div class="box-title">How to use this section</div><p>Keep the examples open in a browser. Browser APIs are easiest to remember when you can observe the event, DOM mutation or network request they produce.</p></div></div>
+<div class="course-nav"><a href="js-section-1-language-fundamentals.html">01 Language</a><a href="js-section-2-arrays-strings-dates.html">02 Data</a><a href="js-section-3-objects-classes-collections.html">03 Objects</a><a href="js-section-4-dom-browser-apis.html">04 DOM</a><a href="js-section-5-asynchronous-javascript.html">05 Async</a><a href="js-section-6-modules-debounce-throttle.html">06 Modules</a></div>
+<nav><a href="#d1">DOM &amp; BOM</a><a href="#deep-render">Rendering</a><a href="#d2">Timers</a><a href="#d3">Bubbling &amp; capturing</a><a href="#d4">Delegation</a><a href="#d5">Navigation</a><a href="#d6">Selecting</a><a href="#d7">Manipulating</a><a href="#d8">Event basics</a><a href="#d9">Mouse</a><a href="#d10">Coordinates</a><a href="#d11">Keyboard</a><a href="#d12">Input events</a><a href="#d13">Clipboard</a><a href="#deep-accessibility">Accessibility + security</a><a href="#d14">Extras</a><a href="#cheat">Cheat sheet</a></nav>
 
 <section id="d1"><h2>1. Understanding the DOM, BOM and window</h2>
 <ul><li><strong>DOM (Document Object Model)</strong>: the browser's in-memory, object representation of an HTML/XML document, plus the <strong>API</strong> (<code>document.getElementById</code>, <code>createElement</code>, events) that lets JavaScript read and change structure, content and style. It is a language-neutral W3C/WHATWG standard, not part of JavaScript itself.</li>
@@ -66,6 +70,27 @@ history.back(); history.pushState({}, "", "/new");</code></pre>
 <details open><summary>Difference between window and document?</summary><p><code>window</code> is the global object representing the browser window and everything global (BOM); <code>document</code> is one of its properties and represents the loaded page content (DOM). Everything you declare globally lives on window; you reach HTML elements through document.</p></details>
 <details open><summary>Difference between DOM and BOM? Which is the global object in the browser?</summary><p>DOM manages page content (structure, styles, events); BOM talks to the browser (URL, history, screen, navigator, timers). The global object is <code>window</code> (also reachable as <code>self</code> or <code>globalThis</code>); in a worker it is <code>self</code>, in Node it is <code>globalThis</code>/<code>global</code>.</p></details>
 <details open><summary>How do you get the window width/height and the address-bar value?</summary><p><code>window.innerWidth / innerHeight</code> (viewport) and <code>location.href</code> for the full URL, <code>location.hostname</code> for the host. Typed text in the address bar before navigation is not accessible to scripts.</p></details>
+</section>
+
+<section id="deep-render"><h2>Deep dive: rendering, layout and DOM performance</h2>
+<p>Changing the DOM is not automatically expensive; forcing the browser to repeatedly recalculate layout is. A useful mental model is <strong>style calculation -&gt; layout -&gt; paint -&gt; compositing</strong>. Reads such as <code>offsetWidth</code> can force pending layout work, while writes such as changing classes can invalidate it.</p>
+<pre><code>// Prefer one write after one read, not alternating read/write in a loop.
+const cards = [...document.querySelectorAll(".card")];
+const width = cards[0]?.getBoundingClientRect().width ?? 0; // read
+const next = `${Math.round(width * 1.1)}px`;
+requestAnimationFrame(() =&gt; {                         // schedule visual write
+  document.documentElement.style.setProperty("--card-width", next);
+});
+
+const fragment = document.createDocumentFragment();
+for (const item of data) {
+  const li = document.createElement("li");
+  li.textContent = item.label;
+  fragment.append(li);
+}
+list.replaceChildren(fragment); // one visible replacement</code></pre>
+<div class="w"><table><tr><th>Technique</th><th>Use it when</th><th>Watch for</th></tr><tr><td><code>requestAnimationFrame</code></td><td>Updating visual state tied to a frame</td><td>It is not a general-purpose timer or background scheduler.</td></tr><tr><td><code>DocumentFragment</code> / <code>replaceChildren</code></td><td>Creating many nodes before one insertion</td><td>Keep event delegation in mind for dynamic children.</td></tr><tr><td><code>IntersectionObserver</code></td><td>Lazy loading or visibility changes</td><td>Unobserve items that no longer need tracking.</td></tr><tr><td><code>MutationObserver</code></td><td>Reacting to DOM changes made elsewhere</td><td>Disconnect it during teardown to avoid retained references.</td></tr></table></div>
+<details open><summary>What is layout thrashing?</summary><p>It is repeatedly writing to the DOM and then immediately reading layout, which can force the browser to recalculate layout on every iteration. Batch reads first and writes second.</p></details>
 </section>
 
 <section id="d2"><h2>2. Timers: setTimeout and setInterval</h2>
@@ -412,6 +437,23 @@ const t = await navigator.clipboard.readText();          // prompts for permissi
 <details open><summary>Explain cut, copy and paste events. How do you stop them?</summary><p>They fire when the user cuts, copies or pastes via keyboard, menu or context menu; the event has <code>clipboardData</code>. Stop with <code>event.preventDefault()</code> in a listener (or <code>return false</code> in the inline attribute).</p></details>
 </section>
 
+<section id="deep-accessibility"><h2>Deep dive: accessibility and DOM security</h2>
+<p>A browser feature is complete only when it works with keyboard input, assistive technology, slow networks and untrusted data. Accessibility is not a final polish step; it changes which element, event and state model you choose.</p>
+<div class="w"><table><tr><th>Concern</th><th>Prefer</th><th>Avoid</th></tr><tr><td>Plain user text</td><td><code>textContent</code></td><td>Interpolating untrusted text into <code>innerHTML</code>.</td></tr><tr><td>Interactive behavior</td><td>Native <code>&lt;button&gt;</code>, <code>&lt;input&gt;</code> and links</td><td>Clickable <code>&lt;div&gt;</code> that needs custom keyboard support.</td></tr><tr><td>Form fields</td><td>Visible labels, error text and focus management</td><td>Placeholder-only labels or color-only error states.</td></tr><tr><td>External navigation</td><td>Validate URLs and allow only intended protocols</td><td>Writing user-controlled URLs into <code>href</code> without checking.</td></tr></table></div>
+<pre><code>const message = document.createElement("p");
+message.id = "status";
+message.setAttribute("role", "status");
+message.textContent = userSuppliedMessage; // safe text insertion
+
+form.addEventListener("submit", event =&gt; {
+  event.preventDefault();
+  const firstInvalid = form.querySelector(":invalid");
+  firstInvalid?.focus();
+});</code></pre>
+<ul><li>Use an accessible name for every control and preserve visible focus.</li><li>Use ARIA to describe semantics that native HTML cannot express; do not replace native semantics unnecessarily.</li><li>For HTML from a trusted template, use a sanitizer with a deliberate allow-list before insertion. Escaping is not the same as sanitizing a rich document.</li><li>Keep storage boundaries clear: <code>localStorage</code> is readable by JavaScript, so never store secrets there.</li></ul>
+<details open><summary>Why is a native button better than a styled div?</summary><p>A button already supports keyboard activation, focus, disabled state and accessibility-tree semantics. Rebuilding those behaviors manually is easy to get wrong.</p></details>
+</section>
+
 <section id="d14"><h2>14. Extra DOM and browser questions interviewers ask</h2>
 <div class="w"><table><tr><th>Question</th><th>Answer</th></tr>
 <tr><td>DOMContentLoaded vs load</td><td><code>DOMContentLoaded</code>: HTML parsed and DOM ready (no waiting for images/styles). <code>load</code> (window): everything including images, iframes finished.</td></tr>
@@ -429,6 +471,8 @@ const throttle = (fn, ms) =&gt; { let last = 0; return (...a) =&gt; { const n = 
 document.addEventListener("DOMContentLoaded", init);
 new IntersectionObserver(([en]) =&gt; en.isIntersecting &amp;&amp; load(), { threshold: 0.1 }).observe(el);</code></pre>
 </section>
+
+<section class="review-section" id="review"><div class="review-kicker">Before you move on</div><h2>Browser production checklist</h2><p>These habits keep a small DOM feature reliable when it meets real users.</p><ul><li>Prefer <code>textContent</code> for plain text and treat HTML insertion as a deliberate security boundary.</li><li>Use event delegation for repeated or dynamic children, and remove listeners or abort them when a view is destroyed.</li><li>Use passive listeners for scroll and touch work when you do not call <code>preventDefault</code>.</li><li>Batch DOM reads and writes, observe only what you need, and avoid forcing layout in a hot loop.</li><li>Keep keyboard access, focus state, labels and reduced-motion preferences in the feature definition.</li></ul><details><summary>Interview prompt: when is delegation a poor fit?</summary><p>When events do not bubble, when the target is outside the delegated root, or when the handler becomes harder to reason about than a direct listener.</p></details><details><summary>Interview prompt: what should cleanup include?</summary><p>Listeners, timers, observers, pending requests and references to removed DOM nodes. <code>AbortController</code> is a useful common cancellation boundary.</p></details></section>
 
 <section id="cheat"><h2>Quick revision cheat sheet</h2>
 <div class="w"><table><tr><th>Topic</th><th>Remember</th></tr>

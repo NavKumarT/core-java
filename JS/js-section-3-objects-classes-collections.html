@@ -23,11 +23,15 @@ pre{background:var(--code);border:1px solid var(--line);border-radius:6px;paddin
 details{border:1px solid var(--line);border-radius:6px;margin:.4em 0;padding:6px 12px}summary{cursor:pointer;font-weight:600}details p{margin:.5em 0 .2em}
 table{border-collapse:collapse;width:100%;font-size:.9rem}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{background:var(--code)}
 .w{overflow-x:auto}
-</style></head><body><main>
-<header><button id="th" aria-label="Toggle theme">Light / Dark</button>
+</style><link rel="stylesheet" href="javascript-docs.css"></head><body><main class="main">
+<header class="header-block"><button id="th" aria-label="Toggle theme">Light / Dark</button>
+<div class="eyebrow">JavaScript Engineer · Course Section 03</div>
 <h1>JavaScript Bible: Section 3<br>Objects, this, Classes, Map &amp; Set</h1>
-<p>The most interview-heavy section. Every course question is answered, plus the traps and follow-ups interviewers add.</p></header>
-<nav><a href="#o1">Object literal</a><a href="#o2">this</a><a href="#o3">call/apply/bind</a><a href="#o4">Classes</a><a href="#o5">Inheritance</a><a href="#o6">Destructuring</a><a href="#o7">Getters/Setters</a><a href="#o8">Map</a><a href="#o9">Set</a><a href="#o10">WeakMap/WeakSet</a><a href="#cheat">Cheat sheet</a></nav>
+<p>The most interview-heavy section. Every course question is answered, plus the traps and follow-ups interviewers add.</p>
+<div class="meta-row"><span class="meta-pill">10 topics</span><span class="meta-pill">Objects + collections</span><span class="meta-pill">Prereq: Section 1</span></div></header>
+<div class="course-overview"><div class="overview-heading"><span class="section-badge">Study focus</span><span class="overview-note">Follow references and receivers</span></div><div class="overview-grid"><div><strong>Core model</strong><p>Follow references, <code>this</code>, the prototype chain, class syntax and collection semantics.</p></div><div><strong>Interview lens</strong><p>Distinguish object versus Map, shallow versus deep copy, and method receiver versus function binding.</p></div><div><strong>Practice habit</strong><p>Trace the receiver and prototype chain on paper before reaching for a debugger.</p></div></div><div class="box info"><div class="box-title">How to use this section</div><p>Read the object model before classes. Class syntax becomes much easier once you can explain what JavaScript is doing with prototypes underneath.</p></div></div>
+<div class="course-nav"><a href="js-section-1-language-fundamentals.html">01 Language</a><a href="js-section-2-arrays-strings-dates.html">02 Data</a><a href="js-section-3-objects-classes-collections.html">03 Objects</a><a href="js-section-4-dom-browser-apis.html">04 DOM</a><a href="js-section-5-asynchronous-javascript.html">05 Async</a><a href="js-section-6-modules-debounce-throttle.html">06 Modules</a></div>
+<nav><a href="#o1">Object literal</a><a href="#deep-prototypes">Prototype lookup</a><a href="#o2">this</a><a href="#o3">call/apply/bind</a><a href="#o4">Classes</a><a href="#o5">Inheritance</a><a href="#deep-composition">Composition</a><a href="#o6">Destructuring</a><a href="#o7">Getters/Setters</a><a href="#o8">Map</a><a href="#o9">Set</a><a href="#o10">WeakMap/WeakSet</a><a href="#cheat">Cheat sheet</a></nav>
 
 <section id="o1"><h2>1. Object literal</h2>
 <p>An object is a collection of <strong>key: value</strong> pairs (properties). An <em>object literal</em> is the <code>{ ... }</code> syntax that creates one directly. Keys are strings or Symbols (numbers are converted to strings); values can be anything, including functions (methods).</p>
@@ -97,6 +101,28 @@ Object.keys({ b: 1, 2: 1, 1: 1, a: 1 });                    // ["1","2","b","a"]
 <details open><summary>Object.freeze vs const?</summary><p><code>const</code> stops reassigning the variable; <code>freeze</code> stops changing the object's own properties (shallowly). Use both for constants; deep-freeze recursively for nested data.</p></details>
 <details open><summary>How do you check if an object is empty?</summary><p><code>Object.keys(o).length === 0</code> (also check <code>o.constructor === Object</code> if needed). <code>if (o)</code> is always true for objects.</p></details>
 <details open><summary>How do you loop over an object's properties?</summary><p><code>Object.entries(o)</code> with <code>for...of</code> or <code>forEach</code> (best), <code>Object.keys</code>, or <code>for...in</code> with <code>Object.hasOwn</code>. Plain objects are not iterable.</p></details>
+</section>
+
+<section id="deep-prototypes"><h2>Deep dive: property lookup and descriptors</h2>
+<p>When you read <code>obj.key</code>, JavaScript first checks the object's own properties. If the key is missing, it follows the prototype link, continuing until it finds a value or reaches <code>null</code>. This lookup is separate from whether a property is enumerable, writable or configurable.</p>
+<pre><code>const base = { role: "reader" };
+const user = Object.create(base);
+user.name = "Asha";
+
+console.log(user.role);                     // inherited value
+console.log(Object.hasOwn(user, "role"));  // false
+console.log("role" in user);                // true: own or inherited
+console.log(Object.keys(user));              // ["name"]: own enumerable keys
+console.log(Object.getPrototypeOf(user) === base); // true</code></pre>
+<div class="w"><table><tr><th>Tool</th><th>Includes inherited keys?</th><th>Use it for</th></tr><tr><td><code>Object.keys</code></td><td>No</td><td>Own enumerable string keys.</td></tr><tr><td><code>for...in</code></td><td>Yes</td><td>Rarely; guard with <code>Object.hasOwn</code>.</td></tr><tr><td><code>key in obj</code></td><td>Yes</td><td>Ask whether a property is available anywhere on the chain.</td></tr><tr><td><code>Object.getOwnPropertyDescriptor</code></td><td>No</td><td>Inspect writable, enumerable, configurable and getter/setter behavior.</td></tr></table></div>
+<pre><code>const settings = {};
+Object.defineProperty(settings, "apiKey", {
+  value: "hidden", enumerable: false, writable: false
+});
+console.log(Object.keys(settings)); // []
+console.log(settings.apiKey);        // "hidden"
+// settings.apiKey = "new";          // ignored or TypeError in strict mode</code></pre>
+<details open><summary>Why prefer <code>Object.hasOwn</code> over <code>obj.hasOwnProperty</code>?</summary><p>An object may shadow or lack <code>hasOwnProperty</code>, especially when it comes from external data or <code>Object.create(null)</code>. The static method works safely with any object.</p></details>
 </section>
 
 <section id="o2"><h2>2. The this keyword</h2>
@@ -281,6 +307,31 @@ const o = Object.create(proto);   // create an object directly from a prototype<
 <details open><summary>Explain the prototype chain and __proto__ vs prototype.</summary><p><code>prototype</code> is a property of constructor functions/classes, used as the template for instances. <code>__proto__</code> (use <code>Object.getPrototypeOf</code>) is each object's internal link to its parent. Lookups walk that link chain to <code>Object.prototype</code> then <code>null</code>.</p></details>
 </section>
 
+<section id="deep-composition"><h2>Deep dive: composition, private state and object design</h2>
+<p>Inheritance models an <em>is-a</em> relationship. Composition models <em>has-a</em>: an object receives small capabilities and delegates to them. Composition often keeps change local and avoids a deep hierarchy whose base-class changes affect many subclasses.</p>
+<pre><code>function withLogger(target, logger = console) {
+  return {
+    ...target,
+    log(message) { logger.info(`[${this.name}] ${message}`); }
+  };
+}
+
+const account = withLogger({ name: "Asha", balance: 0 });
+account.log("opened");
+
+class Counter {
+  #value = 0;
+  increment() { this.#value++; }
+  get value() { return this.#value; }
+}
+const counter = new Counter();
+counter.increment();
+console.log(counter.value); // 1
+// counter.#value;          // SyntaxError: private outside the class</code></pre>
+<ul><li>Use a class when instances share behavior and an explicit lifecycle or invariant.</li><li>Use a factory or composed object when behavior varies independently or inheritance would create a fragile hierarchy.</li><li>Private fields provide language-enforced encapsulation; closures and WeakMaps are alternatives when you need different sharing or compatibility characteristics.</li><li><code>Object.freeze</code> is shallow. Freeze nested structures deliberately or use an immutable data strategy.</li></ul>
+<details open><summary>How do you choose between a class and a factory?</summary><p>Choose a class when the domain has stable identity, shared prototype methods and a meaningful instance contract. Choose a factory when composition, dependency injection and independent capabilities make the design easier to change.</p></details>
+</section>
+
 <section id="o6"><h2>6. Object destructuring</h2>
 <p>Unpacks properties <strong>by name</strong> (order does not matter) into variables.</p>
 <pre><code>const user = { id: 1, name: "Asha", address: { city: "HYD", pin: 500001 }, tags: ["a", "b"] };
@@ -435,6 +486,8 @@ class User { constructor(n) { priv.set(this, { secret: n }) } get s() { return p
 <details open><summary>Difference between Set and WeakSet?</summary><p>Same idea: WeakSet holds only objects, weakly, with just <code>add/has/delete</code>, and cannot be iterated or sized. Use it to tag/track objects (visited, branded) without preventing their collection.</p></details>
 <details open><summary>Why can't you iterate a WeakMap?</summary><p>Contents depend on when the GC runs, so exposing them would make program behaviour non-deterministic and would require holding strong references.</p></details>
 </section>
+
+<section class="review-section" id="review"><div class="review-kicker">Before you move on</div><h2>Object model decision guide</h2><p>Pick the data structure based on identity, lookup needs and ownership.</p><div class="w"><table><tr><th>Need</th><th>Use</th><th>Why</th></tr><tr><td>Named record with a known shape</td><td>Object</td><td>Readable properties and easy JSON serialization.</td></tr><tr><td>Arbitrary keys or frequent keyed lookup</td><td><code>Map</code></td><td>Supports any key type and has explicit size and iteration.</td></tr><tr><td>Unique values</td><td><code>Set</code></td><td>Expresses membership without manual duplicate checks.</td></tr><tr><td>Metadata that must not keep objects alive</td><td><code>WeakMap</code></td><td>Entries can disappear when the key becomes unreachable.</td></tr><tr><td>Reusable behavior with a clear contract</td><td>Class or factory</td><td>Choose based on inheritance needs and composition preference.</td></tr></table></div><details><summary>Interview prompt: why does destructuring not deep clone?</summary><p>It copies property values. Primitive values are copied, but nested objects and arrays remain references to the original structures.</p></details><details><summary>Interview prompt: what decides <code>this</code>?</summary><p>For a normal function, the call site decides it. Arrow functions do not create their own <code>this</code>; they capture it lexically.</p></details></section>
 
 <section id="cheat"><h2>Quick revision cheat sheet</h2>
 <div class="w"><table><tr><th>Topic</th><th>Remember</th></tr>
